@@ -1,0 +1,69 @@
+- generic [active] [ref=f12e1]:
+  - link "Bỏ qua đến nội dung" [ref=f12e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f12e3]:
+    - complementary "Điều hướng chính" [ref=f12e4]:
+      - generic [ref=f12e5]: Ghi chú
+      - navigation [ref=f12e10]:
+        - link "Tất cả ghi chú" [ref=f12e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=f12e12]: ⌂
+        - generic [ref=f12e14]: Tài khoản
+        - link "Hồ sơ" [ref=f12e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=f12e16]: ○
+        - link "Giao diện" [ref=f12e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=f12e19]: ◒
+        - link "Đổi mật khẩu" [ref=f12e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=f12e22]: ⌁
+      - generic [ref=f12e24]:
+        - generic [ref=f12e25]:
+          - generic [ref=f12e26]: B
+          - generic [ref=f12e27]:
+            - strong [ref=f12e28]: Browser Owner
+            - generic [ref=f12e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=f12e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f12e32]: ↪
+    - main [ref=f12e34]:
+      - status [ref=f12e35]:
+        - generic [aria-hidden] [ref=f12e36]: i
+        - generic [ref=f12e37]: Email của bạn chưa được xác minh.
+      - generic [ref=f12e38]:
+        - generic [ref=f12e39]:
+          - generic [ref=f12e41]:
+            - paragraph [ref=f12e42]: Kho lưu trữ cá nhân
+            - heading "Ghi chú" [level=1] [ref=f12e43]
+          - generic [ref=f12e44]:
+            - status
+            - button "Ghi chú mới" [ref=f12e45] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f12e46]: ＋
+        - generic [ref=f12e48]:
+          - complementary "Bộ lọc ghi chú" [ref=f12e49]:
+            - button "Tất cả ghi chú 0" [ref=f12e50] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f12e51]: ▦
+              - generic [ref=f12e52]: Tất cả ghi chú
+              - generic [ref=f12e53]: "0"
+            - generic [ref=f12e55]:
+              - generic [ref=f12e56]: Nhãn
+              - button "Quản lý" [ref=f12e57] [cursor=pointer]
+            - generic [ref=f12e59] [cursor=pointer]:
+              - checkbox "Công việc" [ref=f12e60]
+              - generic [ref=f12e61]: Công việc
+            - button "Thêm nhãn" [ref=f12e62] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f12e63]: ＋
+              - text: Thêm nhãn
+          - region [ref=f12e64]:
+            - generic [ref=f12e65]:
+              - generic [ref=f12e66]:
+                - generic [aria-hidden] [ref=f12e67]: ⌕
+                - generic [ref=f12e68]: Tìm trong ghi chú
+                - searchbox "Tìm trong ghi chú" [ref=f12e69]
+              - group "Kiểu hiển thị" [ref=f12e70]:
+                - button "Hiển thị dạng lưới" [pressed] [ref=f12e71] [cursor=pointer]: ▦
+                - button "Hiển thị dạng danh sách" [ref=f12e72] [cursor=pointer]: ☷
+            - status [ref=f12e73]
+            - generic [ref=f12e75]:
+              - heading "Chưa có ghi chú nào" [level=2] [ref=f12e76]
+              - paragraph [ref=f12e77]: Bắt đầu bằng một điều bạn muốn giữ lại.

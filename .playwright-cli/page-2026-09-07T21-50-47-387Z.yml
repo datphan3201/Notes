@@ -1,0 +1,125 @@
+- generic [ref=f2e1]:
+  - link "Bỏ qua đến nội dung" [ref=f2e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f2e3]:
+    - complementary "Điều hướng chính" [ref=f2e4]:
+      - generic [ref=f2e5]: Ghi chú
+      - navigation [ref=f2e10]:
+        - link "Tất cả ghi chú" [ref=f2e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=f2e12]: ⌂
+        - generic [ref=f2e14]: Tài khoản
+        - link "Hồ sơ" [ref=f2e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=f2e16]: ○
+        - link "Giao diện" [ref=f2e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=f2e19]: ◒
+        - link "Đổi mật khẩu" [ref=f2e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=f2e22]: ⌁
+      - generic [ref=f2e24]:
+        - generic [ref=f2e25]:
+          - generic [ref=f2e26]: B
+          - generic [ref=f2e27]:
+            - strong [ref=f2e28]: Browser Đàt
+            - generic [ref=f2e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=f2e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f2e32]: ↪
+    - main [ref=f2e34]:
+      - status [ref=f2e35]:
+        - generic [aria-hidden] [ref=f2e36]: i
+        - generic [ref=f2e37]: Email của bạn chưa được xác minh.
+      - generic [ref=f2e38]:
+        - generic [ref=f2e39]:
+          - generic [ref=f2e41]:
+            - paragraph [ref=f2e42]: Kho lưu trữ cá nhân
+            - heading "Ghi chú" [level=1] [ref=f2e43]
+          - generic [ref=f2e44]:
+            - status
+            - button "Ghi chú mới" [ref=f2e45] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e46]: ＋
+        - generic [ref=f2e48]:
+          - complementary "Bộ lọc ghi chú" [ref=f2e49]:
+            - button "Tất cả ghi chú 1" [ref=f2e109] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e51]: ▦
+              - generic [ref=f2e52]: Tất cả ghi chú
+              - generic [ref=f2e53]: "1"
+            - generic [ref=f2e55]:
+              - generic [ref=f2e56]: Nhãn
+              - button "Quản lý" [ref=f2e57] [cursor=pointer]
+            - generic [ref=f2e148] [cursor=pointer]:
+              - checkbox "Công việc" [ref=f2e149]
+              - generic [ref=f2e150]: Công việc
+            - button "Thêm nhãn" [ref=f2e60] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e61]: ＋
+              - text: Thêm nhãn
+          - region [ref=f2e62]:
+            - generic [ref=f2e63]:
+              - generic [ref=f2e64]:
+                - generic [aria-hidden] [ref=f2e65]: ⌕
+                - generic [ref=f2e66]: Tìm trong ghi chú
+                - searchbox "Tìm trong ghi chú" [ref=f2e67]
+              - group "Kiểu hiển thị" [ref=f2e68]:
+                - button "Hiển thị dạng lưới" [pressed] [ref=f2e69] [cursor=pointer]: ▦
+                - button "Hiển thị dạng danh sách" [ref=f2e70] [cursor=pointer]: ☷
+            - status [ref=f2e71]
+            - article [ref=f2e186] [cursor=pointer]:
+              - generic [ref=f2e187]:
+                - heading "Cơ sở dữ liệu & HTML <b>" [level=2] [ref=f2e188]
+                - button "Bỏ ghim ghi chú" [ref=f2e190]: ◆
+              - paragraph [ref=f2e191]: Dòng một <b>literal</b> & phần mềm 📝
+              - generic [ref=f2e192]:
+                - generic "Đã ghim" [ref=f2e193]: ◆
+                - generic [ref=f2e194]: Công việc
+                - generic [ref=f2e196]: 7 thg 9, 2026
+      - dialog [ref=f2e118]:
+        - generic [ref=f2e79]:
+          - generic [ref=f2e80]:
+            - paragraph [ref=f2e81]: Đang chỉnh sửa
+            - heading "Cơ sở dữ liệu & HTML <b>" [level=2] [ref=f2e119]
+            - paragraph [ref=f2e83]: Nội dung được tự động lưu sau khi máy chủ xác nhận.
+          - button "Đóng trình soạn thảo" [ref=f2e84] [cursor=pointer]: ×
+        - generic [ref=f2e85]:
+          - status [ref=f2e120]: Đã lưu
+          - generic [ref=f2e86]: Phiên bản 4
+        - generic [ref=f2e87]:
+          - generic [ref=f2e88]:
+            - generic [ref=f2e89]: Tiêu đề ghi chú
+            - textbox "Tiêu đề ghi chú" [ref=f2e90]:
+              - /placeholder: Tiêu đề
+              - text: Cơ sở dữ liệu & HTML <b>
+          - generic [ref=f2e91]:
+            - generic [ref=f2e92]: Nội dung ghi chú
+            - textbox "Nội dung ghi chú" [ref=f2e93]:
+              - /placeholder: Bắt đầu viết…
+              - text: Dòng một <b>literal</b> & phần mềm 📝
+          - generic [ref=f2e94]:
+            - generic [ref=f2e95]:
+              - generic [ref=f2e96]: Màu ghi chú
+              - group "Màu ghi chú" [ref=f2e97]:
+                - button "Mặc định" [ref=f2e98] [cursor=pointer]
+                - button "Vàng nhạt" [ref=f2e99] [cursor=pointer]
+                - button "Xanh lá nhạt" [ref=f2e100] [cursor=pointer]
+                - button "Xanh dương nhạt" [pressed] [ref=f2e101] [cursor=pointer]
+                - button "Hồng nhạt" [ref=f2e102] [cursor=pointer]
+            - generic [ref=f2e103]:
+              - button "Bỏ ghim" [active] [pressed] [ref=f2e197] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f2e105]: ♢
+              - button "Nhãn" [ref=f2e107] [cursor=pointer]:
+                - generic [aria-hidden] [ref=f2e108]: ⌑
+                - text: Nhãn
+              - button "Xóa" [ref=f2e121] [cursor=pointer]
+          - generic [ref=f2e164]:
+            - generic [ref=f2e165]:
+              - strong [ref=f2e166]: Gắn nhãn
+              - generic [ref=f2e167]: 1/20
+            - generic [ref=f2e198]:
+              - checkbox "Công việc" [checked] [ref=f2e199]
+              - generic [ref=f2e200]: Công việc
+            - button "Tạo hoặc quản lý nhãn" [ref=f2e172] [cursor=pointer]
+          - generic [ref=f2e122]:
+            - generic [ref=f2e123]: Tệp đính kèm
+            - generic [ref=f2e125] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f2e126]: ＋
+              - text: Thêm tệp

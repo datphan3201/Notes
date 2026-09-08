@@ -1,0 +1,171 @@
+- generic [ref=f5e2]:
+  - generic [ref=f5e4]:
+    - generic [ref=f5e5]: Internal Server Error
+    - button "Copy as Markdown" [ref=f5e11] [cursor=pointer]
+  - generic [ref=f5e18]:
+    - generic [ref=f5e19]:
+      - heading "ErrorException" [level=1] [ref=f5e20]
+      - generic [ref=f5e21]: resources/views/layouts/app.blade.php:1
+      - paragraph [ref=f5e23]: Undefined variable $preferences
+    - generic [ref=f5e24]:
+      - generic [ref=f5e25]:
+        - generic [ref=f5e26]:
+          - generic [ref=f5e27]: LARAVEL
+          - generic [ref=f5e28]: 13.30.1
+        - generic [ref=f5e29]:
+          - generic [ref=f5e30]: PHP
+          - generic [ref=f5e31]: 8.5.4
+      - generic [ref=f5e32]: UNHANDLED
+      - generic [ref=f5e36]: CODE 0
+    - generic [ref=f5e38]:
+      - generic [ref=f5e39]: "500"
+      - generic [ref=f5e43]: GET
+      - generic [ref=f5e48]: http://127.0.0.1:8000/settings/profile
+      - button [ref=f5e49] [cursor=pointer]
+  - generic [ref=f5e54]:
+    - generic [ref=f5e55]:
+      - heading "Exception trace" [level=3] [ref=f5e61]
+      - generic [ref=f5e62]:
+        - generic [ref=f5e63]:
+          - generic [ref=f5e64] [cursor=pointer]:
+            - generic [ref=f5e67]:
+              - code [ref=f5e71]:
+                - generic [ref=f5e72]: "Illuminate\\Foundation\\Bootstrap\\HandleExceptions->{closure:Illuminate\\Foundation\\Bootstrap\\HandleExceptions::forwardsTo():262}(integer, string, string, integer)"
+              - generic [ref=f5e73]: resources/views/layouts/app.blade.php:1
+            - button [ref=f5e76]
+          - code [ref=f5e85]:
+            - generic [ref=f5e86]: 1@php
+            - generic [ref=f5e87]: 2 $user->loadMissing('preferences');
+            - generic [ref=f5e88]: 3 $bootstrap = [
+            - generic [ref=f5e89]: 4 'user' => [
+            - generic [ref=f5e90]: 5 'id' => (string) $user->id,
+            - generic [ref=f5e91]: 6 'email' => $user->email,
+            - generic [ref=f5e92]: 7 'display_name' => $user->display_name,
+            - generic [ref=f5e93]: 8 'email_verified' => $user->email_verified_at !== null,
+            - generic [ref=f5e94]: "9 'avatar_url' => $user->avatar_path ? route('files.avatar') : null,"
+            - generic [ref=f5e95]: 10 ],
+            - generic [ref=f5e96]: 11 'preferences' => [
+            - generic [ref=f5e97]: 12 'theme' => $preferences->theme,
+            - generic [ref=f5e98]: 13 'note_font_size' => (int) $preferences->note_font_size,
+            - generic [ref=f5e99]: 14 'default_note_color' => $preferences->default_note_color,
+            - generic [ref=f5e100]: 15 'notes_view' => $preferences->notes_view,
+            - generic [ref=f5e101]: 16 ],
+            - generic [ref=f5e102]: 17 'csrf_token' => csrf_token(),
+            - generic [ref=f5e103]: "18"
+        - generic [ref=f5e105] [cursor=pointer]:
+          - generic [ref=f5e110]: 7 vendor frames
+          - button [ref=f5e111]
+        - generic [ref=f5e117] [cursor=pointer]:
+          - generic [ref=f5e120]:
+            - code [ref=f5e124]:
+              - generic [ref=f5e125]: Illuminate\View\View->render()
+            - generic [ref=f5e126]: resources/views/settings/profile.blade.php:26
+          - button [ref=f5e129]
+        - generic [ref=f5e135] [cursor=pointer]:
+          - generic [ref=f5e140]: 13 vendor frames
+          - button [ref=f5e141]
+        - generic [ref=f5e147] [cursor=pointer]:
+          - generic [ref=f5e150]:
+            - code [ref=f5e154]:
+              - generic [ref=f5e155]: "Illuminate\\Pipeline\\Pipeline->{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():178}(object(Illuminate\\Http\\Request))"
+            - generic [ref=f5e156]: app/Http/Middleware/PrivateResponseHeaders.php:14
+          - button [ref=f5e159]
+        - generic [ref=f5e165] [cursor=pointer]:
+          - generic [ref=f5e170]: 47 vendor frames
+          - button [ref=f5e171]
+        - generic [ref=f5e177] [cursor=pointer]:
+          - generic [ref=f5e180]:
+            - code [ref=f5e184]:
+              - generic [ref=f5e185]: Illuminate\Foundation\Application->handleRequest(object(Illuminate\Http\Request))
+            - generic [ref=f5e186]: public/index.php:20
+          - button [ref=f5e189]
+        - generic [ref=f5e195] [cursor=pointer]:
+          - generic [ref=f5e200]: 1 vendor frame
+          - button [ref=f5e201]
+    - generic [ref=f5e206]:
+      - generic [ref=f5e207]:
+        - heading "Queries" [level=3] [ref=f5e212]
+        - generic [ref=f5e213]: 1-3 of 3
+      - generic [ref=f5e215]:
+        - generic [ref=f5e216]:
+          - generic [ref=f5e217]:
+            - generic [ref=f5e218]: mysql
+            - code [ref=f5e225]:
+              - generic [ref=f5e226]: "select * from `sessions` where `id` = 'yUD4RgeuVZivHXouxPtzq8TMg4qLINhK3ln5aeQh' limit 1"
+          - generic [ref=f5e227]: 1.21ms
+        - generic [ref=f5e228]:
+          - generic [ref=f5e229]:
+            - generic [ref=f5e230]: mysql
+            - code [ref=f5e237]:
+              - generic [ref=f5e238]: "select * from `users` where `id` = 2 limit 1"
+          - generic [ref=f5e239]: 0.58ms
+        - generic [ref=f5e240]:
+          - generic [ref=f5e241]:
+            - generic [ref=f5e242]: mysql
+            - code [ref=f5e249]:
+              - generic [ref=f5e250]: "select * from `user_preferences` where `user_preferences`.`user_id` in (2)"
+          - generic [ref=f5e251]: 0.6ms
+  - generic [ref=f5e253]:
+    - generic [ref=f5e254]:
+      - heading "Headers" [level=2] [ref=f5e255]
+      - generic [ref=f5e256]:
+        - generic [ref=f5e257]:
+          - generic [ref=f5e258]: host
+          - generic [ref=f5e260]: 127.0.0.1:8000
+        - generic [ref=f5e261]:
+          - generic [ref=f5e262]: user-agent
+          - generic [ref=f5e264]: Mozilla/5.0 (X11; Linux x86_64; rv:155.0) Gecko/20100101 Firefox/155.0
+        - generic [ref=f5e265]:
+          - generic [ref=f5e266]: accept
+          - generic [ref=f5e268]: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+        - generic [ref=f5e269]:
+          - generic [ref=f5e270]: accept-language
+          - generic [ref=f5e272]: en-US,en;q=0.9
+        - generic [ref=f5e273]:
+          - generic [ref=f5e274]: accept-encoding
+          - generic [ref=f5e276]: gzip, deflate, br, zstd
+        - generic [ref=f5e277]:
+          - generic [ref=f5e278]: referer
+          - generic [ref=f5e280]: http://127.0.0.1:8000/settings/preferences
+        - generic [ref=f5e281]:
+          - generic [ref=f5e282]: connection
+          - generic [ref=f5e284]: keep-alive
+        - generic [ref=f5e285]:
+          - generic [ref=f5e286]: cookie
+          - generic [ref=f5e288]: XSRF-TOKEN=eyJpdiI6IlY2NElaMVByNXoyb29oRUxoN0RNa1E9PSIsInZhbHVlIjoiSHFiSkpTNUJ4eElJbjgyR202ZGFjMDQyY3BMUThsNmxtSHpMNXI3Wmp4c1hLODlNMTdUNTlhRTBUV2hmb0dTOGM5bEJoR09vWG1sdzBKYnpqUTYxY2dleHVhaGl5S3BDYklhQTRRUFUvUlhRRmNnaDYxQ1NCazNHN09qTHJLeXciLCJtYWMiOiJiNmNhMzY4ZDg4ZjA3Mzc2ZjU2ZDVkMjY4NjQ5NjcxN2VmYTczMjk1ODE5ZDZlMjk4MjBiNTZiMDgwNTEzNjRjIiwidGFnIjoiIn0%3D; ghi-chu-session=eyJpdiI6InRvaXZBTFduUDVJSjkvQnhpUE9Ea3c9PSIsInZhbHVlIjoiNThqWTh6ckhNYVlybWRrazV2TXhUMy93VXRVeVRRQmdQQzZRY1Y5N0RVK2JQME5kVkdLSDlRT253MjFwa3BTNG12S29DSkZ6RDBQdG9JRWl6N1lFMEZSMU4zbDlxYzdoSXdDQUFMY3VaY3RiYXM5Q00vbXpVOWZPcE5iUEtnaW8iLCJtYWMiOiI3ZDc5OGQyNDIxOGY5N2NhOTllNTM3MzczZmM2YmJmZDRjZGFlOTNkMDAxOGU3MTg4M2NkNmJmZDZmM2NmMjc5IiwidGFnIjoiIn0%3D
+        - generic [ref=f5e289]:
+          - generic [ref=f5e290]: upgrade-insecure-requests
+          - generic [ref=f5e292]: "1"
+        - generic [ref=f5e293]:
+          - generic [ref=f5e294]: sec-fetch-dest
+          - generic [ref=f5e296]: document
+        - generic [ref=f5e297]:
+          - generic [ref=f5e298]: sec-fetch-mode
+          - generic [ref=f5e300]: navigate
+        - generic [ref=f5e301]:
+          - generic [ref=f5e302]: sec-fetch-site
+          - generic [ref=f5e304]: same-origin
+        - generic [ref=f5e305]:
+          - generic [ref=f5e306]: sec-fetch-user
+          - generic [ref=f5e308]: "?1"
+        - generic [ref=f5e309]:
+          - generic [ref=f5e310]: priority
+          - generic [ref=f5e312]: u=0, i
+    - generic [ref=f5e313]:
+      - heading "Body" [level=2] [ref=f5e314]
+      - generic [ref=f5e315]: // No request body
+    - generic [ref=f5e316]:
+      - heading "Routing" [level=2] [ref=f5e317]
+      - generic [ref=f5e318]:
+        - generic [ref=f5e319]:
+          - generic [ref=f5e320]: controller
+          - generic [ref=f5e322]: App\Http\Controllers\SettingsPageController@profile
+        - generic [ref=f5e323]:
+          - generic [ref=f5e324]: route name
+          - generic [ref=f5e326]: settings.profile
+        - generic [ref=f5e327]:
+          - generic [ref=f5e328]: middleware
+          - generic [ref=f5e330]: web, auth, auth.session
+    - generic [ref=f5e331]:
+      - heading "Routing parameters" [level=2] [ref=f5e332]
+      - generic [ref=f5e333]: // No routing parameters

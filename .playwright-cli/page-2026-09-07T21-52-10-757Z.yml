@@ -1,0 +1,60 @@
+- generic [ref=f6e1]:
+  - link "Bỏ qua đến nội dung" [ref=f6e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f6e3]:
+    - complementary "Điều hướng chính" [ref=f6e4]:
+      - generic [ref=f6e5]: Ghi chú
+      - navigation [ref=f6e10]:
+        - link "Tất cả ghi chú" [ref=f6e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=f6e12]: ⌂
+        - generic [ref=f6e14]: Tài khoản
+        - link "Hồ sơ" [ref=f6e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=f6e16]: ○
+        - link "Giao diện" [ref=f6e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=f6e19]: ◒
+        - link "Đổi mật khẩu" [ref=f6e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=f6e22]: ⌁
+      - generic [ref=f6e24]:
+        - generic [ref=f6e25]:
+          - generic [ref=f6e26]: B
+          - generic [ref=f6e27]:
+            - strong [ref=f6e28]: Browser Đàt
+            - generic [ref=f6e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=f6e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f6e32]: ↪
+    - main [ref=f6e34]:
+      - status [ref=f6e35]:
+        - generic [aria-hidden] [ref=f6e36]: i
+        - generic [ref=f6e37]: Email của bạn chưa được xác minh.
+      - region [ref=f6e38]:
+        - generic [ref=f6e39]:
+          - generic [ref=f6e40]:
+            - paragraph [ref=f6e41]: Tài khoản
+            - heading "Hồ sơ" [level=1] [ref=f6e42]
+            - paragraph [ref=f6e43]: Thông tin hiển thị trong không gian ghi chú của bạn.
+          - link "← Về ghi chú" [ref=f6e44] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000
+        - generic [ref=f6e45]:
+          - generic [ref=f6e46]:
+            - generic [ref=f6e47]: B
+            - generic [ref=f6e49]:
+              - strong [ref=f6e50]: Ảnh đại diện
+              - paragraph [ref=f6e51]: Ảnh JPEG, PNG hoặc WebP, tối đa 2 MB.
+              - generic [ref=f6e52]:
+                - generic [ref=f6e53] [cursor=pointer]: Chọn ảnh
+                - button "Xóa ảnh" [ref=f6e54] [cursor=pointer]
+          - generic [ref=f6e55]:
+            - generic [ref=f6e56]:
+              - generic [ref=f6e57]: Email
+              - textbox "Email" [ref=f6e58]: browser-owner@example.test
+              - paragraph [ref=f6e59]: Email không thể thay đổi trong release này.
+            - generic [ref=f6e60]:
+              - generic [ref=f6e61]: Tên hiển thị
+              - textbox "Tên hiển thị" [ref=f6e62]: Browser Owner
+            - generic [ref=f6e63]:
+              - button "Lưu thay đổi" [active] [ref=f6e64] [cursor=pointer]
+              - status [ref=f6e65]: Đã lưu

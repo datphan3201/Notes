@@ -1,0 +1,55 @@
+- generic [ref=f7e1]:
+  - link "Bỏ qua đến nội dung" [ref=f7e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f7e3]:
+    - complementary "Điều hướng chính" [ref=f7e4]:
+      - generic [ref=f7e5]: Ghi chú
+      - navigation [ref=f7e10]:
+        - link "Tất cả ghi chú" [ref=f7e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=f7e12]: ⌂
+        - generic [ref=f7e14]: Tài khoản
+        - link "Hồ sơ" [ref=f7e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=f7e16]: ○
+        - link "Giao diện" [ref=f7e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=f7e19]: ◒
+        - link "Đổi mật khẩu" [ref=f7e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=f7e22]: ⌁
+      - generic [ref=f7e24]:
+        - generic [ref=f7e25]:
+          - generic [ref=f7e26]: B
+          - generic [ref=f7e27]:
+            - strong [ref=f7e28]: Browser Owner
+            - generic [ref=f7e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=f7e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f7e32]: ↪
+    - main [ref=f7e34]:
+      - status [ref=f7e35]:
+        - generic [aria-hidden] [ref=f7e36]: i
+        - generic [ref=f7e37]: Email của bạn chưa được xác minh.
+      - region [ref=f7e38]:
+        - generic [ref=f7e39]:
+          - generic [ref=f7e40]:
+            - paragraph [ref=f7e41]: Tài khoản
+            - heading "Đổi mật khẩu" [level=1] [ref=f7e42]
+            - paragraph [ref=f7e43]: Sau khi đổi, các cửa sổ đang đăng nhập sẽ được đăng xuất.
+          - link "← Về ghi chú" [ref=f7e44] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000
+        - generic [ref=f7e46]:
+          - generic [ref=f7e47]:
+            - generic [ref=f7e48]: Mật khẩu hiện tại
+            - textbox "Mật khẩu hiện tại" [ref=f7e49]
+          - generic [ref=f7e50]:
+            - generic [ref=f7e51]: Mật khẩu mới
+            - textbox "Mật khẩu mới" [ref=f7e52]
+            - paragraph [ref=f7e53]: Tối thiểu 10 ký tự, tối đa 72 byte.
+            - paragraph [ref=f7e59]: Mật khẩu hiện tại không đúng.
+          - generic [ref=f7e54]:
+            - generic [ref=f7e55]: Nhập lại mật khẩu mới
+            - textbox "Nhập lại mật khẩu mới" [ref=f7e56]
+          - generic [ref=f7e57]:
+            - button "Đổi mật khẩu" [active] [ref=f7e58] [cursor=pointer]
+            - status

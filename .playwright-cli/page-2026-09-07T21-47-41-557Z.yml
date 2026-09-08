@@ -1,0 +1,27 @@
+- main [ref=e2]:
+  - link "Bỏ qua đến nội dung" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - paragraph [ref=e4]: Ghi chú
+  - region [ref=e5]:
+    - paragraph [ref=e6]: Bắt đầu nhẹ nhàng
+    - heading "Tạo tài khoản" [level=1] [ref=e7]
+    - paragraph [ref=e8]: Chỉ cần bốn thông tin để có một nơi riêng cho các ghi chú của bạn.
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - text: Tên hiển thị
+        - textbox "Tên hiển thị" [active] [ref=e11]
+      - generic [ref=e12]:
+        - text: Email
+        - textbox "Email" [ref=e13]
+      - generic [ref=e14]:
+        - text: Mật khẩu
+        - textbox "Mật khẩu" [ref=e15]
+        - paragraph [ref=e16]: Tối thiểu 10 ký tự, tối đa 72 byte.
+      - generic [ref=e17]:
+        - text: Nhập lại mật khẩu
+        - textbox "Nhập lại mật khẩu" [ref=e18]
+      - button "Tạo tài khoản" [ref=e19]
+    - paragraph [ref=e20]:
+      - text: Đã có tài khoản?
+      - link "Đăng nhập" [ref=e21] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/login

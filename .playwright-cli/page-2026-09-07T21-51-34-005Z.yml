@@ -1,0 +1,74 @@
+- generic [active] [ref=f4e1]:
+  - link "Bỏ qua đến nội dung" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f4e3]:
+    - complementary "Điều hướng chính" [ref=f4e4]:
+      - generic [ref=f4e5]: Ghi chú
+      - navigation [ref=f4e10]:
+        - link "Tất cả ghi chú" [ref=f4e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=f4e12]: ⌂
+        - generic [ref=f4e14]: Tài khoản
+        - link "Hồ sơ" [ref=f4e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=f4e16]: ○
+        - link "Giao diện" [ref=f4e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=f4e19]: ◒
+        - link "Đổi mật khẩu" [ref=f4e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=f4e22]: ⌁
+      - generic [ref=f4e24]:
+        - generic [ref=f4e25]:
+          - generic [ref=f4e26]: B
+          - generic [ref=f4e27]:
+            - strong [ref=f4e28]: Browser Đàt
+            - generic [ref=f4e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=f4e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f4e32]: ↪
+    - main [ref=f4e34]:
+      - status [ref=f4e35]:
+        - generic [aria-hidden] [ref=f4e36]: i
+        - generic [ref=f4e37]: Email của bạn chưa được xác minh.
+      - region [ref=f4e38]:
+        - generic [ref=f4e39]:
+          - generic [ref=f4e40]:
+            - paragraph [ref=f4e41]: Tài khoản
+            - heading "Giao diện" [level=1] [ref=f4e42]
+            - paragraph [ref=f4e43]: Chọn nhịp làm việc phù hợp với mắt và cách bạn đọc.
+          - link "← Về ghi chú" [ref=f4e44] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000
+        - generic [ref=f4e45]:
+          - generic [ref=f4e46]:
+            - generic [ref=f4e47]:
+              - heading "Chủ đề" [level=2] [ref=f4e48]
+              - paragraph [ref=f4e49]: Thay đổi nền của không gian làm việc.
+            - group "Chủ đề" [ref=f4e50]:
+              - button "Sáng" [ref=f4e51] [cursor=pointer]
+              - button "Tối" [pressed] [ref=f4e52] [cursor=pointer]
+          - generic [ref=f4e53]:
+            - generic [ref=f4e54]:
+              - heading "Cỡ chữ ghi chú" [level=2] [ref=f4e55]
+              - paragraph [ref=f4e56]: Áp dụng cho nội dung và phần xem trước.
+            - group "Cỡ chữ" [ref=f4e57]:
+              - button "Nhỏ" [ref=f4e58] [cursor=pointer]
+              - button "Vừa" [ref=f4e59] [cursor=pointer]
+              - button "Lớn" [pressed] [ref=f4e60] [cursor=pointer]
+          - generic [ref=f4e61]:
+            - generic [ref=f4e62]:
+              - heading "Màu ghi chú mới" [level=2] [ref=f4e63]
+              - paragraph [ref=f4e64]: Chỉ áp dụng cho ghi chú tạo sau khi chọn.
+            - group "Màu ghi chú mặc định" [ref=f4e65]:
+              - button "Mặc định" [ref=f4e66] [cursor=pointer]
+              - button "Vàng nhạt" [pressed] [ref=f4e67] [cursor=pointer]
+              - button "Xanh lá nhạt" [ref=f4e68] [cursor=pointer]
+              - button "Xanh dương nhạt" [ref=f4e69] [cursor=pointer]
+              - button "Hồng nhạt" [ref=f4e70] [cursor=pointer]
+          - generic [ref=f4e71]:
+            - generic [ref=f4e72]:
+              - heading "Kiểu hiển thị" [level=2] [ref=f4e73]
+              - paragraph [ref=f4e74]: Chọn cách xem thư viện ghi chú.
+            - group "Kiểu hiển thị" [ref=f4e75]:
+              - button "Lưới" [pressed] [ref=f4e76] [cursor=pointer]
+              - button "Danh sách" [ref=f4e77] [cursor=pointer]
+          - status [ref=f4e78]

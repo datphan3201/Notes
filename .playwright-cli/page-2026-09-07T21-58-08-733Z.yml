@@ -1,0 +1,135 @@
+- generic [ref=e1]:
+  - link "Bỏ qua đến nội dung" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - complementary "Điều hướng chính" [ref=e4]:
+      - generic [ref=e5]: Ghi chú
+      - navigation [ref=e10]:
+        - link "Tất cả ghi chú" [ref=e11] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000
+          - generic [aria-hidden] [ref=e12]: ⌂
+        - generic [ref=e14]: Tài khoản
+        - link "Hồ sơ" [ref=e15] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/profile
+          - generic [aria-hidden] [ref=e16]: ○
+        - link "Giao diện" [ref=e18] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/preferences
+          - generic [aria-hidden] [ref=e19]: ◒
+        - link "Đổi mật khẩu" [ref=e21] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/settings/password
+          - generic [aria-hidden] [ref=e22]: ⌁
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: B
+          - generic [ref=e27]:
+            - strong [ref=e28]: Browser Owner
+            - generic [ref=e29]: browser-owner@example.test
+        - button "Đăng xuất" [ref=e31] [cursor=pointer]:
+          - generic [aria-hidden] [ref=e32]: ↪
+    - main [ref=e34]:
+      - status [ref=e35]:
+        - generic [aria-hidden] [ref=e36]: i
+        - generic [ref=e37]: Email của bạn chưa được xác minh.
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Kho lưu trữ cá nhân
+            - heading "Ghi chú" [level=1] [ref=e43]
+          - generic [ref=e44]:
+            - status
+            - button "Ghi chú mới" [ref=e45] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e46]: ＋
+        - generic [ref=e48]:
+          - complementary "Bộ lọc ghi chú" [ref=e49]:
+            - button "Tất cả ghi chú 1" [ref=e75] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e51]: ▦
+              - generic [ref=e52]: Tất cả ghi chú
+              - generic [ref=e53]: "1"
+            - generic [ref=e55]:
+              - generic [ref=e56]: Nhãn
+              - button "Quản lý" [ref=e57] [cursor=pointer]
+            - generic [ref=e59] [cursor=pointer]:
+              - checkbox "Công việc" [ref=e60]
+              - generic [ref=e61]: Công việc
+            - button "Thêm nhãn" [ref=e62] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e63]: ＋
+              - text: Thêm nhãn
+          - region [ref=e64]:
+            - generic [ref=e65]:
+              - generic [ref=e66]:
+                - generic [aria-hidden] [ref=e67]: ⌕
+                - generic [ref=e68]: Tìm trong ghi chú
+                - searchbox "Tìm trong ghi chú" [ref=e69]
+              - group "Kiểu hiển thị" [ref=e70]:
+                - button "Hiển thị dạng lưới" [pressed] [ref=e71] [cursor=pointer]: ▦
+                - button "Hiển thị dạng danh sách" [ref=e72] [cursor=pointer]: ☷
+            - status [ref=e73]
+            - article [ref=e202] [cursor=pointer]:
+              - generic [ref=e203]:
+                - heading "Cơ sở dữ liệu & HTML <b>" [level=2] [ref=e204]
+                - button "Bỏ ghim ghi chú" [ref=e206]: ◆
+              - paragraph [ref=e207]: Nội dung khi mất kết nối — vẫn giữ bản nháp
+              - generic [ref=e208]:
+                - generic "Đã ghim" [ref=e209]: ◆
+                - generic [ref=e210]: Công việc
+                - generic [ref=e212]: 7 thg 9, 2026
+                - generic "1 tệp đính kèm" [ref=e213]: ⌑ 1
+      - dialog [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - paragraph [ref=e103]: Đang chỉnh sửa
+            - heading "Cơ sở dữ liệu & HTML <b>" [level=2] [ref=e104]
+            - paragraph [ref=e105]: Nội dung được tự động lưu sau khi máy chủ xác nhận.
+          - button "Đóng trình soạn thảo" [ref=e106] [cursor=pointer]: ×
+        - generic [ref=e107]:
+          - status [ref=e108]: Đã lưu
+          - generic [ref=e109]: Phiên bản 6
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: Tiêu đề ghi chú
+            - textbox "Tiêu đề ghi chú" [ref=e113]:
+              - /placeholder: Tiêu đề
+              - text: Cơ sở dữ liệu & HTML <b>
+          - generic [ref=e114]:
+            - generic [ref=e115]: Nội dung ghi chú
+            - textbox "Nội dung ghi chú" [ref=e116]:
+              - /placeholder: Bắt đầu viết…
+              - text: Nội dung khi mất kết nối — vẫn giữ bản nháp
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - generic [ref=e119]: Màu ghi chú
+              - group "Màu ghi chú" [ref=e120]:
+                - button "Mặc định" [ref=e121] [cursor=pointer]
+                - button "Vàng nhạt" [ref=e122] [cursor=pointer]
+                - button "Xanh lá nhạt" [ref=e123] [cursor=pointer]
+                - button "Xanh dương nhạt" [pressed] [ref=e124] [cursor=pointer]
+                - button "Hồng nhạt" [ref=e125] [cursor=pointer]
+            - generic [ref=e126]:
+              - button "Bỏ ghim" [pressed] [ref=e127] [cursor=pointer]:
+                - generic [aria-hidden] [ref=e128]: ♢
+              - button "Nhãn" [ref=e130] [cursor=pointer]:
+                - generic [aria-hidden] [ref=e131]: ⌑
+                - text: Nhãn
+              - button "Xóa" [active] [ref=e132] [cursor=pointer]
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - generic [ref=e135]: Tệp đính kèm
+              - generic [ref=e194]: 1/20
+            - generic [ref=e214]:
+              - generic [ref=e215]:
+                - strong [ref=e216]: Readme.txt
+                - generic [ref=e217]: 3 KB
+              - link "Tải" [ref=e218] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/files/attachments/e3d9587f-bf4c-4ba4-b9f4-568caa2c0c24/download
+              - button "Xóa Readme.txt" [ref=e219] [cursor=pointer]: ×
+            - generic [ref=e136] [cursor=pointer]:
+              - generic [aria-hidden] [ref=e137]: ＋
+              - text: Thêm tệp
+      - dialog [ref=e221]:
+        - generic [ref=e223]:
+          - paragraph [ref=e224]: Xác nhận
+          - heading "Xóa ghi chú này?" [level=2] [ref=e225]
+        - paragraph [ref=e226]: Ghi chú sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.
+        - generic [ref=e227]:
+          - button "Hủy" [ref=e228] [cursor=pointer]
+          - button "Tiếp tục" [ref=e229] [cursor=pointer]
