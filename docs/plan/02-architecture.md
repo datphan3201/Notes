@@ -1,12 +1,18 @@
 # Architecture, Environment, and File Responsibilities
 
-## A01 — One Laravel application
+## A01 — Same-origin frontend/backend workspace
 
-Use a modular monolith organized by Laravel conventions. Blade renders authenticated pages and the application shell. Alpine handles small UI components; plain JavaScript modules own HTTP, autosave, recovery, and list state. Controllers call focused actions and Eloquent queries. MySQL is the persistence authority.
+Use a modular monolith with separate source roots. `frontend/` owns Blade,
+Alpine, browser state modules, CSS, Vite and JavaScript tests. `backend/` owns
+Laravel, HTTP/API behavior, authentication, MySQL, private files and PHPUnit
+tests. Laravel renders the frontend Blade files and serves Vite's built output,
+so browser and API traffic remain same-origin.
 
 ```mermaid
 flowchart LR
-    U[Browser: Blade HTML, Alpine, CSS] -->|Session cookie, CSRF, same origin| W[Laravel web middleware]
+    U[Browser: Blade HTML, Alpine, CSS] -->|Session cookie, CSRF, same origin| W[backend/: Laravel web middleware]
+    F[frontend/: Blade, JS, CSS] -->|Vite build| PUB[backend/public/build]
+    W -->|Render| F
     U --> J[JavaScript autosave and recovery]
     J -->|JSON requests| W
     W --> C[Controllers and Form Requests]
@@ -16,7 +22,22 @@ flowchart LR
     A --> FS[Private local file storage]
 ```
 
-This fits a personal notes application with one database and one runtime. Do not introduce microservices, a repository abstraction over every Eloquent model, event sourcing, Redis, a queue worker, a separate Node backend, or a frontend router. Later capabilities can extend existing policies/actions without being prebuilt now.
+This gives the repository a reviewable frontend/backend boundary without adding
+a second application server. Do not introduce microservices, a separate Node
+backend, a frontend router, Redis, or duplicated authentication. Later
+capabilities can extend the existing policies/actions without being prebuilt.
+
+### Architecture decision: split source, preserve same origin
+
+- Status: accepted on 2026-09-10.
+- Decision: use `frontend/` and `backend/` as top-level source roots; keep Laravel
+  responsible for Blade rendering and public asset delivery.
+- Reason: the application already relies on Laravel sessions, CSRF, named routes
+  and server-rendered bootstrap data. A standalone SPA would require a new auth,
+  CORS and deployment contract without improving R1 behavior.
+- Consequence: frontend and backend can be reviewed and tested independently,
+  but they are deployed together. `frontend/vite.config.js` and
+  `backend/config/view.php` are the explicit integration points.
 
 ## A02 — Runtime and packages
 
@@ -67,17 +88,13 @@ Start MySQL using the host's available service manager (`systemctl` where suppor
 
 Configure PHP for attachments: `upload_max_filesize = 20M`, `post_max_size = 25M`, `memory_limit = 256M`. Confirm the interpreter running `artisan serve` loads those values.
 
-## A04 — Scaffold without replacing the existing root
+## A04 — Workspace layout
 
-The root already contains the assignment and documents. During T01:
-
-1. Inspect all existing files. If application files have appeared, reconcile with them instead of scaffolding over them.
-2. Create a temporary directory outside the repository.
-3. Run `composer create-project laravel/laravel <temporary-directory>/app '^13.0' --no-scripts`.
-4. Copy the scaffold into the project root without overwriting existing files. Do not put the application in a `backend/` or `final_project/` subdirectory. Remove only temporary files that this task created after the copy succeeds.
-5. Configure MySQL before running any migration; omit/remove the scaffold's SQLite database file and SQLite defaults.
-6. Install/configure Alpine, local font, Prettier, and Vite inputs; remove unused default CSS tooling. Replace the welcome page with the specified routes.
-7. Generate the app key only if missing. Never regenerate a populated installation's key as a routine start command.
+The root keeps the assignment and shared planning documents. Application source
+is split into `frontend/` and `backend/`; neither directory is a separate Git
+repository. Keep Composer and Artisan commands inside `backend/`, and npm/Vite
+commands inside `frontend/`. Configure MySQL before migrations and never
+regenerate the key of a populated installation as a routine start command.
 
 Do not initialize, commit, or push Git merely to fabricate assignment contribution evidence. Prepare appropriate `.gitignore` content; normal repository operations remain subject to the user's implementation request.
 
@@ -121,23 +138,28 @@ The app uses `APP_URL` only for configuration-dependent server needs. Browser ac
 
 ## A06 — Run and verification commands to establish
 
-First installation after configuration:
+First installation after configuration, from the repository root:
 
 ```bash
+cd backend
 composer install
-npm ci
 php artisan key:generate
 php artisan migrate
+
+cd ../frontend
+npm ci
 npm run build
 ```
 
 The key-generation line is **first installation only**. Use separate terminals during development:
 
 ```bash
+cd backend
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
 ```bash
+cd frontend
 npm run dev
 ```
 
@@ -150,7 +172,7 @@ Create `.env.testing` locally with a separate test SQL user/database and applica
 Use these responsibilities; file splitting into smaller helpers is allowed without changing contracts.
 
 ```text
-app/
+backend/app/
   Actions/Auth/{RegisterUser,ChangePassword}.php
   Actions/Notes/{CreateNote,UpdateNote,DeleteNote}.php
   Actions/Labels/{CreateLabel,RenameLabel,DeleteLabel}.php
@@ -170,10 +192,14 @@ app/
   Queries/NoteListQuery.php
   Support/{NoteSnapshot,TextNormalizer,ApiError}.php
   Rules/{BcryptPassword,ValidNoteText,AllowedAttachment,ValidAvatar}.php
-bootstrap/app.php
-config/{filesystems,hashing,session}.php
-database/{migrations,factories,seeders}/
-resources/
+backend/bootstrap/app.php
+backend/config/{filesystems,hashing,session,view}.php
+backend/database/{migrations,factories,seeders}/
+backend/public/                  # Web document root and generated Vite assets
+backend/routes/web.php
+backend/storage/app/private/     # Never exposed through a public symlink
+backend/tests/{Feature,Unit}/
+frontend/src/
   views/layouts/{app,guest}.blade.php
   views/auth/{login,register}.blade.php
   views/notes/index.blade.php
@@ -185,9 +211,8 @@ resources/
   js/notes/{autosave-machine,notes-page,note-editor,attachment-uploader,label-manager}.js
   js/settings/{profile,preferences,password}.js
   css/{app,tokens,base,layout,components,notes,settings}.css
-routes/web.php
-tests/{Feature,Unit}/
-tests/js/{autosave-machine,recovery-store,notes-query}.test.js
+frontend/tests/js/{autosave-machine,recovery-store,notes-query}.test.js
+frontend/vite.config.js          # Emits into backend/public/build
 docs/{plan,implementation-status.md,verification.md}
 output/playwright/    # Ignored browser evidence
 Readme.txt

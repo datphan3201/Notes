@@ -1,6 +1,7 @@
 # Implementation Plan: Personal Notes, Release R1
 
-Status: ready-to-implement specification; **application implementation has not started**.
+Status: R1 implemented; source reorganized into same-origin `frontend/` and
+`backend/` roots on 2026-09-10.
 
 This plan turns the assignment and the owner's decisions into a bounded first release. It is written for an implementation agent that should not have to invent product behavior, API contracts, or concurrency rules. It reduces ambiguity; passing the verification gates is still required before claiming correctness.
 
@@ -24,7 +25,7 @@ This plan turns the assignment and the owner's decisions into a bounded first re
 
 - Build a local application for the owner's personal use with real authentication and real MySQL persistence.
 - Use **PHP 8.5, Laravel 13, Blade, Alpine.js 3, plain JavaScript modules, custom CSS, MySQL 8.4, and Vite 8**. Use Composer 2 and the existing Node 22.22.2/npm toolchain. Resolve stable package patches once and commit lockfiles.
-- Use one same-origin Laravel application. Serve `/` from Laravel's `public/` directory; authenticated JSON endpoints also use session authentication and CSRF protection.
+- Use one same-origin deployment with separate `frontend/` and `backend/` source roots. Serve `/` from `backend/public/`; authenticated JSON endpoints continue to use Laravel session authentication and CSRF protection.
 - R1 includes registration/login/logout, profile/avatar, password change, preferences, notes, autosave, grid/list, search, labels, pinning, colors, and attachments.
 - R1 defers email activation/recovery delivery, per-note passwords, sharing, collaboration, AI, PWA, Docker Compose, and public deployment.
 - Interface copy is Vietnamese. Code identifiers and technical documentation are English. Notes accept arbitrary Unicode.
@@ -38,7 +39,7 @@ The Laravel version choice was checked against its [official support table](http
 1. Read the complete plan once, then reopen the relevant contracts for each task. Use the installed skills as task-specific guidance, subject to the user's decisions.
 2. Execute T00–T12 in order. Do not mark a task complete until its gate passes. Fix failures before proceeding to a dependent task.
 3. Keep requirements and routes named exactly as specified. Small internal helper refactors are allowed; scope, schema semantics, and API changes must be recorded in these documents before dependent work.
-4. Keep the original DOCX, `agent.md`, and planning documents. Scaffold into the non-empty root safely; do not replace the root wholesale.
+4. Keep the original DOCX, `agent.md`, and planning documents. Application code belongs under `frontend/` and `backend/`; do not replace the repository root wholesale.
 5. Use real MySQL and private files. Fixtures are for tests or an explicitly requested demo seed; do not present seeded or browser-only data as a working backend.
 6. Do not install Docker, call AI/email services, publish, push, or create a remote repository as part of R1.
 7. If an environmental prerequisite fails, record the exact failure and continue independent work. Never claim a test passed when it did not run. Do not silently substitute SQLite.

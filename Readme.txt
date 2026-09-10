@@ -25,8 +25,9 @@ queue worker hay Docker cho R1.
 3. Cài đặt lần đầu
 ------------------
 
-Từ thư mục project:
+Backend (từ thư mục project):
 
+    cd backend
     cp .env.example .env
     composer install
     php artisan key:generate
@@ -46,31 +47,45 @@ riêng của máy, không commit vào repo):
 và APP_ENV=testing; tuyệt đối không trỏ test tới notes_dev.
 
     php artisan migrate --force
+
+Frontend (mở từ thư mục project hoặc quay lại bằng `cd ..`):
+
+    cd ../frontend
     npm ci
     npm run build
 
 4. Chạy local
 -------------
 
+    cd backend
     php artisan serve --host=127.0.0.1 --port=8000
 
-Hoặc dùng web server trỏ document root tới thư mục public/. Trong production
-local, phục vụ asset đã build trong public/build; không cần chạy Vite dev server.
+Khi sửa frontend, mở terminal thứ hai:
+
+    cd frontend
+    npm run dev
+
+Hoặc dùng web server trỏ document root tới `backend/public/`. Bản build nằm ở
+`backend/public/build`; không cần chạy Vite dev server khi chỉ dùng asset đã build.
 
 5. Kiểm thử và kiểm tra
 -----------------------
 
+    cd backend
     composer validate --strict
     composer check-platform-reqs
     php artisan config:clear
-    php artisan test
+    php artisan test --compact
     vendor/bin/pint --test
+
+    cd ../frontend
     npm run test:unit
     npm run format:check
     npm run build
 
 Dọn file riêng tư pending/orphan cũ hơn một giờ bằng:
 
+    cd backend
     php artisan files:prune
 
 Các test backend dùng MySQL notes_test và có guard từ chối database khác.
@@ -80,11 +95,23 @@ Không chạy migrate:fresh trên notes_dev.
 -------------------
 
 - Session dùng database, CSRF dùng same-origin token, JSON API ở /api/v1.
-- File upload đi vào storage/app/private, không có public storage symlink.
+- File upload đi vào `backend/storage/app/private`, không có public storage symlink.
 - Autosave dùng sessionStorage theo user/tab; đây không phải offline/PWA.
 - Private response có no-store; file URL luôn kiểm tra owner và note/attachment
   còn active trước khi mở.
 - Mật khẩu không được log/flash; file path/hash không được trả ra resource.
+
+7. Kiến trúc thư mục
+--------------------
+
+- `frontend/src/views`: Blade và các partial giao diện.
+- `frontend/src/js`, `frontend/src/css`: mã trình duyệt và style.
+- `frontend/tests/js`: unit test cho state machine phía trình duyệt.
+- `backend/app`, `backend/routes`: nghiệp vụ Laravel và HTTP/API.
+- `backend/database`: migration, factory, seeder; refactor không reset dữ liệu.
+- `backend/tests`: PHPUnit feature/unit test.
+- `backend/public`: document root và asset do frontend build ra.
+- `backend/storage/app/private`: attachment/avatar riêng tư.
 
 Kết quả kiểm thử thực tế và giới hạn môi trường hiện tại được cập nhật tại
 docs/verification.md và docs/implementation-status.md.

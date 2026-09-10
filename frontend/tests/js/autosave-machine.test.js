@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AutosaveMachine } from '../../resources/js/notes/autosave-machine.js';
+import { AutosaveMachine } from '../../src/js/notes/autosave-machine.js';
 
 class FakeClock {
     constructor() {

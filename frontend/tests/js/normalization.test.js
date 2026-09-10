@@ -4,7 +4,7 @@ import {
     normalizeSnapshot,
     snapshotsEqual,
     validateSnapshot,
-} from '../../resources/js/lib/normalization.js';
+} from '../../src/js/lib/normalization.js';
 
 test('canonical snapshots preserve literal HTML and indentation', () => {
     const value = normalizeSnapshot({

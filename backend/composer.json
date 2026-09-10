@@ -41,8 +41,8 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm ci",
-            "npm run build"
+            "npm --prefix ../frontend ci",
+            "npm --prefix ../frontend run build"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",

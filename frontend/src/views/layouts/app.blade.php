@@ -27,7 +27,7 @@
         <script>
             window.notesBootstrap = {{ Illuminate\Support\Js::from($bootstrap) }};
         </script>
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['src/css/app.css', 'src/js/app.js'])
     </head>
     <body class="app-page">
         <a class="skip-link" href="#main-content">Bỏ qua đến nội dung</a>

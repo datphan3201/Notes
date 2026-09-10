@@ -1,35 +1,33 @@
 # Verification Evidence
 
-Verification date: 2026-09-07
+Verification date: 2026-09-10
 
 ## Runtime and database
 
-- PHP 8.5.4 CLI with `pdo_mysql`, `mbstring`, `intl`, `fileinfo`, `xml`,
+- PHP 8.5.0 CLI with `pdo_mysql`, `mbstring`, `intl`, `fileinfo`, `xml`,
   `dom`, `gd`, and `zip`.
-- Composer 2.10.3; Laravel 13.17; Node v22.22.2; npm 10.9.7; Vite 8.2.2.
+- Composer 2.8.12; Laravel 13.30.1; Node v22.22.2; npm 10.9.7; Vite 8.2.2.
 - MySQL 8.4.11, databases `notes_dev` and `notes_test`, both
   `utf8mb4_0900_ai_ci`; transaction isolation `REPEATABLE-READ`.
 - Database credentials remain in ignored local environment files. No password
   is stored in the repository; `phpunit.xml` only forces MySQL and
   `notes_test`.
-- Native package installation could not use `sudo` because the host required
-  interactive authentication. The checks below used a user-local PHP/MySQL
-  runtime and the same MySQL semantics; this environment detail does not alter
-  the application setup documented in [`Readme.txt`](../Readme.txt).
+- MySQL is installed and running on the host. The application uses its scoped
+  `notes_dev`/`notes_test` accounts rather than the MySQL root account.
 
 ## Automated checks
 
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Fresh `notes_test` migration | Pass | `php artisan migrate:fresh --force --env=testing`; all 7 application migrations completed. |
-| PHPUnit/MySQL suite | Pass | 9 tests, 76 assertions. Includes registration field count, auth/session invalidation, note replay/conflict/tombstone, label ANY/ownership, private attachment replay/serving/tombstone, HTML spoof rejection, and avatar re-encoding. |
-| JavaScript unit suite | Pass | `npm run test:unit`: 9 tests covering debounce, max wait, immutable acknowledgements, retries, conflicts, normalization, and recovery storage. |
-| Composer metadata | Pass | `composer validate --strict`. |
-| Composer platform | Pass | `composer check-platform-reqs`; PHP 8.5.4 and required extensions reported successful. |
-| PHP formatting | Pass | `vendor/bin/pint --test`. |
-| JS/CSS formatting | Pass | `npm run format:check`. |
-| Production assets | Pass | `npm run build`; Vite emitted `public/build/manifest.json` and hashed JS/CSS/font assets. |
-| Configuration/routes | Pass | `php artisan config:clear`; `route:list` shows 32 application routes and no SQLite/public-storage route. |
+| PHPUnit/MySQL suite | Pass | From `backend/`: 9 tests, 76 assertions after the architecture refactor. Includes registration field count, auth/session invalidation, note replay/conflict/tombstone, label ANY/ownership, private attachment replay/serving/tombstone, HTML spoof rejection, and avatar re-encoding. |
+| JavaScript unit suite | Pass | From `frontend/`, `npm run test:unit`: 15 unit cases across 3 files covering debounce, max wait, immutable acknowledgements, retries, conflicts, normalization, and recovery storage. |
+| Composer metadata | Pass | From `backend/`: `composer validate --strict`. |
+| Composer platform | Pass | From `backend/`: `composer check-platform-reqs`; PHP 8.5 and required extensions reported successful. |
+| PHP formatting | Pass | From `backend/`: `vendor/bin/pint --dirty --format agent`. |
+| JS/CSS formatting | Pass | From `frontend/`: `npm run format:check`. |
+| Production assets | Pass | From `frontend/`: `npm run build`; Vite emitted `backend/public/build/manifest.json` and hashed JS/CSS/font assets. |
+| Configuration/routes/views | Pass | From `backend/`: config clear, 32 application routes, and Blade view cache pass while templates reside in `frontend/src/views`. |
 | Real CSRF rejection | Pass | HTTP registration with a valid session/CSRF, then authenticated `PATCH /api/v1/profile` without token/origin: HTTP 419, `SESSION_EXPIRED`. |
 
 For the extracted PHP runtime, the actual Laravel test invocation inherited a

@@ -18,16 +18,21 @@ Gate: real PHP/PDO-to-MySQL connection succeeds for both isolated databases, req
 
 Dependencies: T00 for executable verification. Read: architecture, HTTP conventions.
 
-Files: root Composer/npm/Vite configs, `.env.example`, `.gitignore`, `.nvmrc`, `bootstrap/app.php`, route skeleton, `resources/js/app.js`, CSS entry, base layouts, `Readme.txt` setup draft.
+Files: `backend/composer.json`, `backend/.env.example`, Laravel bootstrap/routes,
+`frontend/package.json`, `frontend/vite.config.js`, frontend source entries,
+`.gitignore`, and the `Readme.txt` setup draft.
 
-- [ ] Scaffold Laravel 13 outside the non-empty project root, merge without overwrites, configure MySQL and private disk.
+- [ ] Place Laravel under `backend/` and presentation/build source under
+  `frontend/`; configure MySQL and private storage without replacing root docs.
 - [ ] Install/bundle Alpine 3, Noto Sans and Prettier; retain Vite 8/Laravel plugin; remove unused default Tailwind/optional tooling.
 - [ ] Create session/CSRF-aware JSON route group; configure JSON exception shapes and private-response headers.
 - [ ] Set bcrypt/session/cache configuration, note/password normalization exclusions, Vietnamese validation messages, and explicit npm scripts.
 - [ ] Add test environment guard described in document 08 before any destructive test migration.
 - [ ] Keep secrets, vendor/node_modules, logs, private files, browser artifacts, local envs, and `.venv` out of version control. Preserve lockfiles and source assets.
 
-Gate: `composer validate`, `composer check-platform-reqs`, `php artisan route:list`, and `npm run build` pass; no default welcome/SQLite/Tailwind dependency remains. Test guard rejects the development database before any reset. Real session-backed page requests are verified after T02 migrations and T03 auth; do not bypass the missing schema by switching session/database drivers or call the placeholder a completed notes UI.
+Gate: backend Composer/Artisan checks and frontend npm/Vite checks pass from
+their respective directories; no default welcome/SQLite/Tailwind dependency
+remains. Test guard rejects the development database before any reset.
 
 ## T02 — Migrations, models, resources, and fixtures
 

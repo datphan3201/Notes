@@ -163,11 +163,14 @@ Verify no N+1 query growth proportional to cards (use query count instrumentatio
 Once the implementation provides these commands/configs:
 
 ```bash
+cd backend
 composer validate --strict
 composer check-platform-reqs
 php artisan config:clear
-php artisan test
+php artisan test --compact
 vendor/bin/pint --test
+
+cd ../frontend
 npm run test:unit
 npm run format:check
 npm run build

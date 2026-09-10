@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RecoveryStore } from '../../resources/js/lib/recovery-store.js';
+import { RecoveryStore } from '../../src/js/lib/recovery-store.js';
 
 class MemoryStorage {
     values = new Map();
