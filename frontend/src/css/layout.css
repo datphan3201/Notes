@@ -10,6 +10,8 @@
     height: 100dvh;
     flex-direction: column;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     padding: 30px 14px 16px;
     background: var(--sidebar);
     border-right: 1px solid var(--border);
