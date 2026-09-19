@@ -47,9 +47,10 @@ Do not infer that a planned feature exists. `docs/implementation-status.md` is t
 12. [AI contract](docs/plan/13-ai-contract.md)
 13. [Security/runtime](docs/plan/14-security-runtime.md)
 14. [Operations](docs/plan/15-operations.md)
-15. [File-by-file map](docs/plan/18-file-map.md)
-16. [Task index](docs/plan/07-tasks.md) and the current file in `docs/plan/phases/`
-17. [Verification](docs/plan/08-verification.md) and [traceability](docs/plan/16-traceability.md)
+15. [Hosting and startup runbook](docs/hosting.md)
+16. [File-by-file map](docs/plan/18-file-map.md)
+17. [Task index](docs/plan/07-tasks.md) and the current file in `docs/plan/phases/`
+18. [Verification](docs/plan/08-verification.md) and [traceability](docs/plan/16-traceability.md)
 
 ## Execution order and gates
 

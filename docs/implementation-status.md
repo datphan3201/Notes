@@ -33,6 +33,7 @@ Historical browser evidence and limitations remain in `docs/verification.md`.
 | Target contracts and file map | Verified | `docs/plan/01`–`18` |
 | Phase execution specs | Verified | `docs/plan/phases/M00`–`M10` |
 | Documentation structure/link validation | Verified | 49 active Markdown/text/rule files checked; 0 missing local links, 0 unbalanced code fences, all M00–M10 phase templates complete, all 39 migration-plan sections present; `git diff --check` passed |
+| Hosting and startup runbook | Updated | Added `docs/hosting.md` with first-install, subsequent-start, production PHP-FPM, scheduler, backup/restore, account bootstrap, troubleshooting, and verification procedures; linked from `README.md`, `Readme.txt`, and `docs/plan/15-operations.md`. |
 
 ## Migration ledger
 

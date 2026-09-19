@@ -1,5 +1,10 @@
 # Operations, Migration, and Deployment Contract
 
+The operator-facing procedure is maintained in the [Hosting and Startup
+Runbook](../hosting.md). This contract freezes the behavior that runbook must
+describe; the runbook distinguishes first installation, normal subsequent
+starts, and production releases.
+
 ## Environment
 
 Required target variables: application environment/debug/URL/timezone; DB host/port/database/user/password/charset/collation; session key/lifetime/secure flag; storage root; log path/level; Vite development URL only in local mode; optional AI enabled/provider/model/key.
@@ -48,6 +53,19 @@ Native Vite config emits `backend/public/build/manifest.json` and assets. Produc
 7. Verify `/up`, registration, Notes, private storage permissions, and maintenance commands.
 
 No legacy data/session import is required. Do not delete the legacy database automatically.
+
+After this one-time setup, a normal local start only requires a healthy MySQL
+service, php bin/console migrate:check, and the PHP development-server command
+from backend. Composer/npm installation and asset building are not per-start
+operations. A release that contains new migrations runs migrate once before
+the new PHP code receives traffic, then runs migrate:check and the health
+smoke test. The PHP development server is never a production host.
+
+The supported production shape is Apache or Nginx with PHP-FPM and
+backend/public as the sole document root. The web-server examples, file
+permissions, scheduler/flock commands, account bootstrap, backup/restore, and
+troubleshooting steps are kept in docs/hosting.md so they can be followed
+without reading the implementation contracts.
 
 ## Deployment
 

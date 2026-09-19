@@ -30,7 +30,7 @@ The application is a same-origin modular monolith. It does not use Laravel, anot
 
 ## Setup and verification
 
-See [Readme.txt](Readme.txt) for exact local installation, database, startup, scheduler, and verification commands. The concise command set is:
+See the [hosting and startup runbook](docs/hosting.md) for complete first-time installation, normal subsequent startup, production hosting, scheduler, backup, account bootstrap, and troubleshooting instructions. [Readme.txt](Readme.txt) contains the same command-oriented quick reference. The concise first-install command set is:
 
 ```bash
 cd backend
@@ -42,11 +42,12 @@ npm ci
 npm run build
 ```
 
-Production must point the web server document root at `backend/public`. Secrets, the session encryption key, database passwords, and the optional Google AI API key belong only in ignored environment files.
+For later local starts, run php bin/console migrate:check from backend and start php -S 127.0.0.1:8000 -t public dev-router.php; do not repeat dependency installation unless dependencies changed. Production must point the web server document root at backend/public and use PHP-FPM. Secrets, the session encryption key, database passwords, and the optional Google AI API key belong only in ignored environment files.
 
 ## Documentation
 
 - [Interface and everyday workflows](docs/interface-guide.md)
+- [Hosting and startup runbook](docs/hosting.md)
 - [Plan and decisions](PLAN.md)
 - [Repository-grounded migration plan](docs/migration-plan.md)
 - [Implementation status](docs/implementation-status.md)

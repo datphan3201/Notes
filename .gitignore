@@ -1,4 +1,10 @@
 *.log
+*.log.*
+*.pid
+*.out
+*.tmp
+*.swp
+*~
 .DS_Store
 .env
 .env.backup
@@ -22,12 +28,21 @@
 /backend/public/hot
 /backend/public/storage
 /backend/storage/*.key
+/backend/storage/logs/
 /backend/storage/pail
 /backend/vendor
 /backend/.env.testing
 /backend/.env.plain.testing
 /backend/storage/app/private
 /output/playwright
+
+# Machine-local agent notes; authoritative repository rules stay tracked.
+AGENTS.local.md
+CLAUDE.local.md
+agent.local.md
+/.ai/local/
+/.agents/local/
+
 _ide_helper.php
 Homestead.json
 Homestead.yaml
