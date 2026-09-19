@@ -29,7 +29,7 @@ export function initPreferences(root) {
                 const result = await patch('/api/v1/preferences', { [item.key]: item.value });
                 Object.assign(serverPreferences, result.payload.data);
                 Object.assign(preferences, result.payload.data);
-                status.textContent = 'Đã lưu';
+                status.textContent = 'Saved';
                 status.className = 'save-status is-success';
             } catch (error) {
                 // Roll back to the last server-confirmed value, not merely the
@@ -37,7 +37,7 @@ export function initPreferences(root) {
                 // clicks while an earlier request is still in flight.
                 preferences[item.key] = serverPreferences[item.key];
                 render();
-                status.textContent = error.message || 'Không lưu được lựa chọn.';
+                status.textContent = error.message || 'Unable to save this preference.';
                 status.className = 'save-status is-error';
                 queue.splice(0, queue.length, ...queue.filter((queued) => queued.key !== item.key));
             }
@@ -52,7 +52,7 @@ export function initPreferences(root) {
                 key === 'note_font_size' ? Number(button.dataset.value) : button.dataset.value;
             preferences[key] = value;
             render();
-            status.textContent = 'Đang lưu…';
+            status.textContent = 'Saving…';
             const queued = queue.find((item) => item.key === key);
             if (queued) queued.value = value;
             else queue.push({ key, value });

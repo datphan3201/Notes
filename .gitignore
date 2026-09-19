@@ -10,10 +10,13 @@
 /.idea
 /.nova
 /.phpunit.cache
+/.playwright-cli/
+/backend/.phpunit.cache
 /.vscode
 /.zed
 /auth.json
 /frontend/node_modules
+/frontend/.playwright-cli/
 /backend/public/build
 /backend/public/fonts-manifest.dev.json
 /backend/public/hot
@@ -22,6 +25,7 @@
 /backend/storage/pail
 /backend/vendor
 /backend/.env.testing
+/backend/.env.plain.testing
 /backend/storage/app/private
 /output/playwright
 _ide_helper.php

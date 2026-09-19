@@ -25,10 +25,10 @@ test('recovery is isolated by user and survives a reload in the same tab', () =>
     const storage = new MemoryStorage();
     const store = new RecoveryStore({ storage, userId: '7', now: () => 1000 });
     assert.equal(
-        store.write({ noteId: 'note-1', persisted: false, draftSnapshot: { content: 'bản nháp' } }),
+        store.write({ noteId: 'note-1', persisted: false, draftSnapshot: { content: 'draft' } }),
         true,
     );
-    assert.equal(store.read().draftSnapshot.content, 'bản nháp');
+    assert.equal(store.read().draftSnapshot.content, 'draft');
     assert.equal(new RecoveryStore({ storage, userId: '8', now: () => 1000 }).read(), null);
 });
 

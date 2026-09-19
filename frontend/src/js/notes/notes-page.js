@@ -1,4 +1,5 @@
 import { get, patch, post, remove } from '../lib/http';
+import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
 
@@ -12,9 +13,8 @@ export class NotesPage {
         this.notes = [];
         this.query = { q: '', labelIds: [], page: 1 };
         this.meta = { current_page: 1, last_page: 1, total: 0 };
-        this.sequence = 0;
-        this.abortController = null;
-        this.searchTimer = null;
+        this.noteRequests = new LatestRequest();
+        this.searchDebounce = new DebouncedAction({ delay: 300 });
         this.editor = null;
         this.bindShell();
         this.bindDialogs();
@@ -35,6 +35,9 @@ export class NotesPage {
         await this.loadLabels();
         await this.loadNotes();
         this.checkRecovery();
+        // Recovery must inspect the previous page's draft before a new editor
+        // can write its first account-scoped recovery record.
+        this.root.querySelector('[data-new-note]').disabled = false;
     }
 
     bindShell() {
@@ -45,12 +48,11 @@ export class NotesPage {
         this.pagination = this.root.querySelector('[data-pagination]');
         this.total = this.root.querySelector('[data-note-total]');
         this.search.addEventListener('input', () => {
-            window.clearTimeout(this.searchTimer);
-            this.searchTimer = window.setTimeout(() => {
+            this.searchDebounce.schedule(() => {
                 this.query.q = this.search.value.normalize('NFC').trim();
                 this.query.page = 1;
                 this.loadNotes();
-            }, 300);
+            });
             this.root
                 .querySelector('[data-clear-search]')
                 .classList.toggle('is-hidden', !this.search.value);
@@ -74,12 +76,6 @@ export class NotesPage {
         this.root.querySelectorAll('[data-open-label-manager]').forEach((button) => {
             button.addEventListener('click', () => this.openLabelManager());
         });
-        document
-            .querySelector('[data-open-sidebar]')
-            ?.addEventListener('click', () => this.toggleSidebar(true));
-        document
-            .querySelectorAll('[data-close-sidebar]')
-            .forEach((button) => button.addEventListener('click', () => this.toggleSidebar(false)));
         this.root.addEventListener('click', (event) => {
             const card = event.target.closest('[data-note-id]');
             if (!card || event.target.closest('button')) return;
@@ -91,7 +87,7 @@ export class NotesPage {
         document.addEventListener('notes:session-changed', () => {
             this.editor?.dispose();
             this.editor?.hide();
-            this.toast('Phiên đăng nhập đã thay đổi. Hãy mở lại ghi chú.', true);
+            this.toast('Your session changed. Reopen the note.', true);
         });
         document.addEventListener('click', (event) => {
             const link = event.target.closest('a[data-leave-guard]');
@@ -190,7 +186,7 @@ export class NotesPage {
             this.renderLabelFilters();
             this.editor?.renderLabels(this.editor.machine?.state.draftSnapshot.label_ids || []);
         } catch (error) {
-            this.toast(error.message || 'Không thể tải nhãn.', true);
+            this.toast(error.message || 'Unable to load tags.', true);
         }
     }
 
@@ -218,19 +214,17 @@ export class NotesPage {
     }
 
     async loadNotes() {
-        const seq = ++this.sequence;
-        this.abortController?.abort();
-        this.abortController = new AbortController();
-        this.setFeedback('Đang tải ghi chú…');
+        const ticket = this.noteRequests.begin();
+        this.setFeedback('Loading notes…');
         const params = new URLSearchParams();
         if (this.query.q) params.set('q', this.query.q);
         this.query.labelIds.forEach((id) => params.append('label_ids[]', id));
         params.set('page', String(this.query.page));
         try {
             const result = await get('/api/v1/notes?' + params.toString(), {
-                signal: this.abortController.signal,
+                signal: ticket.signal,
             });
-            if (seq !== this.sequence) return;
+            if (!this.noteRequests.isCurrent(ticket)) return;
             this.notes = result.payload.data || [];
             this.meta = result.payload.meta || this.meta;
             if (
@@ -246,14 +240,8 @@ export class NotesPage {
             this.total.textContent = String(this.meta.total || 0);
             this.renderActiveFilter();
         } catch (error) {
-            if (
-                seq !== this.sequence ||
-                (error.code === 'NETWORK_ERROR' &&
-                    error.status === 0 &&
-                    this.abortController?.signal.aborted)
-            )
-                return;
-            this.setFeedback(error.message || 'Không thể tải ghi chú. Hãy thử lại.', true);
+            if (this.noteRequests.shouldIgnore(ticket, error)) return;
+            this.setFeedback(error.message || 'Unable to load notes. Try again.', true);
         }
     }
 
@@ -269,14 +257,12 @@ export class NotesPage {
             empty.className = 'empty-state';
             const title = document.createElement('h2');
             title.textContent =
-                this.query.q || this.query.labelIds.length
-                    ? 'Không tìm thấy ghi chú'
-                    : 'Chưa có ghi chú nào';
+                this.query.q || this.query.labelIds.length ? 'No matching notes' : 'No notes yet';
             const copy = document.createElement('p');
             copy.textContent =
                 this.query.q || this.query.labelIds.length
-                    ? 'Thử xóa bớt bộ lọc hoặc tìm một từ khác.'
-                    : 'Bắt đầu bằng một điều bạn muốn giữ lại.';
+                    ? 'Clear some filters or try another search term.'
+                    : 'Start with something you want to remember.';
             empty.append(title, copy);
             this.grid.append(empty.cloneNode(true));
             this.list.append(empty);
@@ -300,7 +286,7 @@ export class NotesPage {
         pin.className = 'icon-button';
         pin.type = 'button';
         pin.textContent = note.is_pinned ? '◆' : '◇';
-        pin.setAttribute('aria-label', note.is_pinned ? 'Bỏ ghim ghi chú' : 'Ghim ghi chú');
+        pin.setAttribute('aria-label', note.is_pinned ? 'Unpin note' : 'Pin note');
         pin.addEventListener('click', (event) => {
             event.stopPropagation();
             this.togglePin(note.id);
@@ -333,14 +319,14 @@ export class NotesPage {
             const pinMark = document.createElement('span');
             pinMark.className = 'note-card-pin';
             pinMark.textContent = '◆';
-            pinMark.setAttribute('aria-label', 'Đã ghim');
+            pinMark.setAttribute('aria-label', 'Pinned');
             footer.prepend(pinMark);
         }
         if (note.attachment_count) {
             const attachmentMark = document.createElement('span');
             attachmentMark.className = 'note-card-attachment';
             attachmentMark.textContent = '⌑ ' + note.attachment_count;
-            attachmentMark.setAttribute('aria-label', note.attachment_count + ' tệp đính kèm');
+            attachmentMark.setAttribute('aria-label', note.attachment_count + ' attachments');
             footer.append(attachmentMark);
         }
         card.append(head, preview, footer);
@@ -371,6 +357,7 @@ export class NotesPage {
         button.disabled = disabled;
         button.setAttribute('aria-label', 'Trang ' + page);
         button.addEventListener('click', () => {
+            this.searchDebounce.cancel();
             this.query.page = page;
             this.loadNotes();
         });
@@ -383,7 +370,7 @@ export class NotesPage {
         if (!this.labels.length) {
             const copy = document.createElement('p');
             copy.className = 'subtle-copy';
-            copy.textContent = 'Chưa có nhãn';
+            copy.textContent = 'No tags yet';
             list.append(copy);
             return;
         }
@@ -395,6 +382,7 @@ export class NotesPage {
             input.value = String(label.id);
             input.checked = this.query.labelIds.includes(String(label.id));
             input.addEventListener('change', () => {
+                this.searchDebounce.cancel();
                 this.query.labelIds = Array.from(list.querySelectorAll('input:checked')).map(
                     (item) => item.value,
                 );
@@ -412,8 +400,8 @@ export class NotesPage {
         const row = this.root.querySelector('[data-active-filter-row]');
         const copy = this.root.querySelector('[data-active-filter-copy]');
         const parts = [];
-        if (this.query.q) parts.push('Tìm “' + this.query.q + '”');
-        if (this.query.labelIds.length) parts.push(this.query.labelIds.length + ' nhãn đã chọn');
+        if (this.query.q) parts.push('Search “' + this.query.q + '”');
+        if (this.query.labelIds.length) parts.push(this.query.labelIds.length + ' selected tags');
         row.classList.toggle('is-hidden', parts.length === 0);
         copy.textContent = parts.join(' · ');
         this.root
@@ -422,6 +410,7 @@ export class NotesPage {
     }
 
     clearFilters() {
+        this.searchDebounce.cancel();
         this.query = { q: '', labelIds: [], page: 1 };
         this.search.value = '';
         this.root.querySelector('[data-clear-search]').classList.add('is-hidden');
@@ -440,10 +429,10 @@ export class NotesPage {
                 is_pinned: !detail.is_pinned,
                 label_ids: (detail.labels || []).map((label) => label.id),
             });
-            this.toast(result.payload.data.is_pinned ? 'Đã ghim ghi chú.' : 'Đã bỏ ghim ghi chú.');
+            this.toast(result.payload.data.is_pinned ? 'Note pinned.' : 'Note unpinned.');
             this.loadNotes();
         } catch (error) {
-            this.toast(error.message || 'Ghi chú đã thay đổi. Hãy thử lại.', true);
+            this.toast(error.message || 'The note changed. Try again.', true);
             this.loadNotes();
         }
     }
@@ -459,7 +448,7 @@ export class NotesPage {
         });
         if (persist) {
             patch('/api/v1/preferences', { notes_view: view }).catch(() =>
-                this.toast('Không lưu được kiểu hiển thị.', true),
+                this.toast('Unable to save the note layout.', true),
             );
         }
     }
@@ -482,7 +471,7 @@ export class NotesPage {
         if (!this.labels.length) {
             const empty = document.createElement('p');
             empty.className = 'subtle-copy';
-            empty.textContent = 'Chưa có nhãn nào.';
+            empty.textContent = 'No tags yet.';
             list.append(empty);
             return;
         }
@@ -497,12 +486,12 @@ export class NotesPage {
             const rename = document.createElement('button');
             rename.className = 'text-button';
             rename.type = 'button';
-            rename.textContent = 'Đổi tên';
+            rename.textContent = 'Rename';
             rename.addEventListener('click', () => this.renameLabel(label));
             const removeButton = document.createElement('button');
             removeButton.className = 'text-button';
             removeButton.type = 'button';
-            removeButton.textContent = 'Xóa';
+            removeButton.textContent = 'Delete';
             removeButton.addEventListener('click', () => this.deleteLabel(label));
             actions.append(rename, removeButton);
             row.append(name, actions);
@@ -527,7 +516,7 @@ export class NotesPage {
     }
 
     async renameLabel(label) {
-        const next = window.prompt('Tên nhãn mới', label.name);
+        const next = window.prompt('New tag name', label.name);
         if (next === null || next === label.name) return;
         try {
             await patch('/api/v1/labels/' + encodeURIComponent(label.id), {
@@ -538,13 +527,16 @@ export class NotesPage {
             this.renderManagedLabels();
             this.loadNotes();
         } catch (error) {
-            this.toast(error.message || 'Không thể đổi tên nhãn.', true);
+            this.toast(error.message || 'Unable to rename the tag.', true);
         }
     }
 
     async deleteLabel(label) {
         if (
-            !(await this.confirm('Xóa nhãn “' + label.name + '”?', 'Các ghi chú vẫn được giữ lại.'))
+            !(await this.confirm(
+                'Delete the tag “' + label.name + '”?',
+                'Your notes will be kept.',
+            ))
         )
             return;
         try {
@@ -556,7 +548,7 @@ export class NotesPage {
             this.renderManagedLabels();
             this.loadNotes();
         } catch (error) {
-            this.toast(error.message || 'Không thể xóa nhãn.', true);
+            this.toast(error.message || 'Unable to delete the tag.', true);
         }
     }
 
@@ -577,7 +569,7 @@ export class NotesPage {
         this.conflictDialog.querySelector('[data-conflict-local-content]').textContent =
             local.content;
         this.conflictDialog.querySelector('[data-conflict-note]').textContent =
-            'Giữ bản đang soạn sẽ thay thế phiên bản hiển thị sau khi bạn xác nhận.';
+            'Keeping your draft will replace the displayed version after you confirm.';
         this.conflictDialog.classList.remove('is-hidden');
         this.conflictBackdrop.classList.remove('is-hidden');
     }
@@ -613,7 +605,7 @@ export class NotesPage {
     formatDate(value) {
         if (!value) return '';
         try {
-            return new Intl.DateTimeFormat('vi-VN', {
+            return new Intl.DateTimeFormat('en-US', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
@@ -630,10 +622,5 @@ export class NotesPage {
         toast.textContent = message;
         region.append(toast);
         window.setTimeout(() => toast.remove(), 3600);
-    }
-
-    toggleSidebar(open) {
-        document.querySelector('.app-sidebar')?.classList.toggle('is-open', open);
-        document.querySelector('.sidebar-scrim')?.classList.toggle('is-visible', open);
     }
 }

@@ -1,117 +1,115 @@
-GHI CHÚ CÁ NHÂN — RELEASE R1
-============================
+PERSONAL PLANNING AND NOTES APPLICATION
+=======================================
 
-1. Phạm vi
-----------
+RUNTIME
+-------
 
-R1 có đăng ký/đăng nhập/đăng xuất, hồ sơ và avatar, đổi mật khẩu, tùy chọn
-giao diện, ghi chú plain-text tự lưu, xung đột phiên bản, khôi phục theo tab,
-tìm kiếm literal, nhãn, ghim, màu, tệp đính kèm và giao diện responsive.
+The canonical backend is framework-free PHP 8.5 under backend/src. Laravel,
+Blade, Artisan, Eloquent, and the Laravel Vite plugin are not runtime or
+development dependencies.
 
-R2–R5 chưa nằm trong R1: xác minh/khôi phục email, mật khẩu riêng cho note,
-chia sẻ/cộng tác, WebSocket, AI, PWA, Docker Compose và public deployment.
+Requirements:
 
-2. Yêu cầu máy
---------------
-
-- PHP 8.5 với pdo_mysql, mbstring, intl, fileinfo, zip, gd, xml, dom.
+- PHP 8.5 with curl, pdo_mysql, mbstring, intl, fileinfo, zip, gd, dom,
+  sodium, session, and xmlwriter.
 - Composer 2.x.
-- MySQL 8.4 với collation utf8mb4_0900_ai_ci.
-- Node 22.22.2 và npm 10.x.
+- MySQL 8.4 using InnoDB and utf8mb4_0900_ai_ci.
+- Node 22 and npm 10.
 
-Không dùng SQLite cho ứng dụng hoặc test. Không cần Redis, mail server,
-queue worker hay Docker cho R1.
-
-3. Cài đặt lần đầu
+LOCAL INSTALLATION
 ------------------
 
-Backend (từ thư mục project):
+Create separate user-owned goals_dev and goals_test databases. Never point the
+test runner or cleanup commands at goals_dev.
 
     cd backend
     cp .env.example .env
     composer install
-    php artisan key:generate
 
-Tạo database và user riêng cho development/test trong MySQL (dùng mật khẩu
-riêng của máy, không commit vào repo):
+Generate a session key and place it in the ignored .env file:
 
-    CREATE DATABASE notes_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-    CREATE DATABASE notes_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-    CREATE USER 'notes_dev'@'127.0.0.1' IDENTIFIED BY 'doi-mat-khau-dev';
-    CREATE USER 'notes_test'@'127.0.0.1' IDENTIFIED BY 'doi-mat-khau-test';
-    GRANT ALL PRIVILEGES ON notes_dev.* TO 'notes_dev'@'127.0.0.1';
-    GRANT ALL PRIVILEGES ON notes_test.* TO 'notes_test'@'127.0.0.1';
-    FLUSH PRIVILEGES;
+    php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
 
-Điền thông tin notes_dev vào .env. Tạo .env.testing tương ứng với notes_test
-và APP_ENV=testing; tuyệt đối không trỏ test tới notes_dev.
+Configure PLANNER_DB_* for goals_dev, then run:
 
-    php artisan migrate --force
+    php bin/console migrate
+    php bin/console migrate:check
 
-Frontend (mở từ thư mục project hoặc quay lại bằng `cd ..`):
+Install and build the existing frontend:
 
     cd ../frontend
     npm ci
     npm run build
 
-4. Chạy local
+LOCAL STARTUP
 -------------
 
+The production document root is backend/public. For local development only:
+
     cd backend
-    php artisan serve --host=127.0.0.1 --port=8000
+    php -S 127.0.0.1:8000 -t public dev-router.php
 
-Khi sửa frontend, mở terminal thứ hai:
+Vite development mode is optional. Run `npm run dev` from frontend and set an
+explicit loopback VITE_DEV_URL in backend/.env. Production does not require a
+Vite server.
 
-    cd frontend
-    npm run dev
+TEST DATABASE
+-------------
 
-Hoặc dùng web server trỏ document root tới `backend/public/`. Bản build nằm ở
-`backend/public/build`; không cần chạy Vite dev server khi chỉ dùng asset đã build.
+The PHPUnit configuration forces APP_ENV=testing and the exact database name
+goals_test. Supply the isolated test connection through environment values:
 
-5. Kiểm thử và kiểm tra
------------------------
+    export PLANNER_DB_HOST=127.0.0.1
+    export PLANNER_DB_PORT=3306
+    export PLANNER_DB_DATABASE=goals_test
+    export PLANNER_DB_USERNAME=goals_test
+    export PLANNER_DB_PASSWORD='your-local-test-password'
+
+VERIFICATION
+------------
 
     cd backend
     composer validate --strict
     composer check-platform-reqs
-    php artisan config:clear
-    php artisan test --compact
-    vendor/bin/pint --test
+    php bin/console migrate:check
+    php bin/console routes
+    vendor/bin/phpunit -c phpunit.xml
 
     cd ../frontend
     npm run test:unit
     npm run format:check
     npm run build
 
-Dọn file riêng tư pending/orphan cũ hơn một giờ bằng:
+Run PHP syntax validation over first-party PHP and follow the browser matrix in
+docs/plan/08-verification.md before release.
 
-    cd backend
-    php artisan files:prune
+MAINTENANCE AND SCHEDULING
+--------------------------
 
-Các test backend dùng MySQL notes_test và có guard từ chối database khác.
-Không chạy migrate:fresh trên notes_dev.
+    php bin/console files:prune
+    php bin/console sessions:prune
+    php bin/console rate-limits:prune
+    php bin/console areas:backfill
+    php bin/console recurrence:materialize
+    php bin/console snapshots:capture
 
-6. Ghi chú vận hành
--------------------
+Schedule recurrence materialization every 15 minutes; file, expired-session,
+and rate-limit pruning hourly; and Goal snapshots after local-day rollover.
+Run `areas:backfill` once after upgrading an installation that predates Areas.
+Use an OS-level non-overlap lock.
 
-- Session dùng database, CSRF dùng same-origin token, JSON API ở /api/v1.
-- File upload đi vào `backend/storage/app/private`, không có public storage symlink.
-- Autosave dùng sessionStorage theo user/tab; đây không phải offline/PWA.
-- Private response có no-store; file URL luôn kiểm tra owner và note/attachment
-  còn active trước khi mở.
-- Mật khẩu không được log/flash; file path/hash không được trả ra resource.
+AI
+--
 
-7. Kiến trúc thư mục
---------------------
+AI is disabled by default. When explicitly enabled, configure the stable model
+and server-side key in backend/.env. The browser never receives the key. The
+provider can only return a stored proposal; planning rows are created only
+after explicit approval through the ordinary application services.
 
-- `frontend/src/views`: Blade và các partial giao diện.
-- `frontend/src/js`, `frontend/src/css`: mã trình duyệt và style.
-- `frontend/tests/js`: unit test cho state machine phía trình duyệt.
-- `backend/app`, `backend/routes`: nghiệp vụ Laravel và HTTP/API.
-- `backend/database`: migration, factory, seeder; refactor không reset dữ liệu.
-- `backend/tests`: PHPUnit feature/unit test.
-- `backend/public`: document root và asset do frontend build ra.
-- `backend/storage/app/private`: attachment/avatar riêng tư.
+SECURITY
+--------
 
-Kết quả kiểm thử thực tế và giới hạn môi trường hiện tại được cập nhật tại
-docs/verification.md và docs/implementation-status.md.
+Keep backend/.env, database credentials, SESSION_ENCRYPTION_KEY, and
+GOOGLE_AI_API_KEY outside version control. In production use HTTPS,
+SESSION_SECURE_COOKIE=true, APP_DEBUG=false, a private storage path outside the
+public root, and a web server that executes only backend/public/index.php.

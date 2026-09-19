@@ -1,4 +1,5 @@
 import { realClock } from '../lib/clock.js';
+import { secureUuidV4 } from '../lib/uuid.js';
 import {
     normalizeSnapshot,
     snapshotFromNote,
@@ -8,17 +9,10 @@ import {
 
 const RETRY_DELAYS = [1000, 2000, 4000];
 
-function stableId() {
-    return (
-        globalThis.crypto?.randomUUID?.() ||
-        String(Date.now()) + '-' + Math.random().toString(16).slice(2)
-    );
-}
-
 export class AutosaveMachine {
     constructor({
         userId,
-        noteId = stableId(),
+        noteId = secureUuidV4(),
         persisted = false,
         editorGeneration = 0,
         baseVersion = null,
@@ -187,7 +181,7 @@ export class AutosaveMachine {
                 {
                     status: 0,
                     code: 'MALFORMED_RESPONSE',
-                    message: 'Máy chủ trả về dữ liệu không hợp lệ.',
+                    message: 'The server returned invalid data.',
                 },
                 request,
             );
@@ -202,7 +196,7 @@ export class AutosaveMachine {
                 {
                     status: 0,
                     code: 'UNEXPECTED_ACK',
-                    message: 'Không thể xác nhận bản ghi chú vừa lưu.',
+                    message: 'The saved note could not be confirmed.',
                 },
                 request,
             );

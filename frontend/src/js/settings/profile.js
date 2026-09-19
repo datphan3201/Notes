@@ -15,7 +15,7 @@ export function initProfile(root) {
         if (url) {
             const image = document.createElement('img');
             image.src = url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
-            image.alt = 'Ảnh đại diện';
+            image.alt = 'Profile picture';
             avatar.append(image);
             return;
         }
@@ -27,11 +27,11 @@ export function initProfile(root) {
     renderAvatar(initialAvatarUrl);
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        status.textContent = 'Đang lưu…';
+        status.textContent = 'Saving…';
         try {
             const result = await patch('/api/v1/profile', { display_name: input.value });
             input.value = result.payload.data.display_name;
-            status.textContent = 'Đã lưu';
+            status.textContent = 'Saved';
             status.className = 'save-status is-success';
             error.classList.add('is-hidden');
         } catch (requestError) {
@@ -48,11 +48,11 @@ export function initProfile(root) {
         if (!file) return;
         const formData = new FormData();
         formData.append('avatar', file, file.name);
-        status.textContent = 'Đang tải ảnh…';
+        status.textContent = 'Uploading image…';
         try {
             const result = await upload('/api/v1/profile/avatar', formData);
             renderAvatar(result.payload.data.avatar_url);
-            status.textContent = 'Đã cập nhật ảnh';
+            status.textContent = 'Profile picture updated';
             status.className = 'save-status is-success';
         } catch (requestError) {
             status.textContent = requestError.payload?.errors?.avatar?.[0] || requestError.message;
@@ -61,14 +61,14 @@ export function initProfile(root) {
     });
 
     avatarRemove?.addEventListener('click', async () => {
-        status.textContent = 'Đang xóa ảnh…';
+        status.textContent = 'Removing image…';
         try {
             await remove('/api/v1/profile/avatar');
             renderAvatar(null);
-            status.textContent = 'Đã xóa ảnh';
+            status.textContent = 'Profile picture removed';
             status.className = 'save-status is-success';
         } catch (requestError) {
-            status.textContent = requestError.message || 'Không thể xóa ảnh.';
+            status.textContent = requestError.message || 'Unable to remove the profile picture.';
             status.className = 'save-status is-error';
         }
     });

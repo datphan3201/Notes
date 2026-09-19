@@ -1,5 +1,6 @@
 import { get, patch, post, remove, upload } from '../lib/http';
 import { RecoveryStore } from '../lib/recovery-store';
+import { secureUuidV4 } from '../lib/uuid.js';
 import {
     normalizeSnapshot,
     snapshotFromNote,
@@ -104,15 +105,23 @@ export class NoteEditor {
     }
 
     async openNew() {
+        let noteId;
+        try {
+            noteId = secureUuidV4();
+        } catch (error) {
+            this.toast(error.message || 'Unable to generate a secure note identifier.', true);
+            return false;
+        }
+
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Viết điều bạn muốn giữ lại';
-        this.eyebrow.textContent = 'Ghi chú mới';
+        this.heading.textContent = 'Write down what matters';
+        this.eyebrow.textContent = 'New note';
         this.writeFields({ title: '', content: '' });
         this.machine = this.createMachine(
             {
-                id: globalThis.crypto?.randomUUID?.() || String(Date.now()),
+                id: noteId,
                 title: '',
                 content: '',
                 color: this.preferences.default_note_color,
@@ -130,23 +139,23 @@ export class NoteEditor {
         this.dispose();
         const generation = this.generation;
         this.show();
-        this.heading.textContent = 'Đang mở ghi chú…';
-        this.eyebrow.textContent = 'Ghi chú';
-        this.setStatus('Đang tải…');
+        this.heading.textContent = 'Opening note…';
+        this.eyebrow.textContent = 'Note';
+        this.setStatus('Loading…');
         try {
             const result = await get('/api/v1/notes/' + encodeURIComponent(noteId));
             if (generation !== this.generation) return;
             this.note = result.payload.data;
             this.writeFields(this.note);
             this.machine = this.createMachine(this.note, true);
-            this.heading.textContent = this.note.title || 'Ghi chú không có tiêu đề';
-            this.eyebrow.textContent = 'Đang chỉnh sửa';
+            this.heading.textContent = this.note.title || 'Untitled note';
+            this.eyebrow.textContent = 'Editing';
             this.renderState(this.machine.state);
             this.title.focus();
         } catch (error) {
             if (generation !== this.generation) return;
             this.hide();
-            this.toast(error.message || 'Không thể mở ghi chú.', true);
+            this.toast(error.message || 'Unable to open the note.', true);
         }
     }
 
@@ -232,7 +241,7 @@ export class NoteEditor {
         const note = state.acknowledgedNote || this.note;
         if (note) {
             this.note = note;
-            this.heading.textContent = note.title || 'Ghi chú không có tiêu đề';
+            this.heading.textContent = note.title || 'Untitled note';
             this.deleteButton.classList.toggle('is-hidden', !state.persisted);
             this.attachmentsSection.classList.toggle('is-hidden', !state.persisted);
             this.renderAttachments(note.attachments || []);
@@ -252,7 +261,7 @@ export class NoteEditor {
             'aria-pressed',
             state.draftSnapshot.is_pinned ? 'true' : 'false',
         );
-        this.pinLabel.textContent = state.draftSnapshot.is_pinned ? 'Bỏ ghim' : 'Ghim';
+        this.pinLabel.textContent = state.draftSnapshot.is_pinned ? 'Unpin' : 'Pin';
         this.titleError.textContent = state.validationErrors.title || '';
         this.titleError.classList.toggle('is-hidden', !state.validationErrors.title);
         this.contentError.textContent = state.validationErrors.content || '';
@@ -260,26 +269,26 @@ export class NoteEditor {
 
         const copy =
             {
-                loading: 'Đang tải…',
+                loading: 'Loading…',
                 pristine: '',
-                incomplete: 'Chưa đủ thông tin',
-                dirty: 'Đang chờ lưu…',
-                saving: 'Đang lưu…',
-                saved: 'Đã lưu',
-                retry_wait: 'Mất kết nối · sẽ thử lại',
-                error: 'Chưa lưu được · thử lại',
-                conflict: 'Cần chọn phiên bản',
-                auth_expired: 'Phiên đã hết hạn',
-                unavailable: 'Ghi chú không còn khả dụng',
+                incomplete: 'More information needed',
+                dirty: 'Waiting to save…',
+                saving: 'Saving…',
+                saved: 'Saved',
+                retry_wait: 'Offline · retrying',
+                error: 'Not saved · retry',
+                conflict: 'Choose a version',
+                auth_expired: 'Session expired',
+                unavailable: 'Note is no longer available',
             }[state.phase] || '';
         this.setStatus(
             copy,
             ['error', 'conflict', 'auth_expired', 'unavailable'].includes(state.phase),
         );
         if (state.phase === 'conflict') this.onConflict(this.machine);
-        this.meta.textContent = state.persisted ? 'Phiên bản ' + state.baseVersion : 'Bản nháp mới';
+        this.meta.textContent = state.persisted ? 'Version ' + state.baseVersion : 'New draft';
         if (state.recoveryAvailable === false)
-            this.meta.textContent += ' · khôi phục tạm thời không khả dụng';
+            this.meta.textContent += ' · local recovery unavailable';
         if (state.phase === 'saved') this.onChanged?.(this.note);
         if (this.pendingClose && state.phase === 'saved') {
             this.pendingClose = false;
@@ -321,7 +330,7 @@ export class NoteEditor {
     setStatus(text, error = false) {
         this.status.textContent = text;
         this.status.classList.toggle('is-error', error);
-        this.status.classList.toggle('is-success', text === 'Đã lưu');
+        this.status.classList.toggle('is-success', text === 'Saved');
     }
 
     writeFields(note) {
@@ -375,8 +384,8 @@ export class NoteEditor {
         }
         if (this.uploadActive || this.uploadQueue.length > 0) {
             const leaveWhileUploading = await this.confirm(
-                'Tệp đang được tải lên',
-                'Rời đi sẽ hủy các lượt tải đang chờ. Tệp đã tới máy chủ sẽ được đối soát khi mở lại ghi chú.',
+                'Files are being uploaded',
+                'Leaving will cancel pending uploads. Files that reached the server will be reconciled when you reopen the note.',
             );
             if (!leaveWhileUploading) return false;
             this.cancelUploads();
@@ -387,15 +396,15 @@ export class NoteEditor {
         }
         if (this.machine.phase === 'saving') {
             this.pendingClose = true;
-            this.setStatus('Đang hoàn tất lưu trước khi đóng…');
+            this.setStatus('Finishing the save before closing…');
             return new Promise((resolve) => {
                 this.closeResolve = resolve;
             });
         }
         if (this.machine.phase === 'retry_wait') {
             const leaveUnknown = await this.confirm(
-                'Chưa xác nhận được lần lưu',
-                'Máy chủ có thể đã nhận dữ liệu. Bỏ bản nháp và rời đi không hoàn tác dữ liệu đã gửi. Chọn Hủy để tiếp tục chờ lưu.',
+                'The save is not confirmed',
+                'The server may have received the data. Discarding the draft and leaving will not undo submitted data. Choose Cancel to keep waiting.',
             );
             if (!leaveUnknown) return false;
             this.machine.discard();
@@ -407,7 +416,7 @@ export class NoteEditor {
                 this.pendingClose = true;
                 this.machine.flush();
                 if (this.machine.phase === 'saving' || this.machine.phase === 'retry_wait') {
-                    this.setStatus('Đang hoàn tất lưu trước khi đóng…');
+                    this.setStatus('Finishing the save before closing…');
                     return new Promise((resolve) => {
                         this.closeResolve = resolve;
                     });
@@ -415,8 +424,8 @@ export class NoteEditor {
                 if (this.machine.phase === 'saved') return true;
             }
             const leave = await this.confirm(
-                'Rời ghi chú này?',
-                'Bỏ thay đổi chưa lưu và rời đi? Bản nháp trong cửa sổ này sẽ bị xóa. Chọn Hủy để tiếp tục chỉnh sửa.',
+                'Leave this note?',
+                'Discard unsaved changes and leave? The draft in this window will be deleted. Choose Cancel to keep editing.',
             );
             if (leave) {
                 this.machine.discard();
@@ -426,8 +435,8 @@ export class NoteEditor {
             return false;
         }
         const leave = await this.confirm(
-            'Rời ghi chú này?',
-            'Bỏ thay đổi chưa lưu và rời đi? Bản nháp sẽ bị xóa; dữ liệu đã gửi lên máy chủ không được hoàn tác.',
+            'Leave this note?',
+            'Discard unsaved changes and leave? The draft will be deleted; data already submitted to the server will not be undone.',
         );
         if (leave) {
             this.machine.discard();
@@ -443,8 +452,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Viết điều bạn muốn giữ lại';
-        this.eyebrow.textContent = 'Bản nháp khôi phục';
+        this.heading.textContent = 'Write down what matters';
+        this.eyebrow.textContent = 'Recovered draft';
         const snapshot = normalizeSnapshot(record.draftSnapshot);
         this.writeFields(snapshot);
         this.machine = this.createMachine(
@@ -495,7 +504,7 @@ export class NoteEditor {
             if (this.machine === machine) machine.reconcile(current);
         } catch (error) {
             if (this.machine === machine)
-                this.setStatus(error.message || 'Không thể kiểm tra phiên. Hãy thử lại.', true);
+                this.setStatus(error.message || 'Unable to check the session. Try again.', true);
         } finally {
             this.recheckingSession = false;
         }
@@ -503,12 +512,20 @@ export class NoteEditor {
 
     async uploadFiles(fileList) {
         if (!this.machine?.state.persisted) {
-            this.toast('Hãy chờ ghi chú được lưu lần đầu rồi thêm tệp.', true);
+            this.toast('Wait for the note to be saved before adding files.', true);
             return;
         }
-        for (const file of Array.from(fileList || [])) {
+        let queued;
+        try {
+            queued = Array.from(fileList || []).map((file) => ({ id: secureUuidV4(), file }));
+        } catch (error) {
+            this.toast(error.message || 'Unable to generate a secure file identifier.', true);
+            return;
+        }
+
+        for (const { id, file } of queued) {
             this.uploadQueue.push({
-                id: globalThis.crypto?.randomUUID?.() || String(Date.now()) + '-' + Math.random(),
+                id,
                 file,
                 status: 'pending',
                 progress: 0,
@@ -548,7 +565,7 @@ export class NoteEditor {
         } catch (error) {
             if (item.status !== 'cancelled') {
                 item.status = 'error';
-                item.error = error.message || 'Không thể tải tệp.';
+                item.error = error.message || 'Unable to upload the file.';
             }
         } finally {
             if (this.uploadActive === item) {
@@ -641,13 +658,13 @@ export class NoteEditor {
         const download = document.createElement('a');
         download.className = 'text-button';
         download.href = attachment.download_url;
-        download.textContent = 'Tải';
+        download.textContent = 'Download';
         download.setAttribute('download', attachment.original_name);
         const removeButton = document.createElement('button');
         removeButton.className = 'icon-button';
         removeButton.type = 'button';
         removeButton.textContent = '×';
-        removeButton.setAttribute('aria-label', 'Xóa ' + attachment.original_name);
+        removeButton.setAttribute('aria-label', 'Delete ' + attachment.original_name);
         removeButton.addEventListener('click', () => this.deleteAttachment(attachment));
         row.append(copy, download, removeButton);
         return row;
@@ -663,24 +680,24 @@ export class NoteEditor {
         const meta = document.createElement('small');
         meta.textContent =
             item.status === 'uploading'
-                ? 'Đang tải ' + item.progress + '%'
+                ? 'Uploading ' + item.progress + '%'
                 : item.status === 'error'
                   ? item.error
-                  : 'Đang chờ';
+                  : 'Waiting';
         copy.append(name, meta);
         let retry = null;
         if (item.status === 'error') {
             retry = document.createElement('button');
             retry.className = 'text-button';
             retry.type = 'button';
-            retry.textContent = 'Thử lại';
+            retry.textContent = 'Retry';
             retry.addEventListener('click', () => this.retryUpload(item));
         }
         const cancel = document.createElement('button');
         cancel.className = 'icon-button';
         cancel.type = 'button';
         cancel.textContent = '×';
-        cancel.setAttribute('aria-label', 'Hủy tải ' + item.file.name);
+        cancel.setAttribute('aria-label', 'Cancel upload for ' + item.file.name);
         cancel.addEventListener('click', () => this.cancelUpload(item));
         row.append(copy);
         if (retry) row.append(retry);
@@ -696,7 +713,8 @@ export class NoteEditor {
     }
 
     async deleteAttachment(attachment) {
-        if (!(await this.confirm('Xóa tệp này?', 'Tệp sẽ bị xóa khỏi ghi chú.'))) return;
+        if (!(await this.confirm('Delete this file?', 'The file will be removed from the note.')))
+            return;
         try {
             await remove(
                 '/api/v1/notes/' +
@@ -705,17 +723,17 @@ export class NoteEditor {
                     encodeURIComponent(attachment.id),
             );
             await this.refreshAttachments();
-            this.toast('Đã xóa tệp.');
+            this.toast('File deleted.');
         } catch (error) {
-            this.toast(error.message || 'Không thể xóa tệp.', true);
+            this.toast(error.message || 'Unable to delete the file.', true);
         }
     }
 
     async deleteNote() {
         if (!this.machine?.state.persisted || !this.note) return;
         const accepted = await this.confirm(
-            'Xóa ghi chú này?',
-            'Ghi chú sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.',
+            'Delete this note?',
+            'This note will be permanently deleted. This action cannot be undone.',
         );
         if (!accepted) return;
         try {
@@ -725,13 +743,13 @@ export class NoteEditor {
             this.machine.discard();
             this.hide();
             this.onChanged?.();
-            this.toast('Đã xóa ghi chú.');
+            this.toast('Note deleted.');
         } catch (error) {
             if (error.status === 409 && error.payload?.current) {
                 this.machine.conflictCurrent = error.payload.current;
                 this.machine.phase = 'conflict';
                 this.machine.emit();
-            } else this.toast(error.message || 'Không thể xóa ghi chú.', true);
+            } else this.toast(error.message || 'Unable to delete the note.', true);
         }
     }
 

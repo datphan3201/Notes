@@ -1,6 +1,6 @@
 export class HttpError extends Error {
     constructor(status, payload = null, response = null) {
-        super(payload?.message || 'Yêu cầu không thành công.');
+        super(payload?.message || 'The request failed.');
         this.name = 'HttpError';
         this.status = status;
         this.payload = payload;
@@ -60,8 +60,8 @@ export async function request(path, options = {}) {
             code: 'NETWORK_ERROR',
             message:
                 error.name === 'AbortError'
-                    ? 'Yêu cầu đã hết thời gian.'
-                    : 'Không thể kết nối máy chủ.',
+                    ? 'The request timed out.'
+                    : 'Unable to connect to the server.',
         });
     } finally {
         window.clearTimeout(timeoutId);
@@ -74,6 +74,7 @@ export const post = (path, body, options = {}) =>
     request(path, { ...options, method: 'POST', body });
 export const patch = (path, body, options = {}) =>
     request(path, { ...options, method: 'PATCH', body });
+export const put = (path, body, options = {}) => request(path, { ...options, method: 'PUT', body });
 export const remove = (path, body, options = {}) =>
     request(path, { ...options, method: 'DELETE', body });
 
@@ -127,17 +128,20 @@ export function upload(path, formData, { signal, timeout = 120000, onProgress = 
         xhr.onerror = () =>
             finish(
                 reject,
-                new HttpError(0, { code: 'NETWORK_ERROR', message: 'Không thể kết nối máy chủ.' }),
+                new HttpError(0, {
+                    code: 'NETWORK_ERROR',
+                    message: 'Unable to connect to the server.',
+                }),
             );
         xhr.ontimeout = () =>
             finish(
                 reject,
-                new HttpError(0, { code: 'NETWORK_ERROR', message: 'Yêu cầu đã hết thời gian.' }),
+                new HttpError(0, { code: 'NETWORK_ERROR', message: 'The request timed out.' }),
             );
         xhr.onabort = () =>
             finish(
                 reject,
-                new HttpError(0, { code: 'NETWORK_ERROR', message: 'Tải tệp đã bị hủy.' }),
+                new HttpError(0, { code: 'NETWORK_ERROR', message: 'The upload was canceled.' }),
             );
         signal?.addEventListener('abort', abort, { once: true });
         xhr.send(formData);

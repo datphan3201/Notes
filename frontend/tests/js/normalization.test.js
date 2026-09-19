@@ -8,21 +8,21 @@ import {
 
 test('canonical snapshots preserve literal HTML and indentation', () => {
     const value = normalizeSnapshot({
-        title: '  Tiêu đề  ',
-        content: '  <b>%</b>\r\n  dòng hai',
+        title: '  Title  ',
+        content: '  <b>%</b>\r\n  line two',
         label_ids: [10, 2, 10],
     });
-    assert.equal(value.title, 'Tiêu đề');
-    assert.equal(value.content, '  <b>%</b>\n  dòng hai');
+    assert.equal(value.title, 'Title');
+    assert.equal(value.content, '  <b>%</b>\n  line two');
     assert.deepEqual(value.label_ids, ['2', '10']);
     assert.equal(snapshotsEqual(value, { ...value }), true);
 });
 
 test('invalid drafts stay local and are not considered dispatchable', () => {
-    assert.equal(validateSnapshot({ title: '', content: 'nội dung' }).valid, false);
-    assert.equal(validateSnapshot({ title: 'Tiêu đề', content: '\0' }).valid, false);
+    assert.equal(validateSnapshot({ title: '', content: 'content' }).valid, false);
+    assert.equal(validateSnapshot({ title: 'Title', content: '\0' }).valid, false);
     assert.equal(
-        validateSnapshot({ title: 'Tiêu đề', content: 'nội dung', color: 'bad' }).valid,
+        validateSnapshot({ title: 'Title', content: 'content', color: 'bad' }).valid,
         false,
     );
 });

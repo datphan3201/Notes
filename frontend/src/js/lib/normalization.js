@@ -53,16 +53,16 @@ export function validateSnapshot(snapshot) {
         /[\u0000-\u001f\u007f]/u.test(value.title) ||
         codePoints(value.title) > 200
     ) {
-        errors.title = 'Tiêu đề dài từ 1 đến 200 ký tự.';
+        errors.title = 'The title must contain between 1 and 200 characters.';
     }
     if (
         !/\S/u.test(value.content) ||
         codePoints(value.content) > 50000 ||
         /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value.content)
     ) {
-        errors.content = 'Nội dung phải có chữ và không vượt quá 50.000 ký tự.';
+        errors.content = 'Content must contain text and cannot exceed 50,000 characters.';
     }
-    if (!COLORS.includes(value.color)) errors.color = 'Màu ghi chú không hợp lệ.';
-    if (value.label_ids.length > 20) errors.label_ids = 'Mỗi ghi chú có tối đa 20 nhãn.';
+    if (!COLORS.includes(value.color)) errors.color = 'The note color is invalid.';
+    if (value.label_ids.length > 20) errors.label_ids = 'A note can have at most 20 tags.';
     return { valid: Object.keys(errors).length === 0, errors, value };
 }

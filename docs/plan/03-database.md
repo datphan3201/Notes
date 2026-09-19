@@ -1,206 +1,122 @@
-# Database Schema and Mutation Invariants
+# Target Database and Transaction Contract
 
-## Shared conventions
+## Conventions
 
-- MySQL 8.4, InnoDB, database charset `utf8mb4`, default collation `utf8mb4_0900_ai_ci`.
-- Foreign-key column definitions must exactly match their referenced types/collations.
-- User/label IDs: unsigned BIGINT auto-increment. Public JSON serializes all IDs as strings to avoid JavaScript integer precision issues.
-- Note/attachment IDs: lowercase UUID v4 in `CHAR(36)` with ASCII binary collation. Generate in the browser with `crypto.randomUUID()` and validate on the server. These are system-managed idempotency keys, not user-entered fields.
-- Time: UTC `DATETIME(6)` for application timestamps; serialize ISO 8601 with microseconds and `Z`. Configure Eloquent date serialization/storage consistently.
-- `version`: unsigned integer starting at 1. Clients cannot choose the next value.
-- Use migrations as executable schema. The tables below are the design contract, not a second hand-maintained SQL schema.
+- MySQL 8.4, InnoDB, `utf8mb4`, default `utf8mb4_0900_ai_ci`.
+- New entity IDs: lowercase UUID in `CHAR(36) CHARACTER SET ascii COLLATE ascii_bin`.
+- Users and Tags retain unsigned BIGINT IDs. The physical `labels` table
+  becomes the canonical Tag table to preserve Notes compatibility: add nullable
+  owner-scoped `parent_id`, position, and version in M06. `/api/v1/labels`
+  remains a compatibility route over the same rows; do not create a duplicate
+  `tags` table.
+- Time: UTC `DATETIME(6)`; user-facing calendar values: `DATE`; public timestamps: ISO 8601 UTC with six fractional digits.
+- Every owned entity has `user_id NOT NULL`, `version INT UNSIGNED DEFAULT 1`, timestamps, and where specified `archived_at`.
+- Add `UNIQUE(user_id, id)` to owned UUID tables so relationship foreign keys can enforce matching ownership.
+- Finite values use `VARCHAR` plus `CHECK` constraints.
 
-## Tables
+## Existing tables
 
-### `users`
+Preserve current `users`, `user_preferences`, `notes`, `labels`, `label_note`, `attachments`, and `pending_file_deletions` behavior in the fresh target schema. Add `users.auth_version` and `user_preferences.timezone`. Remove `remember_token`. Replace Laravel sessions and migration ledger with the target definitions.
 
-| Column | Type/default | Constraint/meaning |
-| --- | --- | --- |
-| id | BIGINT unsigned | Primary key |
-| email | VARCHAR(254), ASCII case-insensitive | Unique; normalized lowercase |
-| display_name | VARCHAR(80) | Required |
-| password | VARCHAR(255) | bcrypt hash; hidden from serialization |
-| email_verified_at | DATETIME(6), null | Reserved for later verification; normal R1 users remain unverified |
-| avatar_path | VARCHAR(255), null | Relative path on private disk; never exposed as raw path |
-| remember_token | VARCHAR(100), null | Laravel compatibility; Remember me login disabled |
-| created_at, updated_at | DATETIME(6) | Server-managed |
+## Core planning tables
 
-Use `display_name` consistently, including auth registration mapping and default avatar. Do not accidentally keep a separate unused `name` field from the scaffold.
+| Table | Required columns and constraints |
+| --- | --- |
+| `areas` | UUID, owner, name(80), description(10000), position, version, archived/timestamps; unique owner/name |
+| `goals` | UUID, owner, nullable Area, nullable parent Goal, name(200), description, expected_result, completion_criteria, importance 1–5, status, deadline, position, completed/archived/timestamps; exactly one Area/Goal parent |
+| `milestones` | UUID, owner, Goal, name, description, completion_criteria, status, deadline, position, completed/archived/timestamps |
+| `tasks` | UUID, owner, nullable Goal/Milestone, name, description, expected_result, completion_criteria, importance, status, start/deadline, scheduled UTC interval, nullable Note/series/occurrence date, completed/archived/timestamps; at most one parent; unique Note and series/date |
+| `checklist_items` | UUID, owner, Task, title(500), checked, position, checked/deleted/timestamps, version |
+| `habits` | UUID, owner, nullable primary Goal, name, description, importance, period daily/weekly, target, timezone, archived/timestamps |
+| `habit_check_ins` | UUID, owner, Habit, local date, timezone, recorded timestamp; unique Habit/date |
 
-### `user_preferences`
+Text columns use `TEXT` unless the existing Note contract requires `MEDIUMTEXT`. Empty optional text is stored as `''`; nullable is reserved for missing relationships/dates.
 
-| Column | Type/default | Constraint |
-| --- | --- | --- |
-| user_id | BIGINT unsigned | Primary key and FK to users; cascade on delete |
-| theme | VARCHAR(8), `light` | `light`, `dark` |
-| note_font_size | TINYINT unsigned, 16 | 14, 16, 18 |
-| default_note_color | VARCHAR(16), `neutral` | neutral, lemon, mint, sky, rose |
-| notes_view | VARCHAR(8), `grid` | grid, list |
-| created_at, updated_at | DATETIME(6) | Server-managed |
+## Relationship tables
 
-Create the preferences row in the registration transaction. Model/factory defaults must agree with API/UI defaults. Use DB CHECK constraints for these finite values in addition to request validation.
+- `goal_contributions(source_goal_id, target_goal_id)`
+- `milestone_contributions(milestone_id, goal_id)`
+- `task_contributions(task_id, goal_id)`
+- `habit_contributions(habit_id, goal_id)`
+- `milestone_dependencies(milestone_id, prerequisite_id)`
+- `goal_tags`, `milestone_tags`, `task_tags`, `habit_tags`
+- existing `label_note`
+- `weekly_task_selections`, `weekly_milestone_selections`
 
-### `notes`
+Every table also stores `user_id`, uses a composite primary key over edge endpoints, has reverse indexes, and uses composite owner foreign keys. Self Goal contributions and self Milestone dependencies have checks and application validation.
 
-| Column | Type/default | Constraint/meaning |
-| --- | --- | --- |
-| id | CHAR(36) ASCII binary | Primary key, client-generated UUID |
-| user_id | BIGINT unsigned | FK users, cascade on delete |
-| title | VARCHAR(200) | Nonempty for active notes; empty only in scrubbed tombstones |
-| content | MEDIUMTEXT | Valid plain text for active notes; empty only in tombstones |
-| color | VARCHAR(16), `neutral` | Same allowed tokens as default color |
-| pinned_at | DATETIME(6), null | Null = unpinned |
-| version | INT unsigned, 1 | >= 1; increment according to rules below |
-| deleted_at | DATETIME(6), null | Internal scrubbed tombstone; never a trash/restore feature |
-| created_at, updated_at | DATETIME(6) | Server-managed |
+## Recurrence, history, AI, infrastructure
 
-Indexes:
+- `task_series` contains the Task template, parent, daily/weekly rule, interval, weekday bitmask, start/end date, timezone, optional local time/duration/deadline offset, state, cursor, and version.
+- `task_series_checklist_items`, `task_series_tags`, and `task_series_contributions` hold templates.
+- `activities` stores append-only completion/reversal facts with source type/ID/version, UTC occurrence, local effective date, timezone, and optional reversal reference.
+- `goal_daily_snapshots` stores calculated daily progress.
+- `reviews` stores kind/period/timezone, immutable summary JSON, reflection fields, status/version/finalized time; unique owner/kind/period.
+- `ai_actions` stores request ID, state, provider/model, exact proposal/hash, context versions, created-ID mapping, expiry, version, and safe error code.
+- `rate_limit_buckets` stores a hashed key, counter, and expiry.
+- `schema_migrations` stores migration name, SHA-256 checksum, and applied timestamp.
+- `sessions` stores opaque ID, nullable user ID, encrypted payload, IP/user agent metadata, last activity, and expiry.
 
-- Primary `id`.
-- `(user_id, deleted_at, pinned_at, updated_at, id)` for owner/active/order access.
-- `(user_id, deleted_at, updated_at, id)` for ordinary notes.
+## Required indexes
 
-Do not add a full-text dependency for R1. Literal substring searching may scan the owner's rows; it is acceptable for the defined personal workload and must be measured in T12. Do not claim these indexes accelerate a leading-wildcard content search.
+Index every foreign key. Add owner/status/deadline and owner/scheduled-start Task indexes; owner/parent/position Goal indexes; owner/Goal/position Milestone indexes; owner/effective-date/type Activity index; series/date uniqueness; review period uniqueness; rate-limit/session expiry indexes. Verify critical queries with `EXPLAIN` before adding speculative indexes.
 
-Default model queries exclude deleted rows. `withTrashed()` is restricted to create-replay and deletion paths that enforce ownership; no read/update/attachment route exposes a tombstone.
+## Foreign-key and deletion policy
 
-### `labels`
+- User-owned aggregate rows reference `users` with `ON DELETE RESTRICT`; v1 has
+  no account hard-delete flow.
+- Primary hierarchy references use `ON DELETE RESTRICT`. Normal UI uses archive,
+  and a container cannot archive while active children still depend on it.
+- Pure junction/template rows (`*_tags`, contributions, dependencies, weekly
+  selections, series checklist templates) use `ON DELETE CASCADE` from either
+  hard-deleted endpoint solely so test/administrative purge cannot leave edges.
+  Application archive never triggers that cascade.
+- Checklist Items, Habit check-ins, and Task occurrences use `ON DELETE
+  RESTRICT` in production schema because their parent is archived, not purged.
+  A future retention/purge feature must define auditable deletion separately.
+- Activity, Review snapshots, and AI action audit rows never cascade from an
+  archived source. Source identifiers are stored as typed IDs without a foreign
+  key where history must survive a future purge; ownership and source type are
+  validated on insertion.
+- Existing Note/attachment/pending-deletion semantics stay as currently tested;
+  M01 schema fixtures freeze their exact foreign-key actions before translation.
 
-| Column | Type/default | Constraint |
-| --- | --- | --- |
-| id | BIGINT unsigned | Primary key |
-| user_id | BIGINT unsigned | FK users, cascade on delete |
-| name | VARCHAR(40), `utf8mb4_0900_as_ci` | Accent-sensitive, case-insensitive |
-| version | INT unsigned, 1 | >= 1; changes on a real rename |
-| created_at, updated_at | DATETIME(6) | Server-managed |
+Every nullable relationship is explicitly listed in the table definitions;
+absence of `nullable` means `NOT NULL`. Database checks cover scalar/XOR/self
+constraints; graph cycles and lifecycle conditions remain transactionally
+enforced application rules.
 
-Unique `(user_id, name)`; index `(user_id, name, id)`. Do not rely only on pre-insert uniqueness validation: map a duplicate-key race to a 422 field error.
+## Transaction and lock order
 
-### `label_note`
+Mutation services own transactions. Standard order:
 
-| Column | Type | Constraint |
-| --- | --- | --- |
-| note_id | CHAR(36) ASCII binary | FK notes; cascade on physical deletion |
-| label_id | BIGINT unsigned | FK labels; cascade on deletion |
-
-Composite primary `(note_id, label_id)` and index `(label_id, note_id)`. No pivot timestamps. Enforce matching owners in application transactions; this join alone does not establish authorization. Never `sync()` unvalidated client label IDs.
-
-### `attachments`
-
-| Column | Type/default | Constraint/meaning |
-| --- | --- | --- |
-| id | CHAR(36) ASCII binary | Primary key, client upload UUID |
-| note_id | CHAR(36) ASCII binary | FK notes, cascade on physical deletion |
-| original_name | VARCHAR(255) | Display-only sanitized basename; blank in tombstone |
-| path | VARCHAR(255), null | Private randomized path; null only after deletion |
-| mime_type | VARCHAR(127) | Server-detected type; blank in tombstone |
-| kind | VARCHAR(8) | image, video, file |
-| size_bytes | BIGINT unsigned | Actual stored size; zero in tombstone |
-| sha256 | CHAR(64) ASCII binary, null | Actual file digest, used for replay consistency |
-| deleted_at | DATETIME(6), null | Internal removal tombstone |
-| created_at, updated_at | DATETIME(6) | Server-managed |
-
-Index `(note_id, deleted_at, created_at, id)`; unique non-null `path`. Ownership derives from the note, not a client-supplied `user_id`. Active attachment quota queries always use `deleted_at IS NULL`.
-
-Attachment tombstones retain only identity, note relationship, deletion time, and minimal fixed values. Retrying a removed upload UUID returns 410 for its owner, never re-uploads it.
-
-### `pending_file_deletions`
-
-| Column | Type/default | Constraint |
-| --- | --- | --- |
-| id | BIGINT unsigned | Primary key |
-| path | VARCHAR(255) | Unique relative path, private disk only |
-| attempts | INT unsigned, 0 | Cleanup retry count |
-| created_at, updated_at | DATETIME(6) | Server-managed |
-
-This small technical table makes database deletion and filesystem cleanup recoverable. Do not introduce a queue service for it. A missing file counts as successful cleanup; successful cleanup deletes the row.
-
-### Laravel infrastructure
-
-Use the standard `sessions` table (`id`, nullable/indexed `user_id`, IP, user agent, payload, indexed last activity) required by the selected session driver. Preserve Laravel's `migrations` table. R1 needs no jobs/cache/password-reset-token tables; create future feature tables in their own later migrations, or remove unused scaffold migrations before the first migration.
-
-## Relationships
-
-```mermaid
-erDiagram
-    USERS ||--|| USER_PREFERENCES : owns
-    USERS ||--o{ NOTES : owns
-    USERS ||--o{ LABELS : owns
-    NOTES ||--o{ LABEL_NOTE : has
-    LABELS ||--o{ LABEL_NOTE : associates
-    NOTES ||--o{ ATTACHMENTS : contains
-    USERS ||--o{ SESSIONS : authenticates
+```text
+users row FOR UPDATE
+→ aggregate rows ordered by binary ID
+→ relationship/checklist rows ordered by key
+→ activity/AI action rows
 ```
 
-## Transaction and ownership rule
+Do not perform provider calls or file I/O inside database transactions. File writes occur before metadata transactions and are compensated on failure. File deletions are recorded transactionally and processed afterward.
 
-For **all note, label, and attachment mutations**, start a short DB transaction and lock the authenticated user's `users` row with `SELECT ... FOR UPDATE`. Then re-query the target with owner scope and acquire any needed note/label locks. This serializes writes by one owner and prevents label deletion, quotas, and note deletion from racing within R1. Reads do not acquire the owner lock.
+## Cycle prevention
 
-Always lock in order: user → notes sorted by ID → labels sorted by ID → attachments. Never hold DB locks during file validation, hashing, image decoding, external calls, or large file copying. The modest per-owner write serialization is intentional for R1; sharing requires redesigning the aggregate lock as described in document 09.
+Goal/Tag reparent and dependency/contribution edge creation:
 
-Use database transactions and actual row locking, not a check performed outside the write transaction. Laravel's [locking API](https://laravel.com/docs/13.x/queries#pessimistic-locking) maps to database locks; MySQL describes their [transactional behavior](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html).
+1. Begin transaction and lock owner.
+2. Load the user's active adjacency pairs.
+3. Validate endpoints and proposed edge.
+4. Walk iteratively with a visited set; reject a path back to the source.
+5. Apply the mutation and increment affected aggregate version once.
 
-## Canonical editable snapshot
+This serialized validation prevents simultaneous inverse edges. Never depend on MySQL's recursive CTE limit for arbitrary hierarchy depth.
 
-`{ title, content, color, is_pinned, label_ids }` is the complete editable snapshot. Normalize text, convert IDs to canonical decimal strings, deduplicate/sort label IDs numerically, and convert pin to a boolean. Validate limits. Compare these values, not JSON key order or timestamps.
+## Migration runner
 
-`pinned_at`, note ID, owner, version, attachments, and timestamps are never client-editable snapshot fields.
+`schema_migrations(name VARCHAR(190) PRIMARY KEY, checksum CHAR(64), applied_at DATETIME(6))`.
 
-## Create algorithm
-
-1. Validate shape and text outside the transaction; normalize title/body/color.
-2. Lock the owner row. Search the requested UUID including tombstones.
-3. An existing UUID owned by someone else yields generic 404 without contents.
-4. An owned tombstone yields 410 `NOTE_DELETED`.
-5. An existing owned active note whose editable snapshot matches the original create defaults (submitted title/body/color, unpinned, no labels) yields 200 with the current note and `replayed: true`; do not update any fields.
-6. A different active snapshot for the same owned UUID yields 409 `CREATE_CONFLICT` with the current note. It must not overwrite an already-created/edited note.
-7. Otherwise insert version 1, unpinned, no labels, current timestamps. Return 201.
-
-The UUID remains the same across network retries. New UUIDs are generated only for a genuinely new draft, never just because a response was lost.
-
-## Update algorithm
-
-1. Normalize/validate snapshot shape; lock owner and re-read the active owned note and its current label IDs.
-2. If canonical desired snapshot equals current snapshot, return 200 unchanged even when `base_version` is older. This acknowledges a lost successful response without incrementing the version.
-3. Otherwise, if `base_version != current.version`, return 409 `NOTE_CONFLICT` with current detail; change nothing.
-4. Verify each desired label exists and belongs to the owner. Reject invalid labels with 422 and `errors.label_ids`; do not leak other owners' label names.
-5. Update title/content/color and pin state; false→true sets server time, true→true retains pin time, false clears it. Sync validated label IDs. Increment version exactly once and update `updated_at` once in this transaction.
-6. Return canonical note detail after the transaction. A retry that now matches step 2 is a no-op.
-
-Syntax validation must not reject stale/deleted label references before the version conflict check. Cross-owner validation still happens before any write. This order allows the client to recover an outdated snapshot after a concurrent label deletion.
-
-## Delete algorithm
-
-1. User confirms in the UI; submit note ID and `base_version`.
-2. Lock owner; an unknown/foreign ID returns 404. An owned tombstone returns 204 (idempotent retry).
-3. If version differs, return 409 with current detail. Require a fresh explicit deletion confirmation; never automatically retry deletion using the new version.
-4. For each active attachment, insert its path into `pending_file_deletions`, scrub it and mark deleted.
-5. Detach labels. Set title/content to empty, color neutral, pin null, `deleted_at = now`, increment version/update time. Retain the UUID to reject late create/update requests.
-6. Commit; attempt physical cleanup after commit. Return 204 once metadata is inaccessible. If disk deletion fails, leave cleanup rows for retry and log only identifiers.
-
-Never expose a restore endpoint or retain deleted note contents in the tombstone. Database backups are an operational consideration, not a product trash feature.
-
-## Label operations
-
-- Create under the owner lock; enforce 100-label quota/uniqueness; version 1.
-- Rename requires `base_version`; normalized exact no-op returns current data, stale different name returns 409 `LABEL_CONFLICT`. Actual rename increments label version, not note versions: note snapshots contain IDs, and resource serialization joins current names.
-- Delete requires `base_version`; stale version returns conflict. Remove pivots and increment each affected active note's version/update time once because its editable label set changed. Delete the label row. Unknown/already-deleted labels return 404; the UI can treat a known deletion retry's 404 as already removed.
-- Operations must never delete notes or attachments merely because a label was deleted.
-
-## Files and cleanup
-
-1. Validate uploaded bytes/type/limits, compute SHA-256, then store under a fresh random path below `attachments/` or `avatars/` on the private disk. Never use the original filename as a path.
-2. In a short transaction, lock owner/recheck note state and quotas, then persist the path. Replay of an active upload ID is 200 only if note, digest, and sanitized original filename match; otherwise 409 `UPLOAD_ID_REUSED`. Owned removed ID is 410.
-3. On validation/quota/DB failure, delete any newly stored unreferenced path. A process crash may leave an orphan; the prune command handles it.
-4. On removal or avatar replacement, enqueue old paths in `pending_file_deletions` in the same transaction as the metadata change. Cleanup outside the transaction. Avatar replacement must not remove the old file before the replacement is successfully persisted.
-5. `php artisan files:prune`: process pending deletions; also inspect only managed attachment/avatar directories for files older than one hour that are not referenced by any active attachment or user avatar. Never inspect/delete arbitrary disk paths. Skip recently written files to avoid racing uploads.
-6. Cleanup must be repeatable and handle files already absent. Reject paths escaping the private root; do not follow symlinks outside it.
-
-R1 runs cleanup after removals/replacements and documents the command for startup/maintenance. A scheduler or queue worker is not a prerequisite. Do not claim bytes are physically gone when a cleanup failure remains.
-
-## Read invariants
-
-- Every note list is scoped to authenticated owner and active notes before search/filter conditions; group title/body OR conditions so they cannot escape owner scope.
-- Preload labels/counts in batches; no query-per-card behavior. Detail additionally returns active attachment metadata.
-- File serving rechecks active attachment, active parent note, and owner before opening a disk path. Deleted or missing files return 404, never a storage path.
-- Labels are distinct in filtered results: use `whereHas`/EXISTS or distinct note IDs, not a join that duplicates one note for two selected labels.
+- Acquire a named MySQL advisory lock derived from database name.
+- Refuse a migration whose recorded checksum differs.
+- Each migration checks required preconditions and executes idempotent inspection before DDL.
+- MySQL DDL may auto-commit. On failure, stop, record no ledger row, report completed statements, and require a documented forward-repair or restore of the disposable fresh target database.
+- `migrate` refuses database names outside an environment allowlist; tests additionally require exact `goals_test` from both configuration and `SELECT DATABASE()`.

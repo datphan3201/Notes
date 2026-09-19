@@ -8,7 +8,7 @@ export function initPassword(root) {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(form).entries());
-        status.textContent = 'Đang đổi mật khẩu…';
+        status.textContent = 'Changing password…';
         try {
             const result = await post('/api/v1/password', data);
             RecoveryStore.clearAll();

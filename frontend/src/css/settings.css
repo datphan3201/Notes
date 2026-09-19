@@ -13,7 +13,7 @@
     padding: 28px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 10px;
 }
 .settings-panel-narrow {
     max-width: 560px;

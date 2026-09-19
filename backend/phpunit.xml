@@ -3,35 +3,27 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
+         cacheDirectory=".phpunit.cache"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
+        <testsuite name="Application">
+            <directory>tests/Plain</directory>
         </testsuite>
     </testsuites>
     <source>
         <include>
-            <directory>app</directory>
+            <directory>src</directory>
         </include>
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <!-- The contract requires MySQL semantics (collations, UUIDs, checks,
-             and row locks), so tests must never silently fall back to SQLite. -->
-        <env name="DB_CONNECTION" value="mysql"/>
-        <env name="DB_DATABASE" value="notes_test"/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="APP_DEBUG" value="false"/>
+        <env name="PLANNER_DB_DATABASE" value="goals_test"/>
+        <env name="PLANNER_DB_ALLOWED" value="goals_test"/>
+        <env name="SESSION_SECURE_COOKIE" value="false"/>
+        <env name="SESSION_ENCRYPTION_KEY" value="000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"/>
+        <env name="APP_URL" value="http://localhost:8000"/>
+        <env name="PRIVATE_STORAGE_ROOT" value="/tmp/planner-private-tests" force="true"/>
+        <env name="AI_ENABLED" value="false"/>
     </php>
 </phpunit>

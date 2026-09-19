@@ -43,7 +43,7 @@ function noteResponse(id, version, snapshot) {
             content: snapshot.content,
             color: snapshot.color,
             is_pinned: snapshot.is_pinned,
-            labels: snapshot.label_ids.map((labelId) => ({ id: labelId, name: 'Nhãn ' + labelId })),
+            labels: snapshot.label_ids.map((labelId) => ({ id: labelId, name: 'Tag ' + labelId })),
             attachments: [],
         },
     };
@@ -59,9 +59,13 @@ const settle = async () => {
 function makeMachine({
     transport,
     clock = new FakeClock(),
+    persisted = true,
+    baseVersion = persisted ? 1 : null,
+    noteId = '11111111-1111-4111-8111-111111111111',
+    recovery = null,
     snapshot = {
-        title: 'Tiêu đề',
-        content: 'Cũ',
+        title: 'Title',
+        content: 'Old',
         color: 'neutral',
         is_pinned: false,
         label_ids: [],
@@ -71,11 +75,12 @@ function makeMachine({
         clock,
         machine: new AutosaveMachine({
             userId: '1',
-            noteId: '11111111-1111-4111-8111-111111111111',
-            persisted: true,
-            baseVersion: 1,
+            noteId,
+            persisted,
+            baseVersion,
             snapshot,
             transport,
+            recovery,
             clock,
         }),
     };
@@ -92,14 +97,14 @@ test('debounces valid edits and reaches saved only after a matching acknowledgem
         },
     });
 
-    machine.input({ content: 'Mới' });
+    machine.input({ content: 'New' });
     clock.advance(499);
     assert.equal(calls.length, 0);
     clock.advance(1);
     await settle();
 
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].sentSnapshot.content, 'Mới');
+    assert.equal(calls[0].sentSnapshot.content, 'New');
     assert.equal(machine.state.phase, 'saved');
     assert.equal(machine.state.baseVersion, 2);
 });
@@ -116,16 +121,16 @@ test('keeps typing during a save and sends the latest draft after the first ackn
         },
     });
 
-    machine.input({ content: 'Bản một' });
+    machine.input({ content: 'Version one' });
     clock.advance(500);
     await settle();
-    machine.input({ content: 'Bản hai' });
+    machine.input({ content: 'Version two' });
     assert.equal(calls.length, 1);
 
     resolvers[0].resolve(noteResponse(calls[0].noteId, 2, calls[0].sentSnapshot));
     await settle();
     assert.equal(calls.length, 2);
-    assert.equal(calls[1].sentSnapshot.content, 'Bản hai');
+    assert.equal(calls[1].sentSnapshot.content, 'Version two');
     assert.equal(calls[1].baseVersion, 2);
 
     resolvers[1].resolve(noteResponse(calls[1].noteId, 3, calls[1].sentSnapshot));
@@ -145,11 +150,11 @@ test('retries the same frozen request with 1s, 2s, then success', async () => {
         },
     });
 
-    machine.input({ content: 'Có thể thử lại' });
+    machine.input({ content: 'Can retry' });
     clock.advance(500);
     await settle();
     assert.equal(machine.state.phase, 'retry_wait');
-    assert.equal(calls[0].sentSnapshot.content, 'Có thể thử lại');
+    assert.equal(calls[0].sentSnapshot.content, 'Can retry');
 
     clock.advance(1000);
     await settle();
@@ -168,8 +173,8 @@ test('pauses on conflict and keeps local draft only after explicit resolution', 
     const calls = [];
     const clock = new FakeClock();
     const server = {
-        title: 'Máy chủ',
-        content: 'Bản khác',
+        title: 'Server',
+        content: 'Different version',
         color: 'rose',
         is_pinned: false,
         label_ids: [],
@@ -187,17 +192,17 @@ test('pauses on conflict and keeps local draft only after explicit resolution', 
         },
     });
 
-    machine.input({ content: 'Bản local cần giữ' });
+    machine.input({ content: 'Local version to keep' });
     clock.advance(500);
     await settle();
     assert.equal(machine.state.phase, 'conflict');
-    assert.equal(machine.state.draftSnapshot.content, 'Bản local cần giữ');
+    assert.equal(machine.state.draftSnapshot.content, 'Local version to keep');
 
     machine.keepLocal();
     await settle();
     assert.equal(calls.length, 2);
     assert.equal(calls[1].baseVersion, 2);
-    assert.equal(calls[1].sentSnapshot.content, 'Bản local cần giữ');
+    assert.equal(calls[1].sentSnapshot.content, 'Local version to keep');
     assert.equal(machine.state.phase, 'saved');
 });
 
@@ -210,12 +215,12 @@ test('J02 continuous typing dispatches by two seconds', async () => {
         },
     });
     for (let index = 0; index < 5; index++) {
-        machine.input({ content: 'Nhập ' + index });
+        machine.input({ content: 'Input ' + index });
         clock.advance(400);
         await settle();
     }
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].sentSnapshot.content, 'Nhập 4');
+    assert.equal(calls[0].sentSnapshot.content, 'Input 4');
 });
 
 test('J07 editing during an unknown write retains retry state and frozen payload', async () => {
@@ -226,10 +231,10 @@ test('J07 editing during an unknown write retains retry state and frozen payload
             throw { status: 503 };
         },
     });
-    machine.input({ content: 'Đã gửi' });
+    machine.input({ content: 'Submitted' });
     clock.advance(500);
     await settle();
-    machine.input({ content: 'Cũ' });
+    machine.input({ content: 'Old' });
     assert.equal(machine.phase, 'retry_wait');
     assert.equal(Object.isFrozen(calls[0].sentSnapshot), true);
     for (const delay of [1000, 2000, 4000]) {
@@ -240,8 +245,8 @@ test('J07 editing during an unknown write retains retry state and frozen payload
     await settle();
     assert.equal(calls.length, 4);
     assert.equal(machine.phase, 'error');
-    assert.equal(machine.draftSnapshot.content, 'Cũ');
-    assert.ok(calls.every((call) => call.sentSnapshot.content === 'Đã gửi'));
+    assert.equal(machine.draftSnapshot.content, 'Old');
+    assert.ok(calls.every((call) => call.sentSnapshot.content === 'Submitted'));
 });
 
 test('J07 Retry-After accepts seconds and dates and defaults missing headers to five seconds', () => {
@@ -259,7 +264,7 @@ test('J10 late acknowledgements after disposal cannot modify the next editor', a
                 resolve = done;
             }),
     });
-    machine.input({ content: 'Cũ đang gửi' });
+    machine.input({ content: 'Old version in flight' });
     clock.advance(500);
     await settle();
     const pending = machine.pendingRequest;
@@ -276,16 +281,16 @@ test('J10 late acknowledgements after disposal cannot modify the next editor', a
 
 test('J12 recovery of an older revision requires explicit conflict resolution', () => {
     const { machine } = makeMachine();
-    machine.input({ content: 'Bản nháp cũ' });
+    machine.input({ content: 'Old draft' });
     machine.phase = 'auth_expired';
     machine.reconcile(
         noteResponse(machine.noteId, 2, {
             ...machine.draftSnapshot,
-            content: 'Đã đổi từ cửa sổ khác',
+            content: 'Changed in another window',
         }).data,
     );
     assert.equal(machine.phase, 'conflict');
-    assert.equal(machine.draftSnapshot.content, 'Bản nháp cũ');
+    assert.equal(machine.draftSnapshot.content, 'Old draft');
     assert.equal(machine.baseVersion, 1);
 });
 
@@ -295,7 +300,7 @@ test('J13 expired session pauses timers and acknowledges a committed pending wri
             throw { status: 419 };
         },
     });
-    machine.input({ content: 'Dữ liệu đã gửi' });
+    machine.input({ content: 'Submitted data' });
     clock.advance(500);
     await settle();
     assert.equal(machine.phase, 'auth_expired');
@@ -317,7 +322,7 @@ test('J14 IME suppresses dispatch until composition ends', async () => {
     });
     machine.input({ content: 'T' });
     machine.compositionStart();
-    machine.input({ content: 'Tiếng Việt' });
+    machine.input({ content: 'English content' });
     clock.advance(2500);
     await settle();
     assert.equal(calls.length, 0);
@@ -325,5 +330,227 @@ test('J14 IME suppresses dispatch until composition ends', async () => {
     clock.advance(500);
     await settle();
     assert.equal(calls.length, 1);
-    assert.equal(calls[0].sentSnapshot.content, 'Tiếng Việt');
+    assert.equal(calls[0].sentSnapshot.content, 'English content');
+});
+
+test('J01 a new note waits for both valid fields and reuses one stable UUID', async () => {
+    const calls = [];
+    const { machine, clock } = makeMachine({
+        persisted: false,
+        snapshot: { title: '', content: '', color: 'neutral' },
+        transport: async (request) => {
+            calls.push(request);
+            return noteResponse(request.noteId, 1, request.sentSnapshot);
+        },
+    });
+
+    machine.input({ title: 'Title only' });
+    clock.advance(2500);
+    await settle();
+    assert.equal(calls.length, 0);
+    assert.equal(machine.phase, 'incomplete');
+
+    machine.input({ content: 'Now valid' });
+    clock.advance(500);
+    await settle();
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].kind, 'create');
+    assert.equal(calls[0].noteId, machine.noteId);
+    assert.equal(machine.phase, 'saved');
+    assert.equal(machine.baseVersion, 1);
+});
+
+test('J05 a lost create response retries the exact UUID and snapshot', async () => {
+    const calls = [];
+    const { machine, clock } = makeMachine({
+        persisted: false,
+        snapshot: { title: '', content: '', color: 'neutral' },
+        transport: async (request) => {
+            calls.push(request);
+            if (calls.length === 1) throw { status: 0, code: 'NETWORK_ERROR' };
+            return noteResponse(request.noteId, 1, request.sentSnapshot);
+        },
+    });
+
+    machine.input({ title: 'Create once', content: 'Must not duplicate' });
+    clock.advance(500);
+    await settle();
+    clock.advance(1000);
+    await settle();
+
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].noteId, calls[1].noteId);
+    assert.deepEqual(calls[0].sentSnapshot, calls[1].sentSnapshot);
+    assert.equal(machine.phase, 'saved');
+});
+
+test('J06 a lost update response retries the same base revision and snapshot', async () => {
+    const calls = [];
+    const { machine, clock } = makeMachine({
+        transport: async (request) => {
+            calls.push(request);
+            if (calls.length === 1) throw { status: 503 };
+            return noteResponse(request.noteId, 2, request.sentSnapshot);
+        },
+    });
+
+    machine.input({ content: 'The server may have saved this' });
+    clock.advance(500);
+    await settle();
+    clock.advance(1000);
+    await settle();
+
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].baseVersion, 1);
+    assert.equal(calls[1].baseVersion, 1);
+    assert.deepEqual(calls[0].sentSnapshot, calls[1].sentSnapshot);
+    assert.equal(machine.baseVersion, 2);
+});
+
+test('J08 validation errors stop automatic retry and corrected input can save', async () => {
+    const calls = [];
+    const { machine, clock } = makeMachine({
+        transport: async (request) => {
+            calls.push(request);
+            if (calls.length === 1) {
+                throw { status: 422, payload: { errors: { content: ['Invalid'] } } };
+            }
+            return noteResponse(request.noteId, 2, request.sentSnapshot);
+        },
+    });
+
+    machine.input({ content: 'Rejected by server' });
+    clock.advance(500);
+    await settle();
+    clock.advance(60000);
+    await settle();
+    assert.equal(calls.length, 1);
+    assert.equal(machine.phase, 'error');
+
+    machine.input({ content: 'Corrected content' });
+    clock.advance(500);
+    await settle();
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1].sentSnapshot.content, 'Corrected content');
+    assert.equal(machine.phase, 'saved');
+});
+
+test('J09 choosing server adopts it while a second keep-local conflict pauses again', async () => {
+    const serverV2 = {
+        title: 'Server',
+        content: 'Version 2',
+        color: 'rose',
+        is_pinned: false,
+        label_ids: [],
+    };
+    const serverV3 = { ...serverV2, content: 'Version 3' };
+    const useServerMachine = makeMachine({
+        transport: async (request) => {
+            throw {
+                status: 409,
+                payload: { current: noteResponse(request.noteId, 2, serverV2).data },
+            };
+        },
+    });
+    useServerMachine.machine.input({ content: 'Local' });
+    useServerMachine.clock.advance(500);
+    await settle();
+    useServerMachine.machine.useServer();
+    assert.equal(useServerMachine.machine.phase, 'saved');
+    assert.equal(useServerMachine.machine.draftSnapshot.content, 'Version 2');
+
+    let attempts = 0;
+    const keepLocalMachine = makeMachine({
+        transport: async (request) => {
+            attempts += 1;
+            const current = attempts === 1 ? serverV2 : serverV3;
+            throw {
+                status: 409,
+                payload: { current: noteResponse(request.noteId, attempts + 1, current).data },
+            };
+        },
+    });
+    keepLocalMachine.machine.input({ content: 'Keep local' });
+    keepLocalMachine.clock.advance(500);
+    await settle();
+    keepLocalMachine.machine.keepLocal();
+    await settle();
+    assert.equal(attempts, 2);
+    assert.equal(keepLocalMachine.machine.phase, 'conflict');
+    keepLocalMachine.clock.advance(60000);
+    await settle();
+    assert.equal(attempts, 2);
+    assert.equal(keepLocalMachine.machine.draftSnapshot.content, 'Keep local');
+});
+
+test('J11 flush saves a valid dirty draft and discard removes invalid recovery', async () => {
+    const recovery = {
+        writes: 0,
+        removals: 0,
+        write() {
+            this.writes += 1;
+            return true;
+        },
+        remove() {
+            this.removals += 1;
+        },
+    };
+    const { machine } = makeMachine({
+        recovery,
+        transport: async (request) => noteResponse(request.noteId, 2, request.sentSnapshot),
+    });
+    machine.input({ content: 'Save before closing' });
+    assert.equal(machine.flush(), false);
+    assert.equal(machine.phase, 'saving');
+    await settle();
+    assert.equal(machine.phase, 'saved');
+
+    machine.input({ content: '' });
+    assert.equal(machine.phase, 'incomplete');
+    machine.discard();
+    assert.equal(machine.phase, 'saved');
+    assert.ok(recovery.writes > 0);
+    assert.ok(recovery.removals >= 2);
+});
+
+test('J15 a deleted note stops stale retries and retains the local draft', async () => {
+    const { machine, clock } = makeMachine({
+        transport: async () => {
+            throw { status: 410, code: 'NOTE_DELETED' };
+        },
+    });
+    machine.input({ content: 'Local version to copy' });
+    clock.advance(500);
+    await settle();
+
+    assert.equal(machine.phase, 'unavailable');
+    assert.equal(machine.pendingRequest, null);
+    assert.equal(machine.draftSnapshot.content, 'Local version to copy');
+    clock.advance(60000);
+    await settle();
+    assert.equal(machine.phase, 'unavailable');
+});
+
+test('J16 invalid existing content never replaces the server and saves after correction', async () => {
+    const calls = [];
+    const { machine, clock } = makeMachine({
+        transport: async (request) => {
+            calls.push(request);
+            return noteResponse(request.noteId, 2, request.sentSnapshot);
+        },
+    });
+
+    machine.input({ content: '' });
+    clock.advance(2500);
+    await settle();
+    assert.equal(calls.length, 0);
+    assert.equal(machine.acknowledgedSnapshot.content, 'Old');
+    assert.equal(machine.draftSnapshot.content, '');
+
+    machine.input({ content: 'Edited content' });
+    clock.advance(500);
+    await settle();
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].sentSnapshot.content, 'Edited content');
+    assert.equal(machine.phase, 'saved');
 });

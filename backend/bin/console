@@ -1,0 +1,142 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Planner\Application\Files\ProcessFileDeletion;
+use Planner\Application\Files\PruneFiles;
+use Planner\Infrastructure\Database\MigrationRunner;
+use Planner\Infrastructure\Logging\LoggerFactory;
+use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
+use Planner\Infrastructure\Persistence\Pdo\Files\AttachmentRepository;
+use Planner\Infrastructure\Persistence\Pdo\Files\PendingDeletionRepository;
+use Planner\Infrastructure\Storage\LocalPrivateStorage;
+use Planner\Application\Planning\PlanningService;
+use Planner\Domain\Planning\GoalProgressCalculator;
+use Planner\Domain\Planning\GraphGuard;
+use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
+use Planner\Infrastructure\Persistence\Pdo\Activity\PdoActivityRepository;
+use Planner\Http\Security\RateLimiter;
+use Planner\Infrastructure\Session\SessionPruner;
+
+/** @var array{migrations: MigrationRunner} $application */
+$application = require dirname(__DIR__).'/bootstrap/app.php';
+$command = $argv[1] ?? 'help';
+
+try {
+    switch ($command) {
+        case 'migrate':
+            $completed = $application['migrations']->migrate();
+            fwrite(STDOUT, $completed === [] ? "No pending migrations.\n" : 'Applied: '.implode(', ', $completed)."\n");
+            break;
+
+        case 'migrate:status':
+            foreach ($application['migrations']->status() as $migration) {
+                fwrite(STDOUT, sprintf("%-20s %s\n", $migration['status'], $migration['name']));
+            }
+            break;
+
+        case 'migrate:check':
+            $application['migrations']->check();
+            fwrite(STDOUT, "Migration state is healthy.\n");
+            break;
+
+        case 'routes':
+            $http = require dirname(__DIR__).'/bootstrap/http.php';
+
+            foreach ($http['router']->routes() as $route) {
+                fwrite(STDOUT, sprintf(
+                    "%-12s %-48s %s\n",
+                    implode('|', $route->methods),
+                    $route->path,
+                    $route->name,
+                ));
+            }
+            break;
+
+        case 'files:prune':
+            $storage = new LocalPrivateStorage(
+                $application['config']->string('storage.private_root'),
+                $application['config']->string('app.base_path').'/public',
+                $application['uuid'],
+            );
+            $pending = new PendingDeletionRepository($application['pdo']);
+            $attachments = new AttachmentRepository($application['pdo']);
+            $accounts = new PdoAccountRepository($application['pdo']);
+            $logger = (new LoggerFactory($application['config']))->create();
+            $cleanup = new ProcessFileDeletion($pending, $storage, $logger, $application['clock']);
+            $result = (new PruneFiles(
+                $cleanup,
+                $attachments,
+                $accounts,
+                $storage,
+                $application['clock'],
+                $logger,
+            ))->run();
+            fwrite(STDOUT, sprintf(
+                "Pending cleaned: %d; pending failed: %d; orphans cleaned: %d; orphans failed: %d\n",
+                $result['pending_completed'],
+                $result['pending_failed'],
+                $result['orphans_deleted'],
+                $result['orphans_failed'],
+            ));
+
+            if ($result['pending_failed'] > 0 || $result['orphans_failed'] > 0) {
+                exit(1);
+            }
+            break;
+
+        case 'sessions:prune':
+            $deleted = (new SessionPruner($application['pdo']))->pruneExpired();
+            fwrite(STDOUT, "Expired sessions deleted: $deleted\n");
+            break;
+
+        case 'rate-limits:prune':
+            $deleted = (new RateLimiter($application['pdo']))->pruneExpired();
+            fwrite(STDOUT, "Expired rate-limit buckets deleted: $deleted\n");
+            break;
+
+        case 'areas:backfill':
+            $service = new PlanningService(
+                new PdoPlanningRepository($application['pdo']),
+                $application['transactions'],
+                new GraphGuard,
+                new GoalProgressCalculator,
+                $application['uuid'],
+                $application['clock'],
+                new PdoActivityRepository($application['pdo']),
+            );
+            fwrite(STDOUT, 'Created Areas: '.$service->backfillDefaultAreas()."\n");
+            break;
+
+        case 'recurrence:materialize':
+            $http = require dirname(__DIR__).'/bootstrap/http.php';
+            $result = $http['task_series_service']->materialize();
+            $http['session']->close();
+            fwrite(STDOUT, sprintf("Created occurrences: %d; failed series: %d\n", $result['created'], count($result['failed'])));
+            if ($result['failed'] !== []) {
+                fwrite(STDERR, 'Failed series: '.implode(', ', $result['failed'])."\n");
+                exit(1);
+            }
+            break;
+
+        case 'snapshots:capture':
+            $http = require dirname(__DIR__).'/bootstrap/http.php';
+            $result = $http['goal_snapshot_service']->capture();
+            $http['session']->close();
+            fwrite(STDOUT, sprintf("Created snapshots: %d; warnings: %d; failed users: %d\n", $result['created'], count($result['warnings']), count($result['failed'])));
+            if ($result['warnings'] !== [] || $result['failed'] !== []) exit(1);
+            break;
+
+        case 'help':
+            fwrite(STDOUT, "Available commands:\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
+            break;
+
+        default:
+            fwrite(STDERR, "Unknown command [$command].\n");
+            exit(2);
+    }
+} catch (Throwable $exception) {
+    fwrite(STDERR, $exception->getMessage()."\n");
+    exit(1);
+}
