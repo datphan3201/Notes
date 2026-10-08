@@ -8,14 +8,16 @@ logs belong in Git history.
 ## Current automated checks
 
 All integration cleanup checks the actual database name equals `goals_test`.
-An isolated local MySQL 8.4.11 instance on port 33317 supplied test data; the
-configured application database and private user files were untouched.
+The full backend baseline used an isolated local MySQL 8.4.11 instance on port
+33317. The latest Notes/Planning HTTP checks used the persistent local instance
+on port 3307 with the same guarded `goals_test` name. Application records and
+private user files were untouched by integration-test cleanup.
 
 | Check | Executed command | Result |
 | --- | --- | --- |
 | Full backend | From `backend/`: `PLANNER_DB_PORT=33317 PLANNER_DB_USERNAME=root PLANNER_DB_PASSWORD= php vendor/bin/phpunit -c phpunit.xml` | **90 tests / 715 assertions**, PHP 8.5.0, PHPUnit 12.5.35, 50.883 seconds |
-| Planning HTTP | Same environment, with `--filter PlanningHttpTest` | **2 tests / 38 assertions**, 2.129 seconds; owned roadmap, Strategy/version/CSRF/validation/non-disclosure and new Goal-information markup |
-| Browser modules | From `frontend/`: `npm run test:unit` | **47 passed**; autosave/recovery, read coordination, capture serialization, date filters, DraftBuffer and transition behavior |
+| Notes and Planning HTTP | From repo root: `backend/vendor/bin/phpunit -c backend/phpunit.xml --filter 'PlanningHttpTest\|NotesHttpTest'` | **7 tests / 142 assertions**, 11.776 seconds; existing request, ownership, validation, version, roadmap and completion contracts |
+| Browser modules | From `frontend/`: `npm run test:unit` | **54 passed**; adds seven checkable-note text tests to autosave/recovery, read coordination, capture serialization, date filters, DraftBuffer and transition behavior |
 | Formatting | From `frontend/`: `npm run format:check` | Pass |
 | Deployment assets | From `frontend/`: `npm run build` | Pass, Vite 8.2.2; current manifest and hashed assets in `backend/public/build` |
 | Goal view syntax | `php -l frontend/src/views/planning/goal.php` | Pass |
@@ -164,3 +166,22 @@ suites above were not rerun for this data-only follow-up.
   were visually inspected. Temporary generated browser outputs were removed.
   The PHP and browser-module suites above were not rerun for this typography
   change; no domain, request or persistence code changed.
+
+## Checkable Notes — 2026-10-08 UTC
+
+- `cd frontend && npm run test:unit`: 54 tests pass, including seven new
+  plain-text checkbox tests.
+- `backend/vendor/bin/phpunit -c backend/phpunit.xml --filter 'PlanningHttpTest|NotesHttpTest'`:
+  7 tests, 142 assertions pass on guarded `goals_test`.
+- `php -l frontend/src/views/planning/task.php`, frontend `npm run format:check`
+  and `npm run build` pass.
+- Real Chromium: Note creation/autosave/reopen; multiline checks, click/Space,
+  continuation/exit and undo/redo; literal paste and composition-event gating;
+  saved-version conflict choice and offline recovery; Task explicit Save, tab/
+  checklist draft retention, pending-save checkbox edits and version conflicts;
+  unchecked completion cancellation; loading locks and per-Note undo isolation.
+- Inspected desktop/mobile/light/dark captures; no horizontal mobile overflow.
+  Temporary Note/Task/Checklist records were deleted/archived through owned APIs.
+  The demo roadmap still has eight Milestones and 55 Tasks. Captures and browser
+  logs were removed after inspection; bundled application images were retained.
+- Native OS IME and non-Chromium engines were not exercised.

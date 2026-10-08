@@ -1,0 +1,119 @@
+.note-document {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+}
+.note-document-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+}
+.note-document-toolbar .button {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface);
+    min-height: 36px;
+    padding: 6px 10px;
+}
+.note-document-toolbar .button:hover,
+.task-note-checklist .button:hover {
+    background: var(--surface-soft);
+}
+.task-note-checklist .button {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface);
+}
+.note-content-editor {
+    position: relative;
+    min-height: 180px;
+    padding: 14px;
+    color: var(--text);
+    font-size: var(--font-size-body);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    cursor: text;
+    outline-offset: -3px;
+}
+.editor-body-field .note-content-editor {
+    min-height: 330px;
+    font-size: var(--font-size-note, 16px);
+}
+.note-content-editor[data-empty='true']::before {
+    position: absolute;
+    color: var(--muted);
+    content: attr(data-placeholder);
+    pointer-events: none;
+}
+.note-content-line {
+    min-height: 1.7em;
+}
+.note-line-control {
+    display: inline-block;
+    width: 26px;
+    vertical-align: baseline;
+    cursor: default;
+}
+.note-line-control input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    vertical-align: middle;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.note-content-line.is-checked [data-note-line-text] {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+.note-content-editor[aria-readonly='true'] {
+    cursor: default;
+}
+.task-note-checklist {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+.task-note-checklist .section-heading {
+    margin-bottom: 6px;
+}
+.task-note-checklist h3 {
+    margin: 0;
+    font-size: var(--font-size-body);
+}
+.task-note-checklist .subtle-copy {
+    font-size: var(--font-size-meta);
+}
+.task-note-checklist .capture-details {
+    margin-top: 12px;
+}
+.task-detail-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+}
+[data-note-overview-host] {
+    grid-column: auto;
+}
+[data-note-overview-host] .note-content-editor {
+    min-height: 135px;
+}
+[data-task-note-form] > .button {
+    justify-self: end;
+}
+@media (max-width: 760px) {
+    .task-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .note-content-editor {
+        font-size: 16px;
+    }
+    .note-document-toolbar .button {
+        min-height: 44px;
+    }
+    .note-line-control input {
+        outline-offset: 4px;
+    }
+}

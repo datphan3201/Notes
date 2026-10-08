@@ -114,3 +114,11 @@ content. Existing Edit goal, Strategy and Related work use grouped disclosures
 in one native dialog, replacing the four top-level Goal tabs. Draft retention,
 pending-save dismissal guards, conflict reconciliation, completed-Goal inspection
 and return focus remain part of the browser contract.
+
+Checkable-content follow-up (2026-10-08 UTC): Task completion Checklist controls
+now share the working-note card in Overview and Notes, while keeping their own
+versioned records and completion acknowledgement. Personal note checks use the
+existing explicit-save body/version flow. The approved Overview layout now has
+two columns (task context and Note), superseding the earlier three-column view.
+Draft preservation, save races and conflict projection passed real-browser checks;
+current evidence is recorded in `docs/implementation-status.md`.

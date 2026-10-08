@@ -188,6 +188,26 @@ width permits, with a compact, vertically resizable reflection editor. Short
 Task-create viewports retain accessible form scrolling; the form uses the wider
 reference proportions rather than an unnecessarily narrow desktop column.
 
+### Checkable Note content — 2026-10-08 UTC
+
+Notes and Task working notes expose a Check box action beside the content editor.
+Convert the current/selected lines into checkable lines without a separate form;
+when the current line is already checkable, add an empty checkable line after it.
+Enter continues a nonempty checkable line; Enter on an empty one resumes ordinary
+text. Users can edit, check/uncheck, copy/paste plain text and undo/redo directly.
+Maintain literal text, indentation, blank lines, Unicode, composition input and
+existing save-state/draft guards. Never interpret stored content as HTML.
+
+Checkable note lines serialize as plain `- [ ] ` / `- [x] ` text inside the existing
+Note content/Task Note body. Notes keeps autosave/recovery; Task Note keeps explicit
+Save and version reconciliation. Personal note checks do not record planning
+activity or change Task status/progress. The existing Task completion Checklist
+is moved from its separate Overview card into the shared working-note component,
+with an explicit "Task completion checklist" label and contextual Add action.
+These owned Checklist records retain their APIs, activity and unchecked-completion
+acknowledgement. Do not copy/delete existing Checklist data or silently convert it
+to note text. Task Overview uses two columns: task context and working notes.
+
 ### Illustrated walkthrough
 
 Help (`?`) sits beside Appearance in the authenticated top bar on every page.

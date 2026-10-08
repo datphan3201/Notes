@@ -159,9 +159,9 @@ export const walkthroughSteps = [
         id: 'checklist',
         group: 'Tasks',
         title: 'Use a Checklist to finish the work',
-        intro: 'Task → Overview keeps the description, expected result, estimated minutes, and completion criteria beside the Checklist.',
+        intro: 'The Task completion checklist is inside the working Note in Overview and Task → Notes. It keeps the same completion rules.',
         instructions: [
-            'Enter a small step and choose Add. Check or uncheck existing items as you work.',
+            'Expand Add completion check, enter a required step, and choose Add. Check or uncheck existing items as you work; these changes save immediately.',
             'Choose Complete task when the work is done. If Checklist items remain open, explicitly acknowledge them before completing.',
             'Completing the Task does not check its Checklist automatically. Reopen allows you to continue the work and records the reversal of completion.',
         ],
@@ -170,9 +170,9 @@ export const walkthroughSteps = [
         id: 'task-notes',
         group: 'Tasks',
         title: 'Keep notes beside a Task',
-        intro: 'Quick notes in Overview and Task → Notes share the same research, links, and decisions.',
+        intro: 'Notes in Overview and Task → Notes share the same research, links, decisions, and completion Checklist.',
         instructions: [
-            'Write in Working notes and choose Save note. This Task editor uses explicit saving.',
+            'Write in Working notes and choose Save note. Choose Check box to turn a line into a personal checkable note item. Its checked state saves with the note and does not change Task completion.',
             'Switching Overview/Notes or updating the Checklist preserves the draft. Related work lists contributing Goals. Notes → Resources recognizes HTTP links in your draft; Write returns to the editor.',
             'If the note changed elsewhere, choose Use saved version or Keep my draft, then save the chosen draft. A leave warning protects unsaved text; browser-crash recovery is not promised for this editor.',
         ],
@@ -216,6 +216,7 @@ export const walkthroughSteps = [
         title: 'Write and keep ideas',
         intro: 'Notes is the home for freeform ideas, research, and information worth keeping.',
         instructions: [
+            'Choose Check box to turn the current or selected lines into checkable items. Enter continues the list; Enter on an empty check exits it. Click a box or focus it and press Space; Notes saves these changes automatically.',
             'Choose New note, then enter a title and content. Notes saves automatically after edits; wait for Saved to know the server acknowledged the current revision.',
             'Open an existing Note to continue writing. Choose its color and use Pin to make important Notes easier to find.',
             'Delete asks for confirmation. Use it only when you intend to remove the Note and its associated files.',

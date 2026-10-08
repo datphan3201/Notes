@@ -2,6 +2,15 @@
 
 The existing Notes autosave behavior is a preserved compatibility contract.
 
+Inline checkable Note lines use the same plain-text snapshot: `- [ ] ` for an
+unchecked line and `- [x] ` for a checked line. Text edits, insertion, toggles and
+undo/redo enter the existing autosave state machine; composition never dispatches
+partial text. The interactive editor must synchronize when opening, recovering
+or choosing a conflict version, while late acknowledgements retain newer input.
+No new persistence or autosave state is introduced. Task working-note checks use
+the existing explicit-save body/version flow; Task completion Checklist records
+remain separate domain data even though their controls share the Note component.
+
 ## State and timing
 
 - One editor handles create and update.

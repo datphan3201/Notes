@@ -85,3 +85,8 @@ Port every Note/Query/Label/Security contract; test HTML literal content, wildca
 ## Exit criteria
 
 Current Notes/Labels API fixtures and all related JS cases pass against target; no Eloquent/Illuminate code is used in target path.
+
+Checkable-content follow-up (2026-10-08 UTC): the shared browser editor projects
+plain `- [ ] ` / `- [x] ` lines as native checkboxes, retaining existing Note
+content, autosave, recovery and conflict snapshots. Literal/Unicode text and
+keyboard behavior were verified without changing the Note API or data model.

@@ -4,6 +4,7 @@ import { renderEmptyState } from '../lib/empty-state.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
+import { NoteContentEditor } from '../notes/note-content-editor.js';
 import { collectionPage, renderPagination } from './collection-page.js';
 import { localDate, taskMatchesView, resourceLinks } from './task-views.js';
 import {
@@ -579,7 +580,7 @@ export function initTaskDetail(root) {
         const placeNote = () => {
             (notePanel.hidden ? noteHome : notePanel).append(noteCard);
             noteCard.querySelector('[data-task-note-heading]').textContent = notePanel.hidden
-                ? 'Quick notes'
+                ? 'Notes'
                 : 'Working notes';
             noteCard.querySelector('textarea').rows = notePanel.hidden ? 4 : 8;
         };
@@ -641,7 +642,9 @@ export function initTaskDetail(root) {
     const noteForm = root.querySelector('[data-task-note-form]');
     const body = noteForm.elements.body;
     body.disabled = true;
-    noteForm.querySelector('button').disabled = true;
+    const contentEditor = new NoteContentEditor(body);
+    const saveNoteButton = noteForm.querySelector('[type="submit"]');
+    saveNoteButton.disabled = true;
     const noteState = root.querySelector('[data-task-note-state]');
     const updateNoteState = () => {
         noteState.textContent = savingNote
@@ -706,6 +709,8 @@ export function initTaskDetail(root) {
                 : 'Select for this week';
             transition.textContent = task.status === 'Done' ? 'Reopen' : 'Complete';
             const list = root.querySelector('[data-task-checklist]');
+            root.querySelector('[data-task-checklist-count]').textContent =
+                `${checklist.filter((item) => item.checked).length} / ${checklist.length}`;
             list.replaceChildren();
             for (const item of checklist) {
                 const label = document.createElement('label');
@@ -735,9 +740,10 @@ export function initTaskDetail(root) {
             }
             if (!checklist.length) list.textContent = 'No checklist items yet.';
             if (draft.receive({ body: note?.body || '' }, note?.version || null))
-                body.value = draft.values.body;
+                contentEditor.setValue(draft.values.body);
             body.disabled = false;
-            noteForm.querySelector('button').disabled = !!noteConflict || savingNote;
+            contentEditor.setReadOnly(false);
+            saveNoteButton.disabled = !!noteConflict || savingNote;
             updateNoteState();
             renderResources();
             const context = root.querySelector('[data-task-context]');
@@ -862,7 +868,7 @@ export function initTaskDetail(root) {
         event.preventDefault();
         if (savingNote || noteConflict) return;
         savingNote = true;
-        const button = noteForm.querySelector('button');
+        const button = saveNoteButton;
         const submitted = { ...draft.values };
         button.disabled = true;
         updateNoteState();
@@ -870,7 +876,7 @@ export function initTaskDetail(root) {
             const response = await post(`/api/v1/tasks/${id}/note`, draft.freeze());
             note = response.payload.data;
             draft.acknowledge({ body: note.body }, note.version, submitted);
-            body.value = draft.values.body;
+            contentEditor.setValue(draft.values.body);
         } catch (reason) {
             if (reason.status === 409 && reason.payload?.current) {
                 noteConflict = reason.payload.current;
@@ -893,12 +899,12 @@ export function initTaskDetail(root) {
             draft.receive({ body: noteConflict.body }, Number(noteConflict.version), { keepDraft });
             note = noteConflict;
             noteConflict = null;
-            body.value = draft.values.body;
+            contentEditor.setValue(draft.values.body);
             root.querySelector('[data-task-note-conflict]').classList.add('is-hidden');
             root.querySelector('[data-planning-error]').classList.add('is-hidden');
-            noteForm.querySelector('button').disabled = false;
+            saveNoteButton.disabled = false;
             updateNoteState();
-            body.focus();
+            contentEditor.focus();
         });
     }
     root.querySelector('[data-task-transition]').addEventListener('click', async (event) => {

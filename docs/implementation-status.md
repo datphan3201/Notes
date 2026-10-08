@@ -182,3 +182,32 @@ was removed so hollow/check marks stay centered. Formatting and Vite build pass;
 real Chromium checked nine populated workspaces at three widths, five dialog
 states at desktop/mobile, Vietnamese font loading and Note-size preservation.
 Backend behavior and persisted demo content were not changed.
+
+## Checkable Note content — 2026-10-08 UTC
+
+Notes and Task working notes now share a text-and-checkbox editor with a
+**Check box** action, line continuation/exit, keyboard toggles and undo/redo.
+Checkable lines remain plain text in the existing content/body fields and
+snapshots; user-authored HTML is displayed literally. Notes retains autosave and
+account-scoped recovery, while Task Note retains explicit Save and its existing
+versioned draft buffer. Personal note checks do not change Task status/progress
+or create planning Activity.
+
+The existing Task completion Checklist moved into the working-note card, with
+its own label, checked/total count and contextual Add action. Its records and
+owned/versioned mutations remain intact, including unchecked-item acknowledgement
+when completing a Task. Overview places task context beside the combined Note
+card; the Notes tab focuses that same component. Help and the interface guide
+explain the distinction and save behavior. No schema or HTTP contract changed.
+
+Verification: all 54 browser-module unit tests pass, including seven new tests
+for literal/Unicode preservation, selected-line conversion, duplicate titles,
+continuation/exit, surrogate-safe deletion and text replacement. Existing Notes
+and Planning HTTP tests pass on guarded `goals_test` (7 tests, 142 assertions).
+PHP template syntax, Prettier and the Vite build pass. Real Chromium verified
+creation/autosave/reopen, keyboard checks, undo/redo, multiline paste, composition
+event gating, conflict-version projection, offline draft recovery, Task explicit
+Save, checklist refresh/tab draft preservation and late-save acknowledgements.
+Desktop/mobile captures were inspected; temporary captures and verification
+records were removed after inspection. Native OS IME and other browser engines
+were not exercised by this run.

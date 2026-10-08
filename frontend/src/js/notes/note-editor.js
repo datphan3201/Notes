@@ -8,6 +8,7 @@ import {
     validateSnapshot,
 } from '../lib/normalization';
 import { AutosaveMachine } from './autosave-machine';
+import { NoteContentEditor } from './note-content-editor.js';
 
 export class NoteEditor {
     constructor({ root, userId, preferences, getLabels, onChanged, confirm, toast, onConflict }) {
@@ -31,6 +32,7 @@ export class NoteEditor {
         this.backdrop = document.querySelector('[data-editor-dialog-backdrop]');
         this.title = root.querySelector('[data-editor-title]');
         this.content = root.querySelector('[data-editor-content]');
+        this.contentEditor = new NoteContentEditor(this.content);
         this.status = root.querySelector('[data-editor-status]');
         this.meta = root.querySelector('[data-editor-meta]');
         this.heading = root.querySelector('[data-editor-heading]');
@@ -139,6 +141,8 @@ export class NoteEditor {
         this.dispose();
         const generation = this.generation;
         this.show();
+        this.title.readOnly = true;
+        this.contentEditor.setReadOnly(true);
         this.heading.textContent = 'Opening note…';
         this.eyebrow.textContent = 'Note';
         this.setStatus('Loading…');
@@ -225,6 +229,7 @@ export class NoteEditor {
         const locked = ['auth_expired', 'unavailable', 'closing'].includes(state.phase);
         this.title.readOnly = locked;
         this.content.readOnly = locked;
+        this.contentEditor.setReadOnly(locked);
         this.root
             .querySelector('[data-session-recovery]')
             .classList.toggle('is-hidden', state.phase !== 'auth_expired');
@@ -335,7 +340,7 @@ export class NoteEditor {
 
     writeFields(note) {
         this.title.value = note.title || '';
-        this.content.value = note.content || '';
+        this.contentEditor.setValue(note.content || '', { reset: true });
         this.root.querySelectorAll('[data-color]').forEach((button) => {
             const selected = button.dataset.color === (note.color || 'neutral');
             button.classList.toggle('is-selected', selected);
@@ -346,7 +351,7 @@ export class NoteEditor {
         if (!this.machine) return;
         const snapshot = this.machine.state.draftSnapshot;
         this.title.value = snapshot.title;
-        this.content.value = snapshot.content;
+        this.contentEditor.setValue(snapshot.content);
     }
 
     syncUnloadGuard() {

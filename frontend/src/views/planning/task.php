@@ -18,15 +18,6 @@
                 <div><dt>Completion criteria</dt><dd data-task-criteria>—</dd></div>
             </dl></details>
         </article>
-        <article class="planning-panel">
-            <h2>Checklist</h2>
-            <div data-task-checklist aria-live="polite"></div>
-            <form class="inline-form" data-checklist-form>
-                <label class="sr-only" for="checklist-title">New checklist item</label>
-                <input id="checklist-title" name="title" maxlength="500" placeholder="New checklist item" required>
-                <button class="button button-quiet" type="submit">Add</button>
-            </form>
-        </article>
         <div data-note-overview-host></div>
     </div>
 </section>
@@ -36,7 +27,20 @@
             <label class="sr-only" for="task-note-body">Task note</label>
             <textarea id="task-note-body" name="body" maxlength="50000" rows="8" placeholder="Research, links, decisions, and working notes…"></textarea>
             <button class="button button-primary" type="submit">Save note</button>
-        </form></section><section id="task-note-panel-resources" role="tabpanel" aria-labelledby="task-note-tab-resources" data-workspace-panel="note-resources" hidden><div class="resources-list" data-task-resources></div></section>
+        </form>
+        <section class="task-note-checklist" aria-labelledby="task-completion-checklist-title">
+            <div class="section-heading"><h3 id="task-completion-checklist-title">Task completion checklist</h3><span class="subtle-copy" data-task-checklist-count></span></div>
+            <p class="subtle-copy">Used when completing this task. Check boxes in the note above are for your own tracking.</p>
+            <div data-task-checklist aria-live="polite"></div>
+            <details class="capture-details"><summary>Add completion check</summary>
+                <form class="inline-form" data-checklist-form>
+                    <label class="sr-only" for="checklist-title">New completion check</label>
+                    <input id="checklist-title" name="title" maxlength="500" placeholder="What needs to be done?" required>
+                    <button class="button button-quiet" type="submit">Add</button>
+                </form>
+            </details>
+        </section>
+        </section><section id="task-note-panel-resources" role="tabpanel" aria-labelledby="task-note-tab-resources" data-workspace-panel="note-resources" hidden><div class="resources-list" data-task-resources></div></section>
     </article>
 </section>
 <section id="task-panel-related" role="tabpanel" aria-labelledby="task-tab-related" data-workspace-panel="related" hidden><article class="planning-panel"><h2>Context and contributions</h2><p class="subtle-copy">Other goals this work supports.</p><div data-task-related></div></article></section>
