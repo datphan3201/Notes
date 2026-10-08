@@ -81,12 +81,12 @@
 .avatar-small {
     width: 32px;
     height: 32px;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .avatar-large {
     width: 78px;
     height: 78px;
-    font-size: 28px;
+    font-size: 1.75rem;
 }
 .inline-actions {
     display: flex;

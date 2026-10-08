@@ -124,7 +124,7 @@ body:has(.workspace-dialog[open]) {
 [data-review-state],
 [data-task-note-state] {
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 [data-task-note-form] textarea,
 [data-review-edit-form] textarea {
@@ -165,7 +165,7 @@ body:has(.workspace-dialog[open]) {
         border-radius: 14px;
     }
     .roadmap-center h3 {
-        font-size: 16px;
+        font-size: 1rem;
         margin: 4px 0;
     }
     .roadmap-center p {
@@ -180,7 +180,7 @@ body:has(.workspace-dialog[open]) {
         gap: 12px;
     }
     .planning-page > .workspace-header h1 {
-        font-size: 25px;
+        font-size: 1.5rem;
     }
     .planning-page > .workspace-header > .action-row {
         width: 100%;

@@ -22,7 +22,7 @@
     align-items: center;
     padding: 0 12px 32px;
     color: var(--text);
-    font-size: 21px;
+    font-size: 1.3125rem;
     font-weight: 600;
     letter-spacing: -0.045em;
     text-decoration: none;
@@ -31,7 +31,7 @@
     display: block;
     margin-top: 3px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
     font-weight: 400;
     letter-spacing: 0;
 }
@@ -80,7 +80,7 @@
     padding: 10px 12px;
     color: var(--muted);
     border-radius: 7px;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     font-weight: 500;
     text-decoration: none;
 }
@@ -100,7 +100,7 @@
 .sidebar-section-label {
     margin: 0 12px 10px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .account-nav {
     margin-top: 30px;
@@ -136,12 +136,12 @@
     white-space: nowrap;
 }
 .sidebar-user-copy strong {
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
 }
 .sidebar-user-copy small {
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .app-body {
     min-width: 0;
@@ -155,7 +155,7 @@
     gap: 16px;
     padding: 0 clamp(24px, 3.5vw, 52px);
     border-bottom: 1px solid var(--border);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .topbar-location {
     display: flex;
@@ -177,7 +177,7 @@
 .account-notice {
     background: var(--surface-soft);
     border-color: var(--border);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     color: var(--muted);
 }
 .account-notice .ui-icon {
@@ -203,7 +203,7 @@
     max-width: 65ch;
     margin-bottom: 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     line-height: 1.7;
 }
 .workspace-header .eyebrow,
@@ -224,7 +224,7 @@
 .save-status {
     min-height: 20px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .save-status.is-success {
     color: var(--accent);
@@ -313,17 +313,17 @@
     display: block;
 }
 .guest-path strong {
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     font-weight: 500;
 }
 .guest-path small {
     margin-top: 3px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .guest-footnote {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     color: var(--muted);
 }
 .guest-form-region {
@@ -337,7 +337,7 @@
     max-width: 370px;
 }
 .auth-card h1 {
-    font-size: 30px;
+    font-size: 1.875rem;
 }
 .auth-card .eyebrow {
     display: none;
@@ -345,13 +345,13 @@
 .auth-intro {
     margin-bottom: 32px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     line-height: 1.8;
 }
 .auth-switch {
     margin: 28px 0 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     text-align: center;
 }
 .auth-switch a {
@@ -436,7 +436,7 @@ body.navigation-open {
         padding: 24px 20px 40px;
     }
     h1 {
-        font-size: 27px;
+        font-size: 1.6875rem;
     }
     .workspace-header,
     .settings-header {

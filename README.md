@@ -13,7 +13,7 @@ The application is a same-origin modular monolith. It does not use Laravel, anot
 - PHP 8.5 with application-owned HTTP, routing, validation, sessions, services, and PDO repositories
 - MySQL 8.4 / InnoDB / `utf8mb4_0900_ai_ci`
 - Composer packages limited to focused infrastructure utilities
-- JavaScript modules, Alpine.js, custom CSS, Noto Sans
+- JavaScript modules, Alpine.js, custom CSS, locally bundled Be Vietnam Pro
 - Vite 8, Node 22, npm 10
 - PHPUnit 12, Node's test runner, and Playwright for browser verification
 

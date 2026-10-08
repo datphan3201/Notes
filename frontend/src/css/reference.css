@@ -36,8 +36,9 @@
     padding-inline: 32px;
     min-height: 44px;
 }
-.workspace-header h1 {
-    font-size: 26px;
+.workspace-header h1,
+.settings-header h1 {
+    font-size: var(--font-size-heading);
 }
 .planning-page > .scene-header {
     min-height: 108px;
@@ -59,7 +60,7 @@
 .workspace-section-menu [role='tab'],
 .goal-section-menu [role='tab'] {
     padding: 8px 14px;
-    font-size: 12px;
+    font-size: var(--font-size-ui);
     min-height: 36px;
     border-radius: 6px;
 }
@@ -69,7 +70,7 @@
     box-shadow: 0 5px 18px rgb(25 64 96 / 3%);
 }
 .planning-panel h2 {
-    font-size: 14px;
+    font-size: var(--font-size-section);
 }
 .dashboard-page {
     position: relative;
@@ -127,14 +128,14 @@
     padding-left: 10px;
 }
 .focus-name {
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 .streak-flame {
     margin-right: 7px;
-    font-size: 24px;
+    font-size: 1.5rem;
 }
 .streak-value {
-    font-size: 25px;
+    font-size: 1.5625rem;
 }
 .streak-days {
     gap: 6px;
@@ -153,7 +154,7 @@
     color: white;
     background: var(--success);
     border-color: var(--success);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .dashboard-roadmap {
     padding: 16px;
@@ -172,7 +173,7 @@
     top: -6px;
     right: 2px;
     color: #94b6d8;
-    font-size: 21px;
+    font-size: 1.3125rem;
 }
 .dashboard-focus-grid {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -209,7 +210,7 @@
 }
 .main-goal-card h2 {
     max-width: 26ch;
-    font-size: 24px;
+    font-size: 1.5rem;
 }
 .main-goal-card > p {
     max-width: 38ch;
@@ -262,11 +263,11 @@
     background: hsl(var(--area-hue) 60% 92%);
 }
 .area-title {
-    font-size: 14px;
+    font-size: var(--font-size-body);
 }
 .goal-area-group > summary .subtle-copy {
     grid-column: 2;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     font-weight: 400;
 }
 .goal-area-group > summary .progress-track {
@@ -365,7 +366,7 @@
 .roadmap-center > small {
     display: block;
     margin-top: 4px;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     color: var(--text);
     font-weight: 600;
 }
@@ -417,12 +418,12 @@
 }
 .roadmap-branch > strong {
     grid-column: 2;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     line-height: 1.4;
 }
 .roadmap-branch > small {
     grid-column: 2;
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .roadmap-branch .progress-track {
     grid-column: 2;
@@ -435,7 +436,7 @@
 }
 .roadmap-task-preview {
     grid-column: 1 / -1;
-    font-size: 10px;
+    font-size: var(--font-size-caption);
     line-height: 1.3;
     margin-top: 3px;
     padding-left: 12px;
@@ -452,7 +453,7 @@
 }
 [data-note-overview-host] [data-task-note-form] textarea {
     min-height: 150px;
-    font-size: 12px;
+    font-size: var(--font-size-body);
 }
 [data-note-overview-host] .workspace-section-menu [role='tab'] {
     padding-inline: 8px;
@@ -485,12 +486,12 @@
         margin-left: 188px;
     }
     .sidebar-brand {
-        font-size: 19px;
+        font-size: 1.1875rem;
         padding-bottom: 24px;
     }
     .nav-link {
         min-height: 42px;
-        font-size: 12px;
+        font-size: var(--font-size-ui);
     }
 }
 @media (max-width: 1100px) and (min-width: 761px) {
@@ -545,6 +546,10 @@
     }
 }
 @media (max-width: 600px) {
+    .workspace-header h1,
+    .settings-header h1 {
+        font-size: 1.5rem;
+    }
     .app-main {
         padding: 18px 16px 32px;
     }
@@ -583,10 +588,10 @@
         gap: 2px;
     }
     .streak-value {
-        font-size: 22px;
+        font-size: 1.375rem;
     }
     .streak-flame {
-        font-size: 19px;
+        font-size: 1.1875rem;
         margin-right: 4px;
     }
     .main-goal-card {
@@ -595,7 +600,7 @@
     }
     .main-goal-card h2 {
         max-width: 18ch;
-        font-size: 21px;
+        font-size: 1.3125rem;
     }
     .main-goal-card .reference-summit {
         width: 46%;
@@ -770,10 +775,10 @@
     mask-composite: intersect;
 }
 .roadmap-branch > strong {
-    font-size: 14px;
+    font-size: var(--font-size-body);
 }
 .roadmap-branch > small {
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .roadmap-task-preview {
     position: absolute;
@@ -836,8 +841,8 @@ body:not(:has(.settings-page)) .account-nav,
     }
 }
 .task-description {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
     white-space: pre-wrap;
     margin-bottom: 16px;
 }
@@ -849,7 +854,7 @@ body:not(:has(.settings-page)) .account-nav,
 }
 .task-extra-definition {
     margin-top: 14px;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .task-extra-definition summary {
     color: var(--accent);
@@ -902,7 +907,7 @@ body:not(:has(.settings-page)) .account-nav,
     grid-column: 1/-1;
     grid-row: 2;
     margin: 0;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 [data-habit-list] .planning-list-item {
     display: grid;
@@ -934,7 +939,7 @@ body:not(:has(.settings-page)) .account-nav,
     left: 0;
     display: grid;
     place-items: center;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .habit-row-marker.is-checked {
     background: var(--accent);
@@ -959,7 +964,7 @@ body:not(:has(.settings-page)) .account-nav,
     height: 22px;
     border: 1px solid var(--control-border);
     border-radius: 50%;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .habit-today-action[data-checked='true']::before {
     background: var(--accent-soft);
@@ -1062,13 +1067,13 @@ body:not(:has(.settings-page)) .account-nav,
 }
 .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-goal-name {
     margin: 10px 0 8px;
-    font-size: 17px;
+    font-size: 1.125rem;
     line-height: 1.4;
     color: var(--text);
 }
 .goal-roadmap[data-roadmap-layout='fishbone'] [data-roadmap-goal-state] {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     color: var(--muted);
 }
 .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-connections {
@@ -1169,7 +1174,7 @@ body:not(:has(.settings-page)) .account-nav,
 }
 .roadmap-goal-state {
     margin-top: 6px;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     color: var(--muted);
 }
 .goal-information-content p,
@@ -1188,7 +1193,7 @@ body:not(:has(.settings-page)) .account-nav,
 .goal-information-section > summary span {
     margin-left: 10px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 400;
 }
 .goal-information-section > form,
@@ -1210,5 +1215,15 @@ body:not(:has(.settings-page)) .account-nav,
         top: -20px;
         margin: -20px -16px 20px;
         padding: 20px 16px;
+    }
+}
+
+/* Keep small-screen inputs readable without overriding Note text preferences. */
+@media (max-width: 600px) {
+    input:not([type='checkbox']):not([type='radio']):not(.editor-title-input),
+    select,
+    textarea:not(.editor-content-input),
+    [data-note-overview-host] [data-task-note-form] textarea {
+        font-size: 1rem;
     }
 }

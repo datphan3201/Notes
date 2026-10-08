@@ -10,7 +10,7 @@
         "format:check": "prettier --check src/js src/css tests/js vite.config.js"
     },
     "dependencies": {
-        "@fontsource/noto-sans": "^5.2.5",
+        "@fontsource/be-vietnam-pro": "^5.3.0",
         "alpinejs": "^3.14.9"
     },
     "devDependencies": {

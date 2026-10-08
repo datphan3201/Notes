@@ -40,7 +40,7 @@
 .filter-count {
     margin-left: auto;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .filter-divider {
     height: 1px;
@@ -53,7 +53,7 @@
     justify-content: space-between;
     padding: 0 10px 8px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 600;
 }
 .label-filter-list {
@@ -90,7 +90,7 @@
     color: var(--accent);
     background: transparent;
     border: 0;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     cursor: pointer;
 }
 .notes-toolbar {
@@ -109,7 +109,7 @@
 }
 .search-field > span {
     color: var(--muted);
-    font-size: 22px;
+    font-size: 1.375rem;
     line-height: 1;
 }
 .search-field input {
@@ -142,7 +142,7 @@
     background: transparent;
     border: 0;
     border-radius: 6px;
-    font-size: 20px;
+    font-size: 1.25rem;
     cursor: pointer;
 }
 .view-button.is-active {
@@ -159,13 +159,13 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .notes-feedback {
     min-height: 26px;
     margin-bottom: 7px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .empty-state {
     grid-column: 1 / -1;
@@ -179,7 +179,7 @@
 .empty-state h2 {
     margin-bottom: 7px;
     color: var(--text);
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 .empty-state p {
     margin: 0;
@@ -222,7 +222,7 @@
     margin: 0;
     overflow: hidden;
     color: var(--text);
-    font-size: 15px;
+    font-size: var(--font-size-body);
     line-height: 1.4;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -235,7 +235,7 @@
 .note-card-actions .icon-button {
     width: 34px;
     height: 34px;
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 .note-card-preview {
     display: -webkit-box;
@@ -257,7 +257,7 @@
     align-items: center;
     justify-content: space-between;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .note-labels {
     display: flex;
@@ -282,11 +282,11 @@
 }
 .note-card-pin {
     color: var(--accent);
-    font-size: 17px;
+    font-size: 1.0625rem;
 }
 .note-card-attachment {
     color: var(--muted);
-    font-size: 15px;
+    font-size: var(--font-size-body);
 }
 .notes-list {
     display: grid;
@@ -355,7 +355,7 @@
 }
 .editor-meta {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .editor-form {
     display: grid;
@@ -367,7 +367,7 @@
     background: transparent !important;
     border: 0 !important;
     border-radius: 0 !important;
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 600;
     line-height: 1.4;
 }
@@ -452,7 +452,7 @@
 }
 .popover-heading span {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .editor-label-check {
     display: flex;
@@ -505,7 +505,7 @@
 .attachment-row .icon-button {
     width: 34px;
     height: 34px;
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 .attachment-row-pending {
     border: 1px dashed var(--border);
@@ -527,7 +527,7 @@
 }
 .conflict-compare article h3 {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 600;
 }
 .conflict-compare strong {

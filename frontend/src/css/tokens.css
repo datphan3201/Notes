@@ -16,6 +16,14 @@
     --radius-note: 12px;
     --radius-control: 8px;
     --radius-dialog: 16px;
+    --font-family-ui: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-size-body: 0.9375rem;
+    --font-size-ui: 0.875rem;
+    --font-size-meta: 0.8125rem;
+    --font-size-caption: 0.75rem;
+    --font-size-section: 1.0625rem;
+    --font-size-heading: 1.75rem;
+    --line-height-body: 1.6;
     --font-size-note: 16px;
 }
 

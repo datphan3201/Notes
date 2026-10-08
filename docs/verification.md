@@ -141,3 +141,26 @@ roadmap API read confirmed all eight Milestones and 55 Tasks. No unhandled
 browser errors were observed during those checks. Temporary browser outputs
 were removed after verification. No feature code changed and the automated
 suites above were not rerun for this data-only follow-up.
+
+## Typography refinement — 2026-10-08 UTC
+
+- `npm run format:check` and `npm run build` pass after the final CSS changes.
+  The Fontsource 5.3.0 package archive matched the official npm SHA-512 integrity;
+  the lockfile retains the canonical registry URL. No remote font service is
+  required by the browser.
+- Real Chromium checked Dashboard, Goal roadmap, Goals, Tasks, Task details,
+  Habits, Reviews, Notes and Appearance at widths 1440, 768 and 360. All 27 checks
+  loaded Be Vietnam Pro with 15px body text and Vietnamese glyphs, without page
+  horizontal overflow or unhandled browser/font-request failures.
+- Ten dialog checks passed: Goal information, its Strategy disclosure, Task
+  edit, Note editor and Help at 1440/360. Dialog content had no horizontal
+  overflow; mobile Strategy/Task inputs used 16px. Note content retained each
+  14/16/18px setting and its title stayed 24px, using browser-only preference
+  changes rather than persisted demo mutations.
+- Four additional checks after the final title adjustment confirmed Notes and
+  Appearance headings are 28px at desktop and 24px at mobile without horizontal
+  overflow. Mobile Habit dots keep their non-text circle representation.
+- Before/after Dashboard and roadmap captures and mobile Goal/Help/dark captures
+  were visually inspected. Temporary generated browser outputs were removed.
+  The PHP and browser-module suites above were not rerun for this typography
+  change; no domain, request or persistence code changed.

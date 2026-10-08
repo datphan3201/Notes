@@ -2,11 +2,11 @@
 
 ## Design direction
 
-The approved whole-application redesign uses the existing custom CSS, Noto Sans, PHP views, and JavaScript modules. The application language remains English throughout. Notes keeps its editor, autosave, filters, recovery, and attachment behavior while adopting the shared visual system.
+The approved whole-application redesign uses the existing custom CSS, Be Vietnam Pro, PHP views, and JavaScript modules. The application language remains English throughout. Notes keeps its editor, autosave, filters, recovery, and attachment behavior while adopting the shared visual system.
 
 ### Current visual and interaction baseline
 
-Use the approved illustrated reference and graphic contract below. Noto Sans,
+Use the approved illustrated reference and graphic contract below. Be Vietnam Pro,
 semantic light/dark tokens, local icons and the existing responsive shell are
 shared across the app. Collection creation is contextual; unrelated Dashboard
 functions use selectable modes rather than one long scrolling surface.
@@ -16,6 +16,18 @@ supports Escape and returns focus to its trigger. Desktop resize clears mobile
 state. Dashboard reads are serialized, loading/errors are visible, successful
 retries clear errors, and Activity tooltips stay outside the scrolling calendar.
 Only factual data is displayed; no fabricated metrics or inactive controls.
+
+### Typography refinement — 2026-10-08 UTC
+
+Use locally bundled Be Vietnam Pro in regular, medium, semibold and bold, with
+Latin, Latin Extended and Vietnamese subsets. Content remains dominant through
+a shared rem-based scale: 15px body text, 14px navigation/actions and form labels,
+13px supporting metadata, and 12px compact captions at the default browser size.
+Page headings use 28px (24px on small screens); section headings use 17–18px.
+Use relaxed body line height and natural wrapping rather than shrinking text to
+fit the reference. Keep imagery, navigation and existing component layouts.
+Text inputs use at least 16px on narrow screens. The Note editor retains the
+existing account preference of 14, 16 or 18px independently of interface text.
 
 ## Information architecture
 
@@ -100,7 +112,7 @@ and on Profile rather than taking up every planning page's first viewport.
 
 Use the bundled `frontend/src/images/reference/UI.png` as the visual reference while preserving current
 navigation, ownership, save/draft behavior, and roadmap domain rules. Reuse the
-Noto Sans family, semantic controls, focus styles, and one selected content
+Be Vietnam Pro family, semantic controls, focus styles, and one selected content
 section at a time. Light defaults: icy blue canvas #f3f7ff, white surfaces,
 navy text #142849, teal action #067287, green completion graphics #12a77e
 with darker green text #087e5e, and pale context chips. Muted text #55708e

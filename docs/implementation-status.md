@@ -165,3 +165,20 @@ Milestones), named Goal information, Strategy and the eight Foundations Tasks.
 The roadmap API independently returned eight Milestones and 55 Tasks; no
 unhandled browser errors were observed. Progress remains calculated by the
 existing domain rules rather than copied from illustration percentages.
+
+## Typography refinement — 2026-10-08 UTC
+
+Be Vietnam Pro replaces Noto Sans through the existing Fontsource/Vite pipeline.
+Four actual weights and Latin, Latin Extended and Vietnamese subsets are served
+locally. Shared rem-based tokens set body text to 15px, navigation/actions to
+14px, metadata to 13px, compact captions to 12px and section headings to 17–18px.
+Workspace/settings titles use 28px, falling to 24px on narrow screens. Supporting
+text no longer falls to 8–11px; activity weekday spacing accommodates the larger
+labels. The existing illustrated graphics and navigation are retained.
+
+Mobile form inputs use 16px, while Note title/content retain their own scale and
+existing 14/16/18px content preference. A conflicting mobile Habit-dot font rule
+was removed so hollow/check marks stay centered. Formatting and Vite build pass;
+real Chromium checked nine populated workspaces at three widths, five dialog
+states at desktop/mobile, Vietnamese font loading and Note-size preservation.
+Backend behavior and persisted demo content were not changed.

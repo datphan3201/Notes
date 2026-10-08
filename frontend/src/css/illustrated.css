@@ -65,7 +65,7 @@ body {
     padding-bottom: 22px;
 }
 h1 {
-    letter-spacing: -0.035em;
+    letter-spacing: -0.025em;
 }
 .planning-panel {
     border-radius: 14px;
@@ -121,7 +121,7 @@ h1 {
     border-radius: 10px;
     background: color-mix(in srgb, var(--surface) 93%, transparent);
     color: var(--text);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     line-height: 1.7;
     overflow-wrap: anywhere;
 }
@@ -139,7 +139,7 @@ h1 {
 }
 .dashboard-summary-grid h2,
 .insight-card h2 {
-    font-size: 14px;
+    font-size: var(--font-size-section);
     margin-bottom: 14px;
 }
 .week-summary {
@@ -148,13 +148,13 @@ h1 {
     align-items: center;
 }
 .week-summary strong {
-    font-size: 18px;
+    font-size: 1.125rem;
     color: var(--success-text);
 }
 .week-summary small {
     display: block;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     margin-top: 5px;
 }
 .progress-ring {
@@ -176,7 +176,7 @@ h1 {
 }
 .progress-ring strong {
     z-index: 1;
-    font-size: 18px;
+    font-size: 1.125rem;
     color: var(--text);
 }
 .day-bars {
@@ -209,10 +209,10 @@ h1 {
 }
 .day-bar small {
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .streak-value {
-    font-size: 28px;
+    font-size: 1.75rem;
     letter-spacing: -0.04em;
 }
 .streak-days {
@@ -227,18 +227,18 @@ h1 {
 }
 .streak-days span {
     color: var(--muted);
-    font-size: 17px;
+    font-size: 1.0625rem;
 }
 .streak-days .is-checked {
     color: var(--success);
 }
 .streak-days small {
-    font-size: 10px;
+    font-size: var(--font-size-caption);
     color: var(--muted);
 }
 .focus-name {
     display: block;
-    font-size: 19px;
+    font-size: 1.1875rem;
     font-weight: 600;
     margin-bottom: 8px;
     color: var(--text);
@@ -246,7 +246,7 @@ h1 {
 }
 .focus-description {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-ui);
     line-height: 1.7;
     margin-bottom: 12px;
 }
@@ -264,7 +264,7 @@ h1 {
     background: var(--accent-soft);
     color: var(--accent);
     padding: 3px 8px;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     margin: 0 6px 5px 0;
 }
 .roadmap-preview {
@@ -277,7 +277,7 @@ h1 {
     min-width: 0;
     position: relative;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     padding: 26px 8px 0 0;
     text-decoration: none;
     overflow-wrap: anywhere;
@@ -324,7 +324,7 @@ h1 {
     border-radius: 8px;
     padding: 10px 12px;
     font: inherit;
-    font-size: 12px;
+    font-size: var(--font-size-ui);
     color: var(--muted);
     cursor: pointer;
 }
@@ -342,7 +342,7 @@ h1 {
 .task-filter-details summary {
     cursor: pointer;
     color: var(--accent);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     padding: 8px 0;
 }
 .main-goal-card {
@@ -357,11 +357,11 @@ h1 {
 }
 .main-goal-card h2 {
     max-width: 28ch;
-    font-size: 23px;
+    font-size: 1.4375rem;
 }
 .main-goal-card p {
     max-width: 42ch;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     color: var(--muted);
 }
 .progress-track {
@@ -395,7 +395,7 @@ h1 {
     gap: 8px;
     align-items: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--font-size-ui);
     font-weight: 600;
 }
 .goal-area-group .goal-tree {
@@ -409,7 +409,7 @@ h1 {
 }
 .goal-timeline-item time {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     min-width: 90px;
 }
 .habit-summary {
@@ -430,14 +430,14 @@ h1 {
     min-height: 44px;
     display: grid;
     place-items: center;
-    font-size: 17px;
+    font-size: 1.0625rem;
     cursor: pointer;
 }
 .habit-checkin-days button.is-checked {
     color: var(--success);
 }
 .habit-checkin-days small {
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .habit-checkin-days button:disabled {
     opacity: 0.5;
@@ -456,7 +456,7 @@ h1 {
     border-radius: 12px;
 }
 .insight-card > strong {
-    font-size: 26px;
+    font-size: 1.625rem;
 }
 .review-period-navigation {
     display: flex;
@@ -464,7 +464,7 @@ h1 {
     gap: 8px;
     align-items: center;
     margin: 16px 0;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .theme-picker {
     display: grid;
@@ -490,7 +490,7 @@ h1 {
 }
 .theme-option strong {
     margin: 0 12px;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .theme-option.is-selected {
     border-color: var(--accent);
@@ -517,7 +517,7 @@ h1 {
     background: var(--surface-soft);
     color: var(--muted);
     border-radius: 5px;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     padding: 5px 7px;
     cursor: pointer;
 }
@@ -619,7 +619,7 @@ h1 {
     width: 3px;
 }
 .day-bars:has(.day-bar:nth-child(8)) .day-bar small {
-    font-size: 8px;
+    font-size: var(--font-size-caption);
 }
 .roadmap-branch {
     background: color-mix(in srgb, var(--surface) 96%, transparent);
@@ -665,14 +665,11 @@ h1 {
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 2px;
     }
-    .dashboard-summary-grid .streak-days span {
-        font-size: 14px;
-    }
     .dashboard-summary-grid .subtle-copy {
-        font-size: 11px;
+        font-size: var(--font-size-caption);
     }
     .dashboard-summary-grid h2 {
-        font-size: 12px;
+        font-size: var(--font-size-ui);
     }
     .day-bars:has(.day-bar:nth-child(8)) .day-bar small {
         display: none;

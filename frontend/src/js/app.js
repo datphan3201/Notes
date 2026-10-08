@@ -1,7 +1,8 @@
 import Alpine from 'alpinejs';
-import '@fontsource/noto-sans/latin-400.css';
-import '@fontsource/noto-sans/latin-500.css';
-import '@fontsource/noto-sans/latin-600.css';
+import '@fontsource/be-vietnam-pro/400.css';
+import '@fontsource/be-vietnam-pro/500.css';
+import '@fontsource/be-vietnam-pro/600.css';
+import '@fontsource/be-vietnam-pro/700.css';
 import './lib/normalization';
 import { RecoveryStore } from './lib/recovery-store';
 import { NotesPage } from './notes/notes-page';

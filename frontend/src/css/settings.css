@@ -51,7 +51,7 @@
 }
 .preference-section h2 {
     margin: 0 0 4px;
-    font-size: 15px;
+    font-size: var(--font-size-body);
 }
 .preference-section p {
     margin: 0;

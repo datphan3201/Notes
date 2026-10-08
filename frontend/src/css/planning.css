@@ -122,7 +122,7 @@
 }
 .detail-list dt {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 600;
 }
 .detail-list dd {
@@ -162,12 +162,12 @@
 }
 .activity-header h2 {
     margin-bottom: 2px;
-    font-size: 16px;
+    font-size: 1rem;
 }
 .activity-summary {
     margin: 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .activity-month-navigation {
     flex: 0 0 auto;
@@ -176,7 +176,7 @@
 }
 .activity-month-navigation strong {
     margin-right: auto;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
 }
 .activity-month-button {
@@ -187,7 +187,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1;
     cursor: pointer;
 }
@@ -213,21 +213,22 @@
 }
 .activity-weekdays {
     display: grid;
-    grid-template-rows: repeat(7, 11px);
+    grid-template-rows: repeat(7, 1rem);
     gap: 3px;
     color: var(--muted);
-    font-size: 9px;
-    line-height: 11px;
+    font-size: var(--font-size-caption);
+    line-height: 1rem;
     text-align: right;
 }
 .activity-weekdays span {
-    width: 24px;
+    width: 30px;
 }
 .activity-grid {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 11px;
-    grid-template-rows: repeat(7, 11px);
+    grid-template-rows: repeat(7, 1rem);
+    align-items: center;
     gap: 3px;
 }
 .activity-day,
@@ -282,7 +283,7 @@
     background: #24292f;
     border-radius: 6px;
     box-shadow: 0 8px 24px rgb(140 149 159 / 20%);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     line-height: 1.4;
     pointer-events: none;
     text-align: left;
@@ -293,7 +294,7 @@
     gap: 16px;
     margin-top: 4px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .activity-legend {
     flex: 0 0 auto;
@@ -339,7 +340,7 @@
 .panel-description {
     margin-bottom: 24px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     line-height: 1.7;
 }
 .section-heading {
@@ -363,7 +364,7 @@
     gap: 5px;
     align-items: center;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
     text-decoration: none;
 }
@@ -378,12 +379,12 @@
 .area-settings summary {
     cursor: pointer;
     font-weight: 500;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .area-settings summary > span {
     display: block;
     margin: 5px 0 0 17px;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 400;
 }
 .area-settings[open] summary {
@@ -393,7 +394,7 @@
     display: flex;
     gap: 9px;
     align-items: center;
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .goal-area-group h3::before {
     content: '';
@@ -414,7 +415,7 @@
     border: 1px dashed var(--border);
     border-radius: 7px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .goal-tree ul {
     margin-top: 8px;
@@ -444,14 +445,14 @@
 .planning-list-item .button {
     min-height: 36px;
     padding: 6px 9px;
-    font-size: 11px;
+    font-size: var(--font-size-ui);
 }
 .planning-item-link:hover {
     border-color: var(--accent);
     background: var(--surface-soft);
 }
 .planning-item-link strong {
-    font-weight: 500;
+    font-weight: 600;
     overflow-wrap: anywhere;
 }
 .collection-empty {
@@ -474,26 +475,26 @@
     background: var(--surface-soft);
 }
 .collection-empty strong {
-    font-size: 13px;
+    font-size: var(--font-size-ui);
     font-weight: 500;
 }
 .collection-empty p {
     max-width: 35ch;
     margin: 7px 0 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     line-height: 1.8;
 }
 .empty-action {
     margin-top: 16px;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
     text-decoration: none;
 }
 .loading-copy {
     padding: 24px 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .count-badge {
     display: inline-flex;
@@ -506,7 +507,7 @@
     background: var(--surface-soft);
     border: 1px solid var(--border);
     border-radius: 6px;
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     font-weight: 500;
 }
 .dashboard-layout {
@@ -525,7 +526,7 @@
 }
 .dashboard-date {
     margin-bottom: 8px !important;
-    font-size: 12px !important;
+    font-size: var(--font-size-meta) !important;
 }
 .today-panel > .section-heading {
     padding-bottom: 18px;
@@ -544,11 +545,11 @@
 }
 .overdue-section h3 {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
 }
 .overdue-section .subtle-copy {
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .overdue-section .collection-empty {
     position: relative;
@@ -584,7 +585,7 @@
 .weekly-heading p {
     margin: 0;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .weekly-heading > .ui-icon {
     color: var(--muted);
@@ -598,7 +599,7 @@
     padding: 20px;
 }
 .dashboard-weekly-grid h2 {
-    font-size: 13px;
+    font-size: var(--font-size-ui);
 }
 .dashboard-weekly-grid .collection-empty {
     min-height: 160px;
@@ -614,7 +615,7 @@
     border-radius: 7px;
 }
 .dashboard-weekly-grid .collection-empty strong {
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .dashboard-item {
     display: flex;
@@ -651,12 +652,12 @@
     gap: 5px;
 }
 .dashboard-item-copy strong {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-size-body);
+    font-weight: 600;
     overflow-wrap: anywhere;
 }
 .dashboard-item-copy small {
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     color: var(--muted);
 }
 .activity-totals {
@@ -666,23 +667,23 @@
     margin-top: 24px;
 }
 .activity-totals > strong {
-    font-size: 38px;
+    font-size: 2.375rem;
     line-height: 1;
     font-weight: 500;
     letter-spacing: -0.06em;
 }
 .activity-totals > span {
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .activity-totals small {
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
 }
 .activity-explanation {
     padding-top: 16px;
     margin: 18px 0 0;
     border-top: 1px solid var(--border);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
     line-height: 1.7;
     color: var(--muted);
 }
@@ -705,7 +706,7 @@
     align-items: flex-start;
     padding-inline: 4px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: var(--font-size-caption);
     line-height: 1.8;
     overflow-wrap: anywhere;
 }
@@ -735,14 +736,14 @@
 }
 .review-prompt strong {
     display: block;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     font-weight: 500;
 }
 .review-prompt small {
     display: block;
     margin-top: 4px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--font-size-caption);
 }
 .review-prompt > .ui-icon {
     width: 16px;
@@ -756,7 +757,7 @@
     color: var(--accent);
     background: var(--accent-soft);
     border-radius: 7px;
-    font-size: 12px;
+    font-size: var(--font-size-meta);
     flex-shrink: 0;
 }
 .permission-badge .ui-icon {
@@ -971,7 +972,7 @@
 }
 .roadmap-center h3 {
     margin: 8px 0;
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1.4;
 }
 .roadmap-center small,
@@ -1002,7 +1003,7 @@
 .roadmap-branch small,
 .roadmap-task-preview {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--font-size-meta);
 }
 .roadmap-task-preview {
     display: grid;
