@@ -62,6 +62,7 @@ final class DatabaseFoundationTest extends TestCase
         }
 
         self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM transaction_probe')->fetchColumn());
+        self::assertTrue($manager->run(static fn (PDO $pdo): bool => $pdo->inTransaction()));
     }
 
     public function test_migrations_apply_once_and_checksum_state_is_healthy(): void

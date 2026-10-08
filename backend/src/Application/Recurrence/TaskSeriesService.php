@@ -188,7 +188,7 @@ final readonly class TaskSeriesService
                 $start = $this->calculator->localDateTimeToUtc($date, $series['local_time'] === null ? null : (string) $series['local_time'], (string) $series['timezone']);
                 $end = $start !== null && $series['duration_minutes'] !== null ? $start->modify('+'.(int) $series['duration_minutes'].' minutes') : null;
                 $deadline = $series['deadline_offset_days'] === null ? null : (new DateTimeImmutable($date))->modify('+'.(int) $series['deadline_offset_days'].' days')->format('Y-m-d');
-                $task = $this->planning->create('task', $userId, [
+                $task = $this->planning->createOccurrence($userId, $id, $date, [
                     'goal_id' => $series['goal_id'],
                     'milestone_id' => $series['milestone_id'],
                     'name' => $series['name'],
@@ -202,7 +202,6 @@ final readonly class TaskSeriesService
                     'scheduled_end' => $end?->format(DATE_ATOM),
                     'tag_ids' => array_map('strval', $this->series->tagIds($userId, $id)),
                 ]);
-                $this->planningRepository->linkOccurrence($userId, (string) $task['id'], $id, $date, (string) $series['timezone']);
                 foreach ($this->series->checklistTemplate($userId, $id) as $item) {
                     $this->planning->createChecklist($userId, (string) $task['id'], ['title' => $item['title'], 'position' => (int) $item['position']]);
                 }

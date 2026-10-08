@@ -72,6 +72,12 @@ final readonly class PlanningController
     }
 
     /** @param array<string, string> $parameters */
+    public function roadmap(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->planning->roadmap($this->userId(), $parameters['id'])]);
+    }
+
+    /** @param array<string, string> $parameters */
     public function transition(Request $request, array $parameters): Response
     {
         return Response::json(['data' => $this->planning->transition(

@@ -97,6 +97,7 @@ final readonly class AccountController
         return Response::json(['data' => [
             'user' => $this->serializer->user($user),
             'preferences' => $this->repository->preferences($user->id),
+            'walkthrough' => ['dismissed' => $this->repository->walkthroughDismissed($user->id)],
             'csrf_token' => $this->session->csrfToken(),
         ]]);
     }
@@ -128,6 +129,15 @@ final readonly class AccountController
         $changes = $this->validator->preferences($request->input());
 
         return Response::json(['data' => $this->accounts->updatePreferences($user->id, $changes)]);
+    }
+
+    public function dismissWalkthrough(Request $request): Response
+    {
+        $user = $this->auth->requireUser();
+        $this->validator->walkthroughDismissal($request->input());
+        $this->accounts->dismissWalkthrough($user->id);
+
+        return Response::json(['data' => ['dismissed' => true]]);
     }
 
     public function changePassword(Request $request): Response
@@ -200,12 +210,7 @@ final readonly class AccountController
         $user = $this->serializer->user($this->auth->requireUser());
         $preferences = $this->repository->preferences((int) $user['id']);
         $csrf = $this->session->csrfToken();
-        $bootstrapPreferences = [
-            'theme' => $preferences['theme'],
-            'note_font_size' => $preferences['note_font_size'],
-            'default_note_color' => $preferences['default_note_color'],
-            'notes_view' => $preferences['notes_view'],
-        ];
+        $bootstrapPreferences = $preferences;
 
         return $this->views->render($template, [
             'title' => $title,
@@ -216,6 +221,7 @@ final readonly class AccountController
             'bootstrap' => [
                 'user' => $user,
                 'preferences' => $bootstrapPreferences,
+                'walkthrough' => ['dismissed' => $this->repository->walkthroughDismissed((int) $user['id'])],
                 'csrf_token' => $csrf,
             ],
             ...$extra,

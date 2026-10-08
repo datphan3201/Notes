@@ -33,6 +33,13 @@ Use local calendar dates; never add fixed seconds. The pure calculator receives 
 
 Each occurrence copies the series template into a normal Task, including parent, text, importance, checklist templates, Tags, contributions, schedule, and deadline. It has independent version/status/checklist/Note thereafter.
 
+An active series continues to materialize beneath a completed Goal, including
+through a completed ancestor. Occurrences are non-finite work and do not reopen
+Goals. Only the internal materializer can use this creation path: it must verify
+the owned active series and its primary location, and persist the Task and its
+series/date identity in the same transaction. Ordinary Task creation still
+requires active Goal ancestors.
+
 ## Time conversion
 
 Store occurrence date and rule timezone. Convert optional local time to UTC:

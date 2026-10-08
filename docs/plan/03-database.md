@@ -20,10 +20,19 @@ Preserve current `users`, `user_preferences`, `notes`, `labels`, `label_note`, `
 
 ## Core planning tables
 
+Approved illustrated UI extension: migration `0008_add_interface_preferences`
+adds `visual_theme` (mountain/forest/ocean/pisces/stars, default mountain),
+`show_background`, `show_illustrations`, `show_quote` (booleans, default true),
+and `custom_quote` (VARCHAR(500), default empty) to `user_preferences`. An empty
+quote uses the theme's preset. `0009_add_task_estimate` adds nullable
+`tasks.estimated_minutes SMALLINT UNSIGNED` with a 1–1440 check. Existing Tasks
+remain NULL, never inferred from illustrative numbers. This is an estimate, not
+tracked time or a timer. Both migrations leave applied predecessors intact.
+
 | Table | Required columns and constraints |
 | --- | --- |
 | `areas` | UUID, owner, name(80), description(10000), position, version, archived/timestamps; unique owner/name |
-| `goals` | UUID, owner, nullable Area, nullable parent Goal, name(200), description, expected_result, completion_criteria, importance 1–5, status, deadline, position, completed/archived/timestamps; exactly one Area/Goal parent |
+| `goals` | UUID, owner, nullable Area, nullable parent Goal, name(200), description, expected_result, completion_criteria, strategy_notes(20000), importance 1–5, status, deadline, position, completed/archived/timestamps; exactly one Area/Goal parent |
 | `milestones` | UUID, owner, Goal, name, description, completion_criteria, status, deadline, position, completed/archived/timestamps |
 | `tasks` | UUID, owner, nullable Goal/Milestone, name, description, expected_result, completion_criteria, importance, status, start/deadline, scheduled UTC interval, nullable Note/series/occurrence date, completed/archived/timestamps; at most one parent; unique Note and series/date |
 | `checklist_items` | UUID, owner, Task, title(500), checked, position, checked/deleted/timestamps, version |
@@ -31,6 +40,16 @@ Preserve current `users`, `user_preferences`, `notes`, `labels`, `label_note`, `
 | `habit_check_ins` | UUID, owner, Habit, local date, timezone, recorded timestamp; unique Habit/date |
 
 Text columns use `TEXT` unless the existing Note contract requires `MEDIUMTEXT`. Empty optional text is stored as `''`; nullable is reserved for missing relationships/dates.
+
+Migration `0006_add_goal_strategy_notes` adds `strategy_notes` as `MEDIUMTEXT`
+(20,000 four-byte Unicode code points exceed the byte capacity of `TEXT`),
+initializing existing Goals to `''`. Earlier applied migrations are unchanged.
+
+Migration `0007_add_walkthrough_dismissal` adds nullable UTC
+`user_preferences.walkthrough_dismissed_at DATETIME(6)`, initially NULL for
+existing and new accounts. This is account-scoped introduction state, separate
+from the public appearance preferences. The first explicit dismissal sets it
+once under the owner lock; replay never changes the original timestamp.
 
 ## Relationship tables
 

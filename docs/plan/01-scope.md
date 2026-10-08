@@ -2,7 +2,7 @@
 
 ## Goal
 
-Evolve the existing personal Notes application into an understandable goal and task management system while replacing Laravel with framework-free PHP. Preserve working behavior and use well-defined entities rather than user-created schemas.
+Maintain an understandable personal Notes, goal and task management system on the canonical framework-free PHP runtime. Preserve working behavior and use well-defined entities rather than user-created schemas.
 
 ## In scope
 
@@ -62,4 +62,4 @@ Evolve the existing personal Notes application into an understandable goal and t
 
 ## Success criteria
 
-The migration succeeds when the current Notes contracts pass without Laravel; the new domain invariants, security tests, frontend build, migrations, browser critical paths, and operational smoke checks pass; and no first-party runtime code imports Laravel/Illuminate.
+A change is accepted when the affected Notes/planning contracts, domain invariants, security boundaries, frontend build, migrations and critical browser paths pass their relevant gates. Keep the framework-free runtime and report the scope and limitations of operational evidence.

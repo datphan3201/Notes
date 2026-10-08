@@ -94,3 +94,21 @@ Router decoding/404/405/HEAD; malformed JSON/content type/unknown keys; registra
 ## Exit criteria
 
 All existing Account/Auth contracts pass through the target HTTP application; sessions and CSRF pass real HTTP checks; routes are still isolated behind plain entrypoint.
+
+## Account extension — 2026-10-07
+
+The explicitly requested walkthrough adds an account-wide, idempotent dismissal
+in migration 0007, an authenticated CSRF-protected dismissal endpoint, and an
+additive session/HTML-bootstrap flag. This post-migration extension follows the
+current HTTP/UI/database contracts; it does not change authentication redirects
+or the public appearance preference fields. Verification is recorded in
+`docs/verification.md` under Illustrated walkthrough.
+
+## Appearance extension — 2026-10-07
+
+Approved migration 0008 adds five bundled visual-theme identities, three strict
+boolean scenery toggles and a private 500-code-point quote. Existing Light/Dark
+and Note preferences are preserved. Account mutation uses the same explicit
+validation/owner-lock/transaction/session boundaries. Browser writes are
+serialized and quote drafts survive late acknowledgements and failure. Current
+evidence is in `docs/verification.md`, Illustrated interface extension.

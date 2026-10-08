@@ -174,6 +174,65 @@ final class AccountHttpTest extends TestCase
         }
     }
 
+    public function test_walkthrough_dismissal_is_owned_idempotent_and_survives_a_new_login(): void
+    {
+        [$ownerCookie, $ownerCsrf] = $this->registerAccount('guide-owner@example.test');
+        [$otherCookie] = $this->registerAccount('guide-other@example.test');
+        $before = $this->request('GET', '/api/v1/session', cookie: $ownerCookie);
+        self::assertSame(['dismissed' => false], json_decode($before->body, true, flags: JSON_THROW_ON_ERROR)['data']['walkthrough']);
+
+        $dismissed = $this->request('POST', '/api/v1/walkthrough/dismiss', [], $ownerCookie, $ownerCsrf, true);
+        self::assertSame(200, $dismissed->status);
+        self::assertSame(['data' => ['dismissed' => true]], json_decode($dismissed->body, true, flags: JSON_THROW_ON_ERROR));
+        $timestamp = $this->pdo->query("SELECT walkthrough_dismissed_at FROM user_preferences JOIN users ON users.id = user_preferences.user_id WHERE email = 'guide-owner@example.test'")->fetchColumn();
+        self::assertIsString($timestamp);
+        self::assertSame(200, $this->request('POST', '/api/v1/walkthrough/dismiss', [], $ownerCookie, $ownerCsrf, true)->status);
+        self::assertSame($timestamp, $this->pdo->query("SELECT walkthrough_dismissed_at FROM user_preferences JOIN users ON users.id = user_preferences.user_id WHERE email = 'guide-owner@example.test'")->fetchColumn());
+        $other = $this->request('GET', '/api/v1/session', cookie: $otherCookie);
+        self::assertSame(['dismissed' => false], json_decode($other->body, true, flags: JSON_THROW_ON_ERROR)['data']['walkthrough']);
+
+        $this->request('POST', '/logout', ['_token' => $ownerCsrf], $ownerCookie);
+        $loginPage = $this->request('GET', '/login');
+        preg_match('/name="_token" value="([a-f0-9]{64})"/', $loginPage->body, $match);
+        self::assertSame(302, $this->request('POST', '/login', [
+            '_token' => $match[1], 'email' => 'guide-owner@example.test',
+            'password' => 'correct horse battery staple',
+        ], $this->session->id())->status);
+        $session = $this->request('GET', '/api/v1/session', cookie: $this->session->id());
+        self::assertSame(['dismissed' => true], json_decode($session->body, true, flags: JSON_THROW_ON_ERROR)['data']['walkthrough']);
+    }
+
+    public function test_walkthrough_requires_auth_csrf_and_an_empty_payload(): void
+    {
+        self::assertSame(401, $this->request('POST', '/api/v1/walkthrough/dismiss', [], json: true)->status);
+        [$cookie, $csrf] = $this->registerAccount('guide-safe@example.test');
+        self::assertSame(419, $this->request('POST', '/api/v1/walkthrough/dismiss', [], $cookie, json: true)->status);
+        self::assertSame(422, $this->request('POST', '/api/v1/walkthrough/dismiss', ['user_id' => 999], $cookie, $csrf, true)->status);
+        self::assertSame(422, $this->request('PATCH', '/api/v1/preferences', ['walkthrough_dismissed_at' => '2026-10-07'], $cookie, $csrf, true)->status);
+        $session = $this->request('GET', '/api/v1/session', cookie: $cookie);
+        self::assertSame(['dismissed' => false], json_decode($session->body, true, flags: JSON_THROW_ON_ERROR)['data']['walkthrough']);
+    }
+
+    public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal(): void
+    {
+        [$cookie, $csrf] = $this->registerAccount('guide-shell@example.test');
+        foreach (['/', '/dashboard', '/goals', '/tasks', '/habits', '/reviews', '/ai', '/settings/profile', '/settings/preferences', '/settings/password'] as $path) {
+            $page = $this->request('GET', $path, cookie: $cookie);
+            self::assertSame(200, $page->status);
+            self::assertStringContainsString('data-open-walkthrough', $page->body);
+            self::assertStringContainsString('data-walkthrough-topic', $page->body);
+            preg_match('/<meta id="notes-bootstrap" data-json="([^"]+)">/', $page->body, $match);
+            $bootstrap = json_decode(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'), true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame(['dismissed' => false], $bootstrap['walkthrough']);
+        }
+        $this->request('POST', '/api/v1/walkthrough/dismiss', [], $cookie, $csrf, true);
+        $page = $this->request('GET', '/', cookie: $cookie);
+        preg_match('/<meta id="notes-bootstrap" data-json="([^"]+)">/', $page->body, $match);
+        $bootstrap = json_decode(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['dismissed' => true], $bootstrap['walkthrough']);
+        self::assertStringContainsString('data-open-walkthrough', $page->body);
+    }
+
     public function test_login_errors_are_generic_and_account_bucket_throttles_after_five_failures(): void
     {
         [$authenticatedCookie, $csrf] = $this->registerAccount('owner@example.test');
@@ -251,6 +310,28 @@ final class AccountHttpTest extends TestCase
     }
 
     /** @return array{string, string} */
+    public function test_illustrated_preferences_are_private_strict_and_survive_reload(): void
+    {
+        [$cookie, $csrf] = $this->registerAccount('theme-owner@example.test');
+        [$otherCookie] = $this->registerAccount('theme-other@example.test');
+        $input = ['visual_theme' => 'pisces', 'theme' => 'dark', 'show_background' => false, 'show_illustrations' => true, 'show_quote' => false, 'custom_quote' => 'My private quote'];
+        $saved = $this->request('PATCH', '/api/v1/preferences', $input, $cookie, $csrf, true);
+        self::assertSame(200, $saved->status);
+        $preferences = json_decode($saved->body, true, flags: JSON_THROW_ON_ERROR)['data'];
+        foreach ($input as $key => $value) self::assertSame($value, $preferences[$key]);
+        $session = json_decode($this->request('GET', '/api/v1/session', cookie: $cookie)->body, true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('pisces', $session['data']['preferences']['visual_theme']);
+        $other = json_decode($this->request('GET', '/api/v1/session', cookie: $otherCookie)->body, true, flags: JSON_THROW_ON_ERROR)['data']['preferences'];
+        self::assertSame('mountain', $other['visual_theme']);
+        self::assertSame('', $other['custom_quote']);
+        foreach ([['visual_theme'=>'uploaded'], ['show_quote'=>1], ['custom_quote'=>str_repeat('魚',501)], ['background_url'=>'https://example.org/image']] as $invalid) {
+            self::assertSame(422, $this->request('PATCH', '/api/v1/preferences', $invalid, $cookie, $csrf, true)->status);
+        }
+        self::assertSame(419, $this->request('PATCH', '/api/v1/preferences', ['visual_theme'=>'ocean'], $cookie, json:true)->status);
+        $after = json_decode($this->request('GET', '/api/v1/session', cookie:$cookie)->body, true, flags: JSON_THROW_ON_ERROR)['data']['preferences'];
+        self::assertSame('pisces', $after['visual_theme']);
+    }
+
     private function registerAccount(string $email): array
     {
         $page = $this->request('GET', '/register');
@@ -289,7 +370,7 @@ final class AccountHttpTest extends TestCase
 
         if ($json) {
             $headers['content-type'] = 'application/json';
-            $body = json_encode($input, JSON_THROW_ON_ERROR);
+            $body = json_encode((object) $input, JSON_THROW_ON_ERROR);
             $form = [];
         }
 

@@ -135,6 +135,58 @@ final class DashboardReviewsTest extends TestCase
         self::assertSame(3, $byName['Strength training']['target_frequency']);
     }
 
+    public function test_dashboard_streak_deduplicates_habits_respects_owner_and_recalculates_after_undo(): void
+    {
+        $habits=$this->runtime['habit_service'];
+        $first=$habits->create($this->owner,['name'=>'Read','period'=>'daily','target_frequency'=>1,'timezone'=>'UTC']);
+        $second=$habits->create($this->owner,['name'=>'Walk','period'=>'daily','target_frequency'=>1,'timezone'=>'UTC']);
+        $today=$this->runtime['clock']->now();
+        for($offset=0;$offset<4;$offset++) $habits->checkIn($this->owner,$first['id'],$today->modify("-$offset days")->format('Y-m-d'));
+        $habits->checkIn($this->owner,$second['id'],$today->format('Y-m-d'));
+        $dashboard=$this->runtime['dashboard_service'];
+        self::assertSame(4,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $habits->undoCheckIn($this->owner,$first['id'],$today->modify('-1 day')->format('Y-m-d'));
+        self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $habits->undoCheckIn($this->owner,$first['id'],$today->format('Y-m-d'));
+        self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $habits->undoCheckIn($this->owner,$second['id'],$today->format('Y-m-d'));
+        self::assertSame(0,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $other=(new PdoAccountRepository($this->pdo))->insertUser('streak-other@example.test','Other',password_hash('password',PASSWORD_BCRYPT),'2026-09-17 12:00:00.000000')->id;
+        self::assertSame(0,$dashboard->dashboard($other,null)['habit_streak']['days']);
+    }
+
+    public function test_week_and_review_completion_use_real_denominators_and_saved_snapshots(): void
+    {
+        $planning=$this->runtime['planning_service']; $dashboard=$this->runtime['dashboard_service']; $reviews=$this->runtime['review_service'];
+        $today=$this->runtime['clock']->now()->format('Y-m-d');
+        self::assertNull($dashboard->dashboard($this->owner,null)['week_summary']['percentage']);
+        $one=$planning->create('task',$this->owner,['name'=>'One','deadline'=>$today]);
+        $two=$planning->create('task',$this->owner,['name'=>'Two']);
+        foreach([$one,$two] as $task)$dashboard->addSelection('task',$this->owner,['id'=>$task['id']]);
+        $one=$planning->transition('task',$this->owner,$one['id'],'complete',['base_version'=>$one['version']]);
+        $summary=$dashboard->dashboard($this->owner,null)['week_summary'];
+        self::assertSame(2,$summary['total']);self::assertSame(1,$summary['completed']);self::assertSame(50.0,$summary['percentage']);
+        $review=$reviews->create($this->owner,['kind'=>'Weekly','date'=>$today]);
+        self::assertSame(['total'=>2,'completed'=>1],$review['snapshot']['task_summary']);
+        $snapshot=$review['snapshot'];
+        $planning->transition('task',$this->owner,$two['id'],'complete',['base_version'=>$two['version']]);
+        self::assertSame($snapshot,$reviews->show($this->owner,$review['id'])['snapshot']);
+        $refreshed=$reviews->transition($this->owner,$review['id'],'refresh',['base_version'=>$review['version']]);
+        self::assertSame(['total'=>2,'completed'=>2],$refreshed['snapshot']['task_summary']);
+    }
+
+    public function test_today_projection_includes_planned_starts_and_overlapping_schedules(): void
+    {
+        $today=$this->runtime['clock']->now()->format('Y-m-d');
+        $yesterday=$this->runtime['clock']->now()->modify('-1 day')->format('Y-m-d');
+        $planning=$this->runtime['planning_service'];
+        $start=$planning->create('task',$this->owner,['name'=>'Start today','start_date'=>$today]);
+        $span=$planning->create('task',$this->owner,['name'=>'Cross midnight','scheduled_start'=>$yesterday.'T23:00:00.000000Z','scheduled_end'=>$today.'T01:00:00.000000Z']);
+        $planning->create('task',$this->owner,['name'=>'Old interval','scheduled_start'=>$yesterday.'T01:00:00.000000Z','scheduled_end'=>$yesterday.'T02:00:00.000000Z']);
+        $ids=array_column($this->runtime['dashboard_service']->dashboard($this->owner,null)['today_tasks'],'id');
+        self::assertCount(2,$ids);self::assertContains($start['id'],$ids);self::assertContains($span['id'],$ids);
+    }
+
     private function wipeTargetDatabase(): void
     {
         $tables = $this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'goals_test' AND table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);

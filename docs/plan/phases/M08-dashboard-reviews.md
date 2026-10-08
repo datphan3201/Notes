@@ -87,3 +87,20 @@ Test replay/reversal/re-completion, transaction rollback with Activity, timezone
 ## Exit criteria
 
 Critical cases 13–14 and ownership case 17 pass; Dashboard uses only explainable v1 rules; Review snapshots and Activity history are auditable and idempotent; all prior phases remain green.
+
+## Illustrated insights extension — 2026-10-07
+
+Approved Dashboard/Review metric additions follow contracts 04 and 12: finite
+weekly selection completion, Activity bars, current owner Habit local-date streak
+and explicit Review task denominators. Dashboard Today recognizes existing start
+dates and schedule overlaps as well as deadlines and occurrence dates. Review
+facts are captured/refreshed explicitly and older snapshots remain readable.
+Compact focus offers Edit/Complete, not a timer. Period navigation retains each
+reflection draft; no historical snapshots or productivity score are fabricated.
+Current test/browser evidence is recorded in `docs/verification.md`.
+
+Reference fidelity follow-up reuses the supplied landscape/flame/trophy pixels,
+restores a horizontal desktop Review summary and reduces the initial reflection
+height while keeping vertical resizing. Existing snapshot/period/save behavior
+remains. Current capture and comparison evidence is in `docs/verification.md`,
+Reference fidelity correction.

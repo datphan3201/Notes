@@ -6,6 +6,11 @@
 
 No provider receives repositories, SQL, session cookies, file bytes, or write tools.
 
+Selected Goal context may include its `strategy_notes`. A `create_goal`
+operation may propose this field, subject to the ordinary 20,000-code-point
+Planning validation and explicit approval. Strategy notes do not grant any
+additional operation permissions.
+
 ## User flow
 
 1. Select capability and objects.

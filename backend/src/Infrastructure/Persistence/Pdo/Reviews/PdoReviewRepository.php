@@ -47,7 +47,7 @@ final readonly class PdoReviewRepository
     }
 
     /** @return array<string, mixed> */
-    public function facts(int $userId, string $from, string $to): array
+    public function facts(int $userId, string $from, string $to, string $kind = 'Daily'): array
     {
         $activity = $this->query(<<<'SQL'
 SELECT completion.source_type, completion.source_id, completion.action, completion.effective_date, completion.occurred_at, completion.metadata
@@ -59,7 +59,34 @@ ORDER BY completion.effective_date, completion.occurred_at, completion.id
 SQL, ['user_id' => $userId, 'from_date' => $from, 'to_date' => $to]);
         $overdue = $this->query("SELECT id, name, deadline, status FROM tasks WHERE user_id = :user_id AND archived_at IS NULL AND status <> 'Done' AND deadline <= :to_date ORDER BY deadline, id", ['user_id' => $userId, 'to_date' => $to]);
         $goals = $this->query('SELECT goal_id, local_date, progress, checksum FROM goal_daily_snapshots WHERE user_id = :user_id AND local_date BETWEEN :from_date AND :to_date ORDER BY local_date, goal_id', ['user_id' => $userId, 'from_date' => $from, 'to_date' => $to]);
-        return ['activities' => $activity, 'overdue_tasks' => $overdue, 'goal_snapshots' => $goals];
+        // A saved denominator describes state at capture, not retroactive state.
+        $tasks = $this->query(<<<'SQL'
+SELECT task.id, task.status FROM tasks task
+WHERE task.user_id = :user_id AND task.archived_at IS NULL AND task.series_id IS NULL
+AND (task.deadline BETWEEN :from_date AND :to_date OR (
+    :is_weekly = 1 AND EXISTS (
+        SELECT 1 FROM weekly_task_selections selection
+        WHERE selection.user_id = task.user_id AND selection.task_id = task.id AND selection.week_start = :week_start
+    )
+))
+SQL, ['user_id' => $userId, 'from_date' => $from, 'to_date' => $to, 'is_weekly' => $kind === 'Weekly' ? 1 : 0, 'week_start' => $from]);
+        $start = new \DateTimeImmutable($from);
+        $previousStart = match ($kind) {
+            'Monthly' => $start->modify('first day of previous month'),
+            'Weekly' => $start->modify('-7 days'),
+            default => $start->modify('-1 day'),
+        };
+        $previousEnd = $start->modify('-1 day')->format('Y-m-d');
+        $previous = $this->query(<<<'SQL'
+SELECT COUNT(*) AS total FROM activities completion
+WHERE completion.user_id = :user_id AND completion.action = 'completed'
+AND completion.source_type IN ('task', 'checklist', 'habit', 'milestone')
+AND completion.effective_date BETWEEN :from_date AND :to_date
+AND NOT EXISTS (SELECT 1 FROM activities reversal WHERE reversal.user_id = completion.user_id AND reversal.reversal_of_id = completion.id)
+SQL, ['user_id' => $userId, 'from_date' => $previousStart->format('Y-m-d'), 'to_date' => $previousEnd]);
+        return ['activities' => $activity, 'overdue_tasks' => $overdue, 'goal_snapshots' => $goals,
+            'task_summary' => ['total' => count($tasks), 'completed' => count(array_filter($tasks, static fn (array $task): bool => $task['status'] === 'Done'))],
+            'previous_activity_count' => (int) $previous[0]['total']];
     }
 
     /** @return list<array{user_id:int,timezone:string}> */

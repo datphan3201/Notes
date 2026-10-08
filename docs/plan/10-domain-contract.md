@@ -15,6 +15,25 @@ Names are trimmed/NFC-normalized plain text. Area names are 1–80 code points; 
 | ChecklistItem | Task, title, position | checked=false | no nested objects |
 | Habit | name, period, target, timezone | description, importance, primary Goal, Tags, contributions | check-ins |
 
+### Goal roadmap and strategy (2026-10-07)
+
+A roadmap centers on one Goal. Its Milestones are checkpoints; Tasks assigned
+to each Milestone appear under that checkpoint. Direct Tasks and child Goals
+remain supported and are shown separately. A numbered visual branch does not
+implicitly create a prerequisite edge.
+
+Goals have optional `strategy_notes`, plain text up to 20,000 code points. This
+holds methods, principles, learning cycles, resource guidance, and other advice
+that applies throughout the roadmap. It is not a Task, Milestone, Habit, or
+completion criterion and never changes progress or emits Activity. Updates use
+the Goal's `base_version`, including exact-state replay and conflict behavior.
+
+The reference roadmap's central ambition maps to a Goal, its eight subject
+branches to Milestones, and the entries within each branch to Tasks. Its
+cross-cutting learning method, Learning Chat, Project Chat, and Expert Lens
+belong in `strategy_notes`. Reference content is not inserted into accounts
+automatically.
+
 ## States
 
 Goal: `Active`, `Completed`. Milestone: `NotStarted`, `InProgress`, `Completed`. Task: `NotStarted`, `InProgress`, `Blocked`, `Done`. Archived is an orthogonal timestamp, not a status value.
@@ -38,6 +57,15 @@ are owner-unique after the same normalization used for Tag uniqueness.
 | Archive | no active direct children/relationships requiring it | archived; excluded from active progress/navigation |
 
 Calculated 100% never auto-completes. Reopening a finite child beneath a Completed Goal is one explicit operation that returns the list of ancestors to reopen before confirmation; confirmed request locks and reopens all atomically.
+
+This applies to Goal, Milestone, and one-off Task reopen operations. The server
+returns `ANCESTOR_REOPEN_REQUIRED` with the affected Goal IDs/names/versions
+until `acknowledge_ancestor_reopen=true` is supplied. Ancestor reopen appends
+reversal Activity and increments each affected Goal once. It does not reopen a
+Task's Milestone or bypass its dependency rules. Recurring occurrences do not
+reopen Goals. Creating or moving finite children beneath a completed Goal or
+completed Goal ancestor is rejected; editing existing text remains allowed.
+Non-finite recurring work does not prevent completing an otherwise leaf Goal.
 
 ### Milestone
 

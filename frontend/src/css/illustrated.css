@@ -1,0 +1,702 @@
+/* Illustrated scenery supports content; each layer has its own account preference. */
+:root {
+    --canvas: #f3f7ff;
+    --text: #142849;
+    --muted: #55708e;
+    --border: #e1ebf5;
+    --accent: #067287;
+    --accent-soft: #e1f2f5;
+    --sidebar: #f0f7fb;
+    --success: #12a77e;
+    --success-text: #087e5e;
+    --control-border: #7a91ab;
+}
+[data-theme='dark'] {
+    --canvas: #111c2d;
+    --text: #e7effb;
+    --muted: #a8bad2;
+    --border: #304159;
+    --accent: #81d5e0;
+    --accent-soft: #203e4e;
+    --sidebar: #162234;
+    --surface: #19273b;
+    --surface-soft: #203047;
+    --success: #65d5ac;
+    --success-text: #65d5ac;
+    --control-border: #75879c;
+}
+[data-visual-theme='forest'] {
+    --scene-tint: #e8f5ef;
+}
+[data-visual-theme='ocean'] {
+    --scene-tint: #e6f3fa;
+}
+[data-visual-theme='pisces'] {
+    --scene-tint: #efedfc;
+}
+[data-visual-theme='stars'] {
+    --scene-tint: #e9edfc;
+}
+body {
+    background: var(--canvas);
+}
+.app-body {
+    position: relative;
+    isolation: isolate;
+}
+[data-show-background='true'] .app-body::before {
+    content: '';
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    background:
+        linear-gradient(var(--canvas), color-mix(in srgb, var(--canvas) 89%, transparent)),
+        var(--theme-scene) bottom right/cover no-repeat;
+    pointer-events: none;
+}
+.app-topbar {
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    min-height: 52px;
+}
+.app-main {
+    padding-top: 24px;
+}
+.workspace-header {
+    padding-bottom: 22px;
+}
+h1 {
+    letter-spacing: -0.035em;
+}
+.planning-panel {
+    border-radius: 14px;
+    box-shadow: 0 5px 18px rgb(25 64 96 / 3%);
+}
+.button-primary {
+    background: linear-gradient(
+        155deg,
+        color-mix(in srgb, var(--accent) 90%, black),
+        var(--accent)
+    );
+}
+.scene-header,
+.scene-card,
+.goal-roadmap {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+[data-show-illustrations='true'] .scene-header::before,
+[data-show-illustrations='true'] .scene-card::before,
+[data-show-illustrations='true'] .goal-roadmap::before {
+    content: '';
+    z-index: -1;
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            90deg,
+            var(--surface) 5%,
+            color-mix(in srgb, var(--surface) 72%, transparent) 60%,
+            color-mix(in srgb, var(--surface) 20%, transparent)
+        ),
+        var(--theme-scene) right center/cover no-repeat;
+    pointer-events: none;
+}
+.scene-header {
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+    min-height: 126px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+.scene-header .workspace-header-actions {
+    align-self: flex-start;
+}
+.theme-quote {
+    margin: 0;
+    padding: 14px 16px;
+    max-width: 32ch;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface) 93%, transparent);
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+[data-show-quote='false'] .theme-quote {
+    display: none;
+}
+.dashboard-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.dashboard-summary-grid .planning-panel {
+    padding: 18px;
+}
+.dashboard-summary-grid h2,
+.insight-card h2 {
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+.week-summary {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+.week-summary strong {
+    font-size: 18px;
+    color: var(--success-text);
+}
+.week-summary small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 5px;
+}
+.progress-ring {
+    display: grid;
+    place-items: center;
+    width: 78px;
+    height: 78px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--success) var(--progress), var(--border) 0);
+    position: relative;
+}
+.progress-ring::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: var(--surface);
+}
+.progress-ring strong {
+    z-index: 1;
+    font-size: 18px;
+    color: var(--text);
+}
+.day-bars {
+    display: flex;
+    gap: 8px;
+    height: 65px;
+    margin-top: 12px;
+    align-items: end;
+}
+.day-bar {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: end;
+    align-items: center;
+    gap: 5px;
+}
+.day-bar i {
+    display: block;
+    width: 9px;
+    height: max(3px, var(--bar-height));
+    max-height: 43px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(
+        var(--success),
+        color-mix(in srgb, var(--success) 40%, var(--surface))
+    );
+}
+.day-bar small {
+    color: var(--muted);
+    font-size: 10px;
+}
+.streak-value {
+    font-size: 28px;
+    letter-spacing: -0.04em;
+}
+.streak-days {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+.streak-days > div {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+}
+.streak-days span {
+    color: var(--muted);
+    font-size: 17px;
+}
+.streak-days .is-checked {
+    color: var(--success);
+}
+.streak-days small {
+    font-size: 10px;
+    color: var(--muted);
+}
+.focus-name {
+    display: block;
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+    text-decoration: none;
+}
+.focus-description {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+.focus-actions {
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    gap: 6px;
+}
+.focus-actions .button {
+    min-width: 0;
+}
+.context-chip {
+    display: inline-block;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 3px 8px;
+    font-size: 11px;
+    margin: 0 6px 5px 0;
+}
+.roadmap-preview {
+    display: flex;
+    gap: 0;
+    margin-top: 14px;
+}
+.roadmap-preview a {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 26px 8px 0 0;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+.roadmap-preview a::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 13px;
+    height: 13px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+}
+.roadmap-preview a::after {
+    content: '';
+    position: absolute;
+    top: 11px;
+    left: 19px;
+    right: 6px;
+    height: 1px;
+    background: var(--border);
+}
+.roadmap-preview a:last-child::after {
+    display: none;
+}
+.roadmap-preview a.is-complete::before {
+    border-color: var(--success);
+    background: var(--success);
+}
+.dashboard-roadmap {
+    margin-bottom: 18px;
+}
+.task-view-menu {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.task-view-menu button {
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+}
+.task-view-menu button[aria-pressed='true'] {
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 600;
+}
+.task-view-menu .count-badge {
+    margin-left: 5px;
+}
+.task-filter-details {
+    margin-bottom: 14px;
+}
+.task-filter-details summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    padding: 8px 0;
+}
+.main-goal-card {
+    display: block;
+    margin-bottom: 20px;
+    min-height: 180px;
+    padding: 26px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--scene-tint, var(--accent-soft));
+    text-decoration: none;
+}
+.main-goal-card h2 {
+    max-width: 28ch;
+    font-size: 23px;
+}
+.main-goal-card p {
+    max-width: 42ch;
+    font-size: 13px;
+    color: var(--muted);
+}
+.progress-track {
+    width: 180px;
+    height: 6px;
+    max-width: 100%;
+    border-radius: 5px;
+    background: var(--border);
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 12px;
+}
+.progress-track i {
+    display: block;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: var(--success);
+    border-radius: inherit;
+}
+.goal-area-group {
+    margin: 12px 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    background: var(--surface);
+}
+.goal-area-group > summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+.goal-area-group .goal-tree {
+    margin-top: 14px;
+}
+.goal-timeline-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+}
+.goal-timeline-item time {
+    color: var(--muted);
+    font-size: 12px;
+    min-width: 90px;
+}
+.habit-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+.habit-checkin-days {
+    display: flex;
+    gap: 4px;
+}
+.habit-checkin-days button {
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    min-width: 32px;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    cursor: pointer;
+}
+.habit-checkin-days button.is-checked {
+    color: var(--success);
+}
+.habit-checkin-days small {
+    font-size: 10px;
+}
+.habit-checkin-days button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.review-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+}
+.insight-card {
+    padding: 16px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.insight-card > strong {
+    font-size: 26px;
+}
+.review-period-navigation {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+    margin: 16px 0;
+    font-size: 12px;
+}
+.theme-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+.theme-option {
+    overflow: hidden;
+    padding: 0 0 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    background: var(--surface);
+    cursor: pointer;
+    text-align: left;
+}
+.theme-option img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 12px;
+}
+.theme-option strong {
+    margin: 0 12px;
+    font-size: 13px;
+}
+.theme-option.is-selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.theme-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+.decoration-options {
+    display: grid;
+    gap: 14px;
+    margin: 20px 0;
+}
+.capture-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.capture-suggestions button {
+    border: 1px solid var(--border);
+    background: var(--surface-soft);
+    color: var(--muted);
+    border-radius: 5px;
+    font-size: 11px;
+    padding: 5px 7px;
+    cursor: pointer;
+}
+.task-detail-grid {
+    grid-template-columns: 1.1fr 1fr;
+}
+.resources-list {
+    display: grid;
+    gap: 10px;
+    overflow-wrap: anywhere;
+}
+@media (min-width: 801px) {
+    .app-sidebar {
+        width: 200px;
+        padding-top: 24px;
+    }
+    .app-body {
+        margin-left: 200px;
+    }
+}
+@media (max-width: 1050px) {
+    .dashboard-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .dashboard-summary-grid > .planning-panel:last-child {
+        grid-column: 1/-1;
+    }
+    .review-metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 600px) {
+    .app-main {
+        padding: 18px 16px 32px;
+    }
+    .scene-header {
+        padding: 16px;
+    }
+    .dashboard-summary-grid,
+    .habit-summary {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-summary-grid > .planning-panel:last-child {
+        grid-column: auto;
+    }
+    .theme-picker {
+        grid-template-columns: 1fr 1fr;
+    }
+    .review-metrics {
+        gap: 8px;
+    }
+    .insight-card {
+        padding: 12px;
+    }
+    .habit-checkin-days {
+        gap: 0;
+    }
+    .habit-checkin-days button {
+        min-width: 36px;
+    }
+    .theme-quote {
+        max-width: none;
+    }
+    .scene-header .theme-quote {
+        width: 100%;
+    }
+    .task-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    .roadmap-preview {
+        flex-wrap: wrap;
+    }
+    .roadmap-preview a {
+        flex-basis: 33%;
+    }
+}
+
+/* Compact previews share a viewport; full collections retain their dedicated modes. */
+.dashboard-focus-grid > .planning-panel {
+    padding: 18px;
+}
+.dashboard-item {
+    padding-block: 13px;
+}
+.dashboard-focus-grid > .overdue-section {
+    margin: 0;
+    border-top: 1px solid var(--border);
+}
+.dashboard-roadmap {
+    padding: 18px;
+}
+.main-goal-card h2 {
+    color: var(--text);
+}
+.day-bars:has(.day-bar:nth-child(8)) {
+    gap: 2px;
+}
+.day-bars:has(.day-bar:nth-child(8)) .day-bar i {
+    width: 3px;
+}
+.day-bars:has(.day-bar:nth-child(8)) .day-bar small {
+    font-size: 8px;
+}
+.roadmap-branch {
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-radius: 12px;
+    box-shadow: 0 5px 18px rgb(30 78 123 / 7%);
+}
+.roadmap-branch .progress-track {
+    display: block;
+    margin: 12px 0 0;
+    width: 100%;
+}
+[data-theme='dark'] .scene-card::before {
+    opacity: 0.65;
+}
+@media (max-width: 600px) {
+    .dashboard-summary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .dashboard-summary-grid > .planning-panel {
+        padding: 14px;
+    }
+    .dashboard-summary-grid > .planning-panel:nth-child(2) {
+        grid-column: 1/-1;
+        grid-row: 1;
+    }
+    .dashboard-summary-grid > .planning-panel:last-child {
+        grid-column: auto;
+    }
+    .dashboard-summary-grid .week-summary {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .dashboard-summary-grid .progress-ring {
+        width: 60px;
+        height: 60px;
+    }
+    .dashboard-summary-grid .day-bars {
+        display: none;
+    }
+    .dashboard-summary-grid .streak-days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+    }
+    .dashboard-summary-grid .streak-days span {
+        font-size: 14px;
+    }
+    .dashboard-summary-grid .subtle-copy {
+        font-size: 11px;
+    }
+    .dashboard-summary-grid h2 {
+        font-size: 12px;
+    }
+    .day-bars:has(.day-bar:nth-child(8)) .day-bar small {
+        display: none;
+    }
+    .habit-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+.main-goal-card {
+    background: color-mix(in srgb, var(--surface) 85%, var(--scene-tint, var(--accent-soft)));
+}
+[data-show-quote='false'] .quote-scene-card {
+    display: none;
+}
+[data-show-quote='false'] .habit-summary {
+    grid-template-columns: 1fr;
+}
+[data-show-illustrations='false'] .scene-header {
+    min-height: auto;
+}
+
+input:not([type='checkbox']):not([type='radio']),
+textarea,
+select {
+    border-color: var(--control-border);
+}

@@ -15,6 +15,7 @@ use Planner\Application\Planning\PlanningService;
 use Planner\Domain\Planning\GoalProgressCalculator;
 use Planner\Domain\Planning\GraphGuard;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
+use Planner\Infrastructure\Persistence\Pdo\Recurrence\PdoTaskSeriesRepository;
 use Planner\Infrastructure\Persistence\Pdo\Activity\PdoActivityRepository;
 use Planner\Http\Security\RateLimiter;
 use Planner\Infrastructure\Session\SessionPruner;
@@ -105,6 +106,7 @@ try {
                 $application['uuid'],
                 $application['clock'],
                 new PdoActivityRepository($application['pdo']),
+                new PdoTaskSeriesRepository($application['pdo']),
             );
             fwrite(STDOUT, 'Created Areas: '.$service->backfillDefaultAreas()."\n");
             break;

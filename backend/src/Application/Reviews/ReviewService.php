@@ -41,7 +41,7 @@ final readonly class ReviewService
         try {
             return $this->transactions->run(function () use ($userId, $kind, $timezone, $start, $end): array {
                 $this->planning->lockOwner($userId);
-                $snapshot = $this->snapshot($userId, $start, $end, $timezone);
+                $snapshot = $this->snapshot($userId, $start, $end, $timezone, $kind);
                 $row = $this->reviews->insert($userId, $this->uuid->generate(), [
                     'kind' => $kind, 'period_start' => $start, 'period_end' => $end,
                     'timezone' => $timezone, 'snapshot_schema_version' => 1,
@@ -72,7 +72,7 @@ final readonly class ReviewService
             $this->planning->lockOwner($userId); $current = $this->owned($userId, $id, true);
             $this->assertVersion($current, $version);
             $changes = match ($action) {
-                'refresh' => $current['status'] === 'Draft' ? ['snapshot' => json_encode($this->snapshot($userId, (string) $current['period_start'], (string) $current['period_end'], (string) $current['timezone']), JSON_THROW_ON_ERROR)] : throw new ValidationException(['status' => ['Only a draft Review can be refreshed.']]),
+                'refresh' => $current['status'] === 'Draft' ? ['snapshot' => json_encode($this->snapshot($userId, (string) $current['period_start'], (string) $current['period_end'], (string) $current['timezone'], (string) $current['kind']), JSON_THROW_ON_ERROR)] : throw new ValidationException(['status' => ['Only a draft Review can be refreshed.']]),
                 'finalize' => $current['status'] === 'Draft' ? ['status' => 'Finalized', 'finalized_at' => $this->now()] : throw new ValidationException(['status' => ['The Review is already finalized.']]),
                 'reopen' => $current['status'] === 'Finalized' ? ['status' => 'Draft', 'finalized_at' => null] : throw new ValidationException(['status' => ['The Review is already a draft.']]),
                 default => throw new HttpException(404, 'NOT_FOUND', 'The operation was not found.'),
@@ -93,9 +93,9 @@ final readonly class ReviewService
         });
     }
 
-    private function snapshot(int $userId, string $start, string $end, string $timezone): array
+    private function snapshot(int $userId, string $start, string $end, string $timezone, string $kind): array
     {
-        return ['schema_version' => 1, 'generated_at' => Timestamp::api($this->now()), 'timezone' => $timezone, 'period_start' => $start, 'period_end' => $end, ...$this->reviews->facts($userId, $start, $end)];
+        return ['schema_version' => 1, 'generated_at' => Timestamp::api($this->now()), 'timezone' => $timezone, 'period_start' => $start, 'period_end' => $end, ...$this->reviews->facts($userId, $start, $end, $kind)];
     }
     private function period(string $kind, string $date, string $timezone): array
     {

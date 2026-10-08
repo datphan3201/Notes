@@ -30,7 +30,6 @@ final class TransactionManager
 
         try {
             $result = $operation($this->pdo);
-            $this->depth--;
 
             if ($outermost) {
                 if ($this->rollbackOnly) {
@@ -43,7 +42,6 @@ final class TransactionManager
 
             return $result;
         } catch (Throwable $exception) {
-            $this->depth--;
             $this->rollbackOnly = true;
 
             if ($outermost && $this->pdo->inTransaction()) {
@@ -51,6 +49,8 @@ final class TransactionManager
             }
 
             throw $exception;
+        } finally {
+            $this->depth--;
         }
     }
 }

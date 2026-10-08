@@ -20,10 +20,32 @@ Preserve all current auth/settings, `/api/v1/session`, Notes, `/api/v1/labels`, 
 
 ## New resource endpoints
 
+Appearance PATCH accepts `visual_theme` from the five bundled identifiers,
+strict booleans `show_background`, `show_illustrations`, `show_quote`, and
+`custom_quote` (plain text, up to 500 code points). Responses/bootstrap add these
+fields plus the existing account timezone. No URL/path/upload preference exists.
+Task create/PATCH accepts nullable integer `estimated_minutes` (1–1440),
+serialized as integer/null. Existing optimistic version, validation, scheduling,
+ownership, and explicit completion contracts remain authoritative.
+
+Dashboard adds `week_summary` (selected Task denominator/completed/percentage,
+previous-week percentage or null, percentage-point change or null, daily factual
+activity counts), and `habit_streak` (days, through_date, seven-day check-in flags).
+Dashboard Today also recognizes existing Task start dates, recurring occurrence dates, and schedules overlapping the account-local day; scheduled timestamps serialize in UTC ISO format. These read-only facts do not create a scoring system. Review snapshots may add
+`task_summary` and `previous_activity_count`; existing stored snapshots without
+these keys remain valid and display unavailable metrics until explicit Refresh.
+
+The session resource and authenticated HTML bootstrap add
+`walkthrough: { dismissed: boolean }`. `POST /api/v1/walkthrough/dismiss`
+accepts an empty JSON object, requires authentication and CSRF, rejects unknown
+fields, and returns `{ data: { dismissed: true } }`. It only writes the signed-in
+account's introduction state, is idempotent, and requires no aggregate version.
+It does not accept a user identifier or change appearance preferences.
+
 | Group | Routes |
 | --- | --- |
 | Areas | `GET/POST /areas`, `GET/PATCH/DELETE /areas/{id}`, `POST /areas/reorder` |
-| Goals | `GET/POST /goals`, `GET/PATCH/DELETE /goals/{id}`, `GET /goals/{id}/children`, `POST /goals/{id}/move|complete|reopen` |
+| Goals | `GET/POST /goals`, `GET/PATCH/DELETE /goals/{id}`, `GET /goals/{id}/children|roadmap`, `POST /goals/{id}/move|complete|reopen` |
 | Milestones | CRUD plus `POST /milestones/{id}/complete|reopen` |
 | Dependencies | `GET/POST /milestones/{id}/prerequisites`, `DELETE /milestones/{id}/prerequisites/{id}` |
 | Tasks | CRUD plus `POST /tasks/{id}/complete|reopen` and `POST /tasks/{id}/note` |
@@ -38,6 +60,15 @@ Preserve all current auth/settings, `/api/v1/session`, Notes, `/api/v1/labels`, 
 | AI | `POST /ai/actions`, `GET /ai/actions/{id}`, `POST /ai/actions/{id}/apply|reject` |
 
 HTML pages are `/`, `/dashboard`, `/goals`, `/goals/{id}`, `/tasks`, `/habits`, `/reviews`, `/ai`, auth, and settings. `/` remains Notes for compatibility.
+
+`GET /goals/{id}/roadmap` returns `goal`, `child_goals`, `milestones` (each
+including `tasks`, `recurring_tasks`, `prerequisites`, `progress`, and
+`completion_locked`), `direct_tasks`, `recurring_tasks`, `habits`, and
+`contributions`. All rows are active and owner-scoped; Tasks from unrelated
+Goals are not loaded. Milestone finite Task progress excludes occurrences.
+Goal create/PATCH accepts optional `strategy_notes` (20,000 code points).
+Reopen may return 422 `ANCESTOR_REOPEN_REQUIRED`, `errors`, and `ancestors`;
+explicit `acknowledge_ancestor_reopen=true` retries the current operation.
 
 ## Mutation precedence
 

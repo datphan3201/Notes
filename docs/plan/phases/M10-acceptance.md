@@ -28,7 +28,7 @@ Only missing operational artifacts already required by document 15, such as the 
 
 ## Files to modify
 
-`README.md`, `Readme.txt`, `AGENTS.md`, `CLAUDE.md`, `agent.md`, `.ai/rules/**` through the repository rule-recording mechanism, `.env.example`, deployment/runbook documents, `docs/implementation-status.md`, and `docs/verification.md`. Modify source/tests only to fix an evidenced defect.
+`README.md`, `docs/hosting.md`, `AGENTS.md`, `CLAUDE.md`, `agent.md`, `.ai/rules/**` through the repository rule-recording mechanism, `.env.example`, deployment/runbook documents, `docs/implementation-status.md`, and `docs/verification.md`. Modify source/tests only to fix an evidenced defect.
 
 ## Files to remove
 

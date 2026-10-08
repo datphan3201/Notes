@@ -88,3 +88,29 @@ Run the M06 subset after each task, then all plain-PHP tests, frontend unit/form
 ## Exit criteria
 
 All M06 entities and routes work through plain PHP; required invariants are enforced in application logic and database constraints where representable; critical cases 1–10 and 17 pass; no recurring/dashboard/AI behavior is smuggled into this phase.
+
+## Illustrated Planning extension — 2026-10-07
+
+Approved migration 0009 adds nullable `estimated_minutes` (1–1440), with strict
+validation and existing owned/versioned Task mutations. The existing hierarchy
+and finite progress remain authoritative. Tasks reuse dates and weekly selection
+for overlapping filters, default capture to Inbox, and expose optional details
+on demand. Versioned Task Edit preserves conflict drafts; Notes/Resources share
+one stored Task Note. Areas/Timeline and roadmap reuse current routes. Backend
+and browser evidence are in `docs/verification.md`.
+
+Reference fidelity follow-up: six-card roadmap paging, original bundled graphic
+viewports, three-column Task Overview and a shared Overview/Notes editor passed
+browser checks. Task parent context displays its actual link; capture keeps the
+reference's wider desktop form. Current evidence and remaining visual differences are in `docs/verification.md`.
+
+Fishbone follow-up: the actual Goal name identifies the head of a common spine;
+six Milestone cards attach by diagonal ribs, horizontal on desktop and vertical
+at narrower widths. Paging, keyboard focus and domain relationships are retained.
+Current geometry and edge-case evidence is in `docs/verification.md`.
+
+Goal-information follow-up: selecting the named fishbone head opens saved Goal
+content. Existing Edit goal, Strategy and Related work use grouped disclosures
+in one native dialog, replacing the four top-level Goal tabs. Draft retention,
+pending-save dismissal guards, conflict reconciliation, completed-Goal inspection
+and return focus remain part of the browser contract.

@@ -52,11 +52,11 @@ SQL);
         return $this->findById($userId) ?? throw new \RuntimeException('Created user could not be reloaded.');
     }
 
-    /** @return array{theme: string, note_font_size: int, default_note_color: string, notes_view: string, timezone: string} */
+    /** @return array<string, string|int|bool> */
     public function preferences(int $userId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT theme, note_font_size, default_note_color, notes_view, timezone FROM user_preferences WHERE user_id = :user_id',
+            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote FROM user_preferences WHERE user_id = :user_id',
         );
         $statement->execute(['user_id' => $userId]);
         $row = $statement->fetch();
@@ -71,7 +71,41 @@ SQL);
             'default_note_color' => (string) $row['default_note_color'],
             'notes_view' => (string) $row['notes_view'],
             'timezone' => (string) $row['timezone'],
+            'visual_theme' => (string) $row['visual_theme'],
+            'show_background' => (bool) $row['show_background'],
+            'show_illustrations' => (bool) $row['show_illustrations'],
+            'show_quote' => (bool) $row['show_quote'],
+            'custom_quote' => (string) $row['custom_quote'],
         ];
+    }
+
+    public function walkthroughDismissed(int $userId): bool
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT walkthrough_dismissed_at FROM user_preferences WHERE user_id = :user_id',
+        );
+        $statement->execute(['user_id' => $userId]);
+        $row = $statement->fetch();
+
+        if (! is_array($row)) {
+            throw new \RuntimeException('User preferences are missing.');
+        }
+
+        return $row['walkthrough_dismissed_at'] !== null;
+    }
+
+    public function dismissWalkthrough(int $userId, string $timestamp): void
+    {
+        // Replays preserve the first acknowledgement, including across devices.
+        $statement = $this->pdo->prepare(<<<'SQL'
+UPDATE user_preferences SET walkthrough_dismissed_at = :dismissed_at, updated_at = :updated_at
+WHERE user_id = :user_id AND walkthrough_dismissed_at IS NULL
+SQL);
+        $statement->execute([
+            'user_id' => $userId,
+            'dismissed_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ]);
     }
 
     public function updateDisplayName(int $userId, string $displayName, string $timestamp): UserRecord
@@ -84,10 +118,10 @@ SQL);
         return $this->findById($userId) ?? throw new \RuntimeException('Updated user could not be reloaded.');
     }
 
-    /** @param array<string, string|int> $changes */
+    /** @param array<string, string|int|bool> $changes */
     public function updatePreferences(int $userId, array $changes, string $timestamp): array
     {
-        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone'];
+        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote'];
         $assignments = [];
         $bindings = ['user_id' => $userId, 'updated_at' => $timestamp];
 
@@ -97,7 +131,7 @@ SQL);
             }
 
             $assignments[] = "$field = :$field";
-            $bindings[$field] = $value;
+            $bindings[$field] = is_bool($value) ? (int) $value : $value;
         }
 
         if ($assignments !== []) {

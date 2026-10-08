@@ -1,4 +1,4 @@
-# Migration Task Index
+# Implementation Phase Index
 
 Statuses: Pending, Ready, In Progress, Blocked, Verified, Skipped. Skipped requires implementation plus evidence equivalent to the task gate.
 
@@ -23,7 +23,7 @@ flowchart LR
   M00 --> M01 --> M02 --> M03 --> M04 --> M05 --> M06 --> M07 --> M08 --> M09 --> M10
 ```
 
-Historical R1 task completion is retained in Git history and `docs/verification.md`; it does not satisfy new migration tasks except as explicitly reused baseline evidence in M00.
+Original migration and R1 baseline records belong in Git history. Current evidence and its limits are maintained in `docs/verification.md`; a historical Verified phase does not certify every later change or unresolved audit finding.
 
 ## Task execution record
 

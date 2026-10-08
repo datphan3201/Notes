@@ -2,7 +2,7 @@
 
 ## Current objective
 
-Migrate the existing Laravel notes application to framework-free PHP, preserve its verified behavior, and add the planning domain defined in `PLAN.md` and `docs/plan/`.
+Maintain the framework-free PHP Planner application and improve its existing workflows according to `PLAN.md` and `docs/plan/`. Preserve verified behavior unless an approved contract change replaces it.
 
 The application is a personal goal/task system, not a generic Notion clone. It supports independent user accounts but no collaboration.
 
@@ -21,7 +21,7 @@ The application is a personal goal/task system, not a generic Notion clone. It s
 
 ## Technology boundary
 
-The target backend is PHP 8.5 without Laravel, Symfony as an application framework, Slim, CodeIgniter, CakePHP, or another web framework. Composer packages are allowed only for focused infrastructure concerns.
+The canonical backend is PHP 8.5 without Laravel, Symfony as an application framework, Slim, CodeIgniter, CakePHP, or another web framework. Composer packages are allowed only for focused infrastructure concerns.
 
 Keep MySQL, frontend JavaScript, Alpine.js, CSS, Vite, and the same-origin browser/session model. Do not replace working browser code without a demonstrated incompatibility.
 
@@ -31,7 +31,7 @@ Keep MySQL, frontend JavaScript, Alpine.js, CSS, Vite, and the same-origin brows
 
 ## Historical assignment
 
-`503073-FinalProject-V1.docx` and earlier R1 planning documents originated from a course notes-project assignment. They explain why the existing Notes features exist. The current user requirements and `PLAN.md` supersede that assignment when product scope or technology conflicts. In particular, collaboration, PWA, note passwords, email workflows, and the former Laravel mandate are not part of this migration.
+`503073-FinalProject-V1.docx` and earlier R1 planning documents originated from a course notes-project assignment. They explain why the existing Notes features exist. The current user requirements and `PLAN.md` supersede that assignment when product scope or technology conflicts. In particular, collaboration, PWA, note passwords, email workflows, and the former Laravel mandate are outside the current product scope.
 
 ## Engineering rules
 

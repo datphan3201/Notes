@@ -56,7 +56,7 @@ final readonly class ProposalValidator
     {
         if (!is_array($fields)) throw new ValidationException(['fields' => ['The create fields are invalid.']]);
         $allowed = match ($op) {
-            'create_goal' => ['name','description','expected_result','completion_criteria','importance','deadline'],
+            'create_goal' => ['name','description','expected_result','completion_criteria','strategy_notes','importance','deadline'],
             'create_milestone' => ['name','description','completion_criteria','importance','deadline'],
             'create_task' => ['name','description','expected_result','completion_criteria','importance','start_date','deadline','scheduled_start','scheduled_end'],
         };

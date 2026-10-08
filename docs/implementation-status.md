@@ -1,77 +1,137 @@
 # Implementation Status
 
-Updated: 2026-09-18.
+Updated 2026-10-07. This ledger describes the current application and recorded
+checks. Contracts describe required behavior; a historical Verified phase does
+not establish that every edge case has been tested.
 
-## Current application baseline
+## Canonical application
 
-The framework-free PHP application is the only active runtime. M00 through M10
-are implemented and verified; account, Notes/Tags, private files, planning,
-Habits/recurrence, Dashboard/Reviews, approval-gated AI, templates, assets,
-routes, CLI, and tests run without Laravel or Illuminate packages.
+Framework-free PHP 8.5 under `backend/src` (`Planner\`), explicit bootstrap
+wiring, owned PDO repositories, MySQL, same-origin cookie sessions and ordinary
+escaped PHP views under `frontend/` are active. Laravel has been retired.
+M00–M10 were recorded as implemented and verified on 2026-09-18; their phase
+specifications remain maintenance contracts in `docs/plan/phases/`.
 
-Verified during repository audit:
+Current features include authentication/settings, Notes/Tags with autosave and
+recovery, private attachments/avatars, configurable Areas, nested Goals,
+Milestones, Tasks/Checklists/Task Notes, contributions, Milestone dependencies,
+Habits, daily/weekly recurrence, Dashboard/Activity, Reviews and approval-gated
+AI proposals. AI availability depends on server configuration.
 
-- PHPUnit: 72 tests, 527 assertions passed against guarded MySQL 8.4
-  `goals_test`.
-- JavaScript: 33 tests passed; Prettier and the Vite 8.2.2 production build
-  passed.
-- Composer validation/platform checks and a clean 15-package production
-  install passed.
-- 146 canonical first-party PHP files passed syntax validation.
-- 125 application routes and five checksum-verified migrations are active.
-- Firefox 155 critical paths passed with zero console errors or warnings.
+## Current planning and interface behavior
 
-Historical browser evidence and limitations remain in `docs/verification.md`.
+- The owned roadmap projection groups existing relationships consistently.
+  Finite primary children determine Goal progress; Strategy, Habits,
+  contributions and recurring occurrences do not inflate it.
+- The fishbone shows the actual Goal name at its head and six Milestone cards
+  per page. Desktop uses a horizontal spine; narrower screens use a vertical
+  spine. Branch position expresses membership, never a prerequisite.
+- Selecting the named head opens saved Goal information. Existing Edit goal,
+  Strategy and Related work are grouped disclosures in one native dialog,
+  replacing the four top-level Goal tabs. Closing retains drafts and restores
+  focus; pending saves block dismissal. Conflict reconciliation temporarily
+  replaces the dialog and returns to the original form. Completed Goals remain
+  inspectable. Milestone focus and paging remain available.
+- Strategy/details and Task/Review editors preserve newer typing during save,
+  dirty drafts during refresh, and explicit saved-version/draft conflict choices.
+  Milestone Task capture retains a separate draft per branch. Task Notes and
+  Reviews use explicit Save; these drafts do not promise browser-crash recovery.
+- Planning mutations preserve owner scoping, finite progress and completion
+  acknowledgements. Reopening finite descendants explicitly reopens completed
+  Goal ancestors atomically; dependency failure rolls back the operation.
+  Adding finite work requires reopening completed ancestors first. Non-finite
+  series materialization does not silently reopen Goals.
+- Tasks support nullable estimated minutes (1–1440) and a versioned edit dialog.
+  Today/Next/This week/Backlog derive from existing dates, schedules and weekly
+  selections. Capture may start in Inbox without required parent structure.
+- Dashboard modes separate Today, This week and Activity. Focus actions use
+  Edit (20%) and Complete (80%). Counts and percentages use documented actual
+  denominators. Review facts remain saved snapshots until explicitly refreshed.
+- Five bundled themes (Mountain journey, Forest, Ocean, Pisces and Starry sky)
+  retain independent light/dark and background/illustration/quote toggles.
+  Private quote overrides are account-persisted. Theme uploads are unavailable;
+  existing avatars/attachments remain separate workflows.
+- Help beside Appearance opens a 33-step illustrated walkthrough. First-visit
+  dismissal is account-wide; other dialogs and Notes recovery take priority.
+  Walkthrough images remain explicitly replaceable placeholders.
+- Original reference graphics remain bundled rather than simplified. The app
+  adapts them to live data and responsive controls; this is not a certified
+  100% pixel match to the static reference.
 
-## Documentation work
+## Schema and deployment
 
-| Work | Status | Evidence |
-| --- | --- | --- |
-| Repository audit | Verified | `docs/plan/00-repository-audit.md` |
-| Complete migration plan | Verified | `docs/migration-plan.md` |
-| Active project instructions synchronized | Verified | `PLAN.md`, `AGENTS.md`, `agent.md` |
-| Target contracts and file map | Verified | `docs/plan/01`–`18` |
-| Phase execution specs | Verified | `docs/plan/phases/M00`–`M10` |
-| Documentation structure/link validation | Verified | 49 active Markdown/text/rule files checked; 0 missing local links, 0 unbalanced code fences, all M00–M10 phase templates complete, all 39 migration-plan sections present; `git diff --check` passed |
-| Hosting and startup runbook | Updated | Added `docs/hosting.md` with first-install, subsequent-start, production PHP-FPM, scheduler, backup/restore, account bootstrap, troubleshooting, and verification procedures; linked from `README.md`, `Readme.txt`, and `docs/plan/15-operations.md`. |
+There are nine checksum migrations. Current extensions are:
 
-## Migration ledger
+| Migration | Purpose |
+| --- | --- |
+| 0006 | Goal Strategy notes |
+| 0007 | Account-wide walkthrough dismissal |
+| 0008 | Interface themes, visibility and private quotes |
+| 0009 | Optional Task estimated minutes |
 
-| Phase | Status | Evidence/blocker |
-| --- | --- | --- |
-| M00 Baseline | Verified | 2026-09-17: Laravel PHPUnit 35/385, JS 27/27, Composer/platform/format/build/routes/syntax passed; dirty tree preserved |
-| M01 Foundation | Verified | Plain config/PDO/transaction/migration/CLI/autoload implemented; PHPUnit 13 tests/47 assertions; disposable MySQL 8.4 fresh/no-op/status/check passed |
-| M02 HTTP/Auth | Verified | Plain router/request/response/errors, encrypted PDO sessions, CSRF/origin, rate limits, auth/account implemented; plain PHPUnit 24/106, real HTTP registration/session/419 passed; legacy 35/385 still green |
-| M03 Notes/Tags | Verified | Plain owner-scoped PDO Notes/Labels, snapshot replay/no-op/conflict/tombstone, literal search/filter/pagination, quotas/versioning and secure browser UUIDs implemented; plain PHPUnit 29/210, JS 30/30, legacy 35/385, format/build/syntax/Composer passed |
-| M04 Files | Verified | Canonical private storage, validation/re-encoding, attachment/avatar transactions and compensation, range/HEAD streams, cleanup/prune implemented; plain PHPUnit 39/365 including concurrent quota/delete races, real HTTP 200/206/HEAD, prune twice, legacy 35/385 |
-| M05 Cutover | Verified | Canonical PHP templates/entry/bootstrap/routes/PHPUnit/CLI active; PHPUnit 43/389, JS 30/30, native Vite build and real Firefox registration/Notes autosave passed with zero console errors; Laravel/Illuminate dependency and source scans clean |
-| M06 Planning | Verified | 2026-09-18: Areas/Goals/Milestones/Tasks/Checklist/Task Note/Tags, graph guards, dependencies, contributions, progress, owner scoping and UI implemented; `PlanningDomainTest`, `PlanningCoreTest`, and `PlanningHttpTest` pass in the 72/527 suite; Firefox planning flow passed |
-| M07 Habits/Recurrence | Verified | 2026-09-18: dedicated Habits, idempotent check-in reversal, daily/weekly calculator, series lifecycle/materializer and UI implemented; recurrence unit/integration cases pass; Firefox check-in/undo and weekly preview/create/pause/resume passed |
-| M08 Dashboard/Reviews | Verified | 2026-09-18: activity ledger, weekly selections, Dashboard, Goal snapshots, daily/weekly/monthly Reviews and stable finalization implemented; `DashboardReviewsTest` passes; the refreshed GitHub-style monthly calendar has documented intensity thresholds and unit/browser coverage; Firefox activity/selection and Review finalize/reopen passed |
-| M09 AI | Verified | 2026-09-18: provider interface, disabled/Google adapters, selected immutable context, proposal schema validation, approval/rejection/replay and atomic application implemented; `AIActionTest` covers malformed/stale/foreign/cyclic/rollback paths; disabled-provider browser failure was safe |
-| M10 Acceptance | Verified | 2026-09-18: fresh/repeat migrations, full suites, clean install, production HTTP/assets, maintenance commands, framework/secret/license scans, backup/restore, cross-account probe, responsive/dark/keyboard/zoom browser checks passed; optional live Google call and Apache-specific runtime remain explicitly unrun |
+Earlier browser examples used isolated MySQL databases (`goals_test` and
+`goals_ui_review`). The local-startup follow-up now uses persistent `goals_dev`
+on loopback port 3307, with all nine migrations applied and healthy. Its data
+directory is `~/.local/share/planner/mysql/data`, outside temporary storage and
+Git. The old system `notes_dev` database was not modified or imported. This new
+Planner database has no example accounts; registration remains the supported
+bootstrap. Production was not deployed. Other installations must migrate and
+check following [the runbook](hosting.md).
 
-## English interface and Activity calendar refresh
+## Current verification
 
-Verified on 2026-09-18 after the M10 baseline:
+See [Verification](verification.md) for dated commands and browser scope.
+Current checks include the full PHPUnit suite (**90 tests / 715 assertions**),
+**47 Node tests**, formatting and the production Vite build. The focused
+Planning HTTP suite passes **2 tests / 38 assertions** against guarded real
+MySQL `goals_test`.
 
-- All first-party PHP, JavaScript, PHP templates, tests, documentation, and developer comments were audited for Vietnamese interface text and translated to English. The one accented test fixture, `Résumé database`, remains intentional English-language coverage for accent-insensitive search.
-- The monthly Activity widget now follows GitHub's contribution-calendar visual model: Sunday-first weeks as columns, Monday/Wednesday/Friday labels, the GitHub light/dark green scales, factual hover/focus tooltips, month navigation, a completion summary, and a Less/More legend.
-- `npm run test:unit` passed 33 tests, including calendar layout and intensity-threshold cases; Prettier and the Vite production build passed.
-- `vendor/bin/phpunit -c phpunit.xml` passed 72 tests and 527 assertions against isolated MySQL `goals_test`.
-- Real Chromium checks at 1440×900 and 360×800 passed in light and dark themes with zero console errors or warnings. A completed Task produced the expected level-one day and factual tooltip, and previous-month navigation loaded the requested bounded month.
+## Cleanup
 
-## Whole-application interface redesign
+Obsolete Laravel audit/migration/file-map/handoff documents, the duplicate
+`Readme.txt` runbook and generated comparison gallery were removed. Active
+links now point to the canonical contracts and hosting guide. The obsolete
+visual baseline and append-only historical test logs were consolidated into
+current status/evidence; original migration records remain in Git history.
+Generated screenshots, Playwright logs/snapshots, PHPUnit caches, retired
+Laravel compiled views/cache and old application logs were removed: 454 generated/cache files, approximately 47.98 MiB, plus six obsolete/duplicate documents and Windows download metadata.
 
-Verified on 2026-09-18 after the English-interface refresh:
+Keep current source, tests, migrations, contracts, phase specifications,
+assignment source, bundled theme/reference/guide images, dependencies and the
+current deployment build. Private user files and unrelated application work
+are outside this cleanup.
 
-- Updated the UI contract before implementation. The existing frontend stack now shares an ocean/slate palette, Noto Sans type scale, local SVG icons, a compact sidebar, and a page bar. Dashboard, Goals, Tasks, Habits, Reviews, AI, Notes, settings, and authentication adopt the same visual system.
-- Dashboard prioritizes today's work, preserves the monthly GitHub-style Activity semantics, links real task/milestone rows to their detail context, and has actionable empty states. Month/refresh requests are serialized, successful retries clear errors, and tooltips are positioned outside the scrolling calendar.
-- Mobile navigation is shared across all authenticated pages, with focus containment, Escape/return-focus, inert background, and desktop-resize cleanup. Notes tag management remains accessible on mobile.
-- Fixed the remaining Vietnamese date locale, dark-theme colored-note selectors, and a demonstrated startup race where a new Note's recovery record could be offered as an older draft. New note creation now waits for the startup recovery check.
-- Full PHPUnit: 72 tests / 527 assertions on isolated MySQL `goals_test`; focused HTTP/View/Dashboard tests also passed 17 / 119. Node tests: 33 / 33. Production build, formatting, Composer validation/platform checks, and syntax validation of 149 first-party PHP files passed.
-- Real Chromium checked 10 authenticated pages at widths 1440, 768, and 360: all 30 navigations returned 200 without horizontal document overflow. Light/dark screenshots, mobile keyboard navigation, task creation/checklist/completion/weekly selection, Goal creation, Habit check-in, Review draft/save, Note autosave, and a delayed-start Note recovery regression were exercised.
-- A simulated Dashboard 503 displayed an error, left Refresh usable, and cleared the error after a successful retry. The intentionally injected failed request is excluded from normal-flow console results.
-- Updated `README.md`, `docs/interface-guide.md`, UI/autosave contracts, and verification evidence. Generated browser artifacts and local credentials remain untracked and ignored.
+## Open findings and evidence limits
 
-Do not mark a phase Verified without the exact gate in `docs/plan/08-verification.md`.
+- Task Note autosave/recovery remains separate follow-up work; the current
+  browser uses explicit Save. Main Notes autosave/recovery is already active.
+- Recurrence DST/catch-up and lifecycle edge cases, Habit timezone freezing,
+  and full AI operation rendering remain audit follow-ups. Existing tests
+  cover subsets, not exhaustive certification.
+- The entire matrix in [Verification contract](plan/08-verification.md) has
+  not been rerun exhaustively for this UI change. Quota/race permutations,
+  DB/storage failure injection, cross-account browser file access, native
+  video seeking and all accessibility/event-order cases need their own evidence.
+- Live Google-provider validation, Apache-specific rewrite execution and
+  production deployment/backup rehearsal were not rerun for this change.
+
+Do not mark an unresolved finding complete based on a historical phase status
+or an unrelated passing suite.
+
+## Local startup and push preparation — 2026-10-07
+
+The old ignored environment files still targeted the retired Laravel schema.
+They were backed up privately and replaced with canonical Planner settings and
+independent generated credentials/session keys. The system account could not
+create Planner databases, so a separate user-owned MySQL 8.4.11 instance was
+started with disk-backed storage outside Git. `goals_dev` is the app database;
+`goals_test` is isolated for destructive integration cleanup. Both listen only
+on loopback port 3307. PHP serves the built app at port 8000.
+
+Current startup checks: nine migrations applied, repeat migration is a no-op,
+`migrate:check` healthy, `/up` reports ok, `/login` and `/register` return 200.
+Fresh full PHPUnit on the separate test database passes **90 / 715**, frontend
+**47** tests/format/build and Composer validation/platform checks pass, and
+**156** first-party PHP files pass syntax checks. Staged source contains no
+generated credentials or environment files. Restart instructions are in the
+hosting runbook. No legacy-data import or production deployment was performed.

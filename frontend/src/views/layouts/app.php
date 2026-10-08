@@ -15,7 +15,7 @@ $accountNavigation = [
 ];
 ?>
 <!doctype html>
-<html lang="en" data-theme="<?= $view->e($preferences['theme']) ?>" data-font-size="<?= $view->e($preferences['note_font_size']) ?>">
+<html lang="en" data-theme="<?= $view->e($preferences['theme']) ?>" data-font-size="<?= $view->e($preferences['note_font_size']) ?>" data-visual-theme="<?= $view->e($preferences['visual_theme']) ?>" data-show-background="<?= $preferences['show_background'] ? 'true' : 'false' ?>" data-show-illustrations="<?= $preferences['show_illustrations'] ? 'true' : 'false' ?>" data-show-quote="<?= $preferences['show_quote'] ? 'true' : 'false' ?>">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,7 +55,7 @@ $accountNavigation = [
                 <div class="sidebar-footer">
                     <a class="sidebar-user" href="/settings/profile" data-leave-guard>
                         <span class="avatar avatar-small" data-avatar-fallback><?= $view->e($view->initial($user['display_name'])) ?></span>
-                        <span class="sidebar-user-copy"><strong><?= $view->e($user['display_name']) ?></strong><small>Personal account</small></span>
+                        <span class="sidebar-user-copy"><strong><?= $view->e($user['display_name']) ?></strong><small><?= $user['email_verified'] ? 'Personal account' : 'Email not verified' ?></small></span>
                     </a>
                     <form action="/logout" method="post" data-leave-guard-form>
                         <input type="hidden" name="_token" value="<?= $view->e($csrf_token) ?>">
@@ -70,10 +70,13 @@ $accountNavigation = [
                         <button class="mobile-menu-button icon-button" type="button" data-open-sidebar aria-label="Open navigation" aria-controls="app-sidebar" aria-expanded="false"><svg class="ui-icon" aria-hidden="true"><use href="#icon-menu"/></svg></button>
                         <span class="topbar-space">Personal space</span><span class="topbar-divider" aria-hidden="true">/</span><span><?= $view->e($title ?? 'Planner') ?></span>
                     </div>
-                    <a class="topbar-settings icon-button" href="/settings/preferences" data-leave-guard aria-label="Appearance settings" title="Appearance settings"><svg class="ui-icon" aria-hidden="true"><use href="#icon-appearance"/></svg></a>
+                    <div class="topbar-actions">
+                        <button class="icon-button" type="button" data-open-walkthrough aria-label="Open walkthrough" aria-haspopup="dialog" title="Help and walkthrough">?</button>
+                        <a class="topbar-settings icon-button" href="/settings/preferences" data-leave-guard aria-label="Appearance settings" title="Appearance settings"><svg class="ui-icon" aria-hidden="true"><use href="#icon-appearance"/></svg></a>
+                    </div>
                 </header>
                 <main class="app-main" id="main-content" tabindex="-1">
-                    <?php if (!$user['email_verified']): ?>
+                    <?php if (!$user['email_verified'] && $current_route === 'settings.profile'): ?>
                         <div class="notice notice-info account-notice" role="status"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg><span>Your email address has not been verified.</span></div>
                     <?php endif; ?>
                     <?= $content ?>
@@ -81,5 +84,6 @@ $accountNavigation = [
             </div>
         </div>
         <div class="toast-region" data-toast-region aria-live="polite"></div>
+        <?php require __DIR__.'/walkthrough.php'; ?>
     </body>
 </html>

@@ -18,9 +18,9 @@ final readonly class PdoPlanningRepository
 
     private const COLUMNS = [
         'area' => ['name', 'description', 'position'],
-        'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'deadline', 'position', 'completed_at'],
+        'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'status', 'deadline', 'position', 'completed_at'],
         'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'status', 'deadline', 'position', 'completed_at'],
-        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'position', 'completed_at'],
+        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'completed_at'],
         'checklist' => ['task_id', 'title', 'checked', 'position', 'checked_at'],
     ];
 
@@ -116,9 +116,9 @@ final readonly class PdoPlanningRepository
         $table = $this->table($type);
         $column = $type === 'checklist' ? 'deleted_at' : 'archived_at';
         $statement = $this->pdo->prepare(
-            "UPDATE $table SET $column = :timestamp, version = version + 1, updated_at = :timestamp WHERE user_id = :user_id AND id = :id",
+            "UPDATE $table SET $column = :archived_at, version = version + 1, updated_at = :updated_at WHERE user_id = :user_id AND id = :id",
         );
-        $statement->execute(['timestamp' => $timestamp, 'user_id' => $userId, 'id' => $id]);
+        $statement->execute(['archived_at' => $timestamp, 'updated_at' => $timestamp, 'user_id' => $userId, 'id' => $id]);
 
         return $this->find($type, $userId, $id, includeArchived: true)
             ?? throw new \RuntimeException('Archived planning record could not be reloaded.');
@@ -174,10 +174,13 @@ final readonly class PdoPlanningRepository
     public function milestoneDependencyCount(int $userId, string $milestoneId): int
     {
         $statement = $this->pdo->prepare(<<<'SQL'
-SELECT COUNT(*) FROM milestone_dependencies
-WHERE user_id = :user_id AND (milestone_id = :milestone_id OR prerequisite_id = :milestone_id)
+SELECT COUNT(*) FROM milestone_dependencies dependency
+JOIN milestones dependent ON dependent.user_id = dependency.user_id AND dependent.id = dependency.milestone_id
+JOIN milestones prerequisite ON prerequisite.user_id = dependency.user_id AND prerequisite.id = dependency.prerequisite_id
+WHERE dependency.user_id = :user_id AND (dependency.milestone_id = :milestone_id OR dependency.prerequisite_id = :prerequisite_id)
+  AND dependent.archived_at IS NULL AND prerequisite.archived_at IS NULL
 SQL);
-        $statement->execute(['user_id' => $userId, 'milestone_id' => $milestoneId]);
+        $statement->execute(['user_id' => $userId, 'milestone_id' => $milestoneId, 'prerequisite_id' => $milestoneId]);
 
         return (int) $statement->fetchColumn();
     }
@@ -364,6 +367,52 @@ SQL)->fetchAll(PDO::FETCH_COLUMN));
             'milestones' => $this->queryAll('SELECT goal_id, status FROM milestones WHERE user_id = :user_id AND archived_at IS NULL ORDER BY id', $userId),
             'tasks' => $this->queryAll('SELECT goal_id, status FROM tasks WHERE user_id = :user_id AND archived_at IS NULL AND series_id IS NULL AND goal_id IS NOT NULL ORDER BY id', $userId),
         ];
+    }
+
+    /**
+     * Read only the requested Goal's direct roadmap, without per-Milestone
+     * queries or loading all of the account's Tasks.
+     *
+     * @return array{child_goals:list<array<string,mixed>>,milestones:list<array<string,mixed>>,tasks:list<array<string,mixed>>,prerequisites:list<array<string,mixed>>,habits:list<array<string,mixed>>}
+     */
+    public function roadmapRows(int $userId, string $goalId): array
+    {
+        $query = function (string $sql, array $bindings) use ($userId): array {
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute(['user_id' => $userId, ...$bindings]);
+
+            return $statement->fetchAll();
+        };
+
+        return [
+            'child_goals' => $query('SELECT * FROM goals WHERE user_id = :user_id AND parent_goal_id = :goal_id AND archived_at IS NULL ORDER BY position, id', ['goal_id' => $goalId]),
+            'milestones' => $query('SELECT * FROM milestones WHERE user_id = :user_id AND goal_id = :goal_id AND archived_at IS NULL ORDER BY position, id', ['goal_id' => $goalId]),
+            'tasks' => $query(<<<'SQL'
+SELECT task.* FROM tasks task
+LEFT JOIN milestones milestone ON milestone.user_id = task.user_id AND milestone.id = task.milestone_id
+WHERE task.user_id = :user_id AND task.archived_at IS NULL
+  AND (task.goal_id = :direct_goal_id OR (milestone.goal_id = :milestone_goal_id AND milestone.archived_at IS NULL))
+ORDER BY task.position, task.id
+SQL, ['direct_goal_id' => $goalId, 'milestone_goal_id' => $goalId]),
+            'prerequisites' => $query(<<<'SQL'
+SELECT prerequisite.*, dependency.milestone_id AS dependent_id
+FROM milestone_dependencies dependency
+JOIN milestones dependent ON dependent.user_id = dependency.user_id AND dependent.id = dependency.milestone_id
+JOIN milestones prerequisite ON prerequisite.user_id = dependency.user_id AND prerequisite.id = dependency.prerequisite_id
+WHERE dependency.user_id = :user_id AND dependent.goal_id = :goal_id
+  AND dependent.archived_at IS NULL AND prerequisite.archived_at IS NULL
+ORDER BY prerequisite.position, prerequisite.id
+SQL, ['goal_id' => $goalId]),
+            'habits' => $query('SELECT id, name, period, target_frequency, timezone FROM habits WHERE user_id = :user_id AND primary_goal_id = :goal_id AND archived_at IS NULL ORDER BY position, id', ['goal_id' => $goalId]),
+        ];
+    }
+
+    public function finiteTaskCount(int $userId, string $goalId): int
+    {
+        $statement = $this->pdo->prepare('SELECT COUNT(*) FROM tasks WHERE user_id = :user_id AND goal_id = :goal_id AND archived_at IS NULL AND series_id IS NULL');
+        $statement->execute(['user_id' => $userId, 'goal_id' => $goalId]);
+
+        return (int) $statement->fetchColumn();
     }
 
     public function linkOccurrence(int $userId, string $taskId, string $seriesId, string $date, string $timezone): void

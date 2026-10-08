@@ -1,5 +1,8 @@
-import { get, patch, post } from '../lib/http.js';
+import { referenceDecoration } from '../settings/reference-decoration.js';
+import { get } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
+import { renderRing, renderDayBars, renderStreak } from './insights-ui.js';
+import { transitionEntity } from './transitions.js';
 
 function message(root, error) {
     const output = root.querySelector('[data-planning-error]');
@@ -10,14 +13,14 @@ function message(root, error) {
 function rows(container, items, empty, type = 'task') {
     container.replaceChildren();
     if (!items.length) renderEmptyState(container, empty);
-    for (const item of items) {
+    for (const item of items.slice(0, 4)) {
         const row = document.createElement('a');
         row.className = 'dashboard-item';
         row.href =
             type === 'habit'
                 ? '/habits'
                 : type === 'milestone'
-                  ? `/goals/${encodeURIComponent(item.goal_id)}`
+                  ? `/goals/${encodeURIComponent(item.goal_id)}#milestone=${encodeURIComponent(item.id)}`
                   : `/tasks/${encodeURIComponent(item.id)}`;
         const marker = document.createElement('span');
         marker.className = 'task-marker';
@@ -37,6 +40,14 @@ function rows(container, items, empty, type = 'task') {
         copy.append(name, meta);
         row.append(marker, copy);
         container.append(row);
+    }
+    if (items.length > 4) {
+        const link = document.createElement('a');
+        link.className = 'section-link';
+        link.href =
+            type === 'habit' ? '/habits' : type === 'milestone' ? '/goals' : '/tasks?view=all';
+        link.textContent = `View all ${items.length} ${type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks'} →`;
+        container.append(link);
     }
 }
 
@@ -150,6 +161,7 @@ export function initDashboardPage(root) {
     const tooltip = root.querySelector('[data-activity-tooltip]');
     const grid = root.querySelector('[data-activity-grid]');
     let loading = false;
+    let reloadRequested = false;
 
     const hideTooltip = () => {
         tooltip.classList.add('is-hidden');
@@ -178,9 +190,14 @@ export function initDashboardPage(root) {
     });
 
     const load = async (requestedMonth = displayedMonth) => {
-        if (loading) return;
+        if (loading) {
+            reloadRequested = true;
+            return;
+        }
         loading = true;
         previous.disabled = next.disabled = refresh.disabled = true;
+        const previousFocus = root.querySelector('[data-focus-complete]');
+        if (previousFocus) previousFocus.disabled = true;
         root.setAttribute('aria-busy', 'true');
         root.querySelector('[data-planning-error]').classList.add('is-hidden');
         try {
@@ -206,6 +223,134 @@ export function initDashboardPage(root) {
             root.querySelector('[data-weekly-milestone-count]').textContent =
                 data.selected_milestones.length;
             renderActivity(root, data);
+            const hour = Number(
+                new Intl.DateTimeFormat('en-US', {
+                    hour: 'numeric',
+                    hourCycle: 'h23',
+                    timeZone: data.timezone,
+                }).format(new Date()),
+            );
+            root.querySelector('[data-dashboard-greeting]').textContent =
+                hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!';
+            root.querySelector('[data-dashboard-greeting]').append(referenceDecoration('greeting'));
+            renderRing(
+                root.querySelector('[data-week-ring]'),
+                data.week_summary.percentage,
+                'Selected tasks completed',
+            );
+            root.querySelector('[data-week-completed]').textContent =
+                `${data.week_summary.completed} / ${data.week_summary.total}`;
+            root.querySelector('[data-week-change]').textContent =
+                data.week_summary.change_points == null
+                    ? data.week_summary.total
+                        ? 'No previous-week selections'
+                        : 'Select tasks to shape your week'
+                    : `${data.week_summary.change_points > 0 ? '+' : ''}${data.week_summary.change_points} points vs previous week’s selections`;
+            const weekEnd = new Date(`${data.week_start}T00:00:00Z`);
+            weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+            renderDayBars(
+                root.querySelector('[data-week-bars]'),
+                data.week_start,
+                weekEnd.toISOString().slice(0, 10),
+                data.week_summary.daily_activity,
+            );
+            renderStreak(root.querySelector('[data-habit-streak]'), data.habit_streak, data.today);
+            const focus = [...data.selected_tasks, ...data.today_tasks, ...data.overdue_tasks].find(
+                (task) => task.status !== 'Done' && task.status !== 'Blocked',
+            );
+            const focusContainer = root.querySelector('[data-current-focus]');
+            focusContainer.replaceChildren();
+            if (focus) {
+                const name = document.createElement('a');
+                name.className = 'focus-name';
+                name.href = `/tasks/${focus.id}`;
+                name.textContent = focus.name;
+                const chip = document.createElement('span');
+                chip.className = 'context-chip';
+                chip.textContent = focus.estimated_minutes
+                    ? `${focus.estimated_minutes} min · ${focus.status.replace(/([a-z])([A-Z])/g, '$1 $2')}`
+                    : focus.status.replace(/([a-z])([A-Z])/g, '$1 $2');
+                const description = document.createElement('p');
+                description.className = 'focus-description';
+                description.textContent =
+                    focus.description ||
+                    focus.completion_criteria ||
+                    'Open this task and take the next small step.';
+                const actions = document.createElement('div');
+                actions.className = 'focus-actions';
+                const edit = document.createElement('a');
+                edit.className = 'button button-quiet';
+                edit.href = `/tasks/${focus.id}#edit`;
+                edit.textContent = '✎';
+                edit.setAttribute('aria-label', `Edit ${focus.name}`);
+                edit.title = 'Edit task';
+                const complete = document.createElement('button');
+                complete.type = 'button';
+                complete.dataset.focusComplete = '';
+                complete.disabled = true;
+                complete.className = 'button button-primary';
+                complete.textContent = '✓ Complete';
+                complete.addEventListener('click', async () => {
+                    complete.disabled = true;
+                    try {
+                        if (await transitionEntity('task', focus, 'complete')) await load();
+                    } catch (error) {
+                        message(root, error);
+                    } finally {
+                        complete.disabled = false;
+                    }
+                });
+                actions.append(edit, complete);
+                focusContainer.append(name, chip, description, actions);
+            } else
+                renderEmptyState(focusContainer, {
+                    title: 'A little room to focus.',
+                    description: 'Choose an open task for this week.',
+                    href: '/tasks',
+                    action: 'Choose a task',
+                });
+            // Scenery is decorative; links and progress come from the owned roadmap.
+            try {
+                const goals = (await get('/api/v1/goals')).payload.data.filter(
+                    (goal) => !goal.parent_goal_id && goal.status !== 'Completed',
+                );
+                goals.sort((a, b) => b.importance - a.importance);
+                const preview = root.querySelector('[data-dashboard-roadmap]');
+                preview.replaceChildren();
+                if (goals.length) {
+                    const goal = goals[0];
+                    const roadmap = (await get(`/api/v1/goals/${goal.id}/roadmap`)).payload.data;
+                    const branch =
+                        focus &&
+                        roadmap.milestones.find((milestone) => milestone.id === focus.milestone_id);
+                    if (branch || focus?.goal_id === goal.id) {
+                        const context = document.createElement('a');
+                        context.className = 'context-chip';
+                        context.href = `/goals/${goal.id}${branch ? `#milestone=${branch.id}` : ''}`;
+                        context.textContent = branch ? branch.name : goal.name;
+                        focusContainer.querySelector('.focus-name').after(context);
+                    }
+                    root.querySelector('[data-dashboard-roadmap-link]').href = `/goals/${goal.id}`;
+                    root.querySelector('[data-dashboard-roadmap-link]').textContent =
+                        'View full roadmap →';
+                    for (const milestone of (roadmap.milestones || []).slice(0, 6)) {
+                        const link = document.createElement('a');
+                        link.href = `/goals/${goal.id}#milestone=${milestone.id}`;
+                        link.textContent = milestone.name;
+                        link.classList.toggle('is-complete', milestone.status === 'Completed');
+                        preview.append(link);
+                    }
+                    if (!preview.childNodes.length) {
+                        const link = document.createElement('a');
+                        link.href = `/goals/${goal.id}`;
+                        link.textContent = goal.name;
+                        preview.append(link);
+                    }
+                } else preview.textContent = 'Create a goal to give your next steps a direction.';
+            } catch {
+                root.querySelector('[data-dashboard-roadmap]').textContent =
+                    'Roadmap unavailable. Open Goals or refresh to try again.';
+            }
             next.disabled = displayedMonth >= currentMonth;
             rows(root.querySelector('[data-today-tasks]'), data.today_tasks, {
                 title: 'A little room to focus.',
@@ -265,6 +410,13 @@ export function initDashboardPage(root) {
             previous.disabled = !displayedMonth;
             next.disabled = !displayedMonth || displayedMonth >= currentMonth;
             refresh.disabled = false;
+            const complete = root.querySelector('[data-focus-complete]');
+            if (complete) complete.disabled = false;
+            // A mutation finishing during another read must still get a fresh view.
+            if (reloadRequested) {
+                reloadRequested = false;
+                await load();
+            }
         }
     };
     previous.addEventListener('click', () => load(shiftMonth(displayedMonth, -1)));
@@ -273,94 +425,4 @@ export function initDashboardPage(root) {
     load(null);
 }
 
-export function initReviewsPage(root) {
-    let current = null;
-    const list = root.querySelector('[data-review-list]');
-    const editor = root.querySelector('[data-review-editor]');
-    const form = root.querySelector('[data-review-edit-form]');
-    root.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
-    const display = (review) => {
-        current = review;
-        editor.classList.remove('is-hidden');
-        root.querySelector('[data-review-heading]').textContent =
-            `${review.kind} · ${review.period_start}`;
-        root.querySelector('[data-review-facts]').textContent =
-            `${review.snapshot.activities.length} completed activities · generated ${review.snapshot.generated_at}`;
-        for (const field of ['reflection', 'went_well', 'went_wrong', 'change_next'])
-            form.elements[field].value = review[field];
-        const finalized = review.status === 'Finalized';
-        for (const control of form.elements) control.disabled = finalized;
-        root.querySelector('[data-review-finalize]').classList.toggle('is-hidden', finalized);
-        root.querySelector('[data-review-refresh]').classList.toggle('is-hidden', finalized);
-        root.querySelector('[data-review-reopen]').classList.toggle('is-hidden', !finalized);
-    };
-    const load = async () => {
-        try {
-            const { payload } = await get('/api/v1/reviews');
-            list.replaceChildren();
-            for (const review of payload.data) {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'planning-list-item';
-                button.textContent = `${review.kind} · ${review.period_start} · ${review.status}`;
-                button.addEventListener('click', () => display(review));
-                list.append(button);
-            }
-            if (!payload.data.length)
-                renderEmptyState(list, {
-                    title: 'Take a moment to look back.',
-                    description:
-                        'Create a daily, weekly, or monthly review to collect your progress and reflections.',
-                    icon: 'reviews',
-                    href: '#review-kind',
-                    action: 'Start your first review',
-                });
-        } catch (error) {
-            message(root, error);
-        }
-    };
-    root.querySelector('[data-review-create-form]').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        try {
-            const { payload } = await post('/api/v1/reviews', {
-                kind: data.get('kind'),
-                date: data.get('date'),
-            });
-            display(payload.data);
-            await load();
-        } catch (error) {
-            message(root, error);
-        }
-    });
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const data = new FormData(form);
-        try {
-            const { payload } = await patch(`/api/v1/reviews/${current.id}`, {
-                base_version: current.version,
-                reflection: data.get('reflection'),
-                went_well: data.get('went_well'),
-                went_wrong: data.get('went_wrong'),
-                change_next: data.get('change_next'),
-            });
-            display(payload.data);
-            await load();
-        } catch (error) {
-            message(root, error);
-        }
-    });
-    for (const action of ['refresh', 'finalize', 'reopen'])
-        root.querySelector(`[data-review-${action}]`).addEventListener('click', async () => {
-            try {
-                const { payload } = await post(`/api/v1/reviews/${current.id}/${action}`, {
-                    base_version: current.version,
-                });
-                display(payload.data);
-                await load();
-            } catch (error) {
-                message(root, error);
-            }
-        });
-    load();
-}
+export { initReviewsPage } from './reviews-page.js';

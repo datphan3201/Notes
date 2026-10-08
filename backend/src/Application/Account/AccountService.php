@@ -26,7 +26,7 @@ final readonly class AccountService
         });
     }
 
-    /** @param array<string, string|int> $changes @return array<string, string|int> */
+    /** @param array<string, string|int|bool> $changes @return array<string, string|int|bool> */
     public function updatePreferences(int $userId, array $changes): array
     {
         return $this->transactions->run(function () use ($userId, $changes): array {
@@ -36,10 +36,18 @@ final readonly class AccountService
         });
     }
 
-    /** @return array<string, string|int> */
+    /** @return array<string, string|int|bool> */
     public function preferences(int $userId): array
     {
         return $this->accounts->preferences($userId);
+    }
+
+    public function dismissWalkthrough(int $userId): void
+    {
+        $this->transactions->run(function () use ($userId): void {
+            $this->accounts->findById($userId, true) ?? throw new \RuntimeException('Authenticated user disappeared.');
+            $this->accounts->dismissWalkthrough($userId, $this->timestamp());
+        });
     }
 
     private function timestamp(): string

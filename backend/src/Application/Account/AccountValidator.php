@@ -70,11 +70,12 @@ final readonly class AccountValidator
         return $displayName;
     }
 
-    /** @param array<string, mixed> $input @return array<string, string|int> */
+    /** @param array<string, mixed> $input @return array<string, string|int|bool> */
     public function preferences(array $input): array
     {
         $this->inputValidator->rejectUnknown($input, [
             'theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone',
+            'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote',
         ]);
 
         if ($input === []) {
@@ -86,6 +87,7 @@ final readonly class AccountValidator
             'note_font_size' => [14, 16, 18],
             'default_note_color' => ['neutral', 'lemon', 'mint', 'sky', 'rose'],
             'notes_view' => ['grid', 'list'],
+            'visual_theme' => ['mountain', 'forest', 'ocean', 'pisces', 'stars'],
         ];
         $errors = [];
         $changes = [];
@@ -96,6 +98,29 @@ final readonly class AccountValidator
                     $errors[$field][] = 'The value is invalid.';
                 } else {
                     $changes[$field] = $input[$field];
+                }
+            }
+        }
+
+        foreach (['show_background', 'show_illustrations', 'show_quote'] as $field) {
+            if (array_key_exists($field, $input)) {
+                if (! is_bool($input[$field])) {
+                    $errors[$field][] = 'The value must be boolean.';
+                } else {
+                    $changes[$field] = $input[$field];
+                }
+            }
+        }
+
+        if (array_key_exists('custom_quote', $input)) {
+            if (! is_string($input['custom_quote'])) {
+                $errors['custom_quote'][] = 'The quote must be plain text.';
+            } else {
+                $quote = TextNormalizer::body($input['custom_quote']);
+                if (TextNormalizer::codePoints($quote) > 500) {
+                    $errors['custom_quote'][] = 'The quote may contain at most 500 characters.';
+                } else {
+                    $changes['custom_quote'] = $quote;
                 }
             }
         }
@@ -113,6 +138,12 @@ final readonly class AccountValidator
         $this->inputValidator->throwIfErrors($errors);
 
         return $changes;
+    }
+
+    /** @param array<string, mixed> $input */
+    public function walkthroughDismissal(array $input): void
+    {
+        $this->inputValidator->rejectUnknown($input, []);
     }
 
     /** @param array<string, mixed> $input @return array{current_password: string, password: string} */

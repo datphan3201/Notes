@@ -59,6 +59,35 @@ final class PlanningHttpTest extends TestCase
         self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM ai_actions')->fetchColumn());
     }
 
+    public function test_roadmap_and_strategy_http_contracts_are_owner_scoped_and_versioned(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $areas = $this->json($this->request('GET', '/api/v1/areas', cookie: $cookie))['data'];
+        $response = $this->request('POST', '/api/v1/goals', ['area_id' => $areas[0]['id'], 'name' => 'Roadmap', 'strategy_notes' => 'Build and debug'], $cookie, $csrf, true);
+        self::assertSame(201, $response->status);
+        $goal = $this->json($response)['data'];
+        $map = $this->request('GET', '/api/v1/goals/'.$goal['id'].'/roadmap', cookie: $cookie);
+        self::assertSame(200, $map->status);
+        self::assertSame('Build and debug', $this->json($map)['data']['goal']['strategy_notes']);
+        self::assertSame([], $this->json($map)['data']['milestones']);
+        self::assertSame(419, $this->request('PATCH', '/api/v1/goals/'.$goal['id'], ['base_version' => 1, 'strategy_notes' => 'No CSRF'], $cookie, json: true)->status);
+        self::assertSame(422, $this->request('PATCH', '/api/v1/goals/'.$goal['id'], ['base_version' => 1, 'strategy_notes' => 'New', 'unknown' => true], $cookie, $csrf, true)->status);
+        self::assertSame(200, $this->request('PATCH', '/api/v1/goals/'.$goal['id'], ['base_version' => 1, 'strategy_notes' => 'New'], $cookie, $csrf, true)->status);
+        self::assertSame(409, $this->request('PATCH', '/api/v1/goals/'.$goal['id'], ['base_version' => 1, 'strategy_notes' => 'Stale'], $cookie, $csrf, true)->status);
+        self::assertSame(404, $this->request('GET', '/api/v1/goals/00000000-0000-4000-8000-000000000000/roadmap', cookie: $cookie)->status);
+        $other = $this->runtime['account_repository']->insertUser('foreign-roadmap@example.test', 'Other', password_hash('long test password', PASSWORD_BCRYPT), '2026-10-07 00:00:00.000000')->id;
+        $foreignArea = $this->runtime['planning_service']->create('area', $other, ['name' => 'Other']);
+        $foreignGoal = $this->runtime['planning_service']->create('goal', $other, ['name' => 'Foreign', 'area_id' => $foreignArea['id']]);
+        self::assertSame(404, $this->request('GET', '/api/v1/goals/'.$foreignGoal['id'].'/roadmap', cookie: $cookie)->status);
+        $page = $this->request('GET', '/goals/'.$goal['id'], cookie: $cookie);
+        self::assertStringContainsString('id="goal-information-dialog"', $page->body);
+        self::assertStringContainsString('data-goal-information-description', $page->body);
+        self::assertStringContainsString('name="goal-information-sections"', $page->body);
+        self::assertStringContainsString('data-goal-strategy-form', $page->body);
+        self::assertStringContainsString('data-goal-details-form', $page->body);
+        self::assertStringNotContainsString('data-goal-tab', $page->body);
+    }
+
     private function register(): array
     {
         $page=$this->request('GET','/register'); preg_match('/name="_token" value="([a-f0-9]{64})"/',$page->body,$match); $cookie=$this->session->id();

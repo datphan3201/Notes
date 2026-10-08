@@ -1,0 +1,1214 @@
+/* UI.png is the visual reference; these are original decoration pixels,
+   displayed through SVG viewports rather than regenerated illustrations. */
+.reference-decoration {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1;
+}
+.reference-landscape {
+    right: 0;
+    bottom: 0;
+    width: 64%;
+    height: 100%;
+    mask-image: linear-gradient(90deg, transparent, black 30%);
+}
+[data-visual-theme='mountain'] .scene-header::before,
+[data-visual-theme='mountain'] .main-goal-card::before,
+[data-visual-theme='mountain'] .quote-scene-card::before {
+    background: none;
+}
+[data-visual-theme]:not([data-visual-theme='mountain']) .reference-landscape,
+[data-visual-theme]:not([data-visual-theme='mountain']) .reference-summit {
+    display: none;
+}
+[data-show-illustrations='false'] .reference-decoration {
+    display: none;
+}
+[data-theme='dark'] .reference-decoration {
+    mix-blend-mode: luminosity;
+    opacity: 0.55;
+}
+.app-main {
+    padding: 22px 32px 36px;
+}
+.app-topbar {
+    padding-inline: 32px;
+    min-height: 44px;
+}
+.workspace-header h1 {
+    font-size: 26px;
+}
+.planning-page > .scene-header {
+    min-height: 108px;
+    padding: 0 0 22px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    margin-bottom: 8px;
+}
+.scene-header .workspace-header-actions {
+    align-self: flex-start;
+}
+.workspace-section-menu,
+.goal-section-menu {
+    gap: 6px;
+    padding-bottom: 7px;
+    margin-bottom: 16px;
+}
+.workspace-section-menu [role='tab'],
+.goal-section-menu [role='tab'] {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 36px;
+    border-radius: 6px;
+}
+.planning-panel {
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 5px 18px rgb(25 64 96 / 3%);
+}
+.planning-panel h2 {
+    font-size: 14px;
+}
+.dashboard-page {
+    position: relative;
+}
+.dashboard-page > .scene-header {
+    min-height: clamp(150px, calc((100vw - 252px) * 0.1546), 186px);
+    padding: 12px 8px 42px;
+    margin-bottom: 12px;
+    align-items: start;
+}
+.dashboard-page > .scene-header .reference-landscape {
+    width: 76%;
+    height: 175px;
+    mask-image: linear-gradient(90deg, transparent, black 25%);
+}
+.dashboard-page > .scene-header .theme-quote {
+    margin-top: 34px;
+    margin-left: auto;
+    max-width: 26ch;
+    box-shadow: 0 3px 12px rgb(61 100 148 / 8%);
+    border-left: 3px solid #f0be87;
+    line-height: 1.5;
+}
+.dashboard-page > .scene-header .workspace-header-actions {
+    position: absolute;
+    right: 8px;
+    top: 0;
+}
+.dashboard-page > .workspace-section-menu {
+    margin-top: -6px;
+    margin-bottom: 12px;
+}
+.dashboard-summary-grid {
+    gap: 14px;
+    grid-template-columns: 1fr 1.12fr 0.8fr;
+}
+.dashboard-summary-grid > .planning-panel {
+    min-height: 206px;
+    padding: 16px;
+}
+.dashboard-summary-grid > .planning-panel:nth-child(2) {
+    position: relative;
+}
+.dashboard-summary-grid > .planning-panel:nth-child(2)::before {
+    content: '';
+    position: absolute;
+    width: 4px;
+    left: 12px;
+    top: 44px;
+    bottom: 53px;
+    border-radius: 4px;
+    background: linear-gradient(#fbd48c, #ff9dbe, #ffbd70);
+}
+.dashboard-summary-grid [data-current-focus] {
+    padding-left: 10px;
+}
+.focus-name {
+    font-size: 18px;
+}
+.streak-flame {
+    margin-right: 7px;
+    font-size: 24px;
+}
+.streak-value {
+    font-size: 25px;
+}
+.streak-days {
+    gap: 6px;
+}
+.streak-days span {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #a8bed7;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0;
+    margin-top: 5px;
+}
+.streak-days .is-checked {
+    color: white;
+    background: var(--success);
+    border-color: var(--success);
+    font-size: 10px;
+}
+.dashboard-roadmap {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.roadmap-preview a::before {
+    width: 14px;
+    height: 14px;
+    box-shadow:
+        0 0 0 3px var(--surface),
+        0 0 0 4px var(--border);
+}
+.roadmap-preview a:not(:last-child)::after {
+    content: '›';
+    position: absolute;
+    top: -6px;
+    right: 2px;
+    color: #94b6d8;
+    font-size: 21px;
+}
+.dashboard-focus-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 14px;
+}
+.dashboard-item {
+    padding-block: 10px;
+}
+.task-marker {
+    border: 1.5px solid #f09a20;
+    border-radius: 4px;
+}
+.overdue-section .task-marker {
+    border-color: #fc708a;
+    border-radius: 50%;
+}
+.main-goal-card {
+    position: relative;
+    isolation: isolate;
+    min-height: 240px;
+    padding: 28px;
+    border: 7px solid color-mix(in srgb, var(--surface) 80%, #e7e8ff);
+    border-radius: 20px;
+    background: linear-gradient(115deg, var(--surface), var(--scene-tint, #ebeaff));
+    box-shadow: 0 0 0 1px #dfdffe;
+}
+.main-goal-card .reference-summit {
+    right: 0;
+    top: 0;
+    width: 41%;
+    height: 100%;
+    mask-image: linear-gradient(90deg, transparent, black 30%);
+    z-index: -1;
+}
+.main-goal-card h2 {
+    max-width: 26ch;
+    font-size: 24px;
+}
+.main-goal-card > p {
+    max-width: 38ch;
+    margin-bottom: 22px;
+}
+.main-goal-card > .context-chip {
+    background: transparent;
+    color: #7856d9;
+    padding: 0;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+[data-goal-areas-view] > .collection-main > .planning-panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+}
+[data-goal-areas-view] .section-heading {
+    margin-bottom: 8px;
+}
+.goal-area-group {
+    padding: 16px;
+    margin-block: 10px;
+}
+.goal-area-group > summary {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 150px;
+    gap: 0 12px;
+    position: relative;
+    padding-right: 14px;
+}
+.goal-area-group > summary::after {
+    content: '›';
+    position: absolute;
+    right: 0;
+    color: var(--muted);
+}
+.goal-area-group[open] > summary::after {
+    content: '⌄';
+}
+.area-icon {
+    grid-row: 1 / span 2;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: hsl(var(--area-hue) 66% 36%);
+    background: hsl(var(--area-hue) 60% 92%);
+}
+.area-title {
+    font-size: 14px;
+}
+.goal-area-group > summary .subtle-copy {
+    grid-column: 2;
+    font-size: 11px;
+    font-weight: 400;
+}
+.goal-area-group > summary .progress-track {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    width: 100%;
+    margin: 0;
+}
+.habit-summary {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 16px;
+}
+.habit-summary > .planning-panel {
+    min-height: 148px;
+}
+.quote-scene-card {
+    background: linear-gradient(100deg, var(--surface), var(--scene-tint, #e5f3e8));
+    padding-right: 110px;
+}
+.quote-scene-card .theme-quote {
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    max-width: 22ch;
+}
+.reference-plant {
+    right: 4px;
+    bottom: 0;
+    width: 100px;
+    height: 136px;
+    z-index: -1;
+}
+.goal-roadmap {
+    --roadmap-columns: 4;
+    grid-template-columns: 90px repeat(var(--roadmap-columns), minmax(0, 1fr));
+    gap: 42px 26px;
+    min-height: 420px;
+    padding: 70px 22px 115px 12px;
+    background: linear-gradient(165deg, #edf6ff, #e3f1ff 65%, #dce9fd);
+    border-radius: 14px;
+    overflow: hidden;
+}
+[data-theme='dark'] .goal-roadmap {
+    background: linear-gradient(160deg, #1e3048, #192a43);
+}
+[data-visual-theme='mountain'] .goal-roadmap::before {
+    background: none;
+}
+.goal-roadmap > .reference-landscape {
+    top: 0;
+    width: 52%;
+    height: 108px;
+    mask-image: linear-gradient(0deg, transparent, black 50%);
+}
+.reference-foothills {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 105px;
+    z-index: -1;
+}
+.reference-hiker {
+    left: 0;
+    bottom: 0;
+    width: 115px;
+    height: 92px;
+    z-index: 0;
+}
+.roadmap-center {
+    grid-column: 1;
+    grid-row: 1 / span var(--roadmap-rows, 2);
+    width: 72px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    position: relative;
+    align-self: center;
+}
+.roadmap-center .reference-anchor {
+    display: block;
+    position: relative;
+    z-index: 0;
+    width: 72px;
+    height: 74px;
+}
+[data-show-illustrations='false'] .roadmap-center .reference-anchor {
+    display: none;
+}
+[data-show-illustrations='false'] .roadmap-center {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    padding: 16px 8px;
+}
+.roadmap-center > small {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 600;
+}
+.roadmap-connections {
+    z-index: -1;
+}
+.roadmap-connections path {
+    stroke: #7baef3;
+    stroke-width: 1.4;
+}
+.roadmap-branch {
+    position: relative;
+    grid-template-columns: 25px minmax(0, 1fr);
+    align-content: start;
+    border: 1px solid #deebff;
+    border-left-width: 1px;
+    border-radius: 9px;
+    box-shadow: 0 2px 10px rgb(48 94 154 / 5%);
+    gap: 5px 7px;
+    min-height: 110px;
+    padding: 12px;
+    isolation: isolate;
+}
+.roadmap-branch::before,
+.roadmap-branch::after {
+    content: '';
+    position: absolute;
+    inset: -7px -6px;
+    border-radius: 12px;
+    border: 1px solid #d7e7ff;
+    z-index: -1;
+    background: color-mix(in srgb, var(--surface) 45%, transparent);
+}
+.roadmap-branch::after {
+    inset: -2px -2px -12px 7px;
+    background: transparent;
+    opacity: 0.8;
+}
+.milestone-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    color: hsl(var(--branch-hue) 80% 44%);
+    background: hsl(var(--branch-hue) 100% 94%);
+    border: 1px solid hsl(var(--branch-hue) 80% 83%);
+    border-radius: 7px;
+}
+.roadmap-branch > strong {
+    grid-column: 2;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.roadmap-branch > small {
+    grid-column: 2;
+    font-size: 10px;
+}
+.roadmap-branch .progress-track {
+    grid-column: 2;
+    width: 100%;
+    height: 5px;
+    margin: 4px 0 0;
+}
+.roadmap-branch .progress-track i {
+    background: var(--success);
+}
+.roadmap-task-preview {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    line-height: 1.3;
+    margin-top: 3px;
+    padding-left: 12px;
+}
+.task-detail-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px;
+}
+[data-note-overview-host] .planning-panel {
+    height: 100%;
+}
+[data-note-overview-host] .section-heading p {
+    display: none;
+}
+[data-note-overview-host] [data-task-note-form] textarea {
+    min-height: 150px;
+    font-size: 12px;
+}
+[data-note-overview-host] .workspace-section-menu [role='tab'] {
+    padding-inline: 8px;
+}
+.detail-list {
+    gap: 10px;
+}
+.review-metrics {
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+.review-metrics .insight-card {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    margin: 14px 0;
+    padding: 8px 16px;
+}
+.review-metrics .insight-card + .insight-card {
+    border-left: 1px solid var(--border);
+}
+@media (min-width: 801px) {
+    .app-sidebar {
+        width: 188px;
+        padding-top: 22px;
+    }
+    .app-body {
+        margin-left: 188px;
+    }
+    .sidebar-brand {
+        font-size: 19px;
+        padding-bottom: 24px;
+    }
+    .nav-link {
+        min-height: 42px;
+        font-size: 12px;
+    }
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+    .goal-roadmap {
+        gap: 30px 18px;
+        grid-template-columns: 72px repeat(var(--roadmap-columns), minmax(0, 1fr));
+        padding-inline: 8px 16px;
+    }
+    .roadmap-branch {
+        padding: 8px;
+        grid-template-columns: 1fr;
+    }
+    .milestone-icon,
+    .roadmap-branch > strong,
+    .roadmap-branch > small,
+    .roadmap-branch .progress-track {
+        grid-column: 1;
+        grid-row: auto;
+    }
+    .task-detail-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    [data-note-overview-host] {
+        grid-column: 1/-1;
+    }
+}
+@media (max-width: 760px) {
+    .goal-roadmap {
+        grid-template-columns: 1fr 1fr;
+        padding: 22px 16px 110px;
+        gap: 24px;
+    }
+    .roadmap-center {
+        grid-column: 1/-1;
+        grid-row: 1;
+        justify-self: center;
+    }
+    .roadmap-branch {
+        grid-column: auto;
+        grid-row: auto;
+    }
+    .roadmap-center .reference-anchor {
+        width: 66px;
+        height: 68px;
+    }
+    .dashboard-focus-grid,
+    .task-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    [data-note-overview-host] {
+        grid-column: auto;
+    }
+}
+@media (max-width: 600px) {
+    .app-main {
+        padding: 18px 16px 32px;
+    }
+    .app-topbar {
+        padding-inline: 20px;
+    }
+    .planning-page > .scene-header {
+        min-height: 108px;
+        padding-bottom: 14px;
+        gap: 12px;
+    }
+    .dashboard-page > .scene-header {
+        min-height: 208px;
+        padding-bottom: 12px;
+    }
+    .dashboard-page > .scene-header .theme-quote {
+        margin: 0 0 0 auto;
+        max-width: 22ch;
+    }
+    .dashboard-page > .scene-header .workspace-header-actions {
+        position: static;
+        width: 100%;
+    }
+    .dashboard-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .dashboard-summary-grid > .planning-panel {
+        min-height: 0;
+        padding: 14px;
+    }
+    .dashboard-summary-grid > .planning-panel:nth-child(2) {
+        grid-column: 1/-1;
+    }
+    .dashboard-summary-grid .streak-days {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+    }
+    .streak-value {
+        font-size: 22px;
+    }
+    .streak-flame {
+        font-size: 19px;
+        margin-right: 4px;
+    }
+    .main-goal-card {
+        padding: 18px;
+        min-height: 230px;
+    }
+    .main-goal-card h2 {
+        max-width: 18ch;
+        font-size: 21px;
+    }
+    .main-goal-card .reference-summit {
+        width: 46%;
+        opacity: 0.6;
+    }
+    .goal-area-group > summary {
+        grid-template-columns: 28px minmax(0, 1fr);
+    }
+    .goal-area-group > summary .progress-track {
+        grid-column: 2;
+        grid-row: 3;
+        max-width: 170px;
+        margin-top: 8px;
+    }
+    .habit-summary {
+        grid-template-columns: 1fr;
+    }
+    .habit-summary .quote-scene-card {
+        min-height: 124px;
+    }
+    .review-metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+    .review-metrics .insight-card:nth-child(3) {
+        border-left: 0;
+    }
+}
+/* Keep the entire original mountain composition, not an enlarged central crop. */
+.reference-corner {
+    right: 0;
+    bottom: 0;
+    width: 245px;
+    height: 110px;
+    mask-image: linear-gradient(90deg, transparent, black 25%);
+}
+.reference-roadmap {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+.reference-anchor {
+    clip-path: circle(47% at 50% 50%);
+}
+.reference-greeting {
+    position: relative;
+    display: inline-block;
+    width: 28px;
+    height: 30px;
+    margin-left: 4px;
+    vertical-align: middle;
+    z-index: 0;
+}
+.reference-flame {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 29px;
+    vertical-align: middle;
+    z-index: 0;
+}
+[data-goals-page] > .scene-header,
+[data-habits-page] > .scene-header {
+    min-height: 90px;
+}
+.dashboard-page > .scene-header .reference-landscape {
+    width: 65%;
+    height: auto;
+    aspect-ratio: 307 / 73;
+}
+.dashboard-page > .scene-header .theme-quote {
+    position: absolute;
+    right: 1.9%;
+    bottom: 0;
+    width: max(160px, 22.23%);
+    aspect-ratio: 105 / 38;
+    min-height: 0;
+    margin: 0;
+    padding: 15px 18px;
+    max-width: none;
+}
+[data-show-illustrations='false'] .reference-corner,
+[data-show-illustrations='false'] .reference-roadmap {
+    display: none;
+}
+[data-visual-theme]:not([data-visual-theme='mountain']) .reference-roadmap {
+    /* The scenic themes share the reference foreground details and layout. */
+    mask-image: linear-gradient(transparent 60%, black 85%);
+}
+@media (max-width: 600px) {
+    .dashboard-page > .scene-header .theme-quote {
+        position: relative;
+        inset: auto;
+        margin: 0 0 0 auto;
+        width: 210px;
+        min-height: 0;
+    }
+    .dashboard-page > .scene-header .reference-landscape {
+        width: 100%;
+    }
+    .reference-corner {
+        width: 180px;
+        height: 80px;
+    }
+    .reference-flame {
+        width: 19px;
+        height: 25px;
+    }
+}
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+}
+[data-visual-theme='mountain'][data-show-background='true'] .app-body::before {
+    background: linear-gradient(#f6f9ff, #eef4fe);
+}
+[data-theme='dark'][data-visual-theme='mountain'][data-show-background='true'] .app-body::before {
+    background: linear-gradient(#111c2d, #152236);
+}
+.reference-backdrop {
+    position: fixed;
+    left: 188px;
+    bottom: 0;
+    width: calc(100% - 188px);
+    height: 180px;
+    opacity: 0.09;
+    mask-image: linear-gradient(transparent, black);
+    z-index: -1;
+}
+[data-show-background='true'] .reference-backdrop {
+    display: block;
+}
+[data-show-background='false'] .reference-backdrop,
+[data-visual-theme]:not([data-visual-theme='mountain']) .reference-backdrop {
+    display: none;
+}
+[data-theme='dark'] .reference-backdrop {
+    opacity: 0.07;
+}
+.goal-roadmap .reference-hiker {
+    left: 0.43%;
+    width: 18.84%;
+    height: auto;
+    aspect-ratio: 88 / 70;
+    bottom: 2px;
+    mask-image: linear-gradient(90deg, black 78%, transparent);
+}
+@media (max-width: 800px) {
+    .reference-backdrop {
+        left: 0;
+        width: 100%;
+    }
+}
+@media (max-width: 760px) {
+    .goal-roadmap .reference-hiker {
+        width: 115px;
+        bottom: 0;
+    }
+}
+.reference-sky {
+    inset: 0 0 auto;
+    width: 100%;
+    height: 60px;
+    mask-image: linear-gradient(black 40%, transparent);
+}
+.goal-roadmap .reference-hiker {
+    mask-image:
+        linear-gradient(90deg, black 78%, transparent),
+        linear-gradient(0deg, black 94%, transparent);
+    mask-composite: intersect;
+}
+.roadmap-branch > strong {
+    font-size: 14px;
+}
+.roadmap-branch > small {
+    font-size: 12px;
+}
+.roadmap-task-preview {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+.roadmap-pagination {
+    position: relative;
+    z-index: 1;
+}
+.roadmap-preview a:not(:last-child)::after {
+    content: '';
+    top: 11px;
+    right: auto;
+    left: 24px;
+    height: 1px;
+    width: calc(100% - 30px);
+    background: var(--border);
+}
+body:not(:has(.settings-page)) .account-nav,
+.sidebar-nav:not(.account-nav) > .sidebar-section-label {
+    display: none;
+}
+.insight-card:has([data-review-wins]) {
+    position: relative;
+    isolation: isolate;
+}
+.reference-trophy {
+    top: 8px;
+    right: 12px;
+    width: 36px;
+    height: 39px;
+    z-index: 0;
+}
+.planning-list-item > .habit-checkin-days {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.add-area-reference {
+    width: 100%;
+    margin-top: 12px;
+    border: 1px dashed #b9d1e7;
+    background: transparent;
+    color: var(--accent);
+    justify-content: center;
+}
+@media (max-width: 760px) {
+    [data-habit-list] .planning-list-item {
+        flex-wrap: wrap;
+    }
+    .planning-list-item > .habit-checkin-days {
+        gap: 0;
+        flex-basis: 100%;
+        justify-content: space-between;
+    }
+}
+.task-description {
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-bottom: 16px;
+}
+.task-context-details > div {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+}
+.task-extra-definition {
+    margin-top: 14px;
+    font-size: 12px;
+}
+.task-extra-definition summary {
+    color: var(--accent);
+    cursor: pointer;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.task-extra-definition summary::before {
+    content: '+';
+}
+.task-extra-definition[open] summary::before {
+    content: '−';
+}
+[data-note-overview-host] [data-task-note-form] textarea {
+    min-height: 100px;
+}
+[data-note-overview-host] .stack-form > button {
+    justify-self: end;
+}
+[data-visual-theme] .theme-option .reference-theme-thumbnail,
+[data-visual-theme] .theme-preview-region .reference-theme-preview {
+    display: block;
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    mask-image: none;
+    width: 100%;
+    height: 100px;
+    margin-bottom: 12px;
+}
+.theme-preview-region .reference-theme-preview {
+    height: 200px;
+    border-radius: 12px;
+}
+.habit-summary [data-habit-streak] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+}
+.habit-summary .streak-days {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    margin: 0;
+}
+.habit-summary [data-habit-streak] > .subtle-copy {
+    grid-column: 1/-1;
+    grid-row: 2;
+    margin: 0;
+    font-size: 11px;
+}
+[data-habit-list] .planning-list-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+}
+[data-habit-list] .planning-list-item + .planning-list-item {
+    margin-top: 0;
+}
+[data-habit-list] .planning-list-item:last-child {
+    border-bottom: 0;
+}
+[data-habit-list] .planning-list-item > div:first-child {
+    position: relative;
+    padding-left: 28px;
+}
+.habit-row-marker {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--control-border);
+    border-radius: 4px;
+    position: absolute;
+    top: 3px;
+    left: 0;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+}
+.habit-row-marker.is-checked {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+}
+.habit-today-action {
+    font-size: 0;
+    width: 44px;
+    height: 44px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+}
+.habit-today-action::before {
+    content: '✓';
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--control-border);
+    border-radius: 50%;
+    font-size: 12px;
+}
+.habit-today-action[data-checked='true']::before {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+@media (max-width: 600px) {
+    .habit-summary [data-habit-streak] {
+        grid-template-columns: 1fr;
+    }
+    .habit-summary .streak-days {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+    }
+    .habit-summary [data-habit-streak] > .subtle-copy {
+        grid-row: 3;
+    }
+    [data-habit-list] .planning-list-item {
+        grid-template-columns: minmax(0, 1fr) 44px;
+    }
+    [data-habit-list] .habit-checkin-days {
+        grid-column: 1/-1;
+        grid-row: 2;
+    }
+    .habit-today-action {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}
+[data-goals-page] .workspace-header > .action-row {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+}
+[data-goals-expand] {
+    margin-left: auto;
+}
+[data-goals-page] > [data-planning-retry] {
+    display: none;
+}
+[data-goals-page]:has([data-planning-error]:not(.is-hidden)) > [data-planning-retry] {
+    display: inline-flex;
+    margin-bottom: 12px;
+}
+[data-habit-list] .planning-list-item .habit-today-action {
+    font-size: 0;
+    padding: 0;
+    min-height: 44px;
+}
+
+[data-review-edit-form] textarea {
+    min-height: 140px;
+    height: 160px;
+    resize: vertical;
+}
+[data-review-editor] .review-editor-heading {
+    margin-top: 12px;
+}
+[data-review-editor] .review-period-navigation {
+    margin-block: 8px;
+}
+#new-task-dialog {
+    width: min(800px, calc(100vw - 40px));
+}
+@media (min-width: 801px) {
+    .review-metrics {
+        grid-template-columns: 1fr 1fr 0.85fr 1.35fr;
+    }
+    .review-metrics .insight-card {
+        min-width: 0;
+        padding-inline: 12px;
+    }
+}
+
+/* Named Goal head and a common spine: ribs express membership, not dependencies. */
+.goal-roadmap[data-roadmap-layout='fishbone'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(160px, 0.95fr);
+    grid-template-rows: minmax(110px, auto) 64px minmax(110px, auto);
+    gap: 18px 24px;
+    padding: 32px 22px 106px;
+    min-height: 440px;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-center {
+    grid-column: 4;
+    grid-row: 1 / span 3;
+    justify-self: stretch;
+    align-self: center;
+    z-index: 1;
+    width: auto;
+    padding: 16px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--surface) 92%, var(--accent-soft));
+    box-shadow: 0 3px 14px rgb(30 78 123 / 6%);
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-center .reference-anchor {
+    width: 48px;
+    height: 50px;
+    margin-inline: auto;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-goal-name {
+    margin: 10px 0 8px;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--text);
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] [data-roadmap-goal-state] {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-connections {
+    display: block;
+    z-index: 0;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-spine,
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-arrow-tip {
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-rib {
+    stroke: color-mix(in srgb, var(--accent) 60%, #7baef3);
+    stroke-width: 1.7;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch {
+    grid-column: var(--branch-column);
+    grid-row: var(--branch-row);
+    grid-template-columns: 25px minmax(0, 1fr);
+    align-self: stretch;
+    z-index: 1;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .milestone-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch > strong,
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch > small,
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch .progress-track {
+    grid-column: 2;
+    grid-row: auto;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-pagination {
+    grid-row: 4;
+    z-index: 1;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'][data-roadmap-empty='true'] {
+    grid-template-rows: auto;
+    min-height: 280px;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'][data-roadmap-empty='true'] .roadmap-center {
+    grid-row: 1;
+}
+.goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-empty {
+    grid-column: 1 / 4;
+    grid-row: 1;
+}
+@media (max-width: 1000px) {
+    .goal-roadmap[data-roadmap-layout='fishbone'] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(var(--fishbone-pairs), minmax(120px, auto)) auto;
+        gap: 22px 40px;
+        padding: 28px 18px 104px;
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-center {
+        grid-column: 1 / -1;
+        grid-row: var(--fishbone-head-row);
+        width: min(280px, 100%);
+        justify-self: center;
+        margin-top: 12px;
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch {
+        grid-column: var(--mobile-column);
+        grid-row: var(--mobile-row);
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'] .milestone-icon,
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch > strong,
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch > small,
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-branch .progress-track {
+        grid-column: 1;
+        grid-row: auto;
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-pagination {
+        grid-row: var(--fishbone-page-row);
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'][data-roadmap-empty='true'] .roadmap-center {
+        grid-row: 2;
+    }
+    .goal-roadmap[data-roadmap-layout='fishbone'] .roadmap-empty {
+        grid-column: 1 / -1;
+    }
+}
+
+/* The named Goal head is the entry point to its existing information and forms. */
+.roadmap-center[data-open-goal-information] {
+    cursor: pointer;
+    font: inherit;
+    color: var(--text);
+}
+.roadmap-goal-name,
+.roadmap-goal-state {
+    display: block;
+}
+.roadmap-goal-name {
+    font-weight: 700;
+}
+.roadmap-goal-state {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+}
+.goal-information-content p,
+.goal-information-content dd {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.goal-information-section {
+    border-top: 1px solid var(--border);
+}
+.goal-information-section > summary {
+    cursor: pointer;
+    padding-block: 14px;
+    font-weight: 600;
+}
+.goal-information-section > summary span {
+    margin-left: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+.goal-information-section > form,
+.goal-information-section > .section-heading {
+    margin-block: 12px;
+}
+/* Keep the Goal context and close action available while a long form scrolls. */
+.goal-information-dialog > .section-heading {
+    position: sticky;
+    top: -24px;
+    z-index: 2;
+    margin: -24px -24px 20px;
+    padding: 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+@media (max-width: 600px) {
+    .goal-information-dialog > .section-heading {
+        top: -20px;
+        margin: -20px -16px 20px;
+        padding: 20px 16px;
+    }
+}

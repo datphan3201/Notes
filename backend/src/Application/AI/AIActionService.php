@@ -122,7 +122,7 @@ final readonly class AIActionService
             if (in_array($type, ['area','goal','milestone','task'], true)) $data = $this->planning->show($type, $userId, $id);
             elseif ($type === 'review') $data = $this->reviews->show($userId, $id);
             else throw new ValidationException(['context' => ['This context type is not allowed.']]);
-            $allowed = array_intersect_key($data, array_flip(['id','name','description','expected_result','completion_criteria','importance','status','deadline','progress','kind','period_start','period_end','snapshot','version']));
+            $allowed = array_intersect_key($data, array_flip(['id','name','description','expected_result','completion_criteria','strategy_notes','importance','status','deadline','progress','kind','period_start','period_end','snapshot','version']));
             $objects[] = ['type' => $type, 'data' => $allowed];
             $versions[] = ['type' => $type, 'id' => $id, 'version' => (int) $data['version']];
         }

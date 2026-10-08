@@ -31,6 +31,7 @@ $planningRoutes = static function (PlanningController $planning, Closure $handle
 
     $routes[] = new Route(['POST'], '/api/v1/goals/{id}/move', 'api.goals.move', $handler([$planning, 'moveGoal']), auth: true, csrf: true, rateLimit: 'mutations');
     $routes[] = new Route(['GET'], '/api/v1/goals/{id}/children', 'api.goals.children', $handler([$planning, 'children']), auth: true);
+    $routes[] = new Route(['GET'], '/api/v1/goals/{id}/roadmap', 'api.goals.roadmap', $handler([$planning, 'roadmap']), auth: true);
     $routes[] = new Route(['POST'], '/api/v1/areas/reorder', 'api.areas.reorder', static fn (Request $request, array $parameters): Response => $planning->reorder($request, [...$parameters, 'resource' => 'area']), auth: true, csrf: true, rateLimit: 'mutations');
 
     foreach (['goals' => 'goal', 'milestones' => 'milestone', 'tasks' => 'task'] as $path => $resource) {
@@ -93,6 +94,7 @@ return static function (
         new Route(['GET'], '/reviews', 'planning.reviews', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/ai', 'planning.ai', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/api/v1/session', 'api.session', $handler([$account, 'session']), auth: true),
+        new Route(['POST'], '/api/v1/walkthrough/dismiss', 'api.walkthrough.dismiss', $handler([$account, 'dismissWalkthrough']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/profile', 'api.profile.show', $handler([$account, 'profile']), auth: true),
         new Route(['PATCH'], '/api/v1/profile', 'api.profile.update', $handler([$account, 'updateProfile']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/preferences', 'api.preferences.show', $handler([$account, 'preferences']), auth: true),

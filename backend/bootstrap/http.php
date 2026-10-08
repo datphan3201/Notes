@@ -189,6 +189,7 @@ $profileFileController = new ProfileFileController(
 );
 $fileContentController = new FileContentController($auth, $fileService, new FileStreamer);
 $activityRepository = new PdoActivityRepository($services['pdo']);
+$taskSeriesRepository = new PdoTaskSeriesRepository($services['pdo']);
 $planningService = new PlanningService(
     $planningRepository,
     $services['transactions'],
@@ -197,6 +198,7 @@ $planningService = new PlanningService(
     $services['uuid'],
     $services['clock'],
     $activityRepository,
+    $taskSeriesRepository,
 );
 $planningController = new PlanningController($auth, $planningService);
 $habitRepository = new PdoHabitRepository($services['pdo']);
@@ -208,7 +210,6 @@ $habitService = new HabitService(
     $services['uuid'],
     $services['clock'],
 );
-$taskSeriesRepository = new PdoTaskSeriesRepository($services['pdo']);
 $taskSeriesService = new TaskSeriesService(
     $taskSeriesRepository,
     $planningRepository,

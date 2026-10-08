@@ -18,6 +18,10 @@ import { initHabitsPage } from './planning/habits-page';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
 import { initAIPage } from './planning/ai-page';
 import { initNavigation } from './lib/navigation';
+import { initWorkspaceUI } from './lib/workspace-ui';
+import { initWalkthrough } from './help/walkthrough';
+import { applyAppearance } from './settings/theme-catalog';
+import { decorateReference } from './settings/reference-decoration';
 
 window.Alpine = Alpine;
 
@@ -34,6 +38,7 @@ if (bootstrapElement?.dataset.json) {
 
 // Alpine remains intentionally small: this app's multi-request state lives in
 // plain modules so it can be tested with fake clocks and transports.
+if (window.notesBootstrap?.preferences) applyAppearance(window.notesBootstrap.preferences);
 Alpine.start();
 
 window.notesSessionChannel =
@@ -57,9 +62,15 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    decorateReference();
     initNavigation();
+    document
+        .querySelectorAll(
+            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings]',
+        )
+        .forEach(initWorkspaceUI);
     const notes = document.querySelector('[data-notes-workspace]');
-    if (notes) new NotesPage(notes).init();
+    const notesReady = notes ? new NotesPage(notes).init() : Promise.resolve();
     const profile = document.querySelector('[data-profile-settings]');
     if (profile) initProfile(profile);
     const preferences = document.querySelector('[data-preference-settings]');
@@ -82,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reviews) initReviewsPage(reviews);
     const ai = document.querySelector('[data-ai-page]');
     if (ai) initAIPage(ai);
+    initWalkthrough({ ready: notesReady });
 
     document.querySelectorAll('[data-avatar-fallback]').forEach((avatar) => {
         const url = window.notesBootstrap?.user?.avatar_url;

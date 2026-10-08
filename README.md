@@ -4,7 +4,7 @@ This repository contains a framework-free PHP 8.5 personal planning application.
 
 The product interface, validation messages, documentation, and developer-facing comments use English. The Dashboard includes a GitHub-style monthly Activity calendar with week columns, weekday labels, factual tooltips, month navigation, and a five-step visual intensity scale derived from completion counts.
 
-The redesigned interface uses a shared sidebar, light/dark themes, consistent controls, and responsive layouts across planning, Notes, account settings, and authentication. Collection pages prioritize your existing work, with creation forms alongside it. The Dashboard places today's tasks beside monthly activity and habits, with weekly selections below. See the [interface guide](docs/interface-guide.md) for navigation and everyday workflows.
+The illustrated interface uses a shared sidebar, five bundled visual themes with separate light/dark modes, and responsive layouts across planning, Notes, settings, and authentication. Collection creation uses contextual dialogs. Dashboard modes separate the overview, weekly planning, and activity. Goal roadmaps use a fishbone diagram; selecting its named Goal head opens information with optional editing, Strategy, and Related work. Help beside Appearance opens the illustrated walkthrough. See the [interface guide](docs/interface-guide.md) for navigation and everyday workflows.
 
 The application is a same-origin modular monolith. It does not use Laravel, another PHP framework, an ORM, collaboration/workspaces, arbitrary custom fields, or a generic graph model.
 
@@ -30,7 +30,7 @@ The application is a same-origin modular monolith. It does not use Laravel, anot
 
 ## Setup and verification
 
-See the [hosting and startup runbook](docs/hosting.md) for complete first-time installation, normal subsequent startup, production hosting, scheduler, backup, account bootstrap, and troubleshooting instructions. [Readme.txt](Readme.txt) contains the same command-oriented quick reference. The concise first-install command set is:
+See the [hosting and startup runbook](docs/hosting.md) for complete first-time installation, normal subsequent startup, production hosting, scheduler, backup, account bootstrap, and troubleshooting instructions. The concise first-install command set is:
 
 ```bash
 cd backend
@@ -49,7 +49,6 @@ For later local starts, run php bin/console migrate:check from backend and start
 - [Interface and everyday workflows](docs/interface-guide.md)
 - [Hosting and startup runbook](docs/hosting.md)
 - [Plan and decisions](PLAN.md)
-- [Repository-grounded migration plan](docs/migration-plan.md)
 - [Implementation status](docs/implementation-status.md)
 - [Verification evidence](docs/verification.md)
 - [Operations contract](docs/plan/15-operations.md)

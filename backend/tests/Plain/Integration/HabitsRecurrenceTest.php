@@ -133,6 +133,47 @@ final class HabitsRecurrenceTest extends TestCase
         self::assertSame(0, (int) $activeFuture->fetchColumn());
     }
 
+    public function test_active_series_materializes_beneath_completed_goal_without_reopening_it(): void
+    {
+        $planning = $this->runtime['planning_service'];
+        $area = $planning->list('area', $this->owner)[0]
+            ?? $planning->create('area', $this->owner, ['name' => 'Learning']);
+        $goal = $planning->create('goal', $this->owner, ['area_id' => $area['id'], 'name' => 'Maintain knowledge']);
+        $milestone = $planning->create('milestone', $this->owner, ['goal_id' => $goal['id'], 'name' => 'Initial setup']);
+        $milestone = $planning->transition('milestone', $this->owner, $milestone['id'], 'complete', ['base_version' => $milestone['version']]);
+        $goal = $planning->transition('goal', $this->owner, $goal['id'], 'complete', ['base_version' => $goal['version']]);
+        $today = $this->runtime['clock']->now()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
+        $series = $this->runtime['task_series_service']->create($this->owner, [
+            'milestone_id' => $milestone['id'], 'name' => 'Continue practice',
+            'frequency' => 'daily', 'start_date' => $today, 'end_date' => $today, 'timezone' => 'UTC',
+            'checklist' => [['title' => 'Practice']],
+        ]);
+
+        self::assertSame(['created' => 1, 'failed' => []], $this->runtime['task_series_service']->materialize());
+        self::assertSame(['created' => 0, 'failed' => []], $this->runtime['task_series_service']->materialize());
+        $task = $planning->list('task', $this->owner)[0];
+        self::assertSame($series['id'], $task['series_id']);
+        self::assertSame($milestone['id'], $task['milestone_id']);
+        self::assertCount(1, $planning->checklist($this->owner, $task['id']));
+        self::assertSame($goal['version'], $planning->show('goal', $this->owner, $goal['id'])['version']);
+        self::assertSame('Completed', $planning->show('goal', $this->owner, $goal['id'])['status']);
+        self::assertSame('Completed', $planning->show('milestone', $this->owner, $milestone['id'])['status']);
+        self::assertSame(100.0, $planning->show('goal', $this->owner, $goal['id'])['progress']);
+
+        $moved = $planning->update('task', $this->owner, $task['id'], [
+            'base_version' => $task['version'], 'milestone_id' => null, 'goal_id' => $goal['id'],
+        ]);
+        self::assertSame($goal['id'], $moved['goal_id']);
+        self::assertSame('Completed', $planning->show('goal', $this->owner, $goal['id'])['status']);
+
+        try {
+            $planning->create('task', $this->owner, ['milestone_id' => $milestone['id'], 'name' => 'New finite work']);
+            self::fail('Ordinary creation must still require reopening the Goal.');
+        } catch (\Planner\Http\ValidationException $exception) {
+            self::assertArrayHasKey('parent', $exception->errors);
+        }
+    }
+
     /** @return list<array{created:int,failed:list<string>}> */
     private function runConcurrentMaterializers(): array
     {

@@ -1,17 +1,6 @@
-# Current and Target Architecture
+# Architecture
 
-## Current system
-
-The current system is a same-origin Laravel modular application. Blade renders HTML from `frontend/src/views`, browser modules call `/api/v1`, Eloquent persists to MySQL, database sessions authenticate users, and Vite emits to `backend/public/build`.
-
-The current request path is:
-
-```text
-public/index.php → Laravel kernel/middleware → route → controller
-→ action/query → Eloquent/MySQL → resource/Blade → response
-```
-
-## Target system
+## Canonical runtime
 
 Use a framework-free PHP modular monolith:
 
@@ -21,7 +10,7 @@ public/index.php → bootstrap → Request → Router → guards → controller
 → serializer/PHP view → Response → emitter
 ```
 
-Target layout:
+Repository layout:
 
 ```text
 backend/
@@ -42,7 +31,7 @@ backend/
 ├── storage/
 └── tests/
 frontend/
-├── src/views/        # ordinary PHP templates after cutover
+├── src/views/        # escaped PHP templates
 ├── src/js/
 ├── src/css/
 └── tests/js/
@@ -65,25 +54,25 @@ This layer-first tree is mandatory. Do not create parallel roots such as
 under Domain/Application and the final segment under PDO persistence. Shared
 classes belong in Support only when at least two modules actually use them.
 
-## Coexistence and cutover
+## Runtime and dependency boundary
 
-1. Add `Planner\\` → `backend/src/` while current `App\\` Laravel code remains.
-2. Use separate `goals_dev`/`goals_test` databases for the target runtime. The fresh-install decision removes legacy import requirements.
-3. Expose the target temporarily through `public/plain.php` and `routes/plain.php`; do not route production traffic to it.
-4. Port and verify Auth, Notes, Tags, and Files.
-5. Convert templates and Vite integration.
-6. Promote the target to `public/index.php` and standard route/bootstrap files.
-7. Remove Laravel only after parity gates pass.
+Laravel retirement is complete. `public/index.php`, `bootstrap/http.php`,
+`routes/web.php`, `routes/api.php`, and `bin/console` are canonical. There are
+no temporary parallel entrypoints, dual writes or legacy data/session import.
+Rollback uses Git and a consistent database/private-storage backup, as described
+in [Operations](15-operations.md).
 
-The cutover rollback is the existing Laravel entrypoint and databases until M05 acceptance. After Laravel removal, rollback is Git plus database restoration; never maintain dual writes.
-
-## Dependency disposition
-
-Keep as explicit focused packages: `vlucas/phpdotenv`, `ramsey/uuid`, `monolog/monolog`, `egulias/email-validator`, and `phpunit/phpunit` for development. Remove Laravel, Illuminate, Laravel Boost/Pint, Collision, Mockery after callers are gone. Do not retain Symfony routing, HTTP kernel, or templating as an application framework.
+Composer packages provide focused infrastructure: `vlucas/phpdotenv`,
+`ramsey/uuid`, `monolog/monolog`, `egulias/email-validator`, and development
+`phpunit/phpunit`. No Laravel, Illuminate, application framework, ORM or
+automatic service container belongs in the runtime.
 
 ## Frontend boundary
 
-Keep same-origin cookies and `/api/v1`. Preserve existing JS modules unless an interface changes. Replace Blade syntax with escaped PHP templates and replace `laravel-vite-plugin` with Vite's manifest. Do not add token auth or CORS for application APIs.
+Keep same-origin cookies and `/api/v1`. Preserve existing browser contracts
+unless an approved interface change replaces them. Escaped PHP templates and
+Vite's manifest serve the app; build output lives in `backend/public/build`.
+Do not add token authentication or CORS for application APIs.
 
 ## Failure policy
 

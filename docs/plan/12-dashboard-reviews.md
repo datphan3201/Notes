@@ -4,7 +4,7 @@
 
 Today is the authenticated user's preference timezone.
 
-Today's Tasks are active, non-Done Tasks where at least one applies: deadline=today; scheduled interval overlaps today's local day; recurring occurrence_date=today. Overdue is non-Done with deadline before today. A Task appears once per section even when multiple rules match.
+Today's Tasks are active, non-Done Tasks where at least one applies: deadline=today; start_date=today; scheduled interval overlaps today's local day; recurring occurrence_date=today. Overdue is non-Done with deadline before today. A Task appears once per section even when multiple rules match.
 
 ## Weekly selections
 
@@ -45,3 +45,33 @@ A timezone preference change does not change existing Review identity or snapsho
 ## Dashboard response
 
 `GET /api/v1/dashboard?month=YYYY-MM` returns user timezone, requested month, activity days/counts, today/overdue Tasks, current-week selections, and Habits with current period counts. Invalid month is 422. Queries are bounded to the visible period and do not load full object histories.
+
+## Approved illustrated summaries — 2026-10-07
+
+Today uses account-local deadlines/start dates/occurrence dates and UTC schedule intervals overlapping that day.
+
+Weekly completion is Done Tasks divided by active selected Tasks for the current
+Monday week, including Done selections. Compare against the previous week's
+retained active selections; use a percentage-point delta only when that prior
+denominator exists. Daily bars count unreversed task/checklist/habit/milestone
+completion facts. Empty denominators display no selected work rather than a
+fabricated success rate. Historical comparisons describe the currently retained
+selections, not an immutable historical progress snapshot.
+
+Habit streak uses distinct `habit_check_ins.local_date` across the owner (the
+check-in's frozen calendar date, including retained historical archived Habits).
+Multiple Habits on one date count once. The latest contiguous run is current if
+it ends today or yesterday in the account timezone; otherwise zero. Yesterday's
+run is labeled through yesterday, allowing today's practice before day end.
+Compute runs with date islands in SQL rather than loading a full history in the
+browser. Seven-day dots mean whether any check-in exists on each displayed date.
+
+New/explicitly refreshed Review snapshots add a Task completion denominator:
+distinct active finite Tasks due in that Review period, plus active Tasks selected
+for its Monday week for Weekly Reviews. Done/total is snapshot state, not claimed
+historical state before capture. A win counts an unreversed Task or Milestone
+completion fact; actions include task/checklist/habit/milestone facts. Compare
+action count against the immediately preceding equivalent period. Daily bars
+are derived from snapshot activities, never live data. Prior snapshots without
+new facts show an unavailable completion denominator; Finalized snapshots remain
+unchanged until Reopen and explicit Refresh.

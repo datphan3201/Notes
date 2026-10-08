@@ -75,14 +75,14 @@ Apache uses the public `.htaccess`. Nginx uses `try_files $uri /index.php?$query
 
 Backup database and private storage from the same maintenance point. Restore into a new database/storage directory, run `migrate:check`, compare referenced paths, start in maintenance mode, smoke-test, then switch traffic. AI provider data is not the application source of truth.
 
-## Framework retirement gate
+## Framework boundary checks
 
-Before removing Laravel:
+Laravel has been retired. Keep the active runtime and build framework-free:
 
-- Plain parity suites and browser smoke pass.
-- `composer why laravel/framework` has no required target caller.
-- First-party `rg` scan finds no `Illuminate\\`, Laravel helpers/directives, `artisan`, or `laravel-vite-plugin` outside clearly historical docs.
-- Production starts with a clean vendor directory from the target lockfile.
-- Route list and migration status come from target CLI.
+- Composer manifests and lockfiles contain no Laravel/Illuminate requirement.
+- Active source, templates and scripts use no Blade, Artisan or Laravel helpers.
+- Production starts from the target lockfile and `backend/public/index.php`.
+- Route inventory and migration status come from `backend/bin/console`.
 
-Remove Laravel code/packages/config only in M05 after this gate.
+The original migration gates remain in the phase specifications; new changes
+must preserve this boundary.

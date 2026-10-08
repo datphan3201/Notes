@@ -196,7 +196,7 @@ php bin/console migrate:check
 
 Expected results:
 
-- The first migrate applies the five target migrations.
+- The first migrate applies all nine current migrations (0001–0009).
 - migrate:status reports every migration as applied.
 - migrate:check prints Migration state is healthy.
 
@@ -275,6 +275,34 @@ npm run dev
 Set VITE_DEV_URL=http://127.0.0.1:5173 in backend/.env first. The PHP
 application only accepts loopback Vite URLs and only in APP_ENV=local. Clear
 VITE_DEV_URL and rebuild assets before a production deployment.
+
+### 5.1 Separate persistent local MySQL instance
+
+A user-owned MySQL instance can serve local development when the system
+instance's account cannot create the Planner databases. It is still real MySQL
+with disk-backed storage, separate from mock API responses and temporary test
+fixtures. On the current development machine it binds only to 127.0.0.1:3307,
+uses `goals_dev` for the app and `goals_test` for tests, and stores data under
+`~/.local/share/planner/mysql/data`. The old system `notes_dev` database remains
+unchanged.
+
+The configuration and generated credentials are machine-local, outside Git.
+`backend/.env` selects port 3307 and `goals_dev`; `.env.testing` selects the
+separate test database. The prior environment files were backed up privately.
+This setup is specific to that machine; a fresh clone follows section 4.
+
+After stopping this instance or restarting the machine, start it before PHP:
+
+~~~bash
+mysqld --defaults-file="$HOME/.local/share/planner/mysql/my.cnf" --daemonize
+cd backend
+php bin/console migrate:check
+php -S 127.0.0.1:8000 -t public dev-router.php
+~~~
+
+Do not start a second process when port 3307 is already listening. Stopping PHP
+or MySQL does not remove this data directory. Temporary browser/demo databases
+from earlier UI verification are not the app's current database.
 
 ## 6. Releasing an update to an existing host
 

@@ -16,6 +16,7 @@ use Planner\Http\ValidationException;
 use Planner\Infrastructure\Database\TransactionManager;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Infrastructure\Persistence\Pdo\Activity\PdoActivityRepository;
+use Planner\Infrastructure\Persistence\Pdo\Recurrence\PdoTaskSeriesRepository;
 use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
 use Planner\Support\Timestamp;
@@ -31,6 +32,7 @@ final readonly class PlanningService
         private UuidGenerator $uuid,
         private Clock $clock,
         private PdoActivityRepository $activities,
+        private PdoTaskSeriesRepository $series,
     ) {}
 
     /** @return list<array<string, mixed>> */
@@ -94,9 +96,44 @@ final readonly class PlanningService
     {
         $values = $this->validateCreate($type, $input);
 
-        return $this->transactions->run(function () use ($type, $userId, $values): array {
+        return $this->createValidated($type, $userId, $values);
+    }
+
+    /**
+     * Internal materializer boundary. Recurring work is excluded from finite
+     * progress, so completing a Goal must not stop its active series.
+     *
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    public function createOccurrence(int $userId, string $seriesId, string $date, array $input): array
+    {
+        $values = $this->validateCreate('task', $input);
+        $date = $this->date(['occurrence_date' => $date], 'occurrence_date');
+
+        return $this->transactions->run(function () use ($userId, $seriesId, $date, $values): array {
             $this->repository->lockOwner($userId);
-            $this->validateParents($type, $userId, $values);
+            $this->validateParents('task', $userId, $values);
+            $series = $this->series->find($userId, $seriesId, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            if ($series['state'] !== 'Active' || $series['goal_id'] !== $values['goal_id']
+                || $series['milestone_id'] !== $values['milestone_id']
+                || $date < $series['start_date'] || ($series['end_date'] !== null && $date > $series['end_date'])) {
+                throw new ValidationException(['series' => ['The occurrence does not match its active series.']]);
+            }
+            $task = $this->createValidated('task', $userId, $values, false);
+            $this->repository->linkOccurrence($userId, (string) $task['id'], $seriesId, $date, (string) $series['timezone']);
+
+            return $this->show('task', $userId, (string) $task['id']);
+        });
+    }
+
+    /** @param array<string, mixed> $values @return array<string, mixed> */
+    private function createValidated(string $type, int $userId, array $values, bool $finite = true): array
+    {
+        return $this->transactions->run(function () use ($type, $userId, $values, $finite): array {
+            $this->repository->lockOwner($userId);
+            $this->validateParents($type, $userId, $values, $finite);
             $tagIds = $values['tag_ids'] ?? [];
             unset($values['tag_ids']);
             $this->validateTags($userId, $tagIds);
@@ -133,7 +170,14 @@ final readonly class PlanningService
             $current = $this->owned($type, $userId, $id, true);
             $tagIds = $changes['tag_ids'] ?? null;
             unset($changes['tag_ids']);
-            $this->validateParents($type, $userId, [...$current, ...$changes]);
+            $parentChanged = false;
+            foreach (['goal_id', 'milestone_id'] as $field) {
+                if (array_key_exists($field, $changes) && $changes[$field] !== ($current[$field] ?? null)) {
+                    $parentChanged = true;
+                }
+            }
+            $finiteParentChange = $parentChanged && ($type !== 'task' || $current['series_id'] === null);
+            $this->validateParents($type, $userId, [...$current, ...$changes], $finiteParentChange);
 
             if ($type === 'task') {
                 $this->validateDates([...$current, ...$changes]);
@@ -236,7 +280,7 @@ final readonly class PlanningService
             }
 
             $this->assertVersion($current, $baseVersion);
-            $this->validateParents('goal', $userId, $changes);
+            $this->validateParents('goal', $userId, $changes, true);
 
             if ($parentId !== null && $this->graphs->wouldCycle($this->repository->goalHierarchyEdges($userId), $id, $parentId)) {
                 throw new ValidationException(['parent_goal_id' => ['The Goal hierarchy cannot contain a cycle.']]);
@@ -250,7 +294,7 @@ final readonly class PlanningService
     public function transition(string $type, int $userId, string $id, string $action, array $input): array
     {
         $allowed = $type === 'milestone' || $type === 'task'
-            ? ['base_version', 'acknowledge_open_tasks', 'acknowledge_unchecked_items']
+            ? ['base_version', 'acknowledge_open_tasks', 'acknowledge_unchecked_items', 'acknowledge_ancestor_reopen']
             : ['base_version', 'acknowledge_ancestor_reopen'];
         $this->keys($input, $allowed);
         $baseVersion = $this->baseVersion($input);
@@ -277,14 +321,16 @@ final readonly class PlanningService
             if ($type === 'goal' && $action === 'complete') {
                 $hasChildren = $this->repository->activeCount('goal', $userId, 'parent_goal_id', $id) > 0
                     || $this->repository->activeCount('milestone', $userId, 'goal_id', $id) > 0
-                    || $this->repository->activeCount('task', $userId, 'goal_id', $id) > 0;
+                    || $this->repository->finiteTaskCount($userId, $id) > 0;
 
                 if ($hasChildren && ($this->progress($userId)[$id] ?? 0.0) < 100.0) {
                     throw new ValidationException(['status' => ['The Goal has not reached 100% progress.']]);
                 }
             }
 
-            if ($type === 'goal' && $action === 'reopen') {
+            // Recurring occurrences never affect Goal completion. A one-off
+            // Task reopen leaves its Milestone state independent.
+            if ($action === 'reopen' && ($type !== 'task' || $current['series_id'] === null)) {
                 $goals = $this->repository->activeGoals($userId, true);
                 $byId = [];
 
@@ -293,7 +339,11 @@ final readonly class PlanningService
                 }
 
                 $ancestorIds = [];
-                $parentId = $current['parent_goal_id'];
+                $parentId = match ($type) {
+                    'goal' => $current['parent_goal_id'],
+                    'milestone' => $current['goal_id'],
+                    'task' => $current['goal_id'] ?? ($current['milestone_id'] === null ? null : $this->owned('milestone', $userId, (string) $current['milestone_id'], true)['goal_id']),
+                };
                 $visited = [];
 
                 while ($parentId !== null) {
@@ -311,16 +361,25 @@ final readonly class PlanningService
                 }
 
                 if ($ancestorIds !== [] && ($input['acknowledge_ancestor_reopen'] ?? false) !== true) {
-                    throw new ValidationException(['acknowledge_ancestor_reopen' => ['Confirm reopening completed ancestor Goals.']]);
+                    throw new HttpException(422, 'ANCESTOR_REOPEN_REQUIRED', 'Confirm reopening completed ancestor Goals.', payload: [
+                        'errors' => ['acknowledge_ancestor_reopen' => ['Confirm reopening completed ancestor Goals.']],
+                        'ancestors' => array_map(static fn (string $ancestorId): array => [
+                            'id' => $ancestorId, 'name' => $byId[$ancestorId]['name'], 'version' => (int) $byId[$ancestorId]['version'],
+                        ], $ancestorIds),
+                    ]);
                 }
 
                 sort($ancestorIds, SORT_STRING);
 
                 foreach ($ancestorIds as $ancestorId) {
-                    $this->repository->update('goal', $userId, $ancestorId, [
+                    $ancestor = $this->repository->update('goal', $userId, $ancestorId, [
                         'status' => GoalStatus::Active->value,
                         'completed_at' => null,
                     ], $this->now());
+                    $timezone = $this->repository->ownerTimezone($userId);
+                    $date = $this->clock->now()->setTimezone(new \DateTimeZone($timezone))->format('Y-m-d');
+                    $this->activities->insert($this->uuid->generate(), $userId, 'goal', $ancestorId, (int) $ancestor['version'], 'reversed', $this->now(), $date, $timezone,
+                        $this->activities->completionId($userId, 'goal', $ancestorId, $date));
                 }
             }
 
@@ -580,6 +639,63 @@ final readonly class PlanningService
         ));
     }
 
+    /** @return array<string, mixed> */
+    public function roadmap(int $userId, string $goalId): array
+    {
+        // All branches must come from one read snapshot: a concurrent move
+        // must not leave a Task referencing a Milestone absent from this map.
+        return $this->transactions->run(fn (): array => $this->roadmapSnapshot($userId, $goalId));
+    }
+
+    /** @return array<string, mixed> */
+    private function roadmapSnapshot(int $userId, string $goalId): array
+    {
+        $goal = $this->serialize($this->owned('goal', $userId, $goalId));
+        $goal['tag_ids'] = array_map('strval', $this->repository->tagIds('goal', $userId, $goalId));
+        $rows = $this->repository->roadmapRows($userId, $goalId);
+        $progress = $this->progress($userId);
+        $goal['progress'] = round($progress[$goalId] ?? 0.0, 2);
+        $milestones = [];
+        foreach ($rows['milestones'] as $row) {
+            $milestones[(string) $row['id']] = [...$this->serialize($row), 'tasks' => [], 'recurring_tasks' => [], 'prerequisites' => [], 'completion_locked' => false];
+        }
+        $direct = []; $recurring = [];
+        foreach ($rows['tasks'] as $row) {
+            $task = $this->serialize($row);
+            if ($row['milestone_id'] !== null) {
+                $key = $row['series_id'] === null ? 'tasks' : 'recurring_tasks';
+                $milestones[(string) $row['milestone_id']][$key][] = $task;
+            } elseif ($row['series_id'] === null) {
+                $direct[] = $task;
+            } else {
+                $recurring[] = $task;
+            }
+        }
+        foreach ($rows['prerequisites'] as $row) {
+            $dependent = (string) $row['dependent_id']; unset($row['dependent_id']);
+            $milestones[$dependent]['prerequisites'][] = $this->serialize($row);
+            if ($row['status'] !== MilestoneStatus::Completed->value) {
+                $milestones[$dependent]['completion_locked'] = true;
+            }
+        }
+        foreach ($milestones as &$milestone) {
+            $total = count($milestone['tasks']);
+            $completed = count(array_filter($milestone['tasks'], static fn (array $task): bool => $task['status'] === TaskStatus::Done->value));
+            $milestone['progress'] = ['total' => $total, 'completed' => $completed, 'percentage' => $total === 0
+                ? ($milestone['status'] === MilestoneStatus::Completed->value ? 100.0 : 0.0)
+                : round($completed / $total * 100, 2)];
+        }
+        unset($milestone);
+
+        return [
+            'goal' => $goal,
+            'child_goals' => array_map(fn (array $row): array => [...$this->serialize($row), 'progress' => round($progress[(string) $row['id']] ?? 0.0, 2)], $rows['child_goals']),
+            'milestones' => array_values($milestones), 'direct_tasks' => $direct, 'recurring_tasks' => $recurring,
+            'habits' => $rows['habits'],
+            'contributions' => $this->contributions('goal', $userId, $goalId),
+        ];
+    }
+
     /** @return list<array<string, mixed>> */
     public function prerequisites(int $userId, string $milestoneId): array
     {
@@ -688,9 +804,9 @@ final readonly class PlanningService
     {
         $allowed = match ($type) {
             'area' => ['name', 'description', 'position'],
-            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
+            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -712,6 +828,7 @@ final readonly class PlanningService
                 'area_id' => $this->nullableUuid($input, 'area_id'),
                 'parent_goal_id' => $this->nullableUuid($input, 'parent_goal_id'),
                 'expected_result' => $this->text($input, 'expected_result', 10_000, false, ''),
+                'strategy_notes' => $this->text($input, 'strategy_notes', 20_000, false, ''),
                 'status' => GoalStatus::Active->value,
                 'completed_at' => null,
             ];
@@ -726,6 +843,7 @@ final readonly class PlanningService
                 'start_date' => $this->date($input, 'start_date'),
                 'scheduled_start' => $this->dateTime($input, 'scheduled_start'),
                 'scheduled_end' => $this->dateTime($input, 'scheduled_end'),
+                'estimated_minutes' => !isset($input['estimated_minutes']) ? null : $this->integer($input, 'estimated_minutes', 1, 1440),
                 'completed_at' => null,
             ];
             $this->validateDates($values);
@@ -739,9 +857,9 @@ final readonly class PlanningService
     {
         $allowed = match ($type) {
             'area' => ['name', 'description', 'position'],
-            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
+            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -751,8 +869,10 @@ final readonly class PlanningService
             $changes[$field] = match ($field) {
                 'name' => $this->text($input, $field, $type === 'area' ? 80 : 200, true),
                 'description', 'expected_result', 'completion_criteria' => $this->text($input, $field, 10_000, false),
+                'strategy_notes' => $this->text($input, $field, 20_000, false),
                 'importance' => (new Importance($this->integer($input, $field, 1, 5)))->value,
                 'position' => $this->integer($input, $field, 0, PHP_INT_MAX),
+                'estimated_minutes' => $value === null ? null : $this->integer($input, $field, 1, 1440),
                 'deadline', 'start_date' => $this->date($input, $field),
                 'scheduled_start', 'scheduled_end' => $this->dateTime($input, $field),
                 'goal_id', 'milestone_id' => $this->nullableUuid($input, $field),
@@ -770,7 +890,7 @@ final readonly class PlanningService
     }
 
     /** @param array<string, mixed> $values */
-    private function validateParents(string $type, int $userId, array $values): void
+    private function validateParents(string $type, int $userId, array $values, bool $adding = false): void
     {
         if ($type === 'goal') {
             $areaId = $values['area_id'] ?? null;
@@ -784,11 +904,14 @@ final readonly class PlanningService
                 ? $this->owned('area', $userId, (string) $areaId, true)
                 : $this->owned('goal', $userId, (string) $parentId, true);
 
-            if (($destination['status'] ?? GoalStatus::Active->value) === GoalStatus::Completed->value) {
-                throw new ValidationException(['parent_goal_id' => ['Items cannot be added to a completed Goal.']]);
+            if ($adding && $parentId !== null) {
+                $this->assertActiveGoalChain($userId, (string) $parentId);
             }
         } elseif ($type === 'milestone') {
             $this->owned('goal', $userId, (string) $values['goal_id'], true);
+            if ($adding) {
+                $this->assertActiveGoalChain($userId, (string) $values['goal_id']);
+            }
         } elseif ($type === 'task') {
             $goalId = $values['goal_id'] ?? null;
             $milestoneId = $values['milestone_id'] ?? null;
@@ -799,11 +922,36 @@ final readonly class PlanningService
 
             if ($goalId !== null) {
                 $this->owned('goal', $userId, (string) $goalId, true);
+                if ($adding) {
+                    $this->assertActiveGoalChain($userId, (string) $goalId);
+                }
             }
 
             if ($milestoneId !== null) {
-                $this->owned('milestone', $userId, (string) $milestoneId, true);
+                $milestone = $this->owned('milestone', $userId, (string) $milestoneId, true);
+                if ($adding) {
+                    $this->assertActiveGoalChain($userId, (string) $milestone['goal_id']);
+                }
             }
+        }
+    }
+
+    private function assertActiveGoalChain(int $userId, string $goalId): void
+    {
+        $goals = [];
+        foreach ($this->repository->activeGoals($userId, true) as $goal) {
+            $goals[(string) $goal['id']] = $goal;
+        }
+        $visited = [];
+        while ($goalId !== '') {
+            if (isset($visited[$goalId]) || !isset($goals[$goalId])) {
+                throw new \RuntimeException('Stored Goal hierarchy is invalid.');
+            }
+            $visited[$goalId] = true;
+            if ($goals[$goalId]['status'] === GoalStatus::Completed->value) {
+                throw new ValidationException(['parent' => ['Reopen the completed Goal before adding or moving work beneath it.']]);
+            }
+            $goalId = (string) ($goals[$goalId]['parent_goal_id'] ?? '');
         }
     }
 
@@ -919,7 +1067,7 @@ final readonly class PlanningService
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function serialize(array $row): array
     {
-        foreach (['version', 'position', 'importance'] as $field) {
+        foreach (['version', 'position', 'importance', 'estimated_minutes'] as $field) {
             if (isset($row[$field])) {
                 $row[$field] = (int) $row[$field];
             }

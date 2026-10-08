@@ -1,22 +1,21 @@
-# Plain-PHP Migration and Goal Management Plan
+# Planner Development Plan
 
-Status: **implemented and verified on 2026-09-18**. The canonical runtime is the framework-free PHP modular monolith. Historical Laravel behavior remains a regression reference only.
+The canonical runtime is the framework-free PHP modular monolith. The original M00–M10 implementation baseline was verified on 2026-09-18. Current changes, evidence and unresolved findings are tracked in docs/implementation-status.md and docs/verification.md.
 
 ## Source-of-truth order
 
 When documents disagree, use this order:
 
 1. Current user requirements and the frozen decisions in this file.
-2. [Migration plan](docs/migration-plan.md).
-3. Domain-specific contracts in `docs/plan/`.
-4. Phase task specifications in `docs/plan/phases/`.
-5. Historical implementation and verification evidence.
+2. Domain-specific contracts in `docs/plan/`.
+3. Phase task specifications in `docs/plan/phases/`.
+4. Current implementation and verification evidence.
 
 Do not infer that a planned feature exists. `docs/implementation-status.md` is the state ledger.
 
 ## Frozen decisions
 
-- Replace Laravel with PHP 8.5, Composer, focused libraries, and application-owned routing, HTTP, controllers, services, validation, persistence, and dependency wiring.
+- Use PHP 8.5, Composer, focused libraries, and application-owned routing, HTTP, controllers, services, validation, persistence, and dependency wiring. Laravel has been retired.
 - Do not introduce another PHP application framework, ORM, hidden service container, microservices, or generic graph/property system.
 - Keep MySQL 8.4, HTML, CSS, JavaScript modules, Alpine.js, Vite, Node/npm, the same-origin deployment, private files, and `/api/v1` compatibility.
 - This is a fresh target installation. Preserve behavior and source while migrating, but do not build a legacy data importer or Laravel-session bridge.
@@ -27,30 +26,34 @@ Do not infer that a planned feature exists. `docs/implementation-status.md` is t
 - Milestones with unfinished Tasks can be completed after an explicit acknowledgement.
 - Completion criteria remain human-readable text. Do not add a core metrics system.
 - Goal progress uses finite primary children only. Habits, contributions, and recurring Task occurrences do not affect Goal percentages.
+- Goal roadmaps use a fishbone diagram: the actual Goal name identifies the head, Milestones attach to the spine, and selecting a Milestone opens its Tasks. Selecting the named Goal head opens one information dialog with optional Edit goal, Strategy and Related work disclosures. The learning method used throughout belongs to Goal strategy notes. Branch placement does not create dependencies.
+- Apply UX principles to existing product intent and conventions; do not introduce speculative entities, routes, statuses, or workflows merely to satisfy a design philosophy.
+- Frontend content that is not used for comparison belongs in separate sections or components selected through navigation; do not combine unrelated functions into one scrolling canvas.
+- Minimize unnecessary scrolling through progressive disclosure: show the current task's essential content first, open short actions in a dialog/drawer, and navigate to focused components or pages for longer work. Scroll only when the selected content itself requires it; preserve readable text, drafts, keyboard access, and context on return.
+- Provide a complete illustrated walkthrough of existing browser features, with replaceable placeholder images until the UI is finalized. Show one step at a time, allow topic selection, and expose Help beside Appearance. Automatically introduce it on the first authenticated visit for an account that has not dismissed it; Skip, Close, Escape, and Finish dismiss it account-wide. Preserve current work and prioritize existing dialogs/recovery.
+- Apply the approved illustrated interface reference across the app. Supply Mountain journey, Forest, Ocean, Pisces, and Starry sky themes with separate Light/Dark and account-persisted background/illustration/quote visibility. Quotes may be overridden with personal text; theme imagery is bundled and never uploaded by users.
+- Add optional Task estimated minutes and a focused explicit Task edit flow. Replace Start focus with an edit icon (20%) and completion action (80%), preserving completion acknowledgements. Tasks Today/Next/This week/Backlog are derived filters, not new statuses or containers. Habit streak counts consecutive local dates with at least one check-in. All summary percentages and changes must state their actual denominator and remain factual.
 - Recurring Tasks support daily and weekly schedules in v1. Monthly recurrence and timers are deferred.
 - AI may read selected context, suggest, and create after explicit approval. It cannot silently modify/delete data or bypass normal use cases.
 - Do not add teams, collaboration, shared workspaces, arbitrary custom fields, Task dependency graphs, notification infrastructure, or mobile/microservice architecture.
 
 ## Read order for implementation
 
-1. [Repository audit](docs/plan/00-repository-audit.md)
-2. [Migration plan](docs/migration-plan.md)
-3. [Scope](docs/plan/01-scope.md)
-4. [Architecture](docs/plan/02-architecture.md)
-5. [Database](docs/plan/03-database.md)
-6. [HTTP contract](docs/plan/04-http-contract.md)
-7. [UI/UX](docs/plan/05-ui-ux.md)
-8. [Autosave](docs/plan/06-autosave.md)
-9. [Domain contract](docs/plan/10-domain-contract.md)
-10. [Habits and recurrence](docs/plan/11-habits-recurrence.md)
-11. [Dashboard and Reviews](docs/plan/12-dashboard-reviews.md)
-12. [AI contract](docs/plan/13-ai-contract.md)
-13. [Security/runtime](docs/plan/14-security-runtime.md)
-14. [Operations](docs/plan/15-operations.md)
-15. [Hosting and startup runbook](docs/hosting.md)
-16. [File-by-file map](docs/plan/18-file-map.md)
-17. [Task index](docs/plan/07-tasks.md) and the current file in `docs/plan/phases/`
-18. [Verification](docs/plan/08-verification.md) and [traceability](docs/plan/16-traceability.md)
+1. [Scope](docs/plan/01-scope.md)
+2. [Architecture](docs/plan/02-architecture.md)
+3. [Database](docs/plan/03-database.md)
+4. [HTTP contract](docs/plan/04-http-contract.md)
+5. [UI/UX](docs/plan/05-ui-ux.md)
+6. [Autosave](docs/plan/06-autosave.md)
+7. [Domain contract](docs/plan/10-domain-contract.md)
+8. [Habits and recurrence](docs/plan/11-habits-recurrence.md)
+9. [Dashboard and Reviews](docs/plan/12-dashboard-reviews.md)
+10. [AI contract](docs/plan/13-ai-contract.md)
+11. [Security/runtime](docs/plan/14-security-runtime.md)
+12. [Operations](docs/plan/15-operations.md)
+13. [Hosting and startup runbook](docs/hosting.md)
+14. [Task index](docs/plan/07-tasks.md) and the relevant specification in `docs/plan/phases/`
+15. [Verification](docs/plan/08-verification.md) and [traceability](docs/plan/16-traceability.md)
 
 ## Execution order and gates
 
@@ -85,4 +88,4 @@ Dependent work does not start until the prior gate passes. Work inside a phase m
 
 ## Handoff
 
-Use [Luna Max handoff](docs/plan/17-luna-handoff.md). It tells an implementation agent exactly what to read, how to detect completed work, how to execute one task, and what evidence is required before proceeding.
+Follow [repository instructions](AGENTS.md), the relevant contract and phase specification. Inspect current implementation and tests, preserve unrelated work, and record current checks and limitations before handing off.
