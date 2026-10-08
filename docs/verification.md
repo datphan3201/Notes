@@ -1,6 +1,6 @@
 # Verification Evidence
 
-Updated 2026-10-07. Results below are scoped to the commands and paths actually
+Updated 2026-10-08 UTC. Results below are scoped to the commands and paths actually
 exercised. The original M00–M10 acceptance baseline was recorded on 2026-09-18;
 phase specifications remain in `docs/plan/phases/`, and superseded execution
 logs belong in Git history.
@@ -124,3 +124,20 @@ and the localhost Origin reach normal form validation feedback (redirect then
 200); a different Origin and a missing token each remain 419. Invalid probe
 credentials/input were intentional; no account or user content was created.
 The server remains running and CSRF protection remains enabled.
+
+## Persistent roadmap demo — 2026-10-08 UTC
+
+Normal authenticated HTTP mutations populated a separate local demo account in
+the running `goals_dev` database from the user's roadmap reference. An owned
+PDO count confirmed the actual database name and one Goal, eight Milestones,
+55 Tasks, two Habits and one Weekly Review. Existing user accounts were not
+seeded or reset; no test-database cleanup was performed on the app database.
+
+Real Chromium signed in with the demo account and loaded Notes (the existing
+login landing page), then the Dashboard and named Goal roadmap. Browser checks
+passed for six/two Milestone paging, opening Goal information, saved Strategy
+containing Expert Lens, and eight Tasks under Foundations. An authenticated
+roadmap API read confirmed all eight Milestones and 55 Tasks. No unhandled
+browser errors were observed during those checks. Temporary browser outputs
+were removed after verification. No feature code changed and the automated
+suites above were not rerun for this data-only follow-up.

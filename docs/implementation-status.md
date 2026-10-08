@@ -1,6 +1,6 @@
 # Implementation Status
 
-Updated 2026-10-07. This ledger describes the current application and recorded
+Updated 2026-10-08 UTC. This ledger describes the current application and recorded
 checks. Contracts describe required behavior; a historical Verified phase does
 not establish that every edge case has been tested.
 
@@ -73,9 +73,10 @@ Earlier browser examples used isolated MySQL databases (`goals_test` and
 `goals_ui_review`). The local-startup follow-up now uses persistent `goals_dev`
 on loopback port 3307, with all nine migrations applied and healthy. Its data
 directory is `~/.local/share/planner/mysql/data`, outside temporary storage and
-Git. The old system `notes_dev` database was not modified or imported. This new
-Planner database has no example accounts; registration remains the supported
-bootstrap. Production was not deployed. Other installations must migrate and
+Git. The old system `notes_dev` database was not modified or imported. A separate
+local demo account now contains the roadmap reference dataset described below;
+registration remains the supported bootstrap for other accounts. Production
+was not deployed. Other installations must migrate and
 check following [the runbook](hosting.md).
 
 ## Current verification
@@ -147,3 +148,20 @@ origin consistently. No CSRF, session or database behavior was weakened.
 Real HTTP cookie/token probes verified both login and registration reach their
 normal validation feedback on localhost. Missing tokens and the other host
 still return 419. No probe account was created.
+
+## Persistent roadmap demo — 2026-10-08 UTC
+
+The running `goals_dev` database now contains a dedicated demo account populated
+through normal authenticated HTTP APIs from the user's `roadmap.png` reference.
+Its Goal, "AI production engineer + Quant secondary", contains eight Milestones
+and 55 Tasks. The learning cycle, Learning Chat, Project Chat and Expert Lens
+are Goal Strategy notes. Checklist items, a Task Note, two Habits with check-ins,
+weekly Task selections and a Weekly Review provide examples of existing flows.
+Other accounts and the old `notes_dev` database were not modified. Demo access
+details are kept outside Git; new registrations are not automatically seeded.
+
+Real Chromium verified the authenticated Dashboard, roadmap paging (six/two
+Milestones), named Goal information, Strategy and the eight Foundations Tasks.
+The roadmap API independently returned eight Milestones and 55 Tasks; no
+unhandled browser errors were observed. Progress remains calculated by the
+existing domain rules rather than copied from illustration percentages.
