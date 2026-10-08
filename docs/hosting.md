@@ -131,7 +131,7 @@ Edit backend/.env and set at least these values:
 ~~~dotenv
 APP_ENV=local
 APP_DEBUG=true
-APP_URL=http://127.0.0.1:8000
+APP_URL=http://localhost:8000
 APP_TIMEZONE=UTC
 
 PLANNER_DB_HOST=127.0.0.1
@@ -227,16 +227,16 @@ php -S 127.0.0.1:8000 -t public dev-router.php
 In another terminal, run the smoke checks:
 
 ~~~bash
-curl -fsS http://127.0.0.1:8000/up
-curl -I http://127.0.0.1:8000/login
-curl -I http://127.0.0.1:8000/register
+curl -fsS http://localhost:8000/up
+curl -I http://localhost:8000/login
+curl -I http://localhost:8000/register
 ~~~
 
 /up should return JSON with {"data":{"status":"ok"}}. /login and /register
 should return 200. A protected page such as /dashboard should redirect an
 unauthenticated browser to /login.
 
-Open http://127.0.0.1:8000/register and create the first user. There is no
+Open http://localhost:8000/register and create the first user. There is no
 admin account or admin role in the current single-user product. Registration
 creates the user, preferences, and the three default Areas in one application
 transaction. Do not seed a plaintext password directly into MySQL.
@@ -256,7 +256,7 @@ php bin/console migrate:check
 php -S 127.0.0.1:8000 -t public dev-router.php
 ~~~
 
-Then open http://127.0.0.1:8000. No migration, Composer install, or npm install
+Then open http://localhost:8000. No migration, Composer install, or npm install
 is needed on every start.
 
 Run php bin/console migrate after pulling a release that contains new
@@ -548,6 +548,16 @@ Confirm that PRIVATE_STORAGE_ROOT is outside backend/public, is not a symlink,
 and is writable by PHP-FPM. The application creates attachments and avatars
 with restrictive permissions; do not make the entire repository writable.
 
+### Form submission returns 419 on a local URL
+
+Use the exact origin configured in `APP_URL`, including scheme, host and port.
+`localhost` and `127.0.0.1` are distinct browser origins even when they connect
+to the same server. The local examples use `APP_URL=http://localhost:8000` and
+browser URL `http://localhost:8000`; PHP still binds to 127.0.0.1 for loopback
+access. If those addresses differ, a form may load successfully while its POST
+is rejected with 419. Correct the ignored environment setting and reload the
+form. Keep CSRF tokens and origin checks enabled.
+
 ### /dashboard redirects to /login
 
 This is expected when the browser has no valid session. Register or log in
@@ -599,7 +609,7 @@ npm run format:check
 npm run build
 
 cd ..
-curl -fsS http://127.0.0.1:8000/up
+curl -fsS http://localhost:8000/up
 ~~~
 
 For production acceptance also run the browser matrix, syntax/dependency/secret

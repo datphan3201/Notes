@@ -113,3 +113,14 @@ rendering remain follow-ups in [Implementation status](implementation-status.md)
 This is a local development startup with an initially empty Planner database,
 not a production deployment or a migration of legacy user content. Register
 an account in the browser. Restart instructions are in [Hosting](hosting.md).
+
+## Local CSRF origin correction — 2026-10-07
+
+Before correction, a fresh cookie/form token plus `Origin: http://localhost:8000`
+returned 419, while `Origin: http://127.0.0.1:8000` reached login validation.
+The local `APP_URL` was corrected to the localhost browser origin. Afterward,
+six real HTTP checks passed across login and registration: valid session/token
+and the localhost Origin reach normal form validation feedback (redirect then
+200); a different Origin and a missing token each remain 419. Invalid probe
+credentials/input were intentional; no account or user content was created.
+The server remains running and CSRF protection remains enabled.

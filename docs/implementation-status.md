@@ -135,3 +135,15 @@ Fresh full PHPUnit on the separate test database passes **90 / 715**, frontend
 **156** first-party PHP files pass syntax checks. Staged source contains no
 generated credentials or environment files. Restart instructions are in the
 hosting runbook. No legacy-data import or production deployment was performed.
+
+## Local 419 correction — 2026-10-07
+
+A browser using `http://localhost:8000` could load auth forms, but submission
+returned 419 because the ignored local `APP_URL` was `http://127.0.0.1:8000`.
+The CSRF guard correctly treats those hosts as distinct origins. The local
+setting now matches the published localhost URL, and the runbook uses the same
+origin consistently. No CSRF, session or database behavior was weakened.
+
+Real HTTP cookie/token probes verified both login and registration reach their
+normal validation feedback on localhost. Missing tokens and the other host
+still return 419. No probe account was created.
