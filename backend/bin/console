@@ -26,6 +26,17 @@ $command = $argv[1] ?? 'help';
 
 try {
     switch ($command) {
+        case 'reminders:send':
+            $result = (new \Planner\Application\Planning\TaskReminderService(
+                new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoReminderRepository($application['pdo']),
+                new PdoAccountRepository($application['pdo']), $application['transactions'],
+                new \Planner\Infrastructure\Mail\PasswordResetMailer($application['config']->string('app.env'), $application['config']->string('storage.private_root'), $application['config']->string('mail.from')),
+                $application['clock'], $application['config']->string('app.url'),
+            ))->send();
+            fwrite(STDOUT, sprintf("Reminders sent: %d; failed owners: %d\n", $result['sent'], $result['failed']));
+            if ($result['failed'] > 0) { exit(1); }
+            break;
+
         case 'migrate':
             $completed = $application['migrations']->migrate();
             fwrite(STDOUT, $completed === [] ? "No pending migrations.\n" : 'Applied: '.implode(', ', $completed)."\n");
@@ -131,7 +142,7 @@ try {
             break;
 
         case 'help':
-            fwrite(STDOUT, "Available commands:\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
+            fwrite(STDOUT, "Available commands:\n  reminders:send\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
             break;
 
         default:

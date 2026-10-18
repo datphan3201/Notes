@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { patch, remove, upload } from '../lib/http';
 
 export function initProfile(root) {
@@ -27,11 +28,14 @@ export function initProfile(root) {
     renderAvatar(initialAvatarUrl);
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        status.textContent = 'Saving…';
+        status.textContent = t('Saving…');
         try {
-            const result = await patch('/api/v1/profile', { display_name: input.value });
+            const result = await patch('/api/v1/profile', {
+                display_name: input.value,
+                biography: root.querySelector('[data-profile-biography]').value,
+            });
             input.value = result.payload.data.display_name;
-            status.textContent = 'Saved';
+            status.textContent = t('Saved');
             status.className = 'save-status is-success';
             error.classList.add('is-hidden');
         } catch (requestError) {

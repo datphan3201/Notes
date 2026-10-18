@@ -8,7 +8,9 @@ use PDO;
 
 final readonly class PdoDashboardRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<array<string, mixed>> */
     public function activity(int $userId, string $from, string $to): array

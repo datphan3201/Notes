@@ -16,6 +16,9 @@ export class NotesPage {
         this.noteRequests = new LatestRequest();
         this.searchDebounce = new DebouncedAction({ delay: 300 });
         this.editor = null;
+        document.addEventListener('notes:preferences-changed', (event) =>
+            Object.assign(this.preferences, event.detail),
+        );
         this.bindShell();
         this.bindDialogs();
     }

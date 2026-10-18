@@ -13,7 +13,9 @@ final readonly class PdoHabitRepository
         'target_frequency', 'timezone', 'position', 'first_check_in_at',
     ];
 
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array

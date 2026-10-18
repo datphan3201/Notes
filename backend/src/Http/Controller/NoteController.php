@@ -22,7 +22,8 @@ final readonly class NoteController
         private NoteValidator $validator,
         private NoteSerializer $serializer,
         private ProcessFileDeletion $cleanup,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, string> $parameters */
     public function index(Request $request, array $parameters = []): Response

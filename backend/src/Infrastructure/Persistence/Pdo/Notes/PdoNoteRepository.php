@@ -10,7 +10,9 @@ use Planner\Domain\Tags\TagRecord;
 
 final readonly class PdoNoteRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function findById(string $noteId, bool $forUpdate = false): ?NoteRecord
     {

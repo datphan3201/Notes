@@ -9,7 +9,9 @@ use Planner\Domain\Account\UserRecord;
 
 final readonly class PdoAccountRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function findByEmail(string $email): ?UserRecord
     {
@@ -56,7 +58,7 @@ SQL);
     public function preferences(int $userId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote FROM user_preferences WHERE user_id = :user_id',
+            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote, background_color, notifications_enabled, email_notifications, background_path, locale FROM user_preferences WHERE user_id = :user_id',
         );
         $statement->execute(['user_id' => $userId]);
         $row = $statement->fetch();
@@ -76,6 +78,11 @@ SQL);
             'show_illustrations' => (bool) $row['show_illustrations'],
             'show_quote' => (bool) $row['show_quote'],
             'custom_quote' => (string) $row['custom_quote'],
+            'locale' => (string) $row['locale'],
+            'background_color' => (string) $row['background_color'],
+            'background_url' => $row['background_path'] === null ? '' : '/files/background?v='.substr(hash('sha256', (string) $row['background_path']), 0, 16),
+            'notifications_enabled' => (bool) $row['notifications_enabled'],
+            'email_notifications' => (bool) $row['email_notifications'],
         ];
     }
 
@@ -121,7 +128,7 @@ SQL);
     /** @param array<string, string|int|bool> $changes */
     public function updatePreferences(int $userId, array $changes, string $timestamp): array
     {
-        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote'];
+        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'notifications_enabled', 'email_notifications', 'locale'];
         $assignments = [];
         $bindings = ['user_id' => $userId, 'updated_at' => $timestamp];
 
@@ -143,6 +150,32 @@ SQL);
         }
 
         return $this->preferences($userId);
+    }
+
+    public function backgroundPath(int $userId): ?string
+    {
+        $statement = $this->pdo->prepare('SELECT background_path FROM user_preferences WHERE user_id = :user');
+        $statement->execute(['user' => $userId]);
+        $path = $statement->fetchColumn();
+        return is_string($path) ? $path : null;
+    }
+
+    public function setBackgroundPath(int $userId, ?string $path, string $now): void
+    {
+        $statement = $this->pdo->prepare('UPDATE user_preferences SET background_path = :path, background_color = :color, updated_at = :now WHERE user_id = :user');
+        $statement->execute(['path' => $path, 'color' => '', 'now' => $now, 'user' => $userId]);
+    }
+
+    /** @return list<string> */
+    public function backgroundPaths(): array
+    {
+        return $this->pdo->query('SELECT background_path FROM user_preferences WHERE background_path IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function updateBiography(int $userId, string $biography): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET biography = :biography WHERE id = :user');
+        $statement->execute(['biography' => $biography, 'user' => $userId]);
     }
 
     public function updatePasswordAndVersion(int $userId, string $hash, int $authVersion, string $timestamp): void
@@ -197,6 +230,7 @@ SQL);
             $row['email_verified_at'] === null ? null : (string) $row['email_verified_at'],
             $row['avatar_path'] === null ? null : (string) $row['avatar_path'],
             (int) $row['auth_version'],
+            (string) ($row['biography'] ?? ''),
         );
     }
 }

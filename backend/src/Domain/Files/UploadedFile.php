@@ -11,5 +11,6 @@ final readonly class UploadedFile
         public string $temporaryPath,
         public int $error,
         public int $reportedSize,
-    ) {}
+    ) {
+    }
 }

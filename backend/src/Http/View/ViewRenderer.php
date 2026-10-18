@@ -40,7 +40,7 @@ final readonly class ViewRenderer
     /** @param array<string, mixed> $data */
     private function capture(string $path, array $data): string
     {
-        $view = $this->context;
+        $view = $this->context->withLocale((string) ($data['preferences']['locale'] ?? $data['locale'] ?? 'en'));
         extract($data, EXTR_SKIP);
         ob_start();
 

@@ -150,6 +150,7 @@ final class ConfigLoader
                 'path' => $env('LOG_PATH', $base.'/storage/logs/planner.log') ?? '',
                 'level' => $env('LOG_LEVEL', 'debug') ?? 'debug',
             ],
+            'mail' => ['from' => $env('MAIL_FROM_ADDRESS', '') ?? ''],
             'vite' => ['dev_url' => $env('VITE_DEV_URL')],
             'ai' => [
                 'enabled' => $aiEnabled,

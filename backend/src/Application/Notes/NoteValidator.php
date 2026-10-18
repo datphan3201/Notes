@@ -12,7 +12,9 @@ use Ramsey\Uuid\Uuid;
 
 final readonly class NoteValidator
 {
-    public function __construct(private InputValidator $input) {}
+    public function __construct(private InputValidator $input)
+    {
+    }
 
     /** @param array<string, mixed> $input @return array{id:string,title:string,content:string,color?:string} */
     public function create(array $input): array

@@ -20,7 +20,8 @@ final readonly class Application
         private CsrfGuard $csrf,
         private RateLimiter $rateLimiter,
         private ErrorHandler $errors,
-    ) {}
+    ) {
+    }
 
     public function handle(Request $request): Response
     {
@@ -80,7 +81,7 @@ final readonly class Application
             'X-Request-ID' => $requestId,
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
-            'Referrer-Policy' => 'same-origin',
+            'Referrer-Policy' => $response->headers['Referrer-Policy'] ?? 'same-origin',
         ];
 
         if (str_starts_with($response->headers['Content-Type'] ?? '', 'text/html')) {

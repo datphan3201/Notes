@@ -11,7 +11,9 @@ use Planner\Http\Response;
 
 final readonly class PlanningController
 {
-    public function __construct(private AuthService $auth, private PlanningService $planning) {}
+    public function __construct(private AuthService $auth, private PlanningService $planning)
+    {
+    }
 
     /** @param array<string, string> $parameters */
     public function index(Request $request, array $parameters): Response

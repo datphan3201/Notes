@@ -211,3 +211,67 @@ Save, checklist refresh/tab draft preservation and late-save acknowledgements.
 Desktop/mobile captures were inspected; temporary captures and verification
 records were removed after inspection. Native OS IME and other browser engines
 were not exercised by this run.
+
+## Feedback sections 1–3 — 2026-10-19, paused at user request
+
+The user confirmed Settings/account, Tasks/Goals and Task history (not the
+three recommendation steps). Retention is keep-all; two-factor authentication
+is explicitly postponed. English/Vietnamese interface selection is approved.
+
+Implemented in the working tree:
+
+- Settings navigation grouping, direct light/dark action, password visibility,
+  biography, private re-encoded background upload/RGB color, notification choices.
+  Note defaults move to Notes without changing its autosave state machine.
+- Recovery forms and one-use hashed 30-minute tokens, owner-before-token locking,
+  request/attempt throttles, auth-version bump and session invalidation. Local
+  delivery uses private outbox files; production needs system mail configuration.
+- Shared Task capture fields for Tasks/Goal/Milestone, native date/time presets,
+  versioned importance toggle, edit links, circular completion/reopen, confirmed
+  archive, reversible weekly selection, Completed/History filters retaining data.
+- Daily/weekly/monthly/yearly recurrence with stable month-end/leap-day anchors,
+  custom weekly days/intervals and atomic initial occurrence materialization.
+  Individual Tasks support reminders; delivery is opt-in with reminders:send.
+- Account-persisted en/vi locale with a shared static UI catalog and selected
+  dynamic Task/Settings controls. Arbitrary owned content is not translated.
+  Browser checks switched vi -> en and created a Task whose mixed-language title
+  stayed unchanged, with no console errors during that flow. Browser mutations
+  used goals_test on a separate :8081 server, not the user's goals_dev records.
+- Fixed an existing walkthrough empty-hash error found during real-browser QA.
+- Added forward migrations 0010–0015 and applied them to goals_dev; current
+  migrate:check reports healthy. Old migrations were not edited.
+
+Evidence so far: narrow backend gate 26 tests / 346 assertions; focused recovery
+and owner-isolation suite 2 / 21; ViewTest 4 / 14; Node suite 56 passing; Vite build
+and frontend format:check pass. Full backend run and final status follow below.
+
+Not yet accepted as a complete feedback release: browser coverage of background
+upload, reminder delivery, shared capture/draft preservation and history/reopen
+needs completion; dynamic error/help/summary localization needs an audit. No
+production mail delivery or cron setup was performed. Recurring reminders must
+be configured on generated occurrences; series-wide reminder rules are not yet
+implemented. No 2FA, destructive retention, admin, sharing or Teamwork was added.
+No further feature work continues until the user resumes.
+
+### Final checkpoint before pausing — 2026-10-19
+
+- `php backend/vendor/bin/phpunit -c backend/phpunit.xml`: **94 tests / 743
+  assertions**, all pass, 123.761 seconds, real guarded goals_test.
+- `npm --prefix frontend run test:unit`: **56 tests**, all pass.
+- `npm --prefix frontend run format:check`: pass.
+- `npm --prefix frontend run build`: pass (52 modules).
+- First-party syntax sweep: **157 PHP files**, zero errors; final view sweep
+  after localization also reports zero syntax errors.
+- `git diff --check`: pass. `php backend/bin/console migrate:check`: healthy.
+- `curl -fsS http://localhost:8000/up`: status ok.
+- Real Chromium on isolated :8081/goals_test: registration/password-visibility,
+  first-visit walkthrough dismissal, account language vi -> en persistence, Task
+  creation while UI is Vietnamese, unchanged mixed-language Task title after
+  switching back to English. That flow logged zero console errors/warnings.
+- Temporary QA browser and :8081 server were closed. Normal local :8000 server
+  remains available. No production deployment, mail-provider verification, cron
+  installation or automatic Task deletion was performed.
+
+Paused at the user's explicit request after finishing the current core language
+section and verification. Resume with the outstanding acceptance checks above;
+do not treat the three feedback sections as fully accepted/release-certified.

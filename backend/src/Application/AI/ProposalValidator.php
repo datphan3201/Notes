@@ -13,8 +13,11 @@ final readonly class ProposalValidator
     {
         if (strlen($json) > 102_400) throw new ValidationException(['proposal' => ['The proposal exceeds 100 KiB.']]);
         $this->rejectDuplicateKeys($json);
-        try { $proposal = json_decode($json, true, 512, JSON_THROW_ON_ERROR); }
-        catch (\JsonException) { throw new ValidationException(['proposal' => ['The proposal JSON is invalid.']]); }
+        try {
+            $proposal = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new ValidationException(['proposal' => ['The proposal JSON is invalid.']]);
+        }
         if (!is_array($proposal) || count($proposal) !== 3 || array_diff(array_keys($proposal), ['schema_version', 'summary', 'operations']) !== []) throw new ValidationException(['proposal' => ['The proposal structure is invalid.']]);
         if ($proposal['schema_version'] !== 1 || !is_string($proposal['summary']) || mb_strlen($proposal['summary']) > 2_000 || !is_array($proposal['operations']) || !array_is_list($proposal['operations']) || count($proposal['operations']) > 50) throw new ValidationException(['proposal' => ['The proposal structure is invalid.']]);
         $locals = [];
@@ -74,21 +77,51 @@ final readonly class ProposalValidator
 
     private function rejectDuplicateKeys(string $json): void
     {
-        $stack = []; $length = strlen($json); $index = 0;
+        $stack = [];
+        $length = strlen($json);
+        $index = 0;
         while ($index < $length) {
             $char = $json[$index];
-            if ($char === '{') { $stack[] = ['type' => 'object', 'keys' => []]; $index++; continue; }
-            if ($char === '[') { $stack[] = ['type' => 'array', 'keys' => []]; $index++; continue; }
-            if ($char === '}' || $char === ']') { array_pop($stack); $index++; continue; }
-            if ($char !== '"') { $index++; continue; }
-            $start = $index; $index++;
-            while ($index < $length) { if ($json[$index] === '\\') { $index += 2; continue; } if ($json[$index] === '"') break; $index++; }
+            if ($char === '{') {
+                $stack[] = ['type' => 'object', 'keys' => []];
+                $index++;
+                continue;
+            }
+            if ($char === '[') {
+                $stack[] = ['type' => 'array', 'keys' => []];
+                $index++;
+                continue;
+            }
+            if ($char === '}' || $char === ']') {
+                array_pop($stack);
+                $index++;
+                continue;
+            }
+            if ($char !== '"') {
+                $index++;
+                continue;
+            }
+            $start = $index;
+            $index++;
+            while ($index < $length) {
+                if ($json[$index] === '\\') {
+                    $index += 2;
+                    continue;
+                } if ($json[$index] === '"') break;
+                $index++;
+            }
             if ($index >= $length) return;
-            $token = substr($json, $start, $index - $start + 1); $index++;
-            $look = $index; while ($look < $length && ctype_space($json[$look])) $look++;
+            $token = substr($json, $start, $index - $start + 1);
+            $index++;
+            $look = $index;
+            while ($look < $length && ctype_space($json[$look])) $look++;
             $top = array_key_last($stack);
             if ($look < $length && $json[$look] === ':' && $top !== null && $stack[$top]['type'] === 'object') {
-                try { $key = json_decode($token, true, 512, JSON_THROW_ON_ERROR); } catch (\JsonException) { return; }
+                try {
+                    $key = json_decode($token, true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    return;
+                }
                 if (isset($stack[$top]['keys'][$key])) throw new ValidationException(['proposal' => ['The JSON contains a duplicate key.']]);
                 $stack[$top]['keys'][$key] = true;
             }

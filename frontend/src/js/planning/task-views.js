@@ -12,6 +12,9 @@ export function localDate(timestamp, timezone) {
     return `${value('year')}-${value('month')}-${value('day')}`;
 }
 export function taskMatchesView(task, view, today, timezone, selectedIds) {
+    if (view === 'completed') return task.status === 'Done' && !taskInHistory(task, today);
+    if (view === 'history') return taskInHistory(task, today);
+    if (taskInHistory(task, today)) return false;
     const scheduled = localDate(task.scheduled_start, timezone);
     const scheduledEnd = localDate(task.scheduled_end, timezone) || scheduled;
     const dates = [task.deadline, task.start_date, task.occurrence_date, scheduled];
@@ -39,4 +42,14 @@ export function resourceLinks(body) {
         }
     }
     return links;
+}
+
+export function taskInHistory(task, today, now = Date.now()) {
+    if (task.status === 'Done') {
+        return !!task.completed_at && now - new Date(task.completed_at).getTime() >= 86400000;
+    }
+    if (!task.deadline) return false;
+    const cutoff = new Date(`${today}T00:00:00Z`);
+    cutoff.setUTCDate(cutoff.getUTCDate() - 3);
+    return task.deadline <= cutoff.toISOString().slice(0, 10);
 }

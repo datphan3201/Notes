@@ -196,7 +196,7 @@ php bin/console migrate:check
 
 Expected results:
 
-- The first migrate applies all nine current migrations (0001–0009).
+- The first migrate applies all fifteen current migrations (0001–0015).
 - migrate:status reports every migration as applied.
 - migrate:check prints Migration state is healthy.
 
@@ -620,3 +620,12 @@ Record actual command results in [implementation-status.md](implementation-statu
 or [verification.md](verification.md). Do not mark a deployment healthy from
 an unrun command or from a browser page that was not checked against the
 current release.
+
+## Feedback extension: account recovery and reminders
+
+Apply the current migration set before serving updated PHP. Local reset emails
+are written to PRIVATE_STORAGE_ROOT/mail-outbox/*.eml, never exposed through a
+web route. Production uses PHP's configured system mail transport and requires
+MAIL_FROM_ADDRESS. Configure an OS job every minute for php bin/console
+reminders:send with a non-overlap lock. Delivery requires both notification and
+email preferences enabled. No schedule has been installed automatically.

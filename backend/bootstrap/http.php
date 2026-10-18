@@ -115,6 +115,14 @@ $accountController = new AccountController(
     $session,
     $views,
 );
+$passwordResetService = new \Planner\Application\Account\PasswordResetService(
+    $accountRepository,
+    new \Planner\Infrastructure\Persistence\Pdo\Account\PdoPasswordResetRepository($services['pdo']),
+    $services['transactions'], $rateLimiter, $services['clock'],
+    new \Planner\Infrastructure\Mail\PasswordResetMailer($config->string('app.env'), $config->string('storage.private_root'), $config->string('mail.from')),
+    $logger, $config->string('app.url'),
+);
+$passwordResetController = new \Planner\Http\Controller\PasswordResetController($passwordResetService, $validator, $views, $session);
 $noteRepository = new PdoNoteRepository($services['pdo']);
 $tagRepository = new PdoTagRepository($services['pdo']);
 $labelSerializer = new LabelSerializer;
@@ -181,11 +189,13 @@ $attachmentController = new AttachmentController(
     $uploadValidator,
     new AttachmentSerializer,
 );
+$backgroundService = new \Planner\Application\Files\BackgroundService($accountRepository, $services['transactions'], $storage, $pendingDeletionRepository, $services['clock']);
 $profileFileController = new ProfileFileController(
     $auth,
     $fileService,
     $uploadValidator,
     new AccountSerializer,
+    $backgroundService,
 );
 $fileContentController = new FileContentController($auth, $fileService, new FileStreamer);
 $activityRepository = new PdoActivityRepository($services['pdo']);
@@ -234,6 +244,13 @@ $aiProvider = $config->bool('ai.enabled') && $config->nullableString('ai.key') !
 $aiRepository = new PdoAIActionRepository($services['pdo']);
 $aiService = new AIActionService($aiProvider, new ProposalValidator, $aiRepository, $planningRepository, $planningService, $reviewService, $services['transactions'], $services['uuid'], $services['clock']);
 $aiController = new AIActionController($auth, $aiService);
+$reminderService = new \Planner\Application\Planning\TaskReminderService(
+    new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoReminderRepository($services['pdo']),
+    $accountRepository, $services['transactions'],
+    new \Planner\Infrastructure\Mail\PasswordResetMailer($config->string('app.env'), $config->string('storage.private_root'), $config->string('mail.from')),
+    $services['clock'], $config->string('app.url'),
+);
+$reminderController = new \Planner\Http\Controller\ReminderController($auth, $reminderService);
 $routeFactory = require dirname(__DIR__).'/routes/web.php';
 $router = new Router($routeFactory(
     $accountController,
@@ -248,6 +265,8 @@ $router = new Router($routeFactory(
     $dashboardController,
     $reviewController,
     $aiController,
+    $passwordResetController,
+    $reminderController,
 ));
 $application = new Application(
     $router,
@@ -260,6 +279,9 @@ $application = new Application(
 
 return [
     'application' => $application,
+    'password_reset_service' => $passwordResetService,
+    'background_service' => $backgroundService,
+    'reminder_service' => $reminderService,
     'router' => $router,
     'session' => $session,
     'auth' => $auth,

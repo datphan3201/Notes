@@ -1,5 +1,7 @@
+import { t, statusLabel } from '../lib/i18n.js';
+import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
-import { get, patch, post } from '../lib/http.js';
+import { get, patch, post, remove } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
@@ -310,7 +312,9 @@ export function initTasksPage(root) {
     const form = root.querySelector('[data-task-create-form]');
     let tasks = [];
     const requestedView = new URLSearchParams(location.search).get('view');
-    let taskView = ['today', 'next', 'week', 'backlog', 'all'].includes(requestedView)
+    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'history', 'completed'].includes(
+        requestedView,
+    )
         ? requestedView
         : 'today';
     let today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
@@ -326,15 +330,22 @@ export function initTasksPage(root) {
     let size = narrow.matches ? 4 : 8;
     const render = () => {
         root.querySelector('.task-filter-details summary').textContent =
-            `Filter and search · ${status.selectedOptions[0].textContent}${search.value.trim() ? ' · Search active' : ''}`;
+            `${t('Filter and search')} · ${status.selectedOptions[0].textContent}${search.value.trim() ? ` · ${t('Search active')}` : ''}`;
         const timezone = window.notesBootstrap.preferences.timezone;
+        root.querySelector('[data-task-history-hint]').hidden = taskView !== 'history';
         for (const button of root.querySelectorAll('[data-task-view]')) {
             button.setAttribute('aria-pressed', String(button.dataset.taskView === taskView));
             const count = collectionPage(
                 tasks.filter((task) =>
                     taskMatchesView(task, button.dataset.taskView, today, timezone, selectedIds),
                 ),
-                { query: search.value, status: status.value },
+                {
+                    query: search.value,
+                    status:
+                        ['history', 'completed'].includes(taskView) && status.value === 'open'
+                            ? 'all'
+                            : status.value,
+                },
             ).total;
             button.querySelector('[data-task-view-count]').textContent = count;
         }
@@ -342,7 +353,10 @@ export function initTasksPage(root) {
             tasks.filter((task) => taskMatchesView(task, taskView, today, timezone, selectedIds)),
             {
                 query: search.value,
-                status: status.value,
+                status:
+                    ['history', 'completed'].includes(taskView) && status.value === 'open'
+                        ? 'all'
+                        : status.value,
                 page,
                 size,
             },
@@ -369,7 +383,7 @@ export function initTasksPage(root) {
             name.href = `/tasks/${encodeURIComponent(task.id)}`;
             name.textContent = task.name;
             const status = document.createElement('small');
-            status.textContent = `${task.status.replace(/([a-z])([A-Z])/g, '$1 $2')}${task.deadline ? ` · Due ${task.deadline}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} min` : ''}`;
+            status.textContent = `${statusLabel(task.status)}${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} ${t('min')}` : ''}`;
             const context =
                 parentOptions.get(`milestone:${task.milestone_id}`) ||
                 parentOptions.get(`goal:${task.goal_id}`);
@@ -380,10 +394,20 @@ export function initTasksPage(root) {
                 copy.append(chip);
             }
             copy.append(name, status);
+            if (taskView === 'history' && task.completed_at) {
+                const completed = document.createElement('small');
+                completed.textContent = `${t('Completed at')} ${new Date(task.completed_at).toLocaleString(window.notesBootstrap.preferences.locale === 'vi' ? 'vi-VN' : 'en-US')}`;
+                copy.append(completed);
+            }
             const action = document.createElement('button');
-            action.className = 'button button-quiet';
+            action.className = 'task-completion-button';
+            action.setAttribute(
+                'aria-label',
+                `${task.status === 'Done' ? t('Reopen') : t('Complete')} ${task.name}`,
+            );
+            action.setAttribute('aria-pressed', String(task.status === 'Done'));
             action.type = 'button';
-            action.textContent = task.status === 'Done' ? 'Reopen' : 'Complete';
+            action.textContent = task.status === 'Done' ? '✓' : '○';
             action.addEventListener('click', async () => {
                 action.disabled = true;
                 try {
@@ -405,13 +429,20 @@ export function initTasksPage(root) {
             const week = document.createElement('button');
             week.className = 'button button-quiet';
             week.type = 'button';
-            week.textContent = selectedIds.has(task.id) ? 'Selected this week' : 'Select for week';
-            week.disabled = selectedIds.has(task.id);
+            week.textContent = selectedIds.has(task.id)
+                ? t('Selected this week')
+                : t('Select for week');
+            week.setAttribute('aria-pressed', String(selectedIds.has(task.id)));
             week.addEventListener('click', async () => {
                 week.disabled = true;
                 try {
-                    await post('/api/v1/weekly-selections/task', { id: task.id, position: 0 });
-                    selectedIds.add(task.id);
+                    if (selectedIds.has(task.id)) {
+                        await remove(`/api/v1/weekly-selections/task/${task.id}`);
+                        selectedIds.delete(task.id);
+                    } else {
+                        await post('/api/v1/weekly-selections/task', { id: task.id, position: 0 });
+                        selectedIds.add(task.id);
+                    }
                     render();
                 } catch (error) {
                     showError(root, error);
@@ -421,8 +452,53 @@ export function initTasksPage(root) {
             });
             const actions = document.createElement('div');
             actions.className = 'action-row';
-            actions.append(week, action);
-            article.append(copy, actions);
+            const edit = document.createElement('a');
+            edit.className = 'button button-quiet';
+            edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
+            edit.textContent = t('Edit');
+            const important = document.createElement('button');
+            important.type = 'button';
+            important.className = 'icon-button';
+            important.textContent = task.importance === 5 ? '★' : '☆';
+            important.setAttribute('aria-label', `${t('Mark important')}: ${task.name}`);
+            important.setAttribute('aria-pressed', String(task.importance === 5));
+            important.addEventListener('click', async () => {
+                important.disabled = true;
+                try {
+                    await patch(`/api/v1/tasks/${task.id}`, {
+                        base_version: task.version,
+                        importance: task.importance === 5 ? 3 : 5,
+                    });
+                    await load();
+                } catch (error) {
+                    showError(root, error);
+                } finally {
+                    important.disabled = false;
+                }
+            });
+            const archive = document.createElement('button');
+            archive.type = 'button';
+            archive.className = 'button button-quiet';
+            archive.textContent = t('Archive');
+            archive.addEventListener('click', async () => {
+                if (
+                    !window.confirm(
+                        `Archive “${task.name}”? This removes it from active lists without deleting its data.`,
+                    )
+                )
+                    return;
+                archive.disabled = true;
+                try {
+                    await remove(`/api/v1/tasks/${task.id}`, { base_version: task.version });
+                    await load();
+                } catch (error) {
+                    showError(root, error);
+                } finally {
+                    archive.disabled = false;
+                }
+            });
+            actions.append(week, edit, important, archive);
+            article.append(action, copy, actions);
             list.append(article);
         }
     };
@@ -536,7 +612,7 @@ export function initTasksPage(root) {
         const data = new FormData(form);
         createWithForm(form, async () => {
             try {
-                const response = await post('/api/v1/tasks', {
+                const response = await createCapturedTask(data, {
                     goal_id: String(data.get('parent')).startsWith('goal:')
                         ? String(data.get('parent')).slice(5)
                         : null,
@@ -545,6 +621,7 @@ export function initTasksPage(root) {
                         : null,
                     name: data.get('name'),
                     completion_criteria: data.get('completion_criteria'),
+                    ...taskCaptureValues(data),
                 });
                 revealTaskId = response.payload.data.id;
                 form.reset();
@@ -599,6 +676,7 @@ export function initTaskDetail(root) {
         'expected_result',
         'importance',
         'estimated_minutes',
+        'reminder_at',
         'status',
         'start_date',
         'deadline',
@@ -609,7 +687,7 @@ export function initTaskDetail(root) {
         Object.fromEntries(
             editFields.map((field) => [
                 field,
-                ['scheduled_start', 'scheduled_end'].includes(field)
+                ['scheduled_start', 'scheduled_end', 'reminder_at'].includes(field)
                     ? (value[field] || '').slice(0, 16)
                     : String(value[field] ?? ''),
             ]),
@@ -685,7 +763,7 @@ export function initTaskDetail(root) {
                 !!editConflict || creationState(editForm).pending;
             root.querySelector('[data-task-edit-open]').disabled = false;
             root.querySelector('[data-task-estimate]').textContent = task.estimated_minutes
-                ? `${task.estimated_minutes} minutes`
+                ? `${task.estimated_minutes} ${t('minutes')}`
                 : 'Not estimated';
             if (editDeepLinkPending) {
                 editDeepLinkPending = false;
@@ -695,7 +773,7 @@ export function initTaskDetail(root) {
             note = noteResponse.payload.data;
             root.querySelector('[data-task-name]').textContent = task.name;
             root.querySelector('[data-task-meta]').textContent =
-                `${task.status.replace(/([a-z])([A-Z])/g, '$1 $2')} · Importance ${task.importance}/5${task.deadline ? ` · Due ${task.deadline}` : ''}`;
+                `${statusLabel(task.status)} · Importance ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}`;
             root.querySelector('[data-task-description]').textContent = task.description || '—';
             root.querySelector('[data-task-result]').textContent = task.expected_result || '—';
             root.querySelector('[data-task-criteria]').textContent =
@@ -707,7 +785,7 @@ export function initTaskDetail(root) {
             root.querySelector('[data-task-week]').textContent = selected
                 ? '✓ Selected this week'
                 : 'Select for this week';
-            transition.textContent = task.status === 'Done' ? 'Reopen' : 'Complete';
+            transition.textContent = task.status === 'Done' ? t('Reopen') : t('Complete');
             const list = root.querySelector('[data-task-checklist]');
             root.querySelector('[data-task-checklist-count]').textContent =
                 `${checklist.filter((item) => item.checked).length} / ${checklist.length}`;
@@ -789,7 +867,7 @@ export function initTaskDetail(root) {
                 : null;
         for (const field of ['start_date', 'deadline'])
             if (field in input) input[field] = input[field] || null;
-        for (const field of ['scheduled_start', 'scheduled_end'])
+        for (const field of ['scheduled_start', 'scheduled_end', 'reminder_at'])
             if (field in input)
                 input[field] = input[field] ? new Date(`${input[field]}Z`).toISOString() : null;
         if (input.status === 'Done') delete input.status;

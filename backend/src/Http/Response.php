@@ -14,7 +14,8 @@ final readonly class Response
         public array $headers = [],
         public string $body = '',
         public ?Closure $stream = null,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, mixed> $payload @param array<string, string> $headers */
     public static function json(array $payload, int $status = 200, array $headers = []): self

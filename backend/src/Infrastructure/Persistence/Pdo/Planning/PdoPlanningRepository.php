@@ -20,11 +20,13 @@ final readonly class PdoPlanningRepository
         'area' => ['name', 'description', 'position'],
         'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'status', 'deadline', 'position', 'completed_at'],
         'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'status', 'deadline', 'position', 'completed_at'],
-        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'completed_at'],
+        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'estimated_minutes', 'position', 'completed_at'],
         'checklist' => ['task_id', 'title', 'checked', 'position', 'checked_at'],
     ];
 
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function lockOwner(int $userId): void
     {

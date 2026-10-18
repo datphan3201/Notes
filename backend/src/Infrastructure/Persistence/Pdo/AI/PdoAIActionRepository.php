@@ -8,7 +8,9 @@ use PDO;
 
 final readonly class PdoAIActionRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function consented(int $userId): bool
     {

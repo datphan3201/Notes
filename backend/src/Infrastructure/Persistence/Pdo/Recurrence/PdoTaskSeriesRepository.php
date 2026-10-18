@@ -16,7 +16,9 @@ final readonly class PdoTaskSeriesRepository
         'paused_at', 'last_error_code',
     ];
 
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array

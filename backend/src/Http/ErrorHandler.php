@@ -10,7 +10,9 @@ use Throwable;
 
 final readonly class ErrorHandler
 {
-    public function __construct(private LoggerInterface $logger, private bool $debug) {}
+    public function __construct(private LoggerInterface $logger, private bool $debug)
+    {
+    }
 
     public function render(Throwable $exception, Request $request, string $requestId): Response
     {

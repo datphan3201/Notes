@@ -244,3 +244,78 @@ body:has(.workspace-dialog[open]) {
         flex: 0 0 120px;
     }
 }
+
+/* Existing workspace controls, with compact Task actions and discoverable settings. */
+.settings-navigation {
+    width: 100%;
+}
+.settings-navigation > summary {
+    cursor: pointer;
+}
+.settings-navigation[open] > summary {
+    margin-bottom: 0.35rem;
+}
+.password-visibility {
+    align-self: flex-start;
+}
+.notes-sort {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.notes-view-menu {
+    position: relative;
+}
+.notes-view-menu .view-switch {
+    padding: 0.5rem;
+}
+.task-completion-button {
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--accent, #087f8c);
+    cursor: pointer;
+}
+.task-completion-button[aria-pressed='true'] {
+    background: #d1fae5;
+    color: #065f46;
+}
+.planning-list-item > .action-row {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+@media (max-width: 600px) {
+    .notes-toolbar {
+        flex-wrap: wrap;
+    }
+    .notes-sort select {
+        max-width: 12rem;
+    }
+}
+
+html[data-personal-background='true'] body {
+    background: var(--personal-background);
+}
+html[data-personal-background='true'] .app-body::before {
+    background-image: none;
+}
+
+.reminder-menu {
+    position: relative;
+}
+.reminder-menu [data-reminders-list] {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 20;
+    min-width: 16rem;
+    max-height: 20rem;
+    overflow: auto;
+}
+.reminder-menu [data-reminders-list] a {
+    display: block;
+    padding: 0.5rem;
+}

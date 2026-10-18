@@ -9,7 +9,9 @@ use InvalidArgumentException;
 final readonly class Config
 {
     /** @param array<string, mixed> $values */
-    public function __construct(private array $values) {}
+    public function __construct(private array $values)
+    {
+    }
 
     public function string(string $key): string
     {

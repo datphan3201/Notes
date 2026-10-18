@@ -2,11 +2,11 @@
 
 ## Deferred extensions
 
-- Monthly or completion-relative recurring Tasks.
+- Completion-relative recurring Tasks. Monthly/yearly schedules are approved in the 2026-10-19 feedback extension.
 - Time estimates, actual time entries, timer UI, and time analytics.
 - Habit streaks and richer trend analytics.
-- Deadline/Habit/Milestone reminders and delivery channels.
-- Email verification and password recovery.
+- Habit/Milestone reminders and general delivery infrastructure. One-time Task reminders are approved.
+- Email verification. Password recovery is approved.
 - Offline/PWA access and synchronization.
 - Public deployment/containerization unless separately requested.
 - AI Modify/Delete permissions, additional providers, and larger autonomous actions.

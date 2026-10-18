@@ -316,3 +316,23 @@ The user selects context and requested capability, previews what will be sent, a
 ## Responsive/accessibility requirements
 
 Support 360×800, 768×1024, and 1440×900 without significant horizontal overflow. Use minimum 44px touch targets where practical, visible focus, semantic headings/landmarks, labeled controls, `aria-live` for async status, and reduced-motion preferences. Do not convey status using color alone. Preserve literal user text; do not render Note/description HTML.
+
+## Approved feedback delivery — 2026-10-19
+
+Settings groups Profile, Appearance, Security and Notifications. Appearance has
+a direct account-persisted light/dark action in the top bar, private JPEG/PNG/WebP
+background upload, optional RGB background and en/vi language selection.
+Biography stays private to the account. Note preferences move to Notes without
+changing Note autosave/recovery or existing per-note controls.
+Task and Goal capture share description/date/priority/estimate/recurrence fields.
+Native date/time pickers include Today/Tomorrow/Next-week presets. Task rows have
+a circular completion/reopen control, versioned importance toggle, Edit deep link,
+reversible weekly selection and confirmed archive (never destructive delete).
+Completed work is available immediately in Completed and after 24h in History;
+unfinished work at least three local calendar dates overdue is in History. The
+source rows are retained. Details and existing completion acknowledgements remain.
+Localization applies only to predefined interface copy. User names, Task names,
+Notes, descriptions and other owned content are never translated. Static views
+share a Vietnamese catalog with browser modules; language defaults to English.
+The initial catalog covers static views and core Task/Settings controls; full
+translation of all dynamic help, validation and summary copy needs a later audit.

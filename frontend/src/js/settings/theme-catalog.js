@@ -46,7 +46,14 @@ export function applyAppearance(preferences) {
     root.dataset.theme = preferences.theme || 'light';
     root.dataset.fontSize = preferences.note_font_size;
     root.style.setProperty('--font-size-note', `${preferences.note_font_size}px`);
-    root.style.setProperty('--theme-scene', `url("${theme.image}")`);
+    root.style.setProperty(
+        '--theme-scene',
+        preferences.background_color
+            ? 'none'
+            : `url("${preferences.background_url || theme.image}")`,
+    );
+    root.style.setProperty('--personal-background', preferences.background_color || 'transparent');
+    root.dataset.personalBackground = String(!!preferences.background_color);
     for (const [key, attribute] of [
         ['show_background', 'showBackground'],
         ['show_illustrations', 'showIllustrations'],

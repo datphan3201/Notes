@@ -33,7 +33,8 @@ final readonly class PlanningService
         private Clock $clock,
         private PdoActivityRepository $activities,
         private PdoTaskSeriesRepository $series,
-    ) {}
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(string $type, int $userId): array
@@ -659,7 +660,8 @@ final readonly class PlanningService
         foreach ($rows['milestones'] as $row) {
             $milestones[(string) $row['id']] = [...$this->serialize($row), 'tasks' => [], 'recurring_tasks' => [], 'prerequisites' => [], 'completion_locked' => false];
         }
-        $direct = []; $recurring = [];
+        $direct = [];
+        $recurring = [];
         foreach ($rows['tasks'] as $row) {
             $task = $this->serialize($row);
             if ($row['milestone_id'] !== null) {
@@ -672,7 +674,8 @@ final readonly class PlanningService
             }
         }
         foreach ($rows['prerequisites'] as $row) {
-            $dependent = (string) $row['dependent_id']; unset($row['dependent_id']);
+            $dependent = (string) $row['dependent_id'];
+            unset($row['dependent_id']);
             $milestones[$dependent]['prerequisites'][] = $this->serialize($row);
             if ($row['status'] !== MilestoneStatus::Completed->value) {
                 $milestones[$dependent]['completion_locked'] = true;
@@ -806,7 +809,7 @@ final readonly class PlanningService
             'area' => ['name', 'description', 'position'],
             'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -843,6 +846,7 @@ final readonly class PlanningService
                 'start_date' => $this->date($input, 'start_date'),
                 'scheduled_start' => $this->dateTime($input, 'scheduled_start'),
                 'scheduled_end' => $this->dateTime($input, 'scheduled_end'),
+                'reminder_at' => $this->dateTime($input, 'reminder_at'),
                 'estimated_minutes' => !isset($input['estimated_minutes']) ? null : $this->integer($input, 'estimated_minutes', 1, 1440),
                 'completed_at' => null,
             ];
@@ -859,7 +863,7 @@ final readonly class PlanningService
             'area' => ['name', 'description', 'position'],
             'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -874,7 +878,7 @@ final readonly class PlanningService
                 'position' => $this->integer($input, $field, 0, PHP_INT_MAX),
                 'estimated_minutes' => $value === null ? null : $this->integer($input, $field, 1, 1440),
                 'deadline', 'start_date' => $this->date($input, $field),
-                'scheduled_start', 'scheduled_end' => $this->dateTime($input, $field),
+                'scheduled_start', 'scheduled_end', 'reminder_at' => $this->dateTime($input, $field),
                 'goal_id', 'milestone_id' => $this->nullableUuid($input, $field),
                 'tag_ids' => $this->tagIds($value),
                 'status' => $this->nonTerminalStatus($type, $value),
@@ -883,6 +887,9 @@ final readonly class PlanningService
         }
 
         if ($type === 'task') {
+            if (array_key_exists('reminder_at', $changes)) {
+                $changes['reminder_sent_at'] = null;
+            }
             $this->validateDates($changes);
         }
 
@@ -1077,7 +1084,7 @@ final readonly class PlanningService
             $row['checked'] = (bool) $row['checked'];
         }
 
-        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end'] as $field) {
+        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at'] as $field) {
             if (array_key_exists($field, $row)) {
                 $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
             }

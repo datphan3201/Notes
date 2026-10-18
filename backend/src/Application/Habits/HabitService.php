@@ -26,7 +26,8 @@ final readonly class HabitService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array

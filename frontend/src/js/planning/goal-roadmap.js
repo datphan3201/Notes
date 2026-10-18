@@ -1,3 +1,4 @@
+import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { get, patch, post } from '../lib/http.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { transitionEntity } from './transitions.js';
@@ -478,7 +479,20 @@ export function initGoalDetail(root) {
         draftMilestone = milestoneId;
         writeForm(
             milestoneTaskForm,
-            milestoneTaskDrafts.get(milestoneId) || { name: '', completion_criteria: '' },
+            milestoneTaskDrafts.get(milestoneId) || {
+                name: '',
+                completion_criteria: '',
+                description: '',
+                start_date: '',
+                deadline: '',
+                estimated_minutes: '',
+                importance: '3',
+                reminder_at: '',
+                repeat_frequency: '',
+                repeat_interval: '1',
+                repeat_end: '',
+                repeat_days: '',
+            },
         );
         switchTabs(
             '[data-milestone-task-tab]',
@@ -494,6 +508,7 @@ export function initGoalDetail(root) {
             milestoneTaskDrafts.set(draftMilestone, {
                 name: milestoneTaskForm.elements.name.value,
                 completion_criteria: milestoneTaskForm.elements.completion_criteria.value,
+                ...Object.fromEntries(new FormData(milestoneTaskForm)),
             });
     });
     find('[data-roadmap-back]').addEventListener('click', () => {
@@ -610,9 +625,10 @@ export function initGoalDetail(root) {
                     parent === 'goal'
                         ? data.direct_tasks.length
                         : data.milestones.find((item) => item.id === parentId).tasks.length;
-                await post('/api/v1/tasks', {
+                await createCapturedTask(fields, {
                     name: fields.get('name'),
                     completion_criteria: fields.get('completion_criteria') || '',
+                    ...taskCaptureValues(fields),
                     goal_id: parent === 'goal' ? id : null,
                     milestone_id: parent === 'milestone' ? parentId : null,
                     position: taskCount,

@@ -199,7 +199,9 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
             document.removeEventListener('pointerdown', markInteracted, true);
             document.removeEventListener('keydown', markInteracted, true);
             if (bootstrap.walkthrough?.dismissed !== false || interacted || sessionEnded) return;
-            const hashTarget = location.hash && document.getElementById(location.hash.slice(1));
+            const hashTarget = location.hash
+                ? document.getElementById(location.hash.slice(1))
+                : null;
             if (hashTarget?.closest('[data-workspace-dialog]')) return;
             if (new RecoveryStore({ userId: bootstrap.user.id }).read()) return;
             open();

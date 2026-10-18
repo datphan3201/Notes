@@ -14,5 +14,7 @@ final readonly class UserRecord
         public ?string $emailVerifiedAt,
         public ?string $avatarPath,
         public int $authVersion,
-    ) {}
+        public string $biography = '',
+    ) {
+    }
 }

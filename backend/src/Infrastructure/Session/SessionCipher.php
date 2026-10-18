@@ -11,7 +11,9 @@ final readonly class SessionCipher
 {
     private const VERSION = "\x01";
 
-    private function __construct(private string $key) {}
+    private function __construct(private string $key)
+    {
+    }
 
     public static function fromEncodedKey(?string $encoded): self
     {

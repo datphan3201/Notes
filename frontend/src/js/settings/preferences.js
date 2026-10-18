@@ -1,5 +1,6 @@
+import { t } from '../lib/i18n.js';
 import { referenceDecoration } from './reference-decoration.js';
-import { patch } from '../lib/http';
+import { patch, upload, remove, get } from '../lib/http';
 import { applyAppearance, visualThemes } from './theme-catalog.js';
 import { guardWorkspaceLeave } from '../lib/workspace-ui.js';
 
@@ -84,7 +85,7 @@ export function initPreferences(root) {
     const change = (key, value) => {
         preferences[key] = value;
         render();
-        status.textContent = 'Saving…';
+        status.textContent = t('Saving…');
         const queued = queue.find((item) => item.key === key);
         if (queued) queued.value = value;
         else queue.push({ key, value });
@@ -145,6 +146,62 @@ export function initPreferences(root) {
     quote.addEventListener('input', () => {
         status.textContent =
             quote.value === serverPreferences.custom_quote ? 'Saved' : 'Unsaved quote';
+    });
+    root.querySelector('[data-background-color-form]').addEventListener('submit', (event) => {
+        event.preventDefault();
+        change('background_color', new FormData(event.currentTarget).get('background_color'));
+    });
+    root.querySelector('[data-reset-background]').addEventListener('click', async () => {
+        try {
+            await remove('/api/v1/preferences/background');
+            preferences.background_url = serverPreferences.background_url = '';
+            window.notesBootstrap.preferences.background_url = '';
+            change('background_color', '');
+        } catch (error) {
+            status.textContent = error.message;
+        }
+    });
+    root.querySelector('[data-background-upload]').addEventListener('change', async (event) => {
+        const input = event.currentTarget;
+        const file = input.files?.[0];
+        if (!file) return;
+        input.disabled = true;
+        const data = new FormData();
+        data.append('background', file);
+        status.textContent = 'Uploading background…';
+        try {
+            await upload('/api/v1/preferences/background', data);
+            const saved = (await get('/api/v1/preferences')).payload.data;
+            Object.assign(preferences, saved);
+            Object.assign(serverPreferences, saved);
+            Object.assign(window.notesBootstrap.preferences, saved);
+            render();
+            status.textContent = 'Background saved';
+        } catch (error) {
+            status.textContent = error.message;
+        } finally {
+            input.value = '';
+            input.disabled = false;
+        }
+    });
+    root.querySelector('[data-interface-locale]').addEventListener('change', async (event) => {
+        if (quote.value !== serverPreferences.custom_quote) {
+            window.alert(t('Save your quote before changing language.'));
+            event.currentTarget.value = preferences.locale;
+            return;
+        }
+        const input = event.currentTarget;
+        input.disabled = true;
+        try {
+            await new Promise((resolve, reject) => {
+                queue.push({ key: 'locale', value: input.value, resolve, reject });
+                pump();
+            });
+            window.setTimeout(() => window.location.reload(), 0);
+        } catch (error) {
+            status.textContent = error.message;
+            input.disabled = false;
+        }
     });
     render();
 }

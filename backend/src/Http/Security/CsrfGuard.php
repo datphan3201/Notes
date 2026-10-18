@@ -10,7 +10,9 @@ use Planner\Infrastructure\Session\SessionManager;
 
 final readonly class CsrfGuard
 {
-    public function __construct(private SessionManager $session, private string $applicationUrl) {}
+    public function __construct(private SessionManager $session, private string $applicationUrl)
+    {
+    }
 
     /** @param array<string, mixed> $input */
     public function assertValid(Request $request, array $input): void

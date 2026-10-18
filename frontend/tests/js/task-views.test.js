@@ -90,3 +90,25 @@ test('today includes an interval crossing midnight, a planned start date, and a 
         false,
     );
 });
+
+test('history uses elapsed completion time and local calendar overdue dates', async () => {
+    const { taskInHistory } = await import('../../src/js/planning/task-views.js');
+    const now = Date.parse('2026-10-19T12:00:00Z');
+    assert.equal(
+        taskInHistory({ status: 'Done', completed_at: '2026-10-18T12:00:00Z' }, '2026-10-19', now),
+        true,
+    );
+    assert.equal(
+        taskInHistory({ status: 'Done', completed_at: '2026-10-18T12:00:01Z' }, '2026-10-19', now),
+        false,
+    );
+    assert.equal(
+        taskInHistory({ status: 'NotStarted', deadline: '2026-10-16' }, '2026-10-19', now),
+        true,
+    );
+    assert.equal(
+        taskInHistory({ status: 'NotStarted', deadline: '2026-10-17' }, '2026-10-19', now),
+        false,
+    );
+    assert.equal(taskInHistory({ status: 'NotStarted', deadline: null }, '2026-10-19', now), false);
+});

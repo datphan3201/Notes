@@ -14,7 +14,8 @@ final class SessionManager
         private readonly PdoSessionHandler $handler,
         private readonly bool $secure,
         private readonly int $lifetimeMinutes,
-    ) {}
+    ) {
+    }
 
     public function start(Request $request): void
     {

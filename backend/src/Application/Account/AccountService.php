@@ -15,7 +15,8 @@ final readonly class AccountService
         private PdoAccountRepository $accounts,
         private TransactionManager $transactions,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     public function updateDisplayName(int $userId, string $displayName): UserRecord
     {
@@ -23,6 +24,18 @@ final readonly class AccountService
             $this->accounts->findById($userId, true) ?? throw new \RuntimeException('Authenticated user disappeared.');
 
             return $this->accounts->updateDisplayName($userId, $displayName, $this->timestamp());
+        });
+    }
+
+    public function updateProfile(int $userId, string $displayName, ?string $biography): UserRecord
+    {
+        return $this->transactions->run(function () use ($userId, $displayName, $biography): UserRecord {
+            $this->accounts->findById($userId, true) ?? throw new \RuntimeException('Authenticated user disappeared.');
+            $this->accounts->updateDisplayName($userId, $displayName, $this->timestamp());
+            if ($biography !== null) {
+                $this->accounts->updateBiography($userId, $biography);
+            }
+            return $this->accounts->findById($userId) ?? throw new \RuntimeException('Authenticated user disappeared.');
         });
     }
 

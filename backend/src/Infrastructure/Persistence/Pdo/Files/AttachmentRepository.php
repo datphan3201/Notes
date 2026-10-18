@@ -10,7 +10,9 @@ use Planner\Domain\Files\InspectedUpload;
 
 final readonly class AttachmentRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<AttachmentRecord> */
     public function listForActiveNote(int $userId, string $noteId): array

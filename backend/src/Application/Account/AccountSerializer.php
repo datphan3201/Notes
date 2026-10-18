@@ -15,6 +15,7 @@ final class AccountSerializer
             'id' => (string) $user->id,
             'email' => $user->email,
             'display_name' => $user->displayName,
+            'biography' => $user->biography,
             'email_verified' => $user->emailVerifiedAt !== null,
             'avatar_url' => $user->avatarPath === null ? null : '/files/avatar',
         ];

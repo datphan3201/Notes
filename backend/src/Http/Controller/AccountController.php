@@ -25,7 +25,8 @@ final readonly class AccountController
         private PdoAccountRepository $repository,
         private SessionManager $session,
         private ViewRenderer $views,
-    ) {}
+    ) {
+    }
 
     public function loginPage(Request $request): Response
     {
@@ -110,8 +111,10 @@ final readonly class AccountController
     public function updateProfile(Request $request): Response
     {
         $user = $this->auth->requireUser();
-        $displayName = $this->validator->profile($request->input());
-        $updated = $this->accounts->updateDisplayName($user->id, $displayName);
+        $input = $request->input();
+        $displayName = $this->validator->profile($input);
+        $biography = array_key_exists('biography', $input) ? $this->validator->biography($input['biography']) : null;
+        $updated = $this->accounts->updateProfile($user->id, $displayName, $biography);
 
         return Response::json(['data' => $this->serializer->user($updated)]);
     }
@@ -159,6 +162,7 @@ final readonly class AccountController
         $page = match ($request->path) {
             '/settings/profile' => ['settings/profile', 'Profile', 'settings.profile'],
             '/settings/preferences' => ['settings/preferences', 'Appearance', 'settings.preferences'],
+            '/settings/notifications' => ['settings/notifications', 'Notifications', 'settings.notifications'],
             '/settings/password' => ['settings/password', 'Change password', 'settings.password'],
             default => throw new \LogicException('Unexpected settings route.'),
         };

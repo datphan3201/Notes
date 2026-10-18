@@ -14,7 +14,9 @@ final class TransactionManager
 
     private bool $rollbackOnly = false;
 
-    public function __construct(private readonly PDO $pdo) {}
+    public function __construct(private readonly PDO $pdo)
+    {
+    }
 
     /** @template T @param callable(PDO): T $operation @return T */
     public function run(callable $operation): mixed

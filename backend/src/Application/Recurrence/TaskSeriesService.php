@@ -29,7 +29,8 @@ final readonly class TaskSeriesService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array
@@ -62,6 +63,16 @@ final readonly class TaskSeriesService
             $this->series->setContributions($userId, $id, $contributionIds);
 
             return $this->serialize($row);
+        });
+    }
+
+    /** @param array<string, mixed> $input @return array<string, mixed> */
+    public function createAndMaterialize(int $userId, array $input): array
+    {
+        return $this->transactions->run(function () use ($userId, $input): array {
+            $created = $this->create($userId, $input);
+            $this->materializeSeries($userId, $created['id']);
+            return $this->show($userId, $created['id']);
         });
     }
 
@@ -223,11 +234,11 @@ final readonly class TaskSeriesService
         $this->keys($input, ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'goal_id', 'milestone_id', 'frequency', 'interval_count', 'weekdays', 'start_date', 'end_date', 'timezone', 'local_time', 'duration_minutes', 'deadline_offset_days', 'checklist', 'tag_ids', 'contribution_goal_ids']);
         $name = $this->text($input['name'] ?? null, 'name', 200, true);
         $frequency = $input['frequency'] ?? null;
-        if (!in_array($frequency, ['daily', 'weekly'], true)) {
+        if (!in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'], true)) {
             throw new ValidationException(['frequency' => ['The frequency is invalid.']]);
         }
         $weekdays = $this->weekdays($input['weekdays'] ?? []);
-        if (($frequency === 'daily' && $weekdays !== []) || ($frequency === 'weekly' && $weekdays === [])) {
+        if (($frequency !== 'weekly' && $weekdays !== []) || ($frequency === 'weekly' && $weekdays === [])) {
             throw new ValidationException(['weekdays' => ['The selected weekdays do not match the frequency.']]);
         }
         $start = $this->requiredDate($input['start_date'] ?? null, 'start_date');
@@ -365,8 +376,14 @@ final readonly class TaskSeriesService
     }
 
     /** @param array<string, mixed> $input */
-    private function version(array $input): int { return $this->integer($input['base_version'] ?? null, 'base_version', 1, PHP_INT_MAX); }
-    private function now(): string { return Timestamp::database($this->clock->now()); }
+    private function version(array $input): int
+    {
+        return $this->integer($input['base_version'] ?? null, 'base_version', 1, PHP_INT_MAX);
+    }
+    private function now(): string
+    {
+        return Timestamp::database($this->clock->now());
+    }
     private function text(mixed $value, string $field, int $max, bool $required): string
     {
         if (!is_string($value)) throw new ValidationException([$field => ['The value must be a string.']]);
@@ -382,7 +399,11 @@ final readonly class TaskSeriesService
     private function timezone(mixed $value): string
     {
         if (!is_string($value)) throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
-        try { new DateTimeZone($value); } catch (\Exception) { throw new ValidationException(['timezone' => ['The time zone is invalid.']]); }
+        try {
+            new DateTimeZone($value);
+        } catch (\Exception) {
+            throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
+        }
         return $value;
     }
     private function requiredDate(mixed $value, string $field): string
@@ -403,33 +424,62 @@ final readonly class TaskSeriesService
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException(['weekdays' => ['The weekday list is invalid.']]);
         foreach ($value as $day) if (!is_int($day) || $day < 1 || $day > 7) throw new ValidationException(['weekdays' => ['The weekday list is invalid.']]);
-        $value = array_values(array_unique($value)); sort($value); return $value;
+        $value = array_values(array_unique($value));
+        sort($value);
+        return $value;
     }
     /** @param list<int> $days */
-    private function weekdayMask(array $days): int { return array_reduce($days, static fn (int $mask, int $day): int => $mask | (1 << ($day - 1)), 0); }
+    private function weekdayMask(array $days): int
+    {
+        return array_reduce($days, static fn (int $mask, int $day): int => $mask | (1 << ($day - 1)), 0);
+    }
     /** @return list<int> */
-    private function maskWeekdays(int $mask): array { $days = []; for ($day = 1; $day <= 7; $day++) if (($mask & (1 << ($day - 1))) !== 0) $days[] = $day; return $days; }
+    private function maskWeekdays(int $mask): array
+    {
+        $days = [];
+        for ($day = 1; $day <= 7; $day++) if (($mask & (1 << ($day - 1))) !== 0) $days[] = $day;
+        return $days;
+    }
     /** @return list<int> */
     private function numericIds(mixed $value, string $field): array
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException([$field => ['The list is invalid.']]);
-        $ids = []; foreach ($value as $id) { if ((!is_int($id) && !is_string($id)) || !ctype_digit((string) $id) || (int) $id < 1) throw new ValidationException([$field => ['The list is invalid.']]); $ids[] = (int) $id; }
-        $ids = array_values(array_unique($ids)); sort($ids); return $ids;
+        $ids = [];
+        foreach ($value as $id) {
+            if ((!is_int($id) && !is_string($id)) || !ctype_digit((string) $id) || (int) $id < 1) throw new ValidationException([$field => ['The list is invalid.']]);
+            $ids[] = (int) $id;
+        }
+        $ids = array_values(array_unique($ids));
+        sort($ids);
+        return $ids;
     }
     /** @return list<string> */
     private function uuidIds(mixed $value, string $field): array
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException([$field => ['The list is invalid.']]);
-        $ids = []; foreach ($value as $id) { $id = $this->nullableUuid($id, $field); if ($id !== null) $ids[] = $id; }
-        $ids = array_values(array_unique($ids)); sort($ids); return $ids;
+        $ids = [];
+        foreach ($value as $id) {
+            $id = $this->nullableUuid($id, $field);
+            if ($id !== null) $ids[] = $id;
+        }
+        $ids = array_values(array_unique($ids));
+        sort($ids);
+        return $ids;
     }
     /** @return list<array{title:string,position:int}> */
     private function checklist(mixed $value): array
     {
         if (!is_array($value) || !array_is_list($value) || count($value) > 100) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]);
-        $items = []; foreach ($value as $position => $item) { if (!is_array($item) || array_diff(array_keys($item), ['title', 'position']) !== []) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]); $items[] = ['title' => $this->text($item['title'] ?? null, 'checklist', 500, true), 'position' => isset($item['position']) ? $this->integer($item['position'], 'position', 0, PHP_INT_MAX) : $position]; }
+        $items = [];
+        foreach ($value as $position => $item) {
+            if (!is_array($item) || array_diff(array_keys($item), ['title', 'position']) !== []) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]);
+            $items[] = ['title' => $this->text($item['title'] ?? null, 'checklist', 500, true), 'position' => isset($item['position']) ? $this->integer($item['position'], 'position', 0, PHP_INT_MAX) : $position];
+        }
         return $items;
     }
     /** @param array<string, mixed> $input @param list<string> $allowed */
-    private function keys(array $input, array $allowed): void { if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]); }
+    private function keys(array $input, array $allowed): void
+    {
+        if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]);
+    }
 }

@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 // Filtering retains server order and clamps the page after a mutation removes
 // its final row. Search never interprets a user's text as a regular expression.
 export function collectionPage(items, { query = '', status = 'all', page = 0, size = 8 } = {}) {
@@ -24,7 +25,7 @@ export function renderPagination(container, result, onPage) {
     const previous = document.createElement('button');
     const next = document.createElement('button');
     const label = document.createElement('span');
-    label.textContent = `Page ${result.page + 1} of ${result.pages}`;
+    label.textContent = `${t('Page')} ${result.page + 1} ${t('of')} ${result.pages}`;
     label.setAttribute('aria-live', 'polite');
     label.setAttribute(
         'aria-label',
@@ -36,13 +37,13 @@ export function renderPagination(container, result, onPage) {
     ]) {
         button.type = 'button';
         button.className = 'button button-quiet';
-        button.textContent = text;
+        button.textContent = t(text);
         button.disabled = disabled;
         button.addEventListener('click', () => {
             onPage(result.page + change);
             const buttons = [...container.querySelectorAll('button')];
             (
-                buttons.find((item) => item.textContent === text && !item.disabled) ||
+                buttons.find((item) => item.textContent === t(text) && !item.disabled) ||
                 buttons.find((item) => !item.disabled)
             )?.focus();
         });

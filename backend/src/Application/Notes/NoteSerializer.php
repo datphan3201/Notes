@@ -10,7 +10,9 @@ use Planner\Support\Timestamp;
 
 final readonly class NoteSerializer
 {
-    public function __construct(private LabelSerializer $labels) {}
+    public function __construct(private LabelSerializer $labels)
+    {
+    }
 
     /** @return array<string, mixed> */
     public function full(NoteRecord $note): array

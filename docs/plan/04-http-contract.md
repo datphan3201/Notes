@@ -124,3 +124,21 @@ Create Task series:
 ```
 
 All field bounds, state transitions, and relationship rules are defined in documents 10–13 and must be converted into endpoint tests before controller implementation.
+
+## Approved feedback account and Task extension — 2026-10-19
+
+- GET/POST /forgot-password and /reset-password provide CSRF-protected recovery.
+- Profile PATCH additionally accepts optional plain-text biography (0–2,000 code
+  points); omission preserves the current biography.
+- Preferences PATCH additionally accepts background_color (empty or #RRGGBB),
+  locale (en/vi), notifications_enabled and email_notifications (booleans).
+  Existing preference fields remain accepted; background_url is read-only.
+- POST /api/v1/preferences/background accepts one multipart background image;
+  DELETE removes it. Both require authentication and CSRF. GET /files/background
+  serves only the authenticated account's image, or 404; no owner ID is accepted.
+- GET /api/v1/reminders lists at most 100 due unsent, active non-Done owned Tasks
+  when notifications are enabled.
+- Tasks accept nullable reminder_at as an explicit UTC timestamp; editing it
+  resets delivery metadata. Delivery metadata is never client-writable.
+- TaskSeries additionally supports monthly/yearly; old daily/weekly inputs retain
+  their semantics. History/Completed are derived browser filters, not statuses.

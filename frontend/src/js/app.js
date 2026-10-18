@@ -1,4 +1,8 @@
 import Alpine from 'alpinejs';
+import { initDeliveryPreferences, initNotePreferences } from './settings/delivery-preferences.js';
+import { initTaskCapturePresets } from './planning/task-capture.js';
+import { initReminders } from './planning/reminders.js';
+import { initPasswordVisibility } from './lib/password-visibility.js';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/500.css';
 import '@fontsource/be-vietnam-pro/600.css';
@@ -22,6 +26,7 @@ import { initNavigation } from './lib/navigation';
 import { initWorkspaceUI } from './lib/workspace-ui';
 import { initWalkthrough } from './help/walkthrough';
 import { applyAppearance } from './settings/theme-catalog';
+import { patch } from './lib/http.js';
 import { decorateReference } from './settings/reference-decoration';
 
 window.Alpine = Alpine;
@@ -63,6 +68,32 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    initPasswordVisibility();
+    const delivery = document.querySelector('[data-notification-settings]');
+    if (delivery) initDeliveryPreferences(delivery);
+    const notePreferences = document.querySelector('[data-note-preferences]');
+    if (notePreferences) initNotePreferences(notePreferences);
+    initReminders();
+    initTaskCapturePresets();
+    document.querySelector('[data-toggle-theme]')?.addEventListener('click', async (event) => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        const preference = document.querySelector(`[data-pref="theme"][data-value="${theme}"]`);
+        if (preference) {
+            preference.click();
+            return;
+        }
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            const response = await patch('/api/v1/preferences', { theme });
+            Object.assign(window.notesBootstrap.preferences, response.payload.data);
+            applyAppearance(response.payload.data);
+        } catch (error) {
+            window.alert(error.message || 'Unable to change appearance.');
+        } finally {
+            button.disabled = false;
+        }
+    });
     decorateReference();
     initNavigation();
     document

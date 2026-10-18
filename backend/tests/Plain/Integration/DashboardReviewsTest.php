@@ -20,7 +20,9 @@ final class DashboardReviewsTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION = []; $_COOKIE = [];
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
         $this->runtime = require dirname(__DIR__, 3).'/bootstrap/http.php';
         $this->pdo = $this->runtime['pdo'];
         self::assertSame('goals_test', $this->pdo->query('SELECT DATABASE()')->fetchColumn());
@@ -29,7 +31,13 @@ final class DashboardReviewsTest extends TestCase
         $this->owner = (new PdoAccountRepository($this->pdo))->insertUser('dashboard@example.test', 'Dashboard Owner', password_hash('correct horse battery staple', PASSWORD_BCRYPT), '2026-09-17 12:00:00.000000')->id;
     }
 
-    protected function tearDown(): void { $this->runtime['session']->close(); session_id(''); $_SESSION = []; $_COOKIE = []; }
+    protected function tearDown(): void
+    {
+        $this->runtime['session']->close();
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
+    }
 
     public function test_activity_grid_uses_unreversed_completion_facts(): void
     {
@@ -157,7 +165,9 @@ final class DashboardReviewsTest extends TestCase
 
     public function test_week_and_review_completion_use_real_denominators_and_saved_snapshots(): void
     {
-        $planning=$this->runtime['planning_service']; $dashboard=$this->runtime['dashboard_service']; $reviews=$this->runtime['review_service'];
+        $planning=$this->runtime['planning_service'];
+        $dashboard=$this->runtime['dashboard_service'];
+        $reviews=$this->runtime['review_service'];
         $today=$this->runtime['clock']->now()->format('Y-m-d');
         self::assertNull($dashboard->dashboard($this->owner,null)['week_summary']['percentage']);
         $one=$planning->create('task',$this->owner,['name'=>'One','deadline'=>$today]);
@@ -165,7 +175,9 @@ final class DashboardReviewsTest extends TestCase
         foreach([$one,$two] as $task)$dashboard->addSelection('task',$this->owner,['id'=>$task['id']]);
         $one=$planning->transition('task',$this->owner,$one['id'],'complete',['base_version'=>$one['version']]);
         $summary=$dashboard->dashboard($this->owner,null)['week_summary'];
-        self::assertSame(2,$summary['total']);self::assertSame(1,$summary['completed']);self::assertSame(50.0,$summary['percentage']);
+        self::assertSame(2,$summary['total']);
+        self::assertSame(1,$summary['completed']);
+        self::assertSame(50.0,$summary['percentage']);
         $review=$reviews->create($this->owner,['kind'=>'Weekly','date'=>$today]);
         self::assertSame(['total'=>2,'completed'=>1],$review['snapshot']['task_summary']);
         $snapshot=$review['snapshot'];
@@ -184,14 +196,22 @@ final class DashboardReviewsTest extends TestCase
         $span=$planning->create('task',$this->owner,['name'=>'Cross midnight','scheduled_start'=>$yesterday.'T23:00:00.000000Z','scheduled_end'=>$today.'T01:00:00.000000Z']);
         $planning->create('task',$this->owner,['name'=>'Old interval','scheduled_start'=>$yesterday.'T01:00:00.000000Z','scheduled_end'=>$yesterday.'T02:00:00.000000Z']);
         $ids=array_column($this->runtime['dashboard_service']->dashboard($this->owner,null)['today_tasks'],'id');
-        self::assertCount(2,$ids);self::assertContains($start['id'],$ids);self::assertContains($span['id'],$ids);
+        self::assertCount(2,$ids);
+        self::assertContains($start['id'],$ids);
+        self::assertContains($span['id'],$ids);
     }
 
     private function wipeTargetDatabase(): void
     {
         $tables = $this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'goals_test' AND table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);
         $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-        try { foreach ($tables as $table) { if (!is_string($table) || preg_match('/^[a-z0-9_]+$/', $table) !== 1) throw new RuntimeException('Unsafe test table name.'); $this->pdo->exec("DROP TABLE `$table`"); } }
-        finally { $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1'); }
+        try {
+            foreach ($tables as $table) {
+                if (!is_string($table) || preg_match('/^[a-z0-9_]+$/', $table) !== 1) throw new RuntimeException('Unsafe test table name.');
+                $this->pdo->exec("DROP TABLE `$table`");
+            }
+        } finally {
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+        }
     }
 }

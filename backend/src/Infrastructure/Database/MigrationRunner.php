@@ -14,7 +14,8 @@ final readonly class MigrationRunner
         private PDO $pdo,
         private string $directory,
         private string $expectedDatabase,
-    ) {}
+    ) {
+    }
 
     /** @return list<array{name: string, status: string, checksum: string}> */
     public function status(): array

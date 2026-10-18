@@ -25,7 +25,8 @@ final readonly class NoteService
         private TransactionManager $transactions,
         private NoteSerializer $serializer,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array{id:string,title:string,content:string,color?:string}  $input

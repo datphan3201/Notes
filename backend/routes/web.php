@@ -71,17 +71,28 @@ return static function (
     DashboardController $dashboard,
     ReviewController $reviews,
     AIActionController $ai,
- ) use ($planningRoutes): array {
+    \Planner\Http\Controller\PasswordResetController $passwordReset,
+    \Planner\Http\Controller\ReminderController $reminders,
+) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
     return [
+        new Route(['GET'], '/api/v1/reminders', 'api.reminders.index', $handler([$reminders, 'index']), auth: true),
         new Route(['GET'], '/up', 'up', static fn (Request $request, array $parameters): Response => Response::json(['data' => ['status' => 'ok']])),
+        new Route(['GET'], '/forgot-password', 'password.forgot', $handler([$passwordReset, 'page'])),
+        new Route(['POST'], '/forgot-password', 'password.forgot.store', $handler([$passwordReset, 'request']), csrf: true),
+        new Route(['GET'], '/reset-password', 'password.reset', $handler([$passwordReset, 'page'])),
+        new Route(['POST'], '/reset-password', 'password.reset.store', $handler([$passwordReset, 'reset']), csrf: true),
         new Route(['GET'], '/login', 'login', $handler([$account, 'loginPage'])),
         new Route(['POST'], '/login', 'login.store', $handler([$account, 'login']), csrf: true),
         new Route(['GET'], '/register', 'register', $handler([$account, 'registerPage'])),
         new Route(['POST'], '/register', 'register.store', $handler([$account, 'register']), csrf: true, rateLimit: 'registration'),
         new Route(['GET'], '/', 'notes.index', $handler([$account, 'notesShell']), auth: true),
         new Route(['POST'], '/logout', 'logout', $handler([$account, 'logout']), auth: true, csrf: true),
+        new Route(['POST'], '/api/v1/preferences/background', 'api.background.store', $handler([$profileFiles, 'replaceBackground']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/preferences/background', 'api.background.destroy', $handler([$profileFiles, 'removeBackground']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/files/background', 'background.show', $handler([$profileFiles, 'background']), auth: true),
+        new Route(['GET'], '/settings/notifications', 'settings.notifications', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/profile', 'settings.profile', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/preferences', 'settings.preferences', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/password', 'settings.password', $handler([$account, 'settingsPage']), auth: true),

@@ -66,3 +66,17 @@ Occurrences appear in Today/weekly planning, Activity, and Reviews. They are exc
 ## Failure/replay behavior
 
 Materialization locks the series row. Duplicate insert is treated as an idempotent success after verifying existing ownership/series/date. A malformed series stops that series, records a safe operational error, and does not prevent other series from processing. The command exits nonzero if any series fails.
+
+## Approved Task recurrence extension — 2026-10-19
+
+Monthly and yearly frequencies are added with interval_count 1–52. Monthly uses
+the start day, clamped to the target month's last day; yearly uses the start
+month/day, clamped for February 29. Every occurrence is recalculated from the
+original anchor, so a February clamp does not drift March to the 28th. Only
+weekly schedules carry weekdays. Weekdays is a weekly Mon–Fri preset; custom
+weekly schedules select weekday numbers and an interval. Existing cursor,
+owner locks, idempotent occurrence identity, DST and progress exclusions remain.
+HTTP creation calls createAndMaterialize atomically to make initial occurrences
+visible; direct service create remains available without materialization. GET
+requests still never materialize. Reminder times on a recurring series are not
+inferred from a single timestamp; set a reminder on an individual occurrence.

@@ -30,7 +30,8 @@ final readonly class AIActionService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @param array<string,mixed> $input @return array<string,mixed> */
     public function generate(int $userId, array $input): array
@@ -45,7 +46,10 @@ final readonly class AIActionService
         $encoded = json_encode($contexts['objects'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         if (strlen($encoded) > 102_400) throw new ValidationException(['context' => ['The selected context exceeds 100 KiB.']]);
         if (!$this->actions->consented($userId)) {
-            $this->transactions->run(function () use ($userId): void { $this->planningRepository->lockOwner($userId); $this->actions->consent($userId, $this->now()); });
+            $this->transactions->run(function () use ($userId): void {
+                $this->planningRepository->lockOwner($userId);
+                $this->actions->consent($userId, $this->now());
+            });
         }
         // The external request is deliberately outside a database transaction.
         $generated = $this->provider->generate(new GenerationRequest($capability, $instruction, $contexts['objects']));
@@ -74,7 +78,8 @@ final readonly class AIActionService
     public function apply(int $userId, string $id, array $input): array
     {
         $this->keys($input, ['base_version','proposal_hash']);
-        $version = $input['base_version'] ?? null; $hash = $input['proposal_hash'] ?? null;
+        $version = $input['base_version'] ?? null;
+        $hash = $input['proposal_hash'] ?? null;
         if (!is_int($version) || $version < 1 || !is_string($hash) || preg_match('/^[0-9a-f]{64}$/D', $hash) !== 1) throw new ValidationException(['approval' => ['The approval details are invalid.']]);
         return $this->transactions->run(function () use ($userId, $id, $version, $hash): array {
             $this->planningRepository->lockOwner($userId);
@@ -100,10 +105,12 @@ final readonly class AIActionService
 
     public function reject(int $userId, string $id, array $input): array
     {
-        $this->keys($input, ['base_version']); $version = $input['base_version'] ?? null;
+        $this->keys($input, ['base_version']);
+        $version = $input['base_version'] ?? null;
         if (!is_int($version) || $version < 1) throw new ValidationException(['base_version' => ['The version is invalid.']]);
         return $this->transactions->run(function () use ($userId, $id, $version): array {
-            $this->planningRepository->lockOwner($userId); $current = $this->owned($userId, $id, true);
+            $this->planningRepository->lockOwner($userId);
+            $current = $this->owned($userId, $id, true);
             if ($current['status'] === 'Rejected') return $this->serialize($current);
             if ($current['status'] !== 'Proposed') throw new ValidationException(['status' => ['The proposal cannot be rejected.']]);
             if ((int) $current['version'] !== $version) throw new HttpException(409, 'VERSION_CONFLICT', 'The proposal has changed.');
@@ -115,10 +122,12 @@ final readonly class AIActionService
     private function loadContext(int $userId, mixed $requested): array
     {
         if (!is_array($requested) || !array_is_list($requested) || count($requested) > 50) throw new ValidationException(['context' => ['The selected context is invalid.']]);
-        $objects = []; $versions = [];
+        $objects = [];
+        $versions = [];
         foreach ($requested as $item) {
             if (!is_array($item) || array_diff(array_keys($item), ['type','id']) !== [] || !is_string($item['type'] ?? null) || !is_string($item['id'] ?? null)) throw new ValidationException(['context' => ['The selected context is invalid.']]);
-            $type = $item['type']; $id = $item['id'];
+            $type = $item['type'];
+            $id = $item['id'];
             if (in_array($type, ['area','goal','milestone','task'], true)) $data = $this->planning->show($type, $userId, $id);
             elseif ($type === 'review') $data = $this->reviews->show($userId, $id);
             else throw new ValidationException(['context' => ['This context type is not allowed.']]);
@@ -217,7 +226,8 @@ final readonly class AIActionService
     }
     private function assertReferenceVersion(int $userId, array $reference): void
     {
-        $type=$reference['type']; $id=$reference['id'];
+        $type=$reference['type'];
+        $id=$reference['id'];
         $current = in_array($type,['area','goal','milestone','task'],true) ? $this->planning->show($type,$userId,$id) : ($type==='review' ? $this->reviews->show($userId,$id) : null);
         if ($current===null || (int)$current['version'] !== (int)$reference['version']) throw new HttpException(409,'AI_CONTEXT_STALE','The selected AI context has changed; generate a new proposal.');
     }
@@ -244,8 +254,26 @@ final readonly class AIActionService
     {
         return $type."\0".$id;
     }
-    private function owned(int $userId,string $id,bool $lock=false): array { return $this->actions->find($userId,$id,$lock)??throw new HttpException(404,'NOT_FOUND','The requested resource was not found.'); }
-    private function serialize(array $row): array { $row['version']=(int)$row['version']; $row['proposal']=json_decode((string)$row['proposal'],true,512,JSON_THROW_ON_ERROR); $row['context_versions']=json_decode((string)$row['context_versions'],true,512,JSON_THROW_ON_ERROR); $row['created_ids']=$row['created_ids']===null?null:json_decode((string)$row['created_ids'],true,512,JSON_THROW_ON_ERROR); foreach(['created_at','updated_at','expires_at'] as $f)$row[$f]=Timestamp::api((string)$row[$f]); unset($row['user_id']); return $row; }
-    private function keys(array $input,array $allowed): void { if(array_diff(array_keys($input),$allowed)!==[])throw new ValidationException(['_unknown'=>['The request contains an unsupported field.']]); }
-    private function now(): string { return Timestamp::database($this->clock->now()); }
+    private function owned(int $userId,string $id,bool $lock=false): array
+    {
+        return $this->actions->find($userId,$id,$lock)??throw new HttpException(404,'NOT_FOUND','The requested resource was not found.');
+    }
+    private function serialize(array $row): array
+    {
+        $row['version']=(int)$row['version'];
+        $row['proposal']=json_decode((string)$row['proposal'],true,512,JSON_THROW_ON_ERROR);
+        $row['context_versions']=json_decode((string)$row['context_versions'],true,512,JSON_THROW_ON_ERROR);
+        $row['created_ids']=$row['created_ids']===null?null:json_decode((string)$row['created_ids'],true,512,JSON_THROW_ON_ERROR);
+        foreach(['created_at','updated_at','expires_at'] as $f)$row[$f]=Timestamp::api((string)$row[$f]);
+        unset($row['user_id']);
+        return $row;
+    }
+    private function keys(array $input,array $allowed): void
+    {
+        if(array_diff(array_keys($input),$allowed)!==[])throw new ValidationException(['_unknown'=>['The request contains an unsupported field.']]);
+    }
+    private function now(): string
+    {
+        return Timestamp::database($this->clock->now());
+    }
 }

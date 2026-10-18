@@ -22,5 +22,6 @@ final readonly class Route
         public bool $auth = false,
         public bool $csrf = false,
         public ?string $rateLimit = null,
-    ) {}
+    ) {
+    }
 }

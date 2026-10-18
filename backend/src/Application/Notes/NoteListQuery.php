@@ -14,7 +14,8 @@ final readonly class NoteListQuery
     public function __construct(
         private PdoNoteRepository $notes,
         private PdoTagRepository $tags,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  list<int>  $labelIds

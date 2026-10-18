@@ -22,7 +22,8 @@ final readonly class DashboardService
         private PdoPlanningRepository $planning,
         private TransactionManager $transactions,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return array<string, mixed> */
     public function dashboard(int $userId, ?string $month): array
@@ -129,7 +130,10 @@ final readonly class DashboardService
         if (!is_array($input['ids'] ?? null) || !array_is_list($input['ids'])) throw new ValidationException(['ids' => ['The ordering is invalid.']]);
         $ids = array_map(fn (mixed $id): string => $this->uuid($id), $input['ids']);
         $current = array_map(static fn (array $row): string => (string) $row['id'], $this->selections($type, $userId));
-        $expected = $current; $provided = $ids; sort($expected); sort($provided);
+        $expected = $current;
+        $provided = $ids;
+        sort($expected);
+        sort($provided);
         if ($expected !== $provided || count($ids) !== count(array_unique($ids))) throw new ValidationException(['ids' => ['Provide exactly the active selection set.']]);
         $this->transactions->run(function () use ($type, $userId, $ids): void {
             $this->planning->lockOwner($userId);
@@ -138,10 +142,39 @@ final readonly class DashboardService
         return $this->selections($type, $userId);
     }
 
-    private function weekStart(int $userId): string { return $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->modify('monday this week')->format('Y-m-d'); }
-    private function assertType(string $type): void { if (!in_array($type, ['task', 'milestone'], true)) throw new HttpException(404, 'NOT_FOUND', 'The selection type was not found.'); }
-    private function uuid(mixed $value): string { if (!is_string($value) || preg_match('/^[0-9a-f-]{36}$/D', $value) !== 1) throw new ValidationException(['id' => ['The UUID is invalid.']]); return $value; }
-    private function keys(array $input, array $allowed): void { if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]); }
-    private function serializeRows(array $rows): array { return array_map(function (array $row): array { unset($row['user_id']); foreach (['version', 'position', 'importance', 'selection_position', 'estimated_minutes'] as $field) if (isset($row[$field])) $row[$field] = (int) $row[$field]; foreach (['scheduled_start', 'scheduled_end'] as $field) if (array_key_exists($field, $row)) $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]); return $row; }, $rows); }
-    private function habitRows(array $rows): array { return array_map(function (array $row): array { $row['completed_days'] = (int) $row['completed_days']; $row['target_frequency'] = (int) $row['target_frequency']; unset($row['user_id']); return $row; }, $rows); }
+    private function weekStart(int $userId): string
+    {
+        return $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->modify('monday this week')->format('Y-m-d');
+    }
+    private function assertType(string $type): void
+    {
+        if (!in_array($type, ['task', 'milestone'], true)) throw new HttpException(404, 'NOT_FOUND', 'The selection type was not found.');
+    }
+    private function uuid(mixed $value): string
+    {
+        if (!is_string($value) || preg_match('/^[0-9a-f-]{36}$/D', $value) !== 1) throw new ValidationException(['id' => ['The UUID is invalid.']]);
+        return $value;
+    }
+    private function keys(array $input, array $allowed): void
+    {
+        if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]);
+    }
+    private function serializeRows(array $rows): array
+    {
+        return array_map(function (array $row): array {
+            unset($row['user_id']);
+            foreach (['version', 'position', 'importance', 'selection_position', 'estimated_minutes'] as $field) if (isset($row[$field])) $row[$field] = (int) $row[$field];
+            foreach (['scheduled_start', 'scheduled_end'] as $field) if (array_key_exists($field, $row)) $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
+            return $row;
+        }, $rows);
+    }
+    private function habitRows(array $rows): array
+    {
+        return array_map(function (array $row): array {
+            $row['completed_days'] = (int) $row['completed_days'];
+            $row['target_frequency'] = (int) $row['target_frequency'];
+            unset($row['user_id']);
+            return $row;
+        }, $rows);
+    }
 }

@@ -20,7 +20,9 @@ final class HabitsRecurrenceTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION = []; $_COOKIE = [];
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
         $this->runtime = require dirname(__DIR__, 3).'/bootstrap/http.php';
         $this->pdo = $this->runtime['pdo'];
         self::assertSame('goals_test', $this->pdo->query('SELECT DATABASE()')->fetchColumn());
@@ -33,7 +35,10 @@ final class HabitsRecurrenceTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->runtime['session']->close(); session_id(''); $_SESSION = []; $_COOKIE = [];
+        $this->runtime['session']->close();
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
     }
 
     public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone(): void
