@@ -6,13 +6,17 @@ $navigation = [
     ['Habits', '/habits', 'habits', ['planning.habits']],
     ['Notes', '/', 'notes', ['notes.index']],
     ['Reviews', '/reviews', 'reviews', ['planning.reviews']],
-    ['AI assistant', '/ai', 'ai', ['planning.ai']],
+    ['Teamwork', '/teamwork', 'profile', ['planning.teamwork']],
 ];
+if (($user['role'] ?? 'user') === 'admin') {
+    $navigation[] = ['Administration', '/admin', 'lock', ['admin.index']];
+}
 $accountNavigation = [
     ['Profile', '/settings/profile', 'profile', ['settings.profile']],
     ['Appearance', '/settings/preferences', 'appearance', ['settings.preferences']],
     ['Security', '/settings/password', 'lock', ['settings.password']],
     ['Notifications', '/settings/notifications', 'calendar', ['settings.notifications']],
+    ['Task history', '/settings/history', 'tasks', ['settings.history']],
 ];
 ?>
 <!doctype html>
@@ -70,7 +74,7 @@ $accountNavigation = [
                         <span class="avatar avatar-small" data-avatar-fallback><?= $view->e($view->initial($user['display_name'])) ?></span>
                         <span class="sidebar-user-copy">
                             <strong><?= $view->e($user['display_name']) ?></strong>
-                            <small><?= $view->e($view->t($view->e($view->t($view->e($view->t($user['email_verified'] ? 'Personal account' : 'Email not verified')))))) ?></small>
+                            <small><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Email not verified')) ?></small>
                         </span>
                     </a>
                     <form action="/logout" method="post" data-leave-guard-form>
@@ -93,7 +97,19 @@ $accountNavigation = [
                         <span><?= $view->e($view->t($title ?? 'Planner')) ?></span>
                     </div>
                     <div class="topbar-actions">
-                        <details class="reminder-menu"><summary class="button button-quiet" data-reminders-open><?= $view->e($view->t('Reminders')) ?></summary><div class="planning-panel" data-reminders-list role="status"><?= $view->e($view->t('Open to check reminders.')) ?></div></details>
+                        <div class="notification-menu" data-notifications>
+                            <button class="icon-button notification-bell" type="button" data-notifications-toggle aria-expanded="false" aria-controls="notification-panel" aria-label="<?= $view->e($view->t('Notifications')) ?>" title="<?= $view->e($view->t('Notifications')) ?>">
+                                <svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                <span class="notification-count" data-notifications-count hidden></span>
+                            </button>
+                            <section class="notification-panel planning-panel" id="notification-panel" data-notifications-panel hidden aria-label="<?= $view->e($view->t('Notifications')) ?>">
+                                <header class="section-heading">
+                                    <h2><?= $view->e($view->t('Notifications')) ?></h2>
+                                    <button class="text-button" type="button" data-notifications-read-all><?= $view->e($view->t('Mark all read')) ?></button>
+                                </header>
+                                <div class="notification-list" data-notifications-list role="status"></div>
+                            </section>
+                        </div>
                         <button class="icon-button" type="button" data-open-walkthrough aria-label="<?= $view->e($view->t('Open walkthrough')) ?>" aria-haspopup="dialog" title="<?= $view->e($view->t('Help and walkthrough')) ?>">?</button>
                         <button class="topbar-settings icon-button" type="button" data-toggle-theme aria-label="<?= $view->e($view->t('Toggle light and dark')) ?>" title="<?= $view->e($view->t('Toggle light and dark')) ?>">
                             <svg class="ui-icon" aria-hidden="true"><use href="#icon-appearance"/></svg>
@@ -111,6 +127,25 @@ $accountNavigation = [
                 </main>
             </div>
         </div>
+        <button class="assistant-launcher" type="button" data-assistant-open aria-haspopup="dialog" aria-label="<?= $view->e($view->t('Ask the AI assistant')) ?>" title="<?= $view->e($view->t('AI assistant')) ?>">
+            <svg class="ui-icon" aria-hidden="true"><use href="#icon-ai"/></svg>
+        </button>
+        <dialog class="workspace-dialog assistant-dialog" data-assistant-dialog aria-labelledby="assistant-title">
+            <header class="section-heading">
+                <h2 id="assistant-title"><?= $view->e($view->t('AI assistant')) ?></h2>
+                <button class="icon-button" type="button" data-assistant-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+            </header>
+            <p class="subtle-copy" data-assistant-status><?= $view->e($view->t('Ask anything about your goals, tasks and habits. The assistant only reads a summary and never changes your data.')) ?></p>
+            <div class="assistant-log" data-assistant-log aria-live="polite"></div>
+            <form class="assistant-form" data-assistant-form>
+                <label class="sr-only" for="assistant-question"><?= $view->e($view->t('Your question')) ?></label>
+                <textarea id="assistant-question" name="question" rows="2" maxlength="2000" required placeholder="<?= $view->e($view->t('What should I focus on this week?')) ?>"></textarea>
+                <div class="action-row">
+                    <a class="button button-quiet" href="/ai" data-leave-guard><?= $view->e($view->t('Request a planning proposal')) ?></a>
+                    <button class="button button-primary" type="submit"><?= $view->e($view->t('Ask')) ?></button>
+                </div>
+            </form>
+        </dialog>
         <div class="toast-region" data-toast-region aria-live="polite"></div>
         <?php require __DIR__.'/walkthrough.php'; ?>
     </body>

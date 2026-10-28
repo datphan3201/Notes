@@ -1,5 +1,5 @@
 <div class="workspace" data-notes-workspace>
-    <header class="workspace-header">
+    <header class="workspace-header scene-header">
         <div class="workspace-heading">
             <div>
                 <h1><?= $view->e($view->t('Notes')) ?></h1>
@@ -60,6 +60,11 @@
                 <span><?= $view->e($view->t('All notes')) ?></span>
                 <span class="filter-count" data-note-total>0</span>
             </button>
+            <button class="filter-all" type="button" data-filter-shared aria-pressed="false">
+                <span class="filter-icon" aria-hidden="true">⇄</span>
+                <span><?= $view->e($view->t('Shared with me')) ?></span>
+                <span class="filter-count" data-shared-total>0</span>
+            </button>
             <div class="filter-divider"></div>
             <div class="filter-heading">
                 <span><?= $view->e($view->t('Tags')) ?></span>
@@ -81,11 +86,20 @@
                     <input id="notes-search" type="search" placeholder="Search titles and content…" autocomplete="off" data-notes-search>
                     <button class="search-clear icon-button is-hidden" type="button" data-clear-search aria-label="Clear search">×</button>
                 </div>
-                <div class="view-switch" role="group" aria-label="<?= $view->e($view->t('Note layout')) ?>">
-                    <button class="view-button is-active" type="button" data-view="grid" aria-label="Show grid view" aria-pressed="true">▦</button>
-                    <button class="view-button" type="button" data-view="list" aria-label="Show list view" aria-pressed="false">☷</button>
-                </div>
+                <button class="view-button" type="button" data-view-toggle aria-label="<?= $view->e($view->t('View')) ?>" title="<?= $view->e($view->t('View')) ?>">▦</button>
+                <label class="note-sort">
+                    <span class="sr-only"><?= $view->e($view->t('Sort by')) ?></span>
+                    <select data-note-sort aria-label="<?= $view->e($view->t('Sort by')) ?>">
+                        <option value="updated:desc"><?= $view->e($view->t('Date modified · newest')) ?></option>
+                        <option value="updated:asc"><?= $view->e($view->t('Date modified · oldest')) ?></option>
+                        <option value="title:asc"><?= $view->e($view->t('Title · A to Z')) ?></option>
+                        <option value="title:desc"><?= $view->e($view->t('Title · Z to A')) ?></option>
+                        <option value="created:desc"><?= $view->e($view->t('Date created · newest')) ?></option>
+                        <option value="created:asc"><?= $view->e($view->t('Date created · oldest')) ?></option>
+                    </select>
+                </label>
             </div>
+            <section class="shared-invitations is-hidden" data-share-invitations aria-label="<?= $view->e($view->t('Share invitations')) ?>"></section>
             <div class="active-filter-row is-hidden" data-active-filter-row>
                 <span class="active-filter-copy" data-active-filter-copy></span>
                 <button class="text-button" type="button" data-clear-filters><?= $view->e($view->t('Clear filters')) ?></button>
@@ -136,7 +150,17 @@
                     <button type="button" class="color-swatch color-mint" data-color="mint" aria-label="Light green" aria-pressed="false"></button>
                     <button type="button" class="color-swatch color-sky" data-color="sky" aria-label="Light blue" aria-pressed="false"></button>
                     <button type="button" class="color-swatch color-rose" data-color="rose" aria-label="Light pink" aria-pressed="false"></button>
+                    <label class="color-swatch color-custom" title="<?= $view->e($view->t('Any RGB color')) ?>">
+                        <span class="sr-only"><?= $view->e($view->t('Any RGB color')) ?></span>
+                        <input type="color" value="#fde68a" data-color-custom>
+                    </label>
                 </div>
+                <label class="note-background-picker is-hidden" data-note-background-field>
+                    <span class="control-label"><?= $view->e($view->t('Background image')) ?></span>
+                    <select data-note-background>
+                        <option value=""><?= $view->e($view->t('None')) ?></option>
+                    </select>
+                </label>
             </div>
             <div class="editor-actions">
                 <button class="button button-quiet" type="button" data-editor-pin aria-pressed="false">
@@ -147,7 +171,12 @@
                     <span aria-hidden="true">⌑</span>
                     <?= $view->e($view->t('Tags')) ?>
                 </button>
+                <button class="button button-quiet is-hidden" type="button" data-editor-share>
+                    <span aria-hidden="true">⇄</span>
+                    <?= $view->e($view->t('Share')) ?>
+                </button>
                 <button class="button button-danger-quiet is-hidden" type="button" data-editor-delete><?= $view->e($view->t('Delete')) ?></button>
+                <button class="button button-primary" type="button" data-editor-save><?= $view->e($view->t('Save')) ?></button>
             </div>
         </div>
         <div class="editor-label-popover is-hidden" data-editor-label-popover>
@@ -247,3 +276,41 @@
         <button class="button button-primary" type="button" data-recovery-accept><?= $view->e($view->t('Recover draft')) ?></button>
     </div>
 </section>
+<dialog class="workspace-dialog share-dialog" data-share-dialog aria-labelledby="share-dialog-title">
+    <header class="section-heading">
+        <h2 id="share-dialog-title"><?= $view->e($view->t('Share note')) ?></h2>
+        <button class="icon-button" type="button" data-share-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+    </header>
+    <p class="subtle-copy"><?= $view->e($view->t('People you invite see this note after they accept. You can change their permission or remove them at any time.')) ?></p>
+    <form class="share-form" data-share-form>
+        <label class="sr-only" for="share-email"><?= $view->e($view->t('Email')) ?></label>
+        <input id="share-email" name="email" type="email" required list="share-contacts" placeholder="<?= $view->e($view->t('Email address')) ?>">
+        <select name="permission" aria-label="<?= $view->e($view->t('Permission')) ?>">
+            <option value="view"><?= $view->e($view->t('Can view')) ?></option>
+            <option value="edit"><?= $view->e($view->t('Can view and edit')) ?></option>
+        </select>
+        <button class="button button-primary" type="submit"><?= $view->e($view->t('Invite')) ?></button>
+    </form>
+    <datalist id="share-contacts" data-share-contacts></datalist>
+    <div class="share-list" data-share-list aria-live="polite"></div>
+    <p class="save-status" data-share-status role="status"></p>
+</dialog>
+<dialog class="workspace-dialog shared-note-dialog" data-shared-note-dialog aria-labelledby="shared-note-title">
+    <header class="section-heading">
+        <div>
+            <p class="eyebrow" data-shared-note-owner></p>
+            <h2 id="shared-note-title"><?= $view->e($view->t('Shared note')) ?></h2>
+        </div>
+        <button class="icon-button" type="button" data-shared-note-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+    </header>
+    <form class="stack-form" data-shared-note-form>
+        <label><?= $view->e($view->t('Title')) ?> <input name="title" maxlength="200" required></label>
+        <label><?= $view->e($view->t('Content')) ?> <textarea name="content" rows="12" maxlength="50000" required></textarea></label>
+        <div class="action-row">
+            <button class="button button-primary" type="submit" data-shared-note-save><?= $view->e($view->t('Save')) ?></button>
+            <button class="button button-quiet" type="button" data-shared-note-leave><?= $view->e($view->t('Leave shared note')) ?></button>
+            <button class="button button-danger-quiet" type="button" data-shared-note-report><?= $view->e($view->t('Report')) ?></button>
+        </div>
+    </form>
+    <p class="save-status" data-shared-note-status role="status"></p>
+</dialog>

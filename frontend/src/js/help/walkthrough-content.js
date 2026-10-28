@@ -7,7 +7,7 @@ export const walkthroughSteps = [
         title: 'Make Planner your own',
         intro: 'Capture ideas, choose meaningful work, and reflect on what changed.',
         instructions: [
-            'Use the sidebar to open Dashboard, Goals, Tasks, Habits, Notes, Reviews, or AI assistant. On a small screen, open the navigation menu first.',
+            'Use the sidebar to open Dashboard, Goals, Tasks, Habits, Notes, Reviews, or Teamwork. The round AI button in the bottom-right corner opens the assistant chat. On a small screen, open the navigation menu first.',
             'This guide shows one topic at a time. Use Next and Back, or choose any topic from the menu.',
             'Skip, Close, or Finish stops the automatic introduction for your account. The ? beside Appearance always opens this guide again.',
         ],
@@ -40,7 +40,7 @@ export const walkthroughSteps = [
         title: 'Choose your work for this week',
         intro: 'This week shows the Tasks and Milestones you deliberately selected.',
         instructions: [
-            'On a Task, choose Select for this week. In a Goal’s focused Milestone, choose Select for week.',
+            'On a Task row, choose the pin icon (Select for week). In a Goal’s focused Milestone, choose Select for week.',
             'Return to Dashboard → This week to see those selections together.',
             'Open a Task directly, or open a Milestone in its parent Goal. A weekly selection is a focus choice; it does not mark work complete.',
         ],
@@ -179,7 +179,7 @@ export const walkthroughSteps = [
     },
     {
         id: 'habits',
-        group: 'Habits and recurring Tasks',
+        group: 'Repeating Tasks',
         title: 'Record a Habit check-in',
         intro: 'Habits tracks repeated practice without turning it into finite Goal progress.',
         instructions: [
@@ -190,18 +190,18 @@ export const walkthroughSteps = [
     },
     {
         id: 'recurrence',
-        group: 'Habits and recurring Tasks',
+        group: 'Repeating Tasks',
         title: 'Create work on a repeating schedule',
-        intro: 'Recurring Tasks generates separate Task occurrences from a series.',
+        intro: 'The repeat button on a new Task creates separate Task occurrences from a series.',
         instructions: [
-            'Choose Recurring tasks → New recurring task. Set a name, start date, daily/weekly frequency, and interval; weekly schedules also select weekdays.',
-            'Expand End date and time for optional limits or a local time. Preview the upcoming dates before creating the series.',
-            'Occurrences are Tasks you can complete individually. Daily and weekly schedules are supported; the current browser flow does not offer monthly recurrence.',
+            'In New task, choose the repeat icon: Daily, Weekdays, Weekly, Monthly, Yearly, or Custom (every N days, weeks, months or years, with weekdays for weekly).',
+            'Custom also accepts an optional end date. The calendar icon sets the due date and the alarm icon sets a reminder; on an existing Task row the repeat icon starts a series after that Task.',
+            'Occurrences are Tasks you can complete individually. Manage every series in Tasks → Repeating.',
         ],
     },
     {
         id: 'series-state',
-        group: 'Habits and recurring Tasks',
+        group: 'Repeating Tasks',
         title: 'Pause, resume, or end a series',
         intro: 'Series state controls future recurring work.',
         instructions: [
@@ -229,7 +229,7 @@ export const walkthroughSteps = [
         intro: 'Search, Tags, and layout controls help you recognize information quickly.',
         instructions: [
             'Search titles and content, filter by Tags, and clear filters to return to All notes. Use the page controls for larger libraries.',
-            'Switch Grid/List with the layout buttons. Note colors and pinned markers help distinguish items.',
+            'The View button switches Grid/List and Sort by orders Notes by title, date modified or date created. Any RGB color, an attached image background, and pinned markers help distinguish items.',
             'Open Manage tags to create, rename, or delete Tags. In a Note, use Tags to assign up to 20; on mobile, Manage tags remains available in the Notes header.',
         ],
     },
@@ -292,7 +292,7 @@ export const walkthroughSteps = [
         id: 'ai-request',
         group: 'AI assistant',
         title: 'Ask AI for a proposal',
-        intro: 'AI can help plan, suggest work, review an item, or draft reflections when the server’s provider is available.',
+        intro: 'Open the round AI button to ask questions about your Planner, or choose Request a planning proposal to have AI plan, suggest work, review an item, or draft reflections when the server’s provider is available.',
         instructions: [
             'Select a capability: Help me plan, Suggest goals/milestones/tasks, Review a goal/task, Break a goal into a plan, or Draft review reflections.',
             'Select the Areas, Goals, Milestones, Tasks, or Reviews that may be sent as context. Read the selected-context summary and enter your instructions.',
@@ -327,8 +327,8 @@ export const walkthroughSteps = [
         title: 'Choose a comfortable workspace',
         intro: 'The top-right Appearance icon opens these settings. Account → Appearance is also available while viewing account settings.',
         instructions: [
-            'Themes offers Mountain journey, Forest, Ocean, Pisces · Song Ngư, and Starry sky, independently of Light/Dark. All scenery is bundled; there is no theme upload.',
-            'Scenery and quote toggles page background, illustrations, and the quote independently. Enter a private quote and Save quote, or Restore preset. Note preferences holds text size, default color, and Grid/List.',
+            'Themes offers Mountain journey, Forest, Ocean, Pisces · Song Ngư, and Starry sky, independently of Light/Dark. The + tile adds your own private background image or an RGB color.',
+            'Scenery and quote toggles page background, illustrations, and the quote independently. Enter a private quote and Save quote, or Restore preset. Note text size and default color live in Notes.',
             'Theme and toggle changes save as selected; custom quotes require Save quote. Read save status. A new default Note color does not recolor existing Notes.',
         ],
     },

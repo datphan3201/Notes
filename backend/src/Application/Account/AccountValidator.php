@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Planner\Application\Account;
 
-use DateTimeZone;
 use Egulias\EmailValidator\EmailValidator;
 use Egulias\EmailValidator\Validation\RFCValidation;
 use Planner\Http\Validation\InputValidator;
 use Planner\Http\ValidationException;
+use Planner\Domain\Notes\NoteSnapshot;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 
 final readonly class AccountValidator
 {
@@ -77,6 +78,7 @@ final readonly class AccountValidator
         $this->inputValidator->rejectUnknown($input, [
             'theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone',
             'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'notifications_enabled', 'email_notifications', 'locale',
+            'history_completed_hours', 'history_overdue_days', 'history_retention_days',
         ]);
 
         if ($input === []) {
@@ -87,7 +89,6 @@ final readonly class AccountValidator
             'locale' => ['en', 'vi'],
             'theme' => ['light', 'dark'],
             'note_font_size' => [14, 16, 18],
-            'default_note_color' => ['neutral', 'lemon', 'mint', 'sky', 'rose'],
             'notes_view' => ['grid', 'list'],
             'visual_theme' => ['mountain', 'forest', 'ocean', 'pisces', 'stars'],
         ];
@@ -114,6 +115,34 @@ final readonly class AccountValidator
             }
         }
 
+        if (array_key_exists('default_note_color', $input)) {
+            $color = NoteSnapshot::normalizeColor($input['default_note_color']);
+            if ($color === null) {
+                $errors['default_note_color'][] = 'The value is invalid.';
+            } else {
+                $changes['default_note_color'] = $color;
+            }
+        }
+
+        foreach (['history_completed_hours' => [1, 720], 'history_overdue_days' => [1, 365]] as $field => [$min, $max]) {
+            if (array_key_exists($field, $input)) {
+                if (! is_int($input[$field]) || $input[$field] < $min || $input[$field] > $max) {
+                    $errors[$field][] = "Enter a whole number from $min to $max.";
+                } else {
+                    $changes[$field] = $input[$field];
+                }
+            }
+        }
+
+        if (array_key_exists('history_retention_days', $input)) {
+            $value = $input['history_retention_days'];
+            if ($value !== null && (! is_int($value) || $value < 1 || $value > 3650)) {
+                $errors['history_retention_days'][] = 'Enter a whole number from 1 to 3650, or keep history.';
+            } else {
+                $changes['history_retention_days'] = $value;
+            }
+        }
+
         if (array_key_exists('background_color', $input)) {
             if (!is_string($input['background_color']) || ($input['background_color'] !== '' && preg_match('/^#[a-fA-F0-9]{6}$/D', $input['background_color']) !== 1)) {
                 $errors['background_color'][] = 'Choose a valid RGB color.';
@@ -136,9 +165,9 @@ final readonly class AccountValidator
         }
 
         if (array_key_exists('timezone', $input)) {
-            $timezone = is_string($input['timezone']) ? $input['timezone'] : '';
+            $timezone = is_string($input['timezone']) ? TimeZoneNames::canonical($input['timezone']) : null;
 
-            if (! in_array($timezone, DateTimeZone::listIdentifiers(), true) && $timezone !== 'UTC') {
+            if ($timezone === null) {
                 $errors['timezone'][] = 'The time zone is invalid.';
             } else {
                 $changes['timezone'] = $timezone;

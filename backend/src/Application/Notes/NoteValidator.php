@@ -34,10 +34,10 @@ final readonly class NoteValidator
         $result = ['id' => $id, 'title' => $title, 'content' => $content];
 
         if (array_key_exists('color', $input)) {
-            if (! is_string($input['color']) || ! in_array($input['color'], NoteSnapshot::COLORS, true)) {
+            if (NoteSnapshot::normalizeColor($input['color']) === null) {
                 $errors['color'][] = 'The note color is invalid.';
             } else {
-                $result['color'] = $input['color'];
+                $result['color'] = NoteSnapshot::normalizeColor($input['color']);
             }
         }
 
@@ -58,7 +58,7 @@ final readonly class NoteValidator
         $title = TextNormalizer::title(is_string($input['title'] ?? null) ? $input['title'] : '');
         $content = TextNormalizer::body(is_string($input['content'] ?? null) ? $input['content'] : '');
         $baseVersion = $this->positiveInteger($input['base_version'] ?? null);
-        $color = is_string($input['color'] ?? null) ? $input['color'] : '';
+        $color = NoteSnapshot::normalizeColor($input['color'] ?? null) ?? '';
         $pinned = $this->boolean($input['is_pinned'] ?? null);
         $labelIds = $this->labelIds($input['label_ids'] ?? null);
         $errors = [];
@@ -69,7 +69,7 @@ final readonly class NoteValidator
             $errors['base_version'][] = 'The base version is invalid.';
         }
 
-        if (! in_array($color, NoteSnapshot::COLORS, true)) {
+        if ($color === '') {
             $errors['color'][] = 'The note color is invalid.';
         }
 
@@ -108,13 +108,15 @@ final readonly class NoteValidator
 
     /**
      * @param  array<string, string|list<string>>  $query
-     * @return array{q:string,label_ids:list<int>,page:int}
+     * @return array{q:string,label_ids:list<int>,page:int,sort:string,direction:string}
      */
     public function listing(array $query): array
     {
         /** @var array<string, mixed> $values */
         $values = $query;
-        $this->input->rejectUnknown($values, ['q', 'label_ids', 'page']);
+        $this->input->rejectUnknown($values, ['q', 'label_ids', 'page', 'sort', 'direction']);
+        $sort = $query['sort'] ?? 'updated';
+        $direction = $query['direction'] ?? 'desc';
         $qValue = $query['q'] ?? '';
         $q = TextNormalizer::nfc(trim(is_string($qValue) ? $qValue : ''));
         $pageValue = $query['page'] ?? '1';
@@ -135,12 +137,48 @@ final readonly class NoteValidator
             $errors['label_ids'][] = 'The tag list is invalid.';
         }
 
+        if (! in_array($sort, ['updated', 'created', 'title'], true)) {
+            $errors['sort'][] = 'The sort order is invalid.';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $errors['direction'][] = 'The sort direction is invalid.';
+        }
+
         $this->input->throwIfErrors($errors);
 
-        return ['q' => $q, 'label_ids' => $labelIds, 'page' => $page];
+        return ['q' => $q, 'label_ids' => $labelIds, 'page' => $page, 'sort' => (string) $sort, 'direction' => (string) $direction];
     }
 
-    /** @param array<string, list<string>> $errors */
+    /** @param array<string, mixed> $input @param list<string> $allowed */
+    public function rejectUnknown(array $input, array $allowed): void
+    {
+        $this->input->rejectUnknown($input, $allowed);
+    }
+
+    /**
+     * Shared-note recipients with edit permission may change title and content only.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array{base_version:int,title:string,content:string}
+     */
+    public function sharedEdit(array $input): array
+    {
+        $this->input->rejectUnknown($input, ['base_version', 'title', 'content']);
+        $title = TextNormalizer::title(is_string($input['title'] ?? null) ? $input['title'] : '');
+        $content = TextNormalizer::body(is_string($input['content'] ?? null) ? $input['content'] : '');
+        $baseVersion = $this->positiveInteger($input['base_version'] ?? null);
+        $errors = [];
+        $this->validateTitle($title, $errors);
+        $this->validateBody($content, $errors);
+        if ($baseVersion === null) {
+            $errors['base_version'][] = 'The base version is invalid.';
+        }
+        $this->input->throwIfErrors($errors);
+
+        return ['base_version' => (int) $baseVersion, 'title' => $title, 'content' => $content];
+    }
+
     private function validateTitle(string $title, array &$errors): void
     {
         if ($title === '' || TextNormalizer::codePoints($title) > 200) {

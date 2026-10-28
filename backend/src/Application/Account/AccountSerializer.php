@@ -8,7 +8,7 @@ use Planner\Domain\Account\UserRecord;
 
 final class AccountSerializer
 {
-    /** @return array{id: string, email: string, display_name: string, email_verified: bool, avatar_url: ?string} */
+    /** @return array{id: string, email: string, display_name: string, biography: string, email_verified: bool, avatar_url: ?string, role: string, two_factor_method: ?string} */
     public function user(UserRecord $user): array
     {
         return [
@@ -18,6 +18,8 @@ final class AccountSerializer
             'biography' => $user->biography,
             'email_verified' => $user->emailVerifiedAt !== null,
             'avatar_url' => $user->avatarPath === null ? null : '/files/avatar',
+            'role' => $user->role,
+            'two_factor_method' => $user->twoFactorMethod,
         ];
     }
 }

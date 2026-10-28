@@ -1,0 +1,755 @@
+/* Full feedback extension: notifications, assistant, schedule pickers, Task
+   rows, Teamwork, administration, yearly activity, sharing and note styling. */
+
+/* Notes: any RGB color and an optional background image. */
+[data-note-color='custom'] {
+    --note-surface: var(--note-custom-color, var(--surface));
+}
+.note-card.has-background {
+    background-size: cover;
+    background-position: center;
+}
+.note-card.has-background .note-card-title,
+.note-card.has-background .note-card-preview {
+    padding: 2px 6px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    border-radius: 6px;
+}
+.color-swatch.color-custom {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f87171);
+    cursor: pointer;
+}
+.color-swatch.color-custom input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.color-swatch.color-custom.is-selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.note-background-picker {
+    display: grid;
+    gap: 4px;
+}
+.note-sort select,
+.view-button[data-view-toggle] {
+    min-height: 40px;
+}
+.note-card-meta {
+    color: var(--muted);
+}
+.shared-invitations,
+.share-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.share-invitation,
+.share-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+}
+.share-invitation > span,
+.share-row > span {
+    flex: 1 1 200px;
+}
+.share-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block: 12px;
+}
+.share-form input {
+    flex: 1 1 220px;
+}
+.shared-note-dialog {
+    width: min(720px, calc(100vw - 32px));
+    background: var(--note-surface, var(--surface));
+}
+
+/* Notification bell. */
+.notification-menu {
+    position: relative;
+}
+.notification-bell {
+    position: relative;
+}
+.notification-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    padding: 0 4px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    background: var(--danger);
+    border-radius: 9px;
+}
+.notification-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    width: min(360px, calc(100vw - 32px));
+    max-height: min(70vh, 520px);
+    overflow: auto;
+    box-shadow: var(--shadow);
+}
+.notification-list {
+    display: grid;
+    gap: 6px;
+}
+.notification-item {
+    display: grid;
+    gap: 2px;
+    padding: 8px 10px;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: var(--radius-control);
+}
+.notification-item:hover,
+.notification-item:focus-visible {
+    background: var(--surface-soft);
+}
+.notification-item.is-unread {
+    background: var(--accent-soft);
+}
+.notification-item small {
+    color: var(--muted);
+}
+
+/* Floating AI assistant. */
+.assistant-launcher {
+    position: fixed;
+    right: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 0;
+    border-radius: 50%;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+}
+.assistant-launcher:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+}
+.assistant-dialog {
+    width: min(520px, calc(100vw - 32px));
+}
+.assistant-log {
+    display: grid;
+    gap: 8px;
+    max-height: 50vh;
+    margin-block: 12px;
+    overflow: auto;
+}
+.assistant-message {
+    max-width: 85%;
+    margin: 0;
+    padding: 8px 12px;
+    white-space: pre-wrap;
+    border-radius: 12px;
+}
+.assistant-message.is-user {
+    justify-self: end;
+    color: var(--on-accent);
+    background: var(--accent);
+}
+.assistant-message.is-assistant {
+    background: var(--surface-soft);
+}
+.assistant-message.is-error {
+    color: var(--danger);
+    background: var(--danger-soft);
+}
+.assistant-form {
+    display: grid;
+    gap: 8px;
+}
+
+/* Due date / reminder / repeat pickers. */
+.schedule-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block: 8px;
+}
+.schedule-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--control-border, var(--border));
+    border-radius: var(--radius-control);
+    cursor: pointer;
+}
+.schedule-trigger.is-set {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.schedule-trigger span:empty {
+    display: none;
+}
+.schedule-menu {
+    position: fixed;
+    z-index: 1000;
+    display: grid;
+    min-width: 260px;
+    max-width: calc(100vw - 16px);
+    padding: 6px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow);
+}
+.schedule-option {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 44px;
+    padding: 0 12px;
+    color: inherit;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.schedule-option small {
+    color: var(--muted);
+}
+.schedule-option:hover,
+.schedule-option:focus-visible {
+    background: var(--surface-soft);
+}
+.schedule-option.is-primary {
+    justify-content: center;
+    color: var(--on-accent);
+    background: var(--accent);
+}
+.schedule-option.is-danger {
+    color: var(--danger);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+}
+.schedule-calendar-heading {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 6px 10px;
+}
+.schedule-calendar-heading strong {
+    font-size: 1.1rem;
+}
+.schedule-calendar-heading .schedule-option {
+    min-height: 36px;
+}
+.schedule-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 2.4rem);
+    gap: 2px;
+    justify-content: center;
+}
+.schedule-weekday {
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 2rem;
+    text-align: center;
+}
+.schedule-calendar-grid button {
+    height: 2.4rem;
+    color: inherit;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.schedule-calendar-grid button.is-outside {
+    color: var(--muted);
+    opacity: 0.6;
+}
+.schedule-calendar-grid button.is-today {
+    font-weight: 700;
+}
+.schedule-calendar-grid button.is-selected {
+    color: var(--on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.schedule-time {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+}
+.schedule-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+.schedule-footer .schedule-option {
+    justify-content: center;
+    border: 1px solid var(--border);
+}
+.schedule-footer .schedule-option.is-primary {
+    border-color: var(--accent);
+}
+.schedule-custom {
+    display: grid;
+    gap: 10px;
+    padding: 6px;
+}
+.schedule-custom label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.schedule-custom input[type='number'] {
+    width: 4.5rem;
+}
+.schedule-custom .weekday-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 0;
+}
+
+/* Task rows and the Completed list. */
+.task-row-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.task-row-icon {
+    font-size: 1rem;
+}
+.task-row-icon.is-important,
+.icon-button.is-important {
+    color: #d97706;
+}
+.task-row.is-done a {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+.task-completed-section {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+}
+.task-completed-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Appearance: the "+ Add" tile beside the preset themes. */
+.theme-option-add {
+    display: grid;
+    place-items: center;
+    min-height: 126px;
+    border-style: dashed;
+}
+.theme-add-symbol {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+/* Settings: history rules and authenticator key. */
+.history-rules {
+    display: grid;
+    gap: 12px;
+    max-width: 560px;
+}
+.history-rules label {
+    display: grid;
+    gap: 4px;
+}
+.secret-key {
+    display: inline-block;
+    padding: 6px 10px;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    background: var(--surface-soft);
+    border-radius: var(--radius-control);
+    user-select: all;
+}
+
+/* Yearly activity with the year list on the right. */
+.activity-year-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+}
+/* Year spinner: newer year, the selected year, older year between two arrows. */
+.activity-year-list {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+}
+.activity-year-list [data-activity-years] {
+    display: grid;
+    grid-template-rows: repeat(3, 32px);
+    gap: 2px;
+    overflow: hidden;
+    mask-image: linear-gradient(rgb(0 0 0 / 45%), black 35%, black 65%, rgb(0 0 0 / 45%));
+}
+.activity-year {
+    min-width: 72px;
+    padding: 0 8px;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    font-size: var(--font-size-meta);
+    cursor: pointer;
+}
+.activity-year:hover:not(:disabled) {
+    color: var(--text);
+}
+.activity-year:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+.activity-year.is-selected {
+    color: var(--on-accent);
+    background: var(--accent);
+    font-size: var(--font-size-body);
+    font-weight: 700;
+    cursor: default;
+}
+[data-activity-years].is-sliding-up {
+    animation: activity-year-slide-up 180ms ease-out;
+}
+[data-activity-years].is-sliding-down {
+    animation: activity-year-slide-down 180ms ease-out;
+}
+@keyframes activity-year-slide-up {
+    from {
+        transform: translateY(-34px);
+    }
+}
+@keyframes activity-year-slide-down {
+    from {
+        transform: translateY(34px);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-activity-years].is-sliding-up,
+    [data-activity-years].is-sliding-down {
+        animation: none;
+    }
+}
+
+/* Teamwork. */
+.team-search {
+    margin-bottom: 16px;
+}
+/* One row of goals; the arrows slide a whole page (4, 2 or 1 cards) at a time. */
+.team-carousel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.team-carousel-arrow {
+    width: 40px;
+    height: 40px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--control-border, var(--border));
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.team-carousel-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+.team-carousel-viewport {
+    overflow: hidden;
+    padding: 4px;
+}
+.team-carousel-track {
+    --team-carousel-gap: 12px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(
+        (100% - (var(--team-per-page, 4) - 1) * var(--team-carousel-gap)) / var(--team-per-page, 4)
+    );
+    gap: var(--team-carousel-gap);
+    transition: transform 260ms ease;
+}
+.team-carousel-track > p {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .team-carousel-track {
+        transition: none;
+    }
+}
+.team-goal-card {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    min-width: 0;
+    padding: 12px;
+    color: var(--text);
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+}
+.team-goal-card.is-selected {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+.progress-track {
+    height: 6px;
+    overflow: hidden;
+    background: var(--surface-soft);
+    border-radius: 3px;
+}
+.progress-track span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+.avatar-stack {
+    display: flex;
+}
+.avatar-stack .avatar + .avatar {
+    margin-left: -6px;
+}
+/* Goal details | Members on top, Tasks (wider) | Team chat underneath. */
+.team-layout {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+}
+.team-layout > .planning-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+}
+.team-goal-panel,
+.team-members-panel {
+    grid-column: span 3;
+}
+.team-tasks-panel {
+    grid-column: span 4;
+}
+.team-chat {
+    grid-column: span 2;
+}
+.team-layout .section-heading {
+    margin-bottom: 8px;
+}
+.team-layout h3 {
+    margin: 0;
+}
+.team-members-panel,
+.team-goal-panel {
+    height: 280px;
+}
+.team-tasks-panel,
+.team-chat {
+    height: 520px;
+}
+/* Long lists scroll inside their panel instead of stretching the page. */
+.team-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+}
+@media (max-width: 900px) {
+    .team-layout > .planning-panel {
+        grid-column: 1 / -1;
+        height: auto;
+    }
+    .team-scroll {
+        max-height: 360px;
+    }
+}
+.team-member-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1.4fr) minmax(50px, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+.team-member-name {
+    display: grid;
+    min-width: 0;
+}
+.team-member-name strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.team-member-row select {
+    min-height: 36px;
+    padding-block: 4px;
+}
+.team-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.team-task-copy {
+    display: grid;
+    flex: 1 1 auto;
+    gap: 2px;
+    min-width: 0;
+}
+.team-task-copy p {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.team-task-meta {
+    color: var(--muted);
+}
+.team-task.is-done .team-task-copy strong {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+.team-task-importance {
+    color: var(--muted);
+}
+.team-task-importance.is-important {
+    color: #d97706;
+}
+.team-task select {
+    min-height: 36px;
+    padding-block: 4px;
+}
+.team-completed-heading {
+    margin: 14px 0 6px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    color: var(--muted);
+}
+.text-button.is-danger {
+    color: var(--danger);
+}
+.team-invite,
+.team-chat-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.team-invite input,
+.team-chat-form input {
+    flex: 1 1 180px;
+}
+.team-pending-members {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    list-style: none;
+}
+.team-pending-members li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+.status-pill {
+    border-radius: 999px;
+}
+.status-pill.is-done {
+    background: #dcfce7;
+}
+.status-pill.is-in_progress {
+    background: #fef3c7;
+}
+.team-chat-log {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.team-message {
+    display: grid;
+    gap: 2px;
+    max-width: 90%;
+    padding: 8px 10px;
+    background: var(--surface-soft);
+    border-radius: 10px;
+}
+.team-message.is-mine {
+    justify-self: end;
+    background: var(--accent-soft);
+}
+.team-message p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+.team-message small {
+    color: var(--muted);
+}
+
+/* Administration. */
+.admin-excerpt {
+    max-height: 8rem;
+    margin: 6px 0;
+    padding: 8px 10px;
+    overflow: auto;
+    white-space: pre-wrap;
+    background: var(--surface-soft);
+    border-left: 3px solid var(--danger);
+}
+
+@media (max-width: 600px) {
+    .activity-year-layout {
+        grid-template-columns: 1fr;
+    }
+    .activity-year-list,
+    .activity-year-list [data-activity-years] {
+        grid-auto-flow: column;
+        justify-content: start;
+    }
+    .assistant-launcher {
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+}

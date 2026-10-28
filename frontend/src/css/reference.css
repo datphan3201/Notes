@@ -40,9 +40,10 @@
 .settings-header h1 {
     font-size: var(--font-size-heading);
 }
-.planning-page > .scene-header {
+.planning-page > .scene-header,
+.workspace > .scene-header {
     min-height: 108px;
-    padding: 0 0 22px;
+    padding: 0 8px 22px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -556,7 +557,8 @@
     .app-topbar {
         padding-inline: 20px;
     }
-    .planning-page > .scene-header {
+    .planning-page > .scene-header,
+    .workspace > .scene-header {
         min-height: 108px;
         padding-bottom: 14px;
         gap: 12px;
@@ -663,7 +665,10 @@
     z-index: 0;
 }
 [data-goals-page] > .scene-header,
-[data-habits-page] > .scene-header {
+[data-habits-page] > .scene-header,
+[data-teamwork-page] > .scene-header,
+[data-admin-page] > .scene-header,
+[data-notes-workspace] > .scene-header {
     min-height: 90px;
 }
 .dashboard-page > .scene-header .reference-landscape {

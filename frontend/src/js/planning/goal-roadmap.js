@@ -492,8 +492,10 @@ export function initGoalDetail(root) {
                 repeat_interval: '1',
                 repeat_end: '',
                 repeat_days: '',
+                repeat_unit: '',
             },
         );
+        milestoneTaskForm.dispatchEvent(new Event('schedule:refresh'));
         switchTabs(
             '[data-milestone-task-tab]',
             '[data-milestone-task-panel]',

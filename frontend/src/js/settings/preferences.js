@@ -32,6 +32,19 @@ export function initPreferences(root) {
         } else button.append(image, label);
         picker.append(button);
     }
+    // "Add" opens the personal background dialog: an uploaded image or an RGB color.
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'theme-option theme-option-add';
+    add.dataset.openDialog = 'personal-background-dialog';
+    const plus = document.createElement('span');
+    plus.className = 'theme-add-symbol';
+    plus.setAttribute('aria-hidden', 'true');
+    plus.textContent = '+';
+    const addLabel = document.createElement('strong');
+    addLabel.textContent = t('Your image or color');
+    add.append(plus, addLabel);
+    picker.append(add);
     const buttons = [...root.querySelectorAll('[data-pref]')];
     const toggles = [...root.querySelectorAll('[data-pref-toggle]')];
     const quoteForm = root.querySelector('[data-quote-form]');
@@ -147,9 +160,11 @@ export function initPreferences(root) {
         status.textContent =
             quote.value === serverPreferences.custom_quote ? 'Saved' : 'Unsaved quote';
     });
+    const backgroundDialog = root.querySelector('#personal-background-dialog');
     root.querySelector('[data-background-color-form]').addEventListener('submit', (event) => {
         event.preventDefault();
         change('background_color', new FormData(event.currentTarget).get('background_color'));
+        backgroundDialog?.close();
     });
     root.querySelector('[data-reset-background]').addEventListener('click', async () => {
         try {
@@ -157,6 +172,7 @@ export function initPreferences(root) {
             preferences.background_url = serverPreferences.background_url = '';
             window.notesBootstrap.preferences.background_url = '';
             change('background_color', '');
+            backgroundDialog?.close();
         } catch (error) {
             status.textContent = error.message;
         }
@@ -177,6 +193,7 @@ export function initPreferences(root) {
             Object.assign(window.notesBootstrap.preferences, saved);
             render();
             status.textContent = 'Background saved';
+            backgroundDialog?.close();
         } catch (error) {
             status.textContent = error.message;
         } finally {

@@ -58,7 +58,7 @@ SQL);
     public function preferences(int $userId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote, background_color, notifications_enabled, email_notifications, background_path, locale FROM user_preferences WHERE user_id = :user_id',
+            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote, background_color, notifications_enabled, email_notifications, background_path, locale, history_completed_hours, history_overdue_days, history_retention_days FROM user_preferences WHERE user_id = :user_id',
         );
         $statement->execute(['user_id' => $userId]);
         $row = $statement->fetch();
@@ -83,6 +83,9 @@ SQL);
             'background_url' => $row['background_path'] === null ? '' : '/files/background?v='.substr(hash('sha256', (string) $row['background_path']), 0, 16),
             'notifications_enabled' => (bool) $row['notifications_enabled'],
             'email_notifications' => (bool) $row['email_notifications'],
+            'history_completed_hours' => (int) $row['history_completed_hours'],
+            'history_overdue_days' => (int) $row['history_overdue_days'],
+            'history_retention_days' => $row['history_retention_days'] === null ? null : (int) $row['history_retention_days'],
         ];
     }
 
@@ -128,7 +131,7 @@ SQL);
     /** @param array<string, string|int|bool> $changes */
     public function updatePreferences(int $userId, array $changes, string $timestamp): array
     {
-        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'notifications_enabled', 'email_notifications', 'locale'];
+        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'notifications_enabled', 'email_notifications', 'locale', 'history_completed_hours', 'history_overdue_days', 'history_retention_days'];
         $assignments = [];
         $bindings = ['user_id' => $userId, 'updated_at' => $timestamp];
 
@@ -210,6 +213,71 @@ SQL);
         )->fetchAll(PDO::FETCH_COLUMN)));
     }
 
+    public function setRole(int $userId, string $role, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET role = :role, updated_at = :now WHERE id = :id');
+        $statement->execute(['role' => $role, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    /** Locking bumps auth_version so every existing session is rejected. */
+    public function setLocked(int $userId, ?string $lockedAt, ?string $reason, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET locked_at = :locked_at, locked_reason = :reason, auth_version = auth_version + IF(:locking = 1, 1, 0), updated_at = :now WHERE id = :id');
+        $statement->execute(['locked_at' => $lockedAt, 'reason' => $reason, 'locking' => $lockedAt === null ? 0 : 1, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    public function setTwoFactor(int $userId, ?string $method, ?string $secret, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET two_factor_method = :method, two_factor_secret = :secret, updated_at = :now WHERE id = :id');
+        $statement->execute(['method' => $method, 'secret' => $secret, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    /** @return list<int> */
+    public function adminIds(): array
+    {
+        return array_map('intval', $this->pdo->query("SELECT id FROM users WHERE role = 'admin' AND locked_at IS NULL ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    /** @return array<string, mixed>|null id, display name, email and avatar of an account by exact email */
+    public function publicByEmail(string $email): ?array
+    {
+        $statement = $this->pdo->prepare('SELECT id, email, display_name, avatar_path FROM users WHERE email = :email AND locked_at IS NULL LIMIT 1');
+        $statement->execute(['email' => strtolower(trim($email))]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $row : null;
+    }
+
+    /**
+     * @param list<int> $userIds
+     * @return array<int, array{id:string,display_name:string,email:string}>
+     */
+    public function publicProfiles(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+        $userIds = array_values(array_unique($userIds));
+        $statement = $this->pdo->prepare('SELECT id, email, display_name FROM users WHERE id IN ('.implode(',', array_fill(0, count($userIds), '?')).')');
+        $statement->execute($userIds);
+        $profiles = [];
+        foreach ($statement->fetchAll() as $row) {
+            $profiles[(int) $row['id']] = ['id' => (string) $row['id'], 'display_name' => (string) $row['display_name'], 'email' => (string) $row['email']];
+        }
+
+        return $profiles;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function adminUserList(string $query): array
+    {
+        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $query);
+        $statement = $this->pdo->prepare("SELECT id, email, display_name, role, locked_at, locked_reason, created_at FROM users WHERE email LIKE :q_email ESCAPE '!' OR display_name LIKE :q_name ESCAPE '!' ORDER BY (locked_at IS NULL), id LIMIT 100");
+        $statement->execute(['q_email' => '%'.$escaped.'%', 'q_name' => '%'.$escaped.'%']);
+
+        return $statement->fetchAll();
+    }
+
     public function deleteSessions(int $userId): void
     {
         $statement = $this->pdo->prepare('DELETE FROM sessions WHERE user_id = :user_id');
@@ -231,6 +299,10 @@ SQL);
             $row['avatar_path'] === null ? null : (string) $row['avatar_path'],
             (int) $row['auth_version'],
             (string) ($row['biography'] ?? ''),
+            (string) ($row['role'] ?? 'user'),
+            isset($row['locked_at']) ? (string) $row['locked_at'] : null,
+            isset($row['two_factor_method']) ? (string) $row['two_factor_method'] : null,
+            isset($row['two_factor_secret']) ? (string) $row['two_factor_secret'] : null,
         );
     }
 }

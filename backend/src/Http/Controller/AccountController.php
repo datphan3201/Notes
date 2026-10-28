@@ -42,8 +42,14 @@ final readonly class AccountController
         try {
             $credentials = $this->validator->login($request->input());
 
-            if (! $this->auth->attempt($credentials['email'], $credentials['password'], $request->clientIp())) {
+            $result = $this->auth->attempt($credentials['email'], $credentials['password'], $request->clientIp());
+
+            if ($result === 'failed') {
                 throw new ValidationException(['email' => ['The email or password is incorrect.']]);
+            }
+
+            if ($result === 'two_factor') {
+                return Response::redirect('/two-factor');
             }
         } catch (ValidationException $exception) {
             $this->session->flash('errors', $exception->errors);
@@ -163,7 +169,8 @@ final readonly class AccountController
             '/settings/profile' => ['settings/profile', 'Profile', 'settings.profile'],
             '/settings/preferences' => ['settings/preferences', 'Appearance', 'settings.preferences'],
             '/settings/notifications' => ['settings/notifications', 'Notifications', 'settings.notifications'],
-            '/settings/password' => ['settings/password', 'Change password', 'settings.password'],
+            '/settings/password' => ['settings/password', 'Security', 'settings.password'],
+            '/settings/history' => ['settings/history', 'Task history', 'settings.history'],
             default => throw new \LogicException('Unexpected settings route.'),
         };
 
@@ -181,6 +188,7 @@ final readonly class AccountController
             $request->path === '/dashboard' => ['planning/dashboard', 'Dashboard', 'planning.dashboard'],
             $request->path === '/reviews' => ['planning/reviews', 'Reviews', 'planning.reviews'],
             $request->path === '/ai' => ['planning/ai', 'AI assistant', 'planning.ai'],
+            $request->path === '/teamwork' => ['planning/teamwork', 'Teamwork', 'planning.teamwork'],
             default => throw new \LogicException('Unexpected planning page route.'),
         };
         $extra = [];
@@ -192,6 +200,12 @@ final readonly class AccountController
             $extra['task_id'] = rawurldecode(substr($request->path, strlen('/tasks/')));
         }
 
+        return Response::html($this->renderApplicationPage($template, $title, $route, $extra));
+    }
+
+    /** @param array<string, mixed> $extra */
+    public function applicationPage(string $template, string $title, string $route, array $extra = []): Response
+    {
         return Response::html($this->renderApplicationPage($template, $title, $route, $extra));
     }
 

@@ -45,8 +45,14 @@ final readonly class PdoNoteRepository
      * @param  list<int>  $labelIds
      * @return array{items:list<NoteRecord>,total:int,current_page:int,per_page:int,last_page:int}
      */
-    public function paginate(int $userId, string $query, array $labelIds, int $page, int $perPage = 30): array
+    public function paginate(int $userId, string $query, array $labelIds, int $page, int $perPage = 30, string $sort = 'updated', string $direction = 'desc'): array
     {
+        // Whitelisted fragments only; pinned Notes stay first in every order.
+        $order = match ($sort) {
+            'title' => 'n.title',
+            'created' => 'n.created_at',
+            default => 'n.updated_at',
+        }.($direction === 'asc' ? ' ASC' : ' DESC');
         $where = ['n.user_id = :user_id', 'n.deleted_at IS NULL'];
         $bindings = ['user_id' => $userId];
 
@@ -79,7 +85,7 @@ final readonly class PdoNoteRepository
 SELECT n.*
 FROM notes n
 WHERE $predicate
-ORDER BY (n.pinned_at IS NULL) ASC, n.pinned_at DESC, n.updated_at DESC, n.id DESC
+ORDER BY (n.pinned_at IS NULL) ASC, n.pinned_at DESC, $order, n.id DESC
 LIMIT :limit OFFSET :offset
 SQL);
 
@@ -242,6 +248,12 @@ SQL);
         ]);
 
         return $paths;
+    }
+
+    public function setBackground(int $userId, string $noteId, ?string $attachmentId): void
+    {
+        $statement = $this->pdo->prepare('UPDATE notes SET background_attachment_id = :attachment WHERE user_id = :user_id AND id = :id AND deleted_at IS NULL');
+        $statement->execute(['attachment' => $attachmentId, 'user_id' => $userId, 'id' => $noteId]);
     }
 
     /** @param list<string> $noteIds */
@@ -410,6 +422,7 @@ SQL);
             $labels,
             $attachments,
             $attachmentCount,
+            isset($row['background_attachment_id']) ? (string) $row['background_attachment_id'] : null,
         );
     }
 }

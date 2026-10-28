@@ -1,7 +1,9 @@
+import { t } from '../lib/i18n.js';
 import { get, patch, post, remove } from '../lib/http';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
+import { NoteSharing, applyNoteStyle } from './note-sharing.js';
 
 export class NotesPage {
     constructor(root) {
@@ -11,7 +13,13 @@ export class NotesPage {
         this.preferences = { ...this.bootstrap.preferences };
         this.labels = [];
         this.notes = [];
-        this.query = { q: '', labelIds: [], page: 1 };
+        this.query = {
+            q: '',
+            labelIds: [],
+            page: 1,
+            sort: this.query?.sort || 'updated',
+            direction: this.query?.direction || 'desc',
+        };
         this.meta = { current_page: 1, last_page: 1, total: 0 };
         this.noteRequests = new LatestRequest();
         this.searchDebounce = new DebouncedAction({ delay: 300 });
@@ -35,6 +43,8 @@ export class NotesPage {
             onConflict: (machine) => this.openConflict(machine),
         });
         this.applyView(this.preferences.notes_view, false);
+        this.sharing = new NoteSharing(this);
+        this.sharing.init();
         await this.loadLabels();
         await this.loadNotes();
         this.checkRecovery();
@@ -73,8 +83,15 @@ export class NotesPage {
         this.root
             .querySelector('[data-new-note]')
             .addEventListener('click', () => this.editor.requestNew());
-        this.root.querySelectorAll('[data-view]').forEach((button) => {
-            button.addEventListener('click', () => this.applyView(button.dataset.view, true));
+        this.root
+            .querySelector('[data-view-toggle]')
+            .addEventListener('click', () =>
+                this.applyView(this.preferences.notes_view === 'grid' ? 'list' : 'grid', true),
+            );
+        this.root.querySelector('[data-note-sort]').addEventListener('change', (event) => {
+            const [sort, direction] = event.currentTarget.value.split(':');
+            this.query = { ...this.query, sort, direction, page: 1 };
+            this.loadNotes();
         });
         this.root.querySelectorAll('[data-open-label-manager]').forEach((button) => {
             button.addEventListener('click', () => this.openLabelManager());
@@ -217,12 +234,18 @@ export class NotesPage {
     }
 
     async loadNotes() {
+        if (this.sharing?.active) {
+            this.sharing.render();
+            return;
+        }
         const ticket = this.noteRequests.begin();
         this.setFeedback('Loading notes…');
         const params = new URLSearchParams();
         if (this.query.q) params.set('q', this.query.q);
         this.query.labelIds.forEach((id) => params.append('label_ids[]', id));
         params.set('page', String(this.query.page));
+        params.set('sort', this.query.sort);
+        params.set('direction', this.query.direction);
         try {
             const result = await get('/api/v1/notes?' + params.toString(), {
                 signal: ticket.signal,
@@ -277,7 +300,7 @@ export class NotesPage {
         const card = document.createElement('article');
         card.className = 'note-card';
         card.dataset.noteId = note.id;
-        card.dataset.noteColor = note.color;
+        applyNoteStyle(card, note.color, note.background_url);
         const head = document.createElement('div');
         head.className = 'note-card-head';
         const title = document.createElement('h2');
@@ -414,7 +437,13 @@ export class NotesPage {
 
     clearFilters() {
         this.searchDebounce.cancel();
-        this.query = { q: '', labelIds: [], page: 1 };
+        this.query = {
+            q: '',
+            labelIds: [],
+            page: 1,
+            sort: this.query?.sort || 'updated',
+            direction: this.query?.direction || 'desc',
+        };
         this.search.value = '';
         this.root.querySelector('[data-clear-search]').classList.add('is-hidden');
         this.renderLabelFilters();
@@ -444,11 +473,12 @@ export class NotesPage {
         this.preferences.notes_view = view;
         this.grid.classList.toggle('is-hidden', view !== 'grid');
         this.list.classList.toggle('is-hidden', view !== 'list');
-        this.root.querySelectorAll('[data-view]').forEach((button) => {
-            const selected = button.dataset.view === view;
-            button.classList.toggle('is-active', selected);
-            button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-        });
+        // One View button: it shows the layout it switches to.
+        const toggle = this.root.querySelector('[data-view-toggle]');
+        const nextLabel = view === 'grid' ? 'Show list view' : 'Show grid view';
+        toggle.textContent = view === 'grid' ? '☷' : '▦';
+        toggle.setAttribute('aria-label', t(nextLabel));
+        toggle.title = t(nextLabel);
         if (persist) {
             patch('/api/v1/preferences', { notes_view: view }).catch(() =>
                 this.toast('Unable to save the note layout.', true),

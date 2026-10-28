@@ -139,7 +139,7 @@
         <section class="planning-panel activity-panel" aria-labelledby="activity-title">
             <div class="section-heading">
                 <h2 id="activity-title"><?= $view->e($view->t('Your activity')) ?></h2>
-                <span class="subtle-copy"><?= $view->e($view->t('Monthly')) ?></span>
+                <span class="subtle-copy"><?= $view->e($view->t('Yearly')) ?></span>
             </div>
             <div class="activity-totals">
                 <strong data-activity-total>—</strong>
@@ -150,23 +150,14 @@
                 </span>
             </div>
             <p class="sr-only" data-activity-summary aria-live="polite"><?= $view->e($view->t('Loading activity…')) ?></p>
-            <div class="activity-month-navigation" aria-label="Activity month">
-                <strong data-activity-month></strong>
-                <button class="activity-month-button" type="button" data-activity-previous aria-label="Previous month" disabled>‹</button>
-                <button class="activity-month-button" type="button" data-activity-next aria-label="Next month" disabled>›</button>
-            </div>
-            <div class="activity-scroll" tabindex="0" aria-label="Monthly contribution calendar. Scroll horizontally when needed.">
-                <div class="activity-calendar">
-                    <div class="activity-weekdays" aria-hidden="true">
-                        <span></span>
-                        <span><?= $view->e($view->t('Mon')) ?></span>
-                        <span></span>
-                        <span><?= $view->e($view->t('Wed')) ?></span>
-                        <span></span>
-                        <span><?= $view->e($view->t('Fri')) ?></span>
-                        <span></span>
-                    </div>
-                    <div class="activity-grid" data-activity-grid role="group" aria-label="Daily contributions"></div>
+            <div class="activity-year-layout">
+                <div class="activity-scroll" tabindex="0" aria-label="<?= $view->e($view->t('Yearly contribution calendar. Scroll horizontally when needed.')) ?>">
+                    <div class="activity-grid" data-activity-grid role="group" aria-label="<?= $view->e($view->t('Daily contributions')) ?>"></div>
+                </div>
+                <div class="activity-year-list" aria-label="<?= $view->e($view->t('Activity year')) ?>">
+                    <button class="activity-month-button" type="button" data-activity-previous aria-label="<?= $view->e($view->t('Newer year')) ?>" disabled>⌃</button>
+                    <div data-activity-years role="group"></div>
+                    <button class="activity-month-button" type="button" data-activity-next aria-label="<?= $view->e($view->t('Older year')) ?>" disabled>⌄</button>
                 </div>
             </div>
             <div class="activity-footer">

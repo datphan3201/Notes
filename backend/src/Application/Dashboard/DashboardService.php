@@ -25,6 +25,44 @@ final readonly class DashboardService
     ) {
     }
 
+    /**
+     * A whole local calendar year of completion counts, plus the years the
+     * year list can offer (first activity or account year through this year).
+     *
+     * @return array<string, mixed>
+     */
+    public function yearActivity(int $userId, mixed $year): array
+    {
+        $timezone = $this->planning->ownerTimezone($userId);
+        $now = $this->clock->now()->setTimezone(new DateTimeZone($timezone));
+        $currentYear = (int) $now->format('Y');
+        $year ??= (string) $currentYear;
+        if (! is_string($year) || preg_match('/^\d{4}$/D', $year) !== 1 || (int) $year > $currentYear || (int) $year < 2000) {
+            throw new ValidationException(['year' => ['The year is invalid.']]);
+        }
+        $days = [];
+        $total = 0;
+        foreach ($this->dashboard->activity($userId, $year.'-01-01', $year.'-12-31') as $row) {
+            $date = (string) $row['effective_date'];
+            $days[$date] ??= ['date' => $date, 'total' => 0, 'counts' => []];
+            $days[$date]['counts'][(string) $row['source_type']] = (int) $row['count'];
+            $days[$date]['total'] += (int) $row['count'];
+            $total += (int) $row['count'];
+        }
+        // The list always contains the requested year, so stepping back with the arrows keeps it selectable.
+        $firstYear = min($currentYear, (int) $year, $this->dashboard->firstActivityYear($userId) ?? $currentYear);
+
+        return [
+            'year' => (int) $year,
+            'timezone' => $timezone,
+            'today' => $now->format('Y-m-d'),
+            'years' => range($currentYear, $firstYear),
+            'total' => $total,
+            'active_days' => count($days),
+            'days' => array_values($days),
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function dashboard(int $userId, ?string $month): array
     {

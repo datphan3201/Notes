@@ -103,9 +103,7 @@
                     <div class="field">
                         <label for="goal-importance"><?= $view->e($view->t('Importance')) ?></label>
                         <select id="goal-importance" name="importance">
-                            <?php for ($importance = 1; $importance <= 5; $importance++): ?>
-                            <option value="<?= $importance ?>"><?= $importance ?></option>
-                            <?php endfor; ?>
+                            <?php require __DIR__.'/importance-options.php'; ?>
                         </select>
                     </div>
                     <div class="field">

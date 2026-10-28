@@ -42,10 +42,9 @@
                     <?= $view->e($view->t('All')) ?>
                     <span class="count-badge" data-task-view-count="all">—</span>
                 </button>
-                <button type="button" data-task-view="completed" aria-pressed="false"><?= $view->e($view->t('Completed')) ?> <span class="count-badge" data-task-view-count="completed">—</span></button>
-                <button type="button" data-task-view="history" aria-pressed="false"><?= $view->e($view->t('History')) ?> <span class="count-badge" data-task-view-count="history">—</span></button>
+                <button type="button" data-task-view="repeating" aria-pressed="false"><?= $view->e($view->t('Repeating')) ?> <span class="count-badge" data-task-view-count="repeating">—</span></button>
+                <a class="text-button" href="/settings/history"><?= $view->e($view->t('Task history')) ?></a>
             </div>
-            <p class="subtle-copy" data-task-history-hint hidden><?= $view->e($view->t('Completed for 24 hours or overdue by at least 3 days. History keeps your data; reopen or edit a task to bring it back to current work.')) ?></p>
             <details class="task-filter-details">
                 <summary><?= $view->e($view->t('Filter and search')) ?></summary>
                 <div class="collection-controls">
@@ -70,6 +69,11 @@
                 <p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p>
             </div>
             <div class="collection-pagination" data-task-pagination aria-label="<?= $view->e($view->t('Task pages')) ?>"></div>
+            <section class="task-completed-section" data-task-completed hidden aria-labelledby="task-completed-title">
+                <h3 id="task-completed-title"><?= $view->e($view->t('Completed')) ?> <span class="count-badge" data-task-completed-count></span></h3>
+                <p class="subtle-copy"><?= $view->e($view->t('Untick a task to move it back. Completed tasks move to Task history after the time you set in Settings.')) ?></p>
+                <div data-task-completed-list></div>
+            </section>
         </section>
     </div>
     <dialog id="new-task-dialog" class="workspace-dialog" aria-labelledby="new-task-dialog-title" data-workspace-dialog>
@@ -95,6 +99,10 @@
                 <button type="button"><?= $view->e($view->t('Write an explanation')) ?></button>
             </div>
             <div class="field">
+                <label for="task-description"><?= $view->e($view->t('Description')) ?></label>
+                <textarea id="task-description" name="description" rows="2" maxlength="10000" placeholder="<?= $view->e($view->t('Add details, links or context (optional)')) ?>"></textarea>
+            </div>
+            <div class="field">
                 <label for="task-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
                 <textarea id="task-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('What does done look like?')) ?>"></textarea>
                 <div class="capture-suggestions" data-capture-suggestions="completion_criteria">
@@ -104,7 +112,7 @@
                 </div>
                 <span class="field-hint"><?= $view->e($view->t('Optional. Describe the result in your own words.')) ?></span>
             </div>
-            <?php require __DIR__.'/task-capture-fields.php'; ?>
+            <?php $captureDescription = false; require __DIR__.'/task-capture-fields.php'; ?>
             <div class="dialog-footer">
                 <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
                 <button class="button button-primary" type="submit">

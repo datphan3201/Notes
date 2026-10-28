@@ -7,7 +7,7 @@
         </div>
         <a class="button button-quiet" href="/"><?= $view->e($view->t('← Back to notes')) ?></a>
     </header>
-    <nav class="workspace-section-menu" role="tablist" aria-label="Appearance sections">
+    <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Appearance sections')) ?>">
         <?php foreach (['themes'=>'Themes', 'decoration'=>'Scenery and quote'] as $key=>$label): ?>
         <button type="button" role="tab" id="appearance-tab-<?= $key ?>" aria-controls="appearance-panel-<?= $key ?>" aria-selected="<?= $key === 'themes' ? 'true' : 'false' ?>" tabindex="<?= $key === 'themes' ? '0' : '-1' ?>" data-workspace-tab="<?= $key ?>"><?= $view->e($view->t($label)) ?></button>
         <?php endforeach; ?>
@@ -43,7 +43,7 @@
         <form class="stack-form" data-quote-form>
             <div class="field">
                 <label for="custom-quote"><?= $view->e($view->t('Your quote (optional)')) ?></label>
-                <textarea id="custom-quote" name="custom_quote" maxlength="500" rows="3" placeholder="Leave empty to use the theme’s quote"></textarea>
+                <textarea id="custom-quote" name="custom_quote" maxlength="500" rows="3" placeholder="<?= $view->e($view->t('Leave empty to use the theme’s quote')) ?>"></textarea>
                 <span class="field-hint"><?= $view->e($view->t('Up to 500 characters. Only you see this quote.')) ?></span>
             </div>
             <div class="action-row">
@@ -60,14 +60,17 @@
         </select>
     </section>
     <p class="save-status" data-preference-status role="status"></p>
-    <section class="settings-panel">
-        <h2><?= $view->e($view->t('Personal background')) ?></h2>
+    <dialog id="personal-background-dialog" class="workspace-dialog" aria-labelledby="personal-background-title" data-workspace-dialog>
+        <header class="section-heading">
+            <h2 id="personal-background-title"><?= $view->e($view->t('Personal background')) ?></h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
         <label class="button button-quiet"><?= $view->e($view->t('Upload background')) ?> <input type="file" accept="image/jpeg,image/png,image/webp" data-background-upload></label>
         <p class="subtle-copy"><?= $view->e($view->t('JPEG, PNG or WebP, up to 2 MB and 4096 × 4096 pixels. The image stays private to your account.')) ?></p>
         <form data-background-color-form class="settings-form">
-            <label><?= $view->e($view->t('Background color')) ?> <input type="color" name="background_color" value="<?= $view->e($preferences['background_color'] ?: '#eaf4fb') ?>"></label>
+            <label><?= $view->e($view->t('Or choose an RGB color')) ?> <input type="color" name="background_color" value="<?= $view->e($preferences['background_color'] ?: '#eaf4fb') ?>"></label>
             <div class="action-row"><button class="button button-primary" type="submit"><?= $view->e($view->t('Use color')) ?></button><button class="button button-quiet" type="button" data-reset-background><?= $view->e($view->t('Use theme image')) ?></button></div>
         </form>
-    </section>
+    </dialog>
 
 </section>

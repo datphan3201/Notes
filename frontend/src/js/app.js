@@ -1,7 +1,8 @@
 import Alpine from 'alpinejs';
 import { initDeliveryPreferences, initNotePreferences } from './settings/delivery-preferences.js';
 import { initTaskCapturePresets } from './planning/task-capture.js';
-import { initReminders } from './planning/reminders.js';
+import { initNotifications } from './lib/notifications.js';
+import { initAssistant } from './planning/assistant.js';
 import { initPasswordVisibility } from './lib/password-visibility.js';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/500.css';
@@ -22,8 +23,13 @@ import {
 import { initHabitsPage } from './planning/habits-page';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
 import { initAIPage } from './planning/ai-page';
+import { initTeamworkPage } from './planning/teamwork-page.js';
+import { initAdminPage } from './admin/admin-page.js';
+import { initTwoFactor } from './settings/two-factor.js';
+import { initTaskHistory } from './settings/task-history.js';
 import { initNavigation } from './lib/navigation';
 import { initWorkspaceUI } from './lib/workspace-ui';
+import { initDialogBackdropClose } from './lib/dialog-backdrop.js';
 import { initWalkthrough } from './help/walkthrough';
 import { applyAppearance } from './settings/theme-catalog';
 import { patch } from './lib/http.js';
@@ -73,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (delivery) initDeliveryPreferences(delivery);
     const notePreferences = document.querySelector('[data-note-preferences]');
     if (notePreferences) initNotePreferences(notePreferences);
-    initReminders();
+    initNotifications();
+    initAssistant();
     initTaskCapturePresets();
     document.querySelector('[data-toggle-theme]')?.addEventListener('click', async (event) => {
         const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -96,9 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     decorateReference();
     initNavigation();
+    initDialogBackdropClose();
     document
         .querySelectorAll(
-            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings]',
+            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings], [data-teamwork-page]',
         )
         .forEach(initWorkspaceUI);
     const notes = document.querySelector('[data-notes-workspace]');
@@ -125,6 +133,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reviews) initReviewsPage(reviews);
     const ai = document.querySelector('[data-ai-page]');
     if (ai) initAIPage(ai);
+    const teamwork = document.querySelector('[data-teamwork-page]');
+    if (teamwork) initTeamworkPage(teamwork);
+    const admin = document.querySelector('[data-admin-page]');
+    if (admin) initAdminPage(admin);
+    const twoFactor = document.querySelector('[data-two-factor-settings]');
+    if (twoFactor) initTwoFactor(twoFactor);
+    const history = document.querySelector('[data-history-settings]');
+    if (history) initTaskHistory(history);
     initWalkthrough({ ready: notesReady });
 
     document.querySelectorAll('[data-avatar-fallback]').forEach((avatar) => {

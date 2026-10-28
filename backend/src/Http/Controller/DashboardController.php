@@ -18,6 +18,10 @@ final readonly class DashboardController
     {
         return Response::json(['data' => $this->dashboard->dashboard($this->userId(), $request->query['month'] ?? null)]);
     }
+    public function activity(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->dashboard->yearActivity($this->userId(), $request->query['year'] ?? null)]);
+    }
     public function selections(Request $request, array $parameters): Response
     {
         return Response::json(['data' => $this->dashboard->selections($parameters['type'], $this->userId())]);

@@ -465,6 +465,7 @@ production environment file as the web application:
 5 * * * * cd /srv/planner/backend && flock -n /run/lock/planner-sessions.lock php bin/console sessions:prune >> /var/log/planner/sessions.log 2>&1
 10 * * * * cd /srv/planner/backend && flock -n /run/lock/planner-rates.lock php bin/console rate-limits:prune >> /var/log/planner/rates.log 2>&1
 10 0 * * * cd /srv/planner/backend && flock -n /run/lock/planner-snapshots.lock php bin/console snapshots:capture >> /var/log/planner/snapshots.log 2>&1
+20 0 * * * cd /srv/planner/backend && flock -n /run/lock/planner-history.lock php bin/console history:prune >> /var/log/planner/history.log 2>&1
 ~~~
 
 The PHP-FPM/service user must be able to acquire the lock files and write the
@@ -491,8 +492,16 @@ private file backup under backend/public.
 
 ## 10. Accounts and first use
 
-There is no administrator account, role, team, or shared workspace in this
-release. Every account is an independent owner of its own data.
+Every account owns its own data. Owners may share individual Notes, and
+Teamwork goals give invited members role-based access (see
+docs/plan/17-full-feedback.md). Administrators review reported Notes, lock
+accounts and set the Task history limit at /admin. Grant or remove the role
+from the server only:
+
+~~~bash
+cd backend
+php bin/console users:role owner@example.com admin
+~~~
 
 Create the first account from the browser at /register. The application
 validates the email, display name, and password, creates default preferences
@@ -557,6 +566,14 @@ browser URL `http://localhost:8000`; PHP still binds to 127.0.0.1 for loopback
 access. If those addresses differ, a form may load successfully while its POST
 is rejected with 419. Correct the ignored environment setting and reload the
 form. Keep CSRF tokens and origin checks enabled.
+
+### Habit or repeating Task creation says "The time zone is invalid"
+
+Browsers report ICU names such as `Asia/Saigon`, while system tz databases
+without legacy links (Ubuntu 24.04 without `tzdata-legacy`) only ship
+`Asia/Ho_Chi_Minh`. The application maps such aliases to an equivalent
+identifier through ext-intl and stores the canonical name. If an alias is still
+rejected, confirm ext-intl is loaded; installing `tzdata-legacy` is optional.
 
 ### /dashboard redirects to /login
 

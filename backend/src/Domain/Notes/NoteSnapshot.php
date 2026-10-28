@@ -10,6 +10,19 @@ final class NoteSnapshot
 {
     public const COLORS = ['neutral', 'lemon', 'mint', 'sky', 'rose'];
 
+    /** A preset name or any RGB color, stored as lowercase #rrggbb; null when invalid. */
+    public static function normalizeColor(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+        if (in_array($value, self::COLORS, true)) {
+            return $value;
+        }
+
+        return preg_match('/^#[0-9a-fA-F]{6}$/D', $value) === 1 ? strtolower($value) : null;
+    }
+
     /**
      * @param  array<string, mixed>  $input
      * @return array{title:string,content:string,color:string,is_pinned:bool,label_ids:list<int>}

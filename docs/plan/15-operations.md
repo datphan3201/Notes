@@ -24,6 +24,8 @@ php bin/console rate-limits:prune
 php bin/console areas:backfill
 php bin/console recurrence:materialize
 php bin/console snapshots:capture
+php bin/console history:prune
+php bin/console users:role <email> admin|user
 ```
 
 These commands are implemented. All return nonzero on partial failure and

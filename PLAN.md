@@ -35,8 +35,9 @@ Do not infer that a planned feature exists. `docs/implementation-status.md` is t
 - Add optional Task estimated minutes and a focused explicit Task edit flow. Replace Start focus with an edit icon (20%) and completion action (80%), preserving completion acknowledgements. Tasks Today/Next/This week/Backlog are derived filters, not new statuses or containers. Habit streak counts consecutive local dates with at least one check-in. All summary percentages and changes must state their actual denominator and remain factual.
 - Notes and Task working notes support a Check box action for inline checkable lines. Preserve plain-text storage, literal content, existing save/recovery/conflict behavior and keyboard editing. The existing Task completion Checklist appears inside the working-note component, keeps its own owned/versioned mutations and completion acknowledgement, and is distinguished from personal checkable note lines.
 - Recurring Tasks support daily, weekly, monthly and yearly schedules after the approved feedback extension; timers and completion-relative schedules remain deferred.
-- AI may read selected context, suggest, and create after explicit approval. It cannot silently modify/delete data or bypass normal use cases.
-- Do not add teams, collaboration, shared workspaces, arbitrary custom fields, Task dependency graphs, general notification infrastructure (beyond approved Task reminders), or mobile/microservice architecture.
+- AI may read selected context, answer questions about the user's Planner, suggest, and create after explicit approval. It cannot silently modify/delete data or bypass normal use cases.
+- The 2026-10-27 full feedback extension ([contract](docs/plan/17-full-feedback.md)) supersedes earlier exclusions for: user/admin roles, note reports and account locking, owner-controlled Note sharing with view/edit permissions, in-app notifications, two-factor authentication, configurable Task history with retention, and Teamwork goals with members, assigned team tasks and team chat. All of these remain same-origin, polling-based (no WebSockets), owner/member scoped and auditable.
+- Do not add arbitrary custom fields, Task dependency graphs, or mobile/microservice architecture.
 
 ## Read order for implementation
 
@@ -90,6 +91,14 @@ Dependent work does not start until the prior gate passes. Work inside a phase m
 ## Handoff
 
 Follow [repository instructions](AGENTS.md), the relevant contract and phase specification. Inspect current implementation and tests, preserve unrelated work, and record current checks and limitations before handing off.
+
+## Full feedback extension — 2026-10-27
+
+The user directed that every item of the feedback PDF be implemented and that any
+conflicting earlier rule be changed. [docs/plan/17-full-feedback.md](docs/plan/17-full-feedback.md)
+is the contract for that work and takes precedence over the narrower 2026-10-19
+approval below where they differ (two-factor authentication, sharing, admin roles,
+Teamwork, history retention and the Notes/Habit/Activity/AI interface changes).
 
 ## Approved feedback maintenance — 2026-10-19
 

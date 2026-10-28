@@ -41,6 +41,16 @@ final class HabitsRecurrenceTest extends TestCase
         $_COOKIE = [];
     }
 
+    public function test_habit_accepts_browser_time_zone_alias_as_canonical_identifier(): void
+    {
+        $habit = $this->runtime['habit_service']->create($this->owner, [
+            'name' => 'Read', 'period' => 'daily', 'target_frequency' => 1,
+            'timezone' => 'Asia/Saigon',
+        ]);
+
+        self::assertSame('Asia/Ho_Chi_Minh', $habit['timezone']);
+    }
+
     public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone(): void
     {
         $habits = $this->runtime['habit_service'];

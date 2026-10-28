@@ -20,8 +20,8 @@ M01–M10 must not add a timer column or running-process state prematurely.
 
 ## Explicitly excluded
 
-- Teams, workspaces, sharing, comments, assignees, collaboration roles, and WebSockets.
-- Per-Note passwords and shared Notes.
+- WebSockets and comments (Teamwork, sharing and roles: see 17-full-feedback.md).
+- Per-Note passwords.
 - User-defined fields, schemas, formulas, Notion-like databases.
 - Task dependencies or a generic graph database.
 - Gamification/productivity scores.

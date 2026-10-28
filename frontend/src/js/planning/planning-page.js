@@ -1,5 +1,8 @@
 import { t, statusLabel } from '../lib/i18n.js';
-import { taskCaptureValues, createCapturedTask } from './task-capture.js';
+import { taskCaptureValues, createCapturedTask, seriesPayload } from './task-capture.js';
+import { openScheduleMenu } from './schedule-picker.js';
+import { renderSeriesList } from './series-list.js';
+import { addDays, localDateTime } from '../lib/calendar.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
@@ -8,7 +11,13 @@ import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { NoteContentEditor } from '../notes/note-content-editor.js';
 import { collectionPage, renderPagination } from './collection-page.js';
-import { localDate, taskMatchesView, resourceLinks } from './task-views.js';
+import {
+    localDate,
+    taskIsOverdue,
+    taskMatchesView,
+    taskViewStatus,
+    resourceLinks,
+} from './task-views.js';
 import {
     creationState,
     createWithForm,
@@ -312,9 +321,7 @@ export function initTasksPage(root) {
     const form = root.querySelector('[data-task-create-form]');
     let tasks = [];
     const requestedView = new URLSearchParams(location.search).get('view');
-    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'history', 'completed'].includes(
-        requestedView,
-    )
+    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'repeating'].includes(requestedView)
         ? requestedView
         : 'today';
     let today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
@@ -328,35 +335,214 @@ export function initTasksPage(root) {
     const status = root.querySelector('[data-task-status]');
     const narrow = window.matchMedia('(max-width: 600px)');
     let size = narrow.matches ? 4 : 8;
+    let series = [];
+    const completedList = root.querySelector('[data-task-completed-list]');
+    const completedSection = root.querySelector('[data-task-completed]');
+    const iconButton = (label, symbol, onClick) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'icon-button task-row-icon';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.textContent = symbol;
+        button.addEventListener('click', onClick);
+        return button;
+    };
+    const mutate = async (button, operation) => {
+        button.disabled = true;
+        try {
+            await operation();
+            await load();
+        } catch (error) {
+            showError(root, error);
+        } finally {
+            button.disabled = false;
+        }
+    };
+    // Row order follows the approved reference: tick, name, schedule icons,
+    // week, Edit, Remove, then the Important star at the end.
+    const taskRow = (task) => {
+        const article = document.createElement('article');
+        const overdue = taskIsOverdue(task, today);
+        const done = task.status === 'Done';
+        article.className = `planning-list-item task-row${overdue ? ' is-overdue' : ''}${done ? ' is-done' : ''}`;
+        const copy = document.createElement('div');
+        const name = document.createElement('a');
+        name.href = `/tasks/${encodeURIComponent(task.id)}`;
+        name.textContent = task.name;
+        const facts = document.createElement('small');
+        facts.textContent = `${statusLabel(task.status)}${overdue ? ` · ${t('Overdue')}` : ''}${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}${task.reminder_at ? ` · ⏰ ${new Date(task.reminder_at).toLocaleString()}` : ''}${task.series_id ? ` · ${t('Repeats')}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} ${t('min')}` : ''}`;
+        const context =
+            parentOptions.get(`milestone:${task.milestone_id}`) ||
+            parentOptions.get(`goal:${task.goal_id}`);
+        if (context) {
+            const chip = document.createElement('span');
+            chip.className = 'context-chip';
+            chip.textContent = context.name;
+            copy.append(chip);
+        }
+        copy.append(name, facts);
+        const action = document.createElement('button');
+        action.className = 'task-completion-button';
+        action.setAttribute('aria-label', `${done ? t('Reopen') : t('Complete')} ${task.name}`);
+        action.setAttribute('aria-pressed', String(done));
+        action.type = 'button';
+        action.textContent = done ? '✓' : '○';
+        action.addEventListener('click', () =>
+            mutate(action, () => transitionEntity('task', task, done ? 'reopen' : 'complete')),
+        );
+        const actions = document.createElement('div');
+        actions.className = 'action-row task-row-actions';
+        if (!done) {
+            const dateButton = iconButton(t('Due date'), '📅', (event) =>
+                openScheduleMenu(event.currentTarget, 'date', {
+                    today,
+                    value: task.deadline,
+                    onSelect: (deadline) =>
+                        mutate(dateButton, () =>
+                            patch(`/api/v1/tasks/${task.id}`, {
+                                base_version: task.version,
+                                deadline,
+                            }),
+                        ),
+                }),
+            );
+            dateButton.dataset.scheduleOpen = 'date';
+            const reminderButton = iconButton(t('Remind me'), '⏰', (event) =>
+                openScheduleMenu(event.currentTarget, 'reminder', {
+                    today,
+                    value: task.reminder_at ? localDateTime(new Date(task.reminder_at)) : null,
+                    onSelect: (reminder) =>
+                        mutate(reminderButton, () =>
+                            patch(`/api/v1/tasks/${task.id}`, {
+                                base_version: task.version,
+                                reminder_at: reminder ? new Date(reminder).toISOString() : null,
+                            }),
+                        ),
+                }),
+            );
+            reminderButton.dataset.scheduleOpen = 'reminder';
+            const repeatButton = iconButton(t('Repeat'), '🔁', (event) =>
+                openScheduleMenu(event.currentTarget, 'repeat', {
+                    today,
+                    onSelect: (choice) => {
+                        if (!choice) return;
+                        // The existing Task stays as it is; the series starts the day after it.
+                        const start = addDays(
+                            task.deadline && task.deadline > today ? task.deadline : today,
+                            1,
+                        );
+                        mutate(repeatButton, () =>
+                            post(
+                                '/api/v1/task-series',
+                                seriesPayload(
+                                    { ...task, deadline: task.deadline ? start : null },
+                                    choice,
+                                    start,
+                                ),
+                            ),
+                        );
+                    },
+                }),
+            );
+            repeatButton.dataset.scheduleOpen = 'repeat';
+            const week = iconButton(
+                selectedIds.has(task.id) ? t('Remove from this week') : t('Select for week'),
+                selectedIds.has(task.id) ? '📌' : '📍',
+                () =>
+                    mutate(week, () =>
+                        selectedIds.has(task.id)
+                            ? remove(`/api/v1/weekly-selections/task/${task.id}`)
+                            : post('/api/v1/weekly-selections/task', { id: task.id, position: 0 }),
+                    ),
+            );
+            week.setAttribute('aria-pressed', String(selectedIds.has(task.id)));
+            actions.append(dateButton, reminderButton, repeatButton, week);
+        }
+        const edit = document.createElement('a');
+        edit.className = 'button button-quiet';
+        edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
+        edit.textContent = t('Edit');
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'button button-quiet';
+        removeButton.textContent = t('Remove');
+        removeButton.addEventListener('click', () => {
+            if (
+                !window.confirm(
+                    `${t('Remove')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
+                )
+            )
+                return;
+            mutate(removeButton, () =>
+                remove(`/api/v1/tasks/${task.id}`, { base_version: task.version }),
+            );
+        });
+        const important = iconButton(
+            `${t('Mark important')}: ${task.name}`,
+            task.importance === 5 ? '★' : '☆',
+            () =>
+                mutate(important, () =>
+                    patch(`/api/v1/tasks/${task.id}`, {
+                        base_version: task.version,
+                        importance: task.importance === 5 ? 3 : 5,
+                    }),
+                ),
+        );
+        important.classList.toggle('is-important', task.importance === 5);
+        important.setAttribute('aria-pressed', String(task.importance === 5));
+        actions.append(edit, removeButton, important);
+        article.append(action, copy, actions);
+        return article;
+    };
     const render = () => {
         root.querySelector('.task-filter-details summary').textContent =
             `${t('Filter and search')} · ${status.selectedOptions[0].textContent}${search.value.trim() ? ` · ${t('Search active')}` : ''}`;
         const timezone = window.notesBootstrap.preferences.timezone;
-        root.querySelector('[data-task-history-hint]').hidden = taskView !== 'history';
         for (const button of root.querySelectorAll('[data-task-view]')) {
             button.setAttribute('aria-pressed', String(button.dataset.taskView === taskView));
+            if (button.dataset.taskView === 'repeating') {
+                button.querySelector('[data-task-view-count]').textContent = series.filter(
+                    (item) => item.state !== 'Ended',
+                ).length;
+                continue;
+            }
             const count = collectionPage(
                 tasks.filter((task) =>
                     taskMatchesView(task, button.dataset.taskView, today, timezone, selectedIds),
                 ),
                 {
                     query: search.value,
-                    status:
-                        ['history', 'completed'].includes(taskView) && status.value === 'open'
-                            ? 'all'
-                            : status.value,
+                    status: taskViewStatus(button.dataset.taskView, status.value),
                 },
             ).total;
             button.querySelector('[data-task-view-count]').textContent = count;
         }
+        if (taskView === 'repeating') {
+            completedSection.hidden = true;
+            root.querySelector('[data-task-pagination]').replaceChildren();
+            renderSeriesList(list, series, {
+                today,
+                reload: load,
+                onError: (error) => showError(root, error),
+            });
+            return;
+        }
+        // Completed (not yet in history) Tasks sit under the active list; unticking moves them back.
+        const completed = collectionPage(
+            tasks.filter((task) =>
+                taskMatchesView(task, 'completed', today, timezone, selectedIds),
+            ),
+            { query: search.value, status: 'all', page: 0, size: 100 },
+        );
+        completedSection.hidden = !completed.total || status.value !== 'open';
+        completedSection.querySelector('[data-task-completed-count]').textContent = completed.total;
+        completedList.replaceChildren(...completed.items.map(taskRow));
         const result = collectionPage(
             tasks.filter((task) => taskMatchesView(task, taskView, today, timezone, selectedIds)),
             {
                 query: search.value,
-                status:
-                    ['history', 'completed'].includes(taskView) && status.value === 'open'
-                        ? 'all'
-                        : status.value,
+                status: taskViewStatus(taskView, status.value),
                 page,
                 size,
             },
@@ -375,144 +561,21 @@ export function initTasksPage(root) {
                     : 'Capture a task now and add details when you need them.',
                 ...(tasks.length ? {} : { href: '#task-name', action: 'Add your first task' }),
             });
-        for (const task of result.items) {
-            const article = document.createElement('article');
-            article.className = 'planning-list-item';
-            const copy = document.createElement('div');
-            const name = document.createElement('a');
-            name.href = `/tasks/${encodeURIComponent(task.id)}`;
-            name.textContent = task.name;
-            const status = document.createElement('small');
-            status.textContent = `${statusLabel(task.status)}${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} ${t('min')}` : ''}`;
-            const context =
-                parentOptions.get(`milestone:${task.milestone_id}`) ||
-                parentOptions.get(`goal:${task.goal_id}`);
-            if (context) {
-                const chip = document.createElement('span');
-                chip.className = 'context-chip';
-                chip.textContent = context.name;
-                copy.append(chip);
-            }
-            copy.append(name, status);
-            if (taskView === 'history' && task.completed_at) {
-                const completed = document.createElement('small');
-                completed.textContent = `${t('Completed at')} ${new Date(task.completed_at).toLocaleString(window.notesBootstrap.preferences.locale === 'vi' ? 'vi-VN' : 'en-US')}`;
-                copy.append(completed);
-            }
-            const action = document.createElement('button');
-            action.className = 'task-completion-button';
-            action.setAttribute(
-                'aria-label',
-                `${task.status === 'Done' ? t('Reopen') : t('Complete')} ${task.name}`,
-            );
-            action.setAttribute('aria-pressed', String(task.status === 'Done'));
-            action.type = 'button';
-            action.textContent = task.status === 'Done' ? '✓' : '○';
-            action.addEventListener('click', async () => {
-                action.disabled = true;
-                try {
-                    if (
-                        await transitionEntity(
-                            'task',
-                            task,
-                            task.status === 'Done' ? 'reopen' : 'complete',
-                        )
-                    ) {
-                        await load();
-                    }
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    action.disabled = false;
-                }
-            });
-            const week = document.createElement('button');
-            week.className = 'button button-quiet';
-            week.type = 'button';
-            week.textContent = selectedIds.has(task.id)
-                ? t('Selected this week')
-                : t('Select for week');
-            week.setAttribute('aria-pressed', String(selectedIds.has(task.id)));
-            week.addEventListener('click', async () => {
-                week.disabled = true;
-                try {
-                    if (selectedIds.has(task.id)) {
-                        await remove(`/api/v1/weekly-selections/task/${task.id}`);
-                        selectedIds.delete(task.id);
-                    } else {
-                        await post('/api/v1/weekly-selections/task', { id: task.id, position: 0 });
-                        selectedIds.add(task.id);
-                    }
-                    render();
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    week.disabled = false;
-                }
-            });
-            const actions = document.createElement('div');
-            actions.className = 'action-row';
-            const edit = document.createElement('a');
-            edit.className = 'button button-quiet';
-            edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
-            edit.textContent = t('Edit');
-            const important = document.createElement('button');
-            important.type = 'button';
-            important.className = 'icon-button';
-            important.textContent = task.importance === 5 ? '★' : '☆';
-            important.setAttribute('aria-label', `${t('Mark important')}: ${task.name}`);
-            important.setAttribute('aria-pressed', String(task.importance === 5));
-            important.addEventListener('click', async () => {
-                important.disabled = true;
-                try {
-                    await patch(`/api/v1/tasks/${task.id}`, {
-                        base_version: task.version,
-                        importance: task.importance === 5 ? 3 : 5,
-                    });
-                    await load();
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    important.disabled = false;
-                }
-            });
-            const archive = document.createElement('button');
-            archive.type = 'button';
-            archive.className = 'button button-quiet';
-            archive.textContent = t('Archive');
-            archive.addEventListener('click', async () => {
-                if (
-                    !window.confirm(
-                        `Archive “${task.name}”? This removes it from active lists without deleting its data.`,
-                    )
-                )
-                    return;
-                archive.disabled = true;
-                try {
-                    await remove(`/api/v1/tasks/${task.id}`, { base_version: task.version });
-                    await load();
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    archive.disabled = false;
-                }
-            });
-            actions.append(week, edit, important, archive);
-            article.append(action, copy, actions);
-            list.append(article);
-        }
+        list.append(...result.items.map(taskRow));
     };
     const load = async () => {
         const ticket = reads.begin();
         try {
-            const [response, dashboard, goals, milestones] = await Promise.all([
+            const [response, dashboard, goals, milestones, seriesResponse] = await Promise.all([
                 get('/api/v1/tasks', { signal: ticket.signal }),
                 get('/api/v1/dashboard', { signal: ticket.signal }),
                 get('/api/v1/goals', { signal: ticket.signal }),
                 get('/api/v1/milestones', { signal: ticket.signal }),
+                get('/api/v1/task-series', { signal: ticket.signal }),
             ]);
             if (!reads.isCurrent(ticket)) return;
             tasks = response.payload.data;
+            series = seriesResponse.payload.data;
             today = dashboard.payload.data.today;
             selectedIds = new Set(dashboard.payload.data.selected_tasks.map((task) => task.id));
             const parentValue = parent.value;

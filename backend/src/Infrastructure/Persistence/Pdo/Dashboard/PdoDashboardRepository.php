@@ -34,6 +34,16 @@ SQL);
         return $statement->fetchAll();
     }
 
+    /** The earliest year with any activity or the account's creation year. */
+    public function firstActivityYear(int $userId): ?int
+    {
+        $statement = $this->pdo->prepare('SELECT LEAST(COALESCE((SELECT YEAR(MIN(effective_date)) FROM activities WHERE user_id = :activity_user), 9999), (SELECT YEAR(created_at) FROM users WHERE id = :user))');
+        $statement->execute(['activity_user' => $userId, 'user' => $userId]);
+        $year = $statement->fetchColumn();
+
+        return $year === false || $year === null ? null : (int) $year;
+    }
+
     /** @return list<array<string, mixed>> */
     public function todayTasks(int $userId, string $today, string $utcStart, string $utcEnd): array
     {

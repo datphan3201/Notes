@@ -82,4 +82,21 @@ final readonly class PdoAIActionRepository
         return $this->find($userId, $id)
             ?? throw new \RuntimeException('AI action missing after update.');
     }
+
+    /** @return array{goals:list<array<string,mixed>>,open_tasks:list<array<string,mixed>>,habits:list<array<string,mixed>>} bounded owner-only facts */
+    public function assistantSummary(int $userId): array
+    {
+        $read = function (string $sql) use ($userId): array {
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute(['user' => $userId]);
+
+            return $statement->fetchAll();
+        };
+
+        return [
+            'goals' => $read('SELECT name, status, deadline FROM goals WHERE user_id = :user AND archived_at IS NULL ORDER BY updated_at DESC LIMIT 50'),
+            'open_tasks' => $read("SELECT name, status, deadline, importance FROM tasks WHERE user_id = :user AND archived_at IS NULL AND status <> 'Done' ORDER BY deadline IS NULL, deadline, updated_at DESC LIMIT 100"),
+            'habits' => $read('SELECT name, period, target_frequency FROM habits WHERE user_id = :user AND archived_at IS NULL ORDER BY position LIMIT 50'),
+        ];
+    }
 }

@@ -9,11 +9,13 @@
 .app-topbar {
     min-height: 56px;
 }
-.planning-page > .workspace-header {
+.planning-page > .workspace-header,
+.workspace > .workspace-header {
     padding-bottom: 18px;
     gap: 14px;
 }
-.planning-page > .workspace-header p {
+.planning-page > .workspace-header p,
+.workspace > .workspace-header p {
     line-height: 1.5;
 }
 .workspace-section-menu {
@@ -63,9 +65,6 @@
     grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
     gap: 24px;
     align-items: start;
-}
-.activity-focus {
-    max-width: 620px;
 }
 .dashboard-page .collection-empty {
     min-height: 0;
@@ -179,7 +178,8 @@ body:has(.workspace-dialog[open]) {
     .planning-page > .workspace-header {
         gap: 12px;
     }
-    .planning-page > .workspace-header h1 {
+    .planning-page > .workspace-header h1,
+    .workspace > .workspace-header h1 {
         font-size: 1.5rem;
     }
     .planning-page > .workspace-header > .action-row {

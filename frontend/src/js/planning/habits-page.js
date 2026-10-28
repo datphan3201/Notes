@@ -17,40 +17,14 @@ function showError(root, error) {
 export function initHabitsPage(root) {
     const reads = new LatestRequest();
     const habitList = root.querySelector('[data-habit-list]');
-    const seriesList = root.querySelector('[data-series-list]');
-    const today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
-    const seriesForm = root.querySelector('[data-series-create-form]');
-    const seriesStart = seriesForm.querySelector('[name="start_date"]');
-    const frequency = seriesForm.querySelector('[name="frequency"]');
-    const weekdayFieldset = seriesForm.querySelector('[data-series-weekdays]');
-    const previewOutput = seriesForm.querySelector('[data-series-preview-output]');
-    seriesStart.value = today;
-    creationState(seriesForm).markSaved();
-    const seriesPayload = () => {
-        const data = new FormData(seriesForm);
-        return {
-            name: data.get('name'),
-            frequency: data.get('frequency'),
-            interval_count: Number(data.get('interval_count')),
-            weekdays: data.getAll('weekdays').map(Number),
-            start_date: data.get('start_date'),
-            end_date: data.get('end_date') || null,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            local_time: data.get('local_time') || null,
-            checklist: [],
-            tag_ids: [],
-            contribution_goal_ids: [],
-        };
-    };
 
     const load = async () => {
         const ticket = reads.begin();
         root.setAttribute('aria-busy', 'true');
         root.querySelector('[data-planning-error]').classList.add('is-hidden');
         try {
-            const [habits, series, dashboard] = await Promise.all([
+            const [habits, dashboard] = await Promise.all([
                 get('/api/v1/habits', { signal: ticket.signal }),
-                get('/api/v1/task-series', { signal: ticket.signal }),
                 get('/api/v1/dashboard', { signal: ticket.signal }),
             ]);
             const histories = await Promise.all(
@@ -134,6 +108,12 @@ export function initHabitsPage(root) {
                 marker.textContent = checkedDates.has(habitToday) ? '✓' : '';
                 marker.classList.toggle('is-checked', checkedDates.has(habitToday));
                 copy.append(marker, name);
+                if (habit.description) {
+                    const description = document.createElement('p');
+                    description.className = 'subtle-copy';
+                    description.textContent = habit.description;
+                    copy.append(description);
+                }
                 const timezone = document.createElement('small');
                 timezone.textContent = `${habit.timezone} · today ${habitToday}`;
                 copy.append(progress, timezone);
@@ -170,75 +150,6 @@ export function initHabitsPage(root) {
                     href: '#habit-name',
                     action: 'Create your first habit',
                 });
-            seriesList.replaceChildren();
-            for (const item of series.payload.data) {
-                const row = document.createElement('article');
-                row.className = 'planning-list-item planning-list-item-wrap';
-                const copy = document.createElement('div');
-                const name = document.createElement('strong');
-                name.textContent = item.name;
-                const meta = document.createElement('small');
-                meta.textContent = `${item.state} · ${item.frequency} · from ${item.start_date}${item.end_date ? ` to ${item.end_date}` : ''}`;
-                copy.append(name, meta);
-                const actions = document.createElement('div');
-                actions.className = 'action-row';
-                if (item.state !== 'Ended') {
-                    const stateButton = document.createElement('button');
-                    stateButton.type = 'button';
-                    stateButton.className = 'button button-quiet';
-                    const action = item.state === 'Paused' ? 'resume' : 'pause';
-                    stateButton.textContent = action === 'resume' ? 'Resume' : 'Pause';
-                    stateButton.addEventListener('click', async () => {
-                        stateButton.disabled = true;
-                        try {
-                            await post(`/api/v1/task-series/${item.id}/${action}`, {
-                                base_version: item.version,
-                            });
-                            await load();
-                        } catch (error) {
-                            showError(root, error);
-                        } finally {
-                            stateButton.disabled = false;
-                        }
-                    });
-                    const endButton = document.createElement('button');
-                    endButton.type = 'button';
-                    endButton.className = 'button button-quiet';
-                    endButton.textContent = 'End';
-                    endButton.addEventListener('click', async () => {
-                        if (
-                            !window.confirm(
-                                `End “${item.name}” today and archive future occurrences that have not started?`,
-                            )
-                        )
-                            return;
-                        endButton.disabled = true;
-                        try {
-                            await post(`/api/v1/task-series/${item.id}/end`, {
-                                base_version: item.version,
-                                end_date: today,
-                                archive_future: true,
-                            });
-                            await load();
-                        } catch (error) {
-                            showError(root, error);
-                        } finally {
-                            endButton.disabled = false;
-                        }
-                    });
-                    actions.append(stateButton, endButton);
-                }
-                row.append(copy, actions);
-                seriesList.append(row);
-            }
-            if (!series.payload.data.length)
-                renderEmptyState(seriesList, {
-                    title: 'Make room for a routine.',
-                    description: 'Schedule daily or weekly tasks to keep repeatable work on track.',
-                    icon: 'calendar',
-                    href: '#series-name',
-                    action: 'Plan a recurring task',
-                });
         } catch (error) {
             if (reads.shouldIgnore(ticket, error)) return;
             showError(root, error);
@@ -267,6 +178,7 @@ export function initHabitsPage(root) {
                     period: data.get('period'),
                     target_frequency:
                         data.get('period') === 'daily' ? 1 : Number(data.get('target_frequency')),
+                    description: data.get('description') || '',
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 });
                 form.reset();
@@ -277,45 +189,6 @@ export function initHabitsPage(root) {
                 showError(root, error);
             }
         });
-    });
-    seriesForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const payload = seriesPayload();
-        createWithForm(seriesForm, async () => {
-            try {
-                await post('/api/v1/task-series', payload);
-                seriesForm.reset();
-                frequency.dispatchEvent(new Event('change'));
-                seriesStart.value = today;
-                previewOutput.textContent = '';
-                finishCreation(seriesForm);
-                load();
-            } catch (error) {
-                showError(root, error);
-            }
-        });
-    });
-    frequency.addEventListener('change', () => {
-        weekdayFieldset.classList.toggle('is-hidden', frequency.value !== 'weekly');
-        if (frequency.value === 'daily') {
-            for (const checkbox of weekdayFieldset.querySelectorAll('input'))
-                checkbox.checked = false;
-        }
-    });
-    root.querySelector('[data-series-preview]').addEventListener('click', async (event) => {
-        const button = event.currentTarget;
-        button.disabled = true;
-        try {
-            const response = await post('/api/v1/task-series/preview', seriesPayload());
-            const dates = response.payload.data;
-            previewOutput.textContent = dates.length
-                ? `Upcoming dates: ${dates.slice(0, 8).join(', ')}${dates.length > 8 ? '…' : ''}`
-                : 'No matching dates in the preview range.';
-        } catch (error) {
-            showError(root, error);
-        } finally {
-            button.disabled = false;
-        }
     });
     root.querySelector('[data-planning-retry]').addEventListener('click', load);
     load();

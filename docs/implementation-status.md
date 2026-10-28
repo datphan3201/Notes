@@ -275,3 +275,88 @@ No further feature work continues until the user resumes.
 Paused at the user's explicit request after finishing the current core language
 section and verification. Resume with the outstanding acceptance checks above;
 do not treat the three feedback sections as fully accepted/release-certified.
+
+## Feedback audit fixes — 2026-10-27
+
+An audit of the user's feedback PDF against the paused feedback release found
+and fixed these defects inside the approved scope:
+
+- Habit and Task-series creation rejected browser time zones such as
+  `Asia/Saigon` ("The time zone is invalid") because the local PHP 8.5.4 uses a
+  system tz database without legacy links. `Planner\Support\TimeZoneNames` maps
+  aliases to an equivalent identifier through ext-intl; Habit, Task series and
+  account preference validation store the canonical name.
+- Task filter count badges applied the active view's status rule, so Completed
+  showed 0 while Today was open. Each badge now applies its own view's rule.
+- Unfinished Tasks overdue for one or two dates appeared in no filter except All.
+  Today now carries them until History takes them, marked "Overdue" in text and
+  danger colors (contract updated in `docs/plan/05-ui-ux.md`).
+- Removed triple escaping in the sidebar account caption and localized remaining
+  Appearance, archive-confirmation and repeating-capture messages.
+
+Evidence: `php backend/vendor/bin/phpunit -c backend/phpunit.xml` **96 tests /
+751 assertions** pass on guarded goals_test; `npm --prefix frontend run
+test:unit` **58** pass; `format:check` and `build` pass. No real-browser check of
+these changes was performed. `frontend/package-lock.json` already had unrelated
+uncommitted dependency updates dated 2026-10-26 that this work did not change.
+
+## Full feedback extension — 2026-10-27
+
+The user directed that every feedback-PDF item be delivered and conflicting
+rules be changed. PLAN.md, 01-scope, 09-deferred, agent.md and the new contract
+`docs/plan/17-full-feedback.md` record the decision. Forward migrations
+0016–0020 add roles/locking/reports/system settings, Note shares and
+notifications, two-factor codes, history preferences and RGB/background Note
+styles, and Teamwork tables. Old migrations were not edited.
+
+Implemented:
+
+- Roles and administration: `users:role` console command, `/admin` with
+  report review (snapshot, not live Note), resolve/dismiss with reply, account
+  lock/unlock (sessions invalidated, login refused) and the history limit.
+- Note sharing: owner invites by email (no account enumeration), view/edit
+  permission, change/remove, recipient accept/decline/leave, "Shared with me",
+  title/content editing with version conflicts, reporting, notifications.
+- Notifications: bell with unread count (60 s polling), share/report/team
+  events and Task reminders; opt-out and email copies follow Settings.
+- Two-step verification: email codes or RFC 6238 authenticator (secret
+  encrypted with the session key, manual key/otpauth link, email fallback).
+- Settings: Security groups password and 2FA; Appearance "+" tile for a private
+  image or RGB color; Settings → Task history with Find, user thresholds and
+  retention; `history:prune` archives expired history and anything beyond the
+  administrator limit (never hard-deletes).
+- Dashboard Activity: full-year grid with month labels and a year list.
+- Tasks/Goals: shared capture with visible description and icon menus for due
+  date, reminder and repeat (presets, month calendar, time, custom interval);
+  rows with tick, schedule icons, week pin, Edit, Remove, Important star;
+  Completed list under the active list; Repeating view replaces the Habits tab.
+- Habits: Recurring tab removed; optional description.
+- Notes: one View toggle, Sort by title/modified/created, explicit Save, any RGB
+  color, background from an attached image, Share.
+- AI: sidebar tab replaced by a floating chat that answers from a bounded,
+  read-only summary; proposals remain at /ai.
+- Teamwork: team goals with members/roles (admin/editor/viewer), invitations,
+  assigned tasks with status, per-member completion and polled team chat.
+
+Evidence: full `phpunit` **102 tests / 824 assertions** pass on guarded
+goals_test, plus the later page-render test (1 test / 52 assertions) for every
+changed page; new coverage includes sharing permissions/isolation, reports and
+locking, TOTP login, Teamwork roles/chat and RFC 6238 vectors. Node suite **62**
+pass; `format:check` and `build` pass; changed PHP and views lint clean.
+Not done: no real-browser walkthrough of the new UI, no `migrate` on goals_dev,
+no production mail/cron setup, and authenticator setup has no QR image (manual
+key and otpauth link only). `frontend/package-lock.json` changes predate this work.
+
+## Teamwork layout and team task capture — 2026-10-28
+
+Implemented contract `docs/plan/17-full-feedback.md` §11.1: Teamwork search box,
+4-per-page goal carousel with page arrows, Goal details | Members and Tasks |
+Team chat layout with scrolling panels, Invite dialog, and a team task dialog
+that reuses the Tasks capture fields plus assignee. Migration
+`0021_extend_team_tasks` adds importance, start date, estimate, reminder and
+repeat rule; completing a repeating team task creates the next occurrence and due
+team reminders reach the assignee's bell.
+Evidence: full `phpunit` **106 tests / 896 assertions** pass, including `TeamTaskRepeatTest` (2 tests) and `FullFeedbackHttpTest` (6 tests /
+129 assertions) pass; Node suite **67** pass; `format:check` and `build` pass.
+Not done: no real-browser walkthrough; `php bin/console migrate` must be run on
+goals_dev for 0021.

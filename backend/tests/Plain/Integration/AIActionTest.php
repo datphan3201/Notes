@@ -240,6 +240,10 @@ final class AIActionTest extends TestCase
             {
                 return 'fake';
             }
+            public function answer(string $question, array $context): string
+            {
+                return 'fake answer';
+            }
             public function model(): string
             {
                 return 'fake-v1';

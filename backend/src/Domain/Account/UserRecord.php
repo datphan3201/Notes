@@ -15,6 +15,15 @@ final readonly class UserRecord
         public ?string $avatarPath,
         public int $authVersion,
         public string $biography = '',
+        public string $role = 'user',
+        public ?string $lockedAt = null,
+        public ?string $twoFactorMethod = null,
+        public ?string $twoFactorSecret = null,
     ) {
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

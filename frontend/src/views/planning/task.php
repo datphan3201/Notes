@@ -139,8 +139,10 @@
                     <textarea id="edit-task-result" name="expected_result" maxlength="10000" rows="2"></textarea>
                 </div>
                 <div class="field">
-                    <label for="edit-task-importance"><?= $view->e($view->t('Importance (1–5)')) ?></label>
-                    <input id="edit-task-importance" name="importance" type="number" min="1" max="5" required>
+                    <label for="edit-task-importance"><?= $view->e($view->t('Importance')) ?></label>
+                    <select id="edit-task-importance" name="importance" required>
+                        <?php require __DIR__.'/importance-options.php'; ?>
+                    </select>
                 </div>
                 <div class="field">
                     <label for="edit-task-estimate"><?= $view->e($view->t('Estimated minutes (optional)')) ?></label>

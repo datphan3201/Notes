@@ -1,3 +1,5 @@
+import { t } from '../lib/i18n.js';
+import { NoteSharing } from './note-sharing.js';
 import { get, patch, post, remove, upload } from '../lib/http';
 import { RecoveryStore } from '../lib/recovery-store';
 import { secureUuidV4 } from '../lib/uuid.js';
@@ -53,6 +55,22 @@ export class NoteEditor {
 
     bind() {
         this.title.addEventListener('input', () => this.input());
+        this.root
+            .querySelector('[data-editor-save]')
+            ?.addEventListener('click', () => this.requestClose());
+        // Clicking the dimmed page behind the editor saves and closes, like Save.
+        this.backdrop.addEventListener('click', () => {
+            if (!document.querySelector('[data-confirm-dialog]:not(.is-hidden)'))
+                this.requestClose();
+        });
+        this.root
+            .querySelector('[data-color-custom]')
+            ?.addEventListener('change', (event) =>
+                this.setColor(event.currentTarget.value.toLowerCase()),
+            );
+        this.root
+            .querySelector('[data-note-background]')
+            ?.addEventListener('change', (event) => this.setBackground(event.currentTarget.value));
         this.content.addEventListener('input', () => this.input());
         this.title.addEventListener('compositionstart', () => this.machine?.compositionStart());
         this.content.addEventListener('compositionstart', () => this.machine?.compositionStart());
@@ -220,6 +238,36 @@ export class NoteEditor {
         this.machine?.input({ color });
     }
 
+    /** Background images live outside the autosave snapshot; saving them never conflicts. */
+    async setBackground(attachmentId) {
+        if (!this.note?.id) return;
+        try {
+            const response = await NoteSharing.setBackground(this.note.id, attachmentId);
+            this.note = { ...this.note, ...response.payload.data, version: this.note.version };
+            this.renderBackground(this.note);
+            this.onChanged?.();
+        } catch (error) {
+            this.toast(error.message || 'Unable to change the background.', true);
+        }
+    }
+
+    renderBackground(note) {
+        const field = this.root.querySelector('[data-note-background-field]');
+        const select = this.root.querySelector('[data-note-background]');
+        if (!field || !select) return;
+        const images = (note.attachments || []).filter((attachment) => attachment.kind === 'image');
+        field.classList.toggle('is-hidden', !images.length);
+        select.replaceChildren(new Option(t('None'), ''));
+        for (const image of images) select.append(new Option(image.original_name, image.id));
+        select.value = note.background_attachment_id || '';
+        this.root
+            .querySelector('.editor-card, .modal-card')
+            ?.style.setProperty(
+                '--note-background-image',
+                note.background_url ? `url("${note.background_url}")` : 'none',
+            );
+    }
+
     setLabels(labelIds) {
         this.machine?.input({ label_ids: labelIds });
     }
@@ -238,7 +286,7 @@ export class NoteEditor {
             .classList.toggle('is-hidden', !['error', 'retry_wait'].includes(state.phase));
         this.root
             .querySelectorAll(
-                '[data-editor-pin], [data-editor-labels], [data-color], [data-attachment-input]',
+                '[data-editor-pin], [data-editor-labels], [data-color], [data-color-custom], [data-note-background], [data-attachment-input]',
             )
             .forEach((control) => {
                 control.disabled = locked || !state.persisted;
@@ -248,10 +296,16 @@ export class NoteEditor {
             this.note = note;
             this.heading.textContent = note.title || 'Untitled note';
             this.deleteButton.classList.toggle('is-hidden', !state.persisted);
+            this.root
+                .querySelector('[data-editor-share]')
+                ?.classList.toggle('is-hidden', !state.persisted);
+            this.renderBackground(note);
             this.attachmentsSection.classList.toggle('is-hidden', !state.persisted);
             this.renderAttachments(note.attachments || []);
         } else {
             this.deleteButton.classList.add('is-hidden');
+            this.root.querySelector('[data-editor-share]')?.classList.add('is-hidden');
+            this.root.querySelector('[data-note-background-field]')?.classList.add('is-hidden');
             this.attachmentsSection.classList.add('is-hidden');
             this.renderAttachments([]);
         }
@@ -262,6 +316,18 @@ export class NoteEditor {
             button.classList.toggle('is-selected', selected);
             button.setAttribute('aria-pressed', selected ? 'true' : 'false');
         });
+        const custom = this.root.querySelector('[data-color-custom]');
+        if (custom) {
+            const isCustom = state.draftSnapshot.color?.startsWith('#');
+            custom.closest('.color-custom').classList.toggle('is-selected', !!isCustom);
+            if (isCustom) custom.value = state.draftSnapshot.color;
+        }
+        this.root
+            .querySelector('.editor-dialog, [data-editor-dialog]')
+            ?.style.setProperty(
+                '--note-custom-color',
+                state.draftSnapshot.color?.startsWith('#') ? state.draftSnapshot.color : '',
+            );
         this.pinButton.setAttribute(
             'aria-pressed',
             state.draftSnapshot.is_pinned ? 'true' : 'false',

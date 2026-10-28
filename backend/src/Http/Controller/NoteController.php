@@ -30,7 +30,7 @@ final readonly class NoteController
     {
         $user = $this->auth->requireUser();
         $input = $this->validator->listing($request->query);
-        $page = $this->list->paginate($user->id, $input['q'], $input['label_ids'], $input['page']);
+        $page = $this->list->paginate($user->id, $input['q'], $input['label_ids'], $input['page'], $input['sort'], $input['direction']);
 
         return Response::json([
             'data' => array_map($this->serializer->summary(...), $page['items']),
@@ -76,6 +76,20 @@ final readonly class NoteController
         );
 
         return Response::json(['data' => $this->serializer->full($note)]);
+    }
+
+    /** @param array<string, string> $parameters */
+    public function background(Request $request, array $parameters): Response
+    {
+        $user = $this->auth->requireUser();
+        $input = $request->input();
+        $this->validator->rejectUnknown($input, ['attachment_id']);
+        $attachmentId = $input['attachment_id'] ?? null;
+        if ($attachmentId !== null && ! is_string($attachmentId)) {
+            throw new \Planner\Http\ValidationException(['attachment_id' => ['Choose an image attached to this note.']]);
+        }
+
+        return Response::json(['data' => $this->serializer->full($this->notes->setBackground($user->id, $parameters['note'], $attachmentId))]);
     }
 
     /** @param array<string, string> $parameters */

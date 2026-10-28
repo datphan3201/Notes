@@ -14,6 +14,7 @@ use Planner\Infrastructure\Persistence\Pdo\Habits\PdoHabitRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 
@@ -359,7 +360,8 @@ final readonly class HabitService
         try {
             new DateTimeZone($value);
         } catch (\Exception) {
-            throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
+            return TimeZoneNames::canonical($value)
+                ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
         }
 
         return $value;

@@ -21,12 +21,12 @@ final readonly class NoteListQuery
      * @param  list<int>  $labelIds
      * @return array{items:list<NoteRecord>,total:int,current_page:int,per_page:int,last_page:int}
      */
-    public function paginate(int $userId, string $query, array $labelIds, int $page): array
+    public function paginate(int $userId, string $query, array $labelIds, int $page, string $sort = 'updated', string $direction = 'desc'): array
     {
         if ($labelIds !== [] && $this->tags->ownedIds($userId, $labelIds) !== $labelIds) {
             throw new ValidationException(['label_ids' => ['One or more tags do not exist.']]);
         }
 
-        return $this->notes->paginate($userId, $query, $labelIds, $page);
+        return $this->notes->paginate($userId, $query, $labelIds, $page, sort: $sort, direction: $direction);
     }
 }

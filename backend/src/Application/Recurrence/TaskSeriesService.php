@@ -15,6 +15,7 @@ use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Infrastructure\Persistence\Pdo\Recurrence\PdoTaskSeriesRepository;
 use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 use Throwable;
@@ -402,7 +403,8 @@ final readonly class TaskSeriesService
         try {
             new DateTimeZone($value);
         } catch (\Exception) {
-            throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
+            return TimeZoneNames::canonical($value)
+                ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
         }
         return $value;
     }

@@ -141,8 +141,34 @@ try {
             if ($result['warnings'] !== [] || $result['failed'] !== []) exit(1);
             break;
 
+        case 'users:role':
+            $email = strtolower(trim((string) ($argv[2] ?? '')));
+            $role = $argv[3] ?? '';
+            if ($email === '' || !in_array($role, ['user', 'admin'], true)) {
+                fwrite(STDERR, "Usage: php bin/console users:role <email> admin|user\n");
+                exit(2);
+            }
+            $accounts = new PdoAccountRepository($application['pdo']);
+            $user = $accounts->findByEmail($email);
+            if ($user === null) {
+                fwrite(STDERR, "No account uses that email.\n");
+                exit(1);
+            }
+            $accounts->setRole($user->id, $role, $application['clock']->now()->format('Y-m-d H:i:s.u'));
+            fwrite(STDOUT, sprintf("%s is now %s.\n", $email, $role));
+            break;
+
+        case 'history:prune':
+            $result = (new \Planner\Application\Planning\TaskHistoryService(
+                new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository($application['pdo']),
+                new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($application['pdo']),
+                $application['transactions'], $application['clock'],
+            ))->prune();
+            fwrite(STDOUT, sprintf("History checked for %d users; archived %d tasks.\n", $result['users'], $result['archived']));
+            break;
+
         case 'help':
-            fwrite(STDOUT, "Available commands:\n  reminders:send\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
+            fwrite(STDOUT, "Available commands:\n  users:role <email> admin|user\n  history:prune\n  reminders:send\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
             break;
 
         default:

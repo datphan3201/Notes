@@ -73,10 +73,84 @@ return static function (
     AIActionController $ai,
     \Planner\Http\Controller\PasswordResetController $passwordReset,
     \Planner\Http\Controller\ReminderController $reminders,
+    \Planner\Http\Controller\NotificationController $notifications,
+    \Planner\Http\Controller\NoteShareController $shares,
+    \Planner\Http\Controller\AdminController $admin,
+    \Planner\Http\Controller\TwoFactorController $twoFactor,
+    \Planner\Http\Controller\TeamController $teams,
+    \Planner\Http\Controller\AIChatController $chat,
 ) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
     return [
+        new Route(['GET'], '/two-factor', 'two-factor', $handler([$twoFactor, 'page'])),
+        new Route(['POST'], '/two-factor', 'two-factor.verify', $handler([$twoFactor, 'verify']), csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/two-factor/email', 'two-factor.email', $handler([$twoFactor, 'sendEmail']), csrf: true, rateLimit: 'two-factor'),
+        new Route(['GET'], '/api/v1/two-factor', 'api.two-factor.show', $handler([$twoFactor, 'status']), auth: true),
+        new Route(['POST'], '/api/v1/two-factor/totp', 'api.two-factor.totp.begin', $handler([$twoFactor, 'beginTotp']), auth: true, csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/api/v1/two-factor/totp/confirm', 'api.two-factor.totp.confirm', $handler([$twoFactor, 'confirmTotp']), auth: true, csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/api/v1/two-factor/email', 'api.two-factor.email.send', $handler([$twoFactor, 'sendSetupEmail']), auth: true, csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/api/v1/two-factor/email/confirm', 'api.two-factor.email.confirm', $handler([$twoFactor, 'confirmEmail']), auth: true, csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/api/v1/two-factor/disable', 'api.two-factor.disable', $handler([$twoFactor, 'disable']), auth: true, csrf: true, rateLimit: 'password-change'),
+        new Route(['GET'], '/api/v1/notifications', 'api.notifications.index', $handler([$notifications, 'index']), auth: true),
+        new Route(['POST'], '/api/v1/notifications/read', 'api.notifications.read-all', $handler([$notifications, 'readAll']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/notifications/{id}/read', 'api.notifications.read', $handler([$notifications, 'read']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PUT'], '/api/v1/notes/{note}/background', 'api.notes.background', $handler([$notes, 'background']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/notes/{note}/shares', 'api.notes.shares.index', $handler([$shares, 'index']), auth: true),
+        new Route(['POST'], '/api/v1/notes/{note}/shares', 'api.notes.shares.store', $handler([$shares, 'store']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PATCH'], '/api/v1/notes/{note}/shares/{share}', 'api.notes.shares.update', $handler([$shares, 'update']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/notes/{note}/shares/{share}', 'api.notes.shares.destroy', $handler([$shares, 'destroy']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/shared-notes', 'api.shared-notes.index', $handler([$shares, 'received']), auth: true),
+        new Route(['POST'], '/api/v1/shared-notes/invitations/{share}/{action}', 'api.shared-notes.respond', static function (Request $request, array $parameters) use ($shares): Response {
+            if (! in_array($parameters['action'], ['accept', 'decline'], true)) {
+                throw new \Planner\Http\HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+
+            return $shares->respond($request, $parameters);
+        }, auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/shared-notes/memberships/{share}', 'api.shared-notes.leave', $handler([$shares, 'leave']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/shared-notes/{note}', 'api.shared-notes.show', $handler([$shares, 'show']), auth: true),
+        new Route(['PATCH'], '/api/v1/shared-notes/{note}', 'api.shared-notes.update', $handler([$shares, 'edit']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/shared-notes/{note}/report', 'api.shared-notes.report', $handler([$shares, 'report']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/contacts', 'api.contacts', $handler([$teams, 'contacts']), auth: true),
+        new Route(['GET'], '/admin', 'admin.index', $handler([$admin, 'page']), auth: true),
+        new Route(['GET'], '/api/v1/admin/reports', 'api.admin.reports', $handler([$admin, 'reports']), auth: true),
+        new Route(['POST'], '/api/v1/admin/reports/{id}/resolve', 'api.admin.reports.resolve', $handler([$admin, 'resolve']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/admin/users', 'api.admin.users', $handler([$admin, 'users']), auth: true),
+        new Route(['POST'], '/api/v1/admin/users/{id}/{action}', 'api.admin.users.lock', static function (Request $request, array $parameters) use ($admin): Response {
+            if (! in_array($parameters['action'], ['lock', 'unlock'], true)) {
+                throw new \Planner\Http\HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+
+            return $admin->lock($request, $parameters);
+        }, auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/admin/settings', 'api.admin.settings', $handler([$admin, 'settings']), auth: true),
+        new Route(['PATCH'], '/api/v1/admin/settings', 'api.admin.settings.update', $handler([$admin, 'updateSettings']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/teamwork', 'planning.teamwork', $handler([$account, 'planningPage']), auth: true),
+        new Route(['GET'], '/api/v1/team-goals', 'api.team-goals.index', $handler([$teams, 'index']), auth: true),
+        new Route(['POST'], '/api/v1/team-goals', 'api.team-goals.store', $handler([$teams, 'store']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/team-goals/{id}', 'api.team-goals.show', $handler([$teams, 'show']), auth: true),
+        new Route(['PATCH'], '/api/v1/team-goals/{id}', 'api.team-goals.update', $handler([$teams, 'update']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/team-goals/{id}', 'api.team-goals.archive', $handler([$teams, 'archive']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/team-goals/{id}/members', 'api.team-goals.members.store', $handler([$teams, 'invite']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PATCH'], '/api/v1/team-goals/{id}/members/{member}', 'api.team-goals.members.update', $handler([$teams, 'changeRole']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/team-goals/{id}/members/{member}', 'api.team-goals.members.destroy', $handler([$teams, 'removeMember']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/team-goals/{id}/invitation/{action}', 'api.team-goals.respond', static function (Request $request, array $parameters) use ($teams): Response {
+            if (! in_array($parameters['action'], ['accept', 'decline'], true)) {
+                throw new \Planner\Http\HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+
+            return $teams->respond($request, $parameters);
+        }, auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/team-goals/{id}/tasks', 'api.team-goals.tasks.store', $handler([$teams, 'createTask']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PATCH'], '/api/v1/team-goals/{id}/tasks/{task}', 'api.team-goals.tasks.update', $handler([$teams, 'updateTask']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/team-goals/{id}/tasks/{task}', 'api.team-goals.tasks.archive', $handler([$teams, 'archiveTask']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/team-goals/{id}/messages', 'api.team-goals.messages.index', $handler([$teams, 'messages']), auth: true),
+        new Route(['POST'], '/api/v1/team-goals/{id}/messages', 'api.team-goals.messages.store', $handler([$teams, 'postMessage']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/ai/chat', 'api.ai.chat.status', $handler([$chat, 'status']), auth: true),
+        new Route(['POST'], '/api/v1/ai/chat', 'api.ai.chat', $handler([$chat, 'ask']), auth: true, csrf: true, rateLimit: 'ai-chat'),
+        new Route(['GET'], '/api/v1/dashboard/activity', 'api.dashboard.activity', $handler([$dashboard, 'activity']), auth: true),
+        new Route(['GET'], '/settings/history', 'settings.history', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/api/v1/reminders', 'api.reminders.index', $handler([$reminders, 'index']), auth: true),
         new Route(['GET'], '/up', 'up', static fn (Request $request, array $parameters): Response => Response::json(['data' => ['status' => 'ok']])),
         new Route(['GET'], '/forgot-password', 'password.forgot', $handler([$passwordReset, 'page'])),

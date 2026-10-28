@@ -7,6 +7,7 @@ namespace Tests\Plain\Unit;
 use PHPUnit\Framework\TestCase;
 use Planner\Support\SystemClock;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 use Planner\Support\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 
@@ -27,6 +28,16 @@ final class SupportTest extends TestCase
         self::assertSame(strtolower($uuid), $uuid);
         self::assertTrue(Uuid::isValid($uuid));
         self::assertSame(4, Uuid::fromString($uuid)->getVersion());
+    }
+
+    public function test_maps_browser_time_zone_aliases_to_identifiers_php_accepts(): void
+    {
+        self::assertSame('Asia/Ho_Chi_Minh', TimeZoneNames::canonical('Asia/Ho_Chi_Minh'));
+        self::assertSame('UTC', TimeZoneNames::canonical('UTC'));
+        self::assertSame('Asia/Ho_Chi_Minh', TimeZoneNames::canonical('Asia/Saigon'));
+        self::assertSame('Asia/Kolkata', TimeZoneNames::canonical('Asia/Calcutta'));
+        self::assertNull(TimeZoneNames::canonical('Bogus/Zone'));
+        self::assertNull(TimeZoneNames::canonical(''));
     }
 
     public function test_system_clock_returns_utc_immutable_time(): void

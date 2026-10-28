@@ -26,6 +26,25 @@ final readonly class PdoReminderRepository
         return $statement->fetchAll();
     }
 
+    /**
+     * Due team-task reminders for tasks assigned to the user in teams they joined.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function teamDue(int $userId, string $now): array
+    {
+        $statement = $this->pdo->prepare(<<<'SQL'
+SELECT task.id, task.name, task.reminder_at, task.team_goal_id
+FROM team_tasks task
+JOIN team_members member ON member.team_goal_id = task.team_goal_id AND member.user_id = task.assignee_id AND member.status = 'accepted'
+JOIN team_goals goal ON goal.id = task.team_goal_id AND goal.archived_at IS NULL
+WHERE task.assignee_id = :user AND task.reminder_at <= :now AND task.archived_at IS NULL AND task.status <> 'done'
+ORDER BY task.reminder_at, task.id LIMIT 100
+SQL);
+        $statement->execute(['user' => $userId, 'now' => $now]);
+        return $statement->fetchAll();
+    }
+
     public function sent(int $userId, string $taskId, string $now): void
     {
         $statement = $this->pdo->prepare('UPDATE tasks SET reminder_sent_at = :now WHERE user_id = :user AND id = :task');

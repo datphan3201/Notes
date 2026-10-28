@@ -69,6 +69,8 @@ final readonly class Application
             'mutations' => [240, 60],
             'uploads' => [30, 60],
             'password-change' => [5, 60],
+            'two-factor' => [10, 60],
+            'ai-chat' => [30, 3600],
             'ai-generation' => [10, 3600],
             'ai-apply' => [30, 3600],
             default => throw new \LogicException("Unknown rate limit bucket [$bucket]."),

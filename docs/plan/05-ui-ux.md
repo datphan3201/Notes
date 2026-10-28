@@ -128,8 +128,10 @@ blocked work is not promoted as the recommended next Task. Edit uses an icon in
 20% of the action row; the remaining 80% is Complete. It uses the same Checklist
 and ancestor acknowledgement flow as other Task controls.
 
-Tasks adds Today, Next, This week, Backlog, and All filters with factual counts.
-Today uses local due/start/occurrence dates or a schedule overlapping today;
+Tasks adds Today, Next, This week, Backlog, All and Repeating filters with factual counts.
+Today uses local due/start/occurrence dates or a schedule overlapping today, and
+also carries unfinished Tasks whose deadline is before today but not yet in
+History; those rows are visibly marked overdue with text, not color alone;
 Next uses future start/deadline/occurrence/scheduled dates; This week uses existing
 selections; Backlog has no date/schedule and is not selected. Filters can overlap;
 they are not status changes. Search/status remain available under Filter.
@@ -328,8 +330,8 @@ Task and Goal capture share description/date/priority/estimate/recurrence fields
 Native date/time pickers include Today/Tomorrow/Next-week presets. Task rows have
 a circular completion/reopen control, versioned importance toggle, Edit deep link,
 reversible weekly selection and confirmed archive (never destructive delete).
-Completed work is available immediately in Completed and after 24h in History;
-unfinished work at least three local calendar dates overdue is in History. The
+Completed work appears in a Completed list under the active list and moves to
+Settings → Task history after the user's thresholds (default 24h completed, 3 days overdue). The
 source rows are retained. Details and existing completion acknowledgements remain.
 Localization applies only to predefined interface copy. User names, Task names,
 Notes, descriptions and other owned content are never translated. Static views
