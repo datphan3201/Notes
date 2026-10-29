@@ -35,9 +35,20 @@ export function captureRepeatChoice(data) {
     };
 }
 
+/** "HH:MM" of an instant in the given time zone. */
+export function timeOfDay(instant, timeZone) {
+    return new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZone,
+    }).format(new Date(instant));
+}
+
 export function seriesPayload(input, choice, start) {
     if (input.deadline && input.deadline < start)
         throw new Error(t('The due date cannot be before the repeating start date.'));
+    const timezone = window.notesBootstrap.preferences.timezone;
     return {
         name: input.name,
         description: input.description,
@@ -48,7 +59,9 @@ export function seriesPayload(input, choice, start) {
         ...repeatRule(choice, start),
         start_date: start,
         end_date: choice.end || null,
-        timezone: window.notesBootstrap.preferences.timezone,
+        timezone,
+        // A reminder on repeating work recurs at the same local time on each occurrence.
+        reminder_time: input.reminder_at ? timeOfDay(input.reminder_at, timezone) : null,
         deadline_offset_days: input.deadline
             ? Math.max(
                   0,
@@ -67,10 +80,6 @@ export function seriesPayload(input, choice, start) {
 export async function createCapturedTask(data, input) {
     const choice = captureRepeatChoice(data);
     if (!choice) return post('/api/v1/tasks', input);
-    if (input.reminder_at)
-        throw new Error(
-            t('Set a reminder on the generated task after creating the repeating series.'),
-        );
     const start =
         input.start_date ||
         localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);

@@ -5,7 +5,7 @@
             <h1 id="settings-title"><?= $view->e($view->t('Security')) ?></h1>
             <p><?= $view->e($view->t('Change your password and protect sign-in with two-step verification.')) ?></p>
         </div>
-        <a class="button button-quiet" href="/"><?= $view->e($view->t('← Back to notes')) ?></a>
+        <a class="button button-quiet" href="/dashboard"><?= $view->e($view->t('← Back to Dashboard')) ?></a>
     </header>
     <div class="settings-panel settings-panel-narrow">
         <h2><?= $view->e($view->t('Change password')) ?></h2>

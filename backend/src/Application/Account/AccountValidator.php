@@ -77,7 +77,7 @@ final readonly class AccountValidator
     {
         $this->inputValidator->rejectUnknown($input, [
             'theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone',
-            'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'notifications_enabled', 'email_notifications', 'locale',
+            'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'background_id', 'notifications_enabled', 'email_notifications', 'locale',
             'history_completed_hours', 'history_overdue_days', 'history_retention_days',
         ]);
 
@@ -151,6 +151,15 @@ final readonly class AccountValidator
             }
         }
 
+        if (array_key_exists('background_id', $input)) {
+            // '' shows the preset theme; AccountService checks ownership.
+            if (! is_string($input['background_id']) || ($input['background_id'] !== '' && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/D', $input['background_id']) !== 1)) {
+                $errors['background_id'][] = 'Choose one of your backgrounds.';
+            } else {
+                $changes['background_id'] = $input['background_id'] === '' ? null : $input['background_id'];
+            }
+        }
+
         if (array_key_exists('custom_quote', $input)) {
             if (! is_string($input['custom_quote'])) {
                 $errors['custom_quote'][] = 'The quote must be plain text.';
@@ -209,6 +218,22 @@ final readonly class AccountValidator
         $this->inputValidator->throwIfErrors($errors);
 
         return ['current_password' => $current, 'password' => $password];
+    }
+
+    /** @param array<string, mixed> $input @return array{current_password: string, email: string} */
+    public function emailChange(array $input): array
+    {
+        $this->inputValidator->rejectUnknown($input, ['current_password', 'email']);
+        $email = TextNormalizer::email(is_string($input['email'] ?? null) ? $input['email'] : '');
+        $password = is_string($input['current_password'] ?? null) ? $input['current_password'] : '';
+        $errors = [];
+        if ($password === '') {
+            $errors['current_password'][] = 'The current password is required.';
+        }
+        $this->validateEmail($email, $errors);
+        $this->inputValidator->throwIfErrors($errors);
+
+        return ['current_password' => $password, 'email' => $email];
     }
 
     public function biography(mixed $value): string

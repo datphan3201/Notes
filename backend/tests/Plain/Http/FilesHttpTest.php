@@ -301,6 +301,62 @@ SQL);
         self::assertSame(404, $this->request('GET', '/files/avatar', cookie: $cookie)->status);
     }
 
+    public function test_uploaded_backgrounds_form_an_owned_list_that_can_be_selected_and_removed(): void
+    {
+        [$cookie, $csrf] = $this->registerAccount('backgrounds@example.test');
+        [$otherCookie, $otherCsrf] = $this->registerAccount('backgrounds-other@example.test');
+        $png = base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true,
+        );
+        self::assertIsString($png);
+        $ids = [];
+        foreach (['first.png', 'second.png'] as $name) {
+            $added = $this->multipart('POST', '/api/v1/preferences/background', [], [
+                'background' => $this->upload($name, $png),
+            ], $cookie, $csrf);
+            self::assertSame(201, $added->status);
+            $ids[] = $this->json($added)['data']['id'];
+        }
+        [$first, $second] = $ids;
+
+        // The newest upload is selected; both stay listed and servable.
+        $preferences = $this->json($this->request('GET', '/api/v1/preferences', cookie: $cookie))['data'];
+        self::assertSame($second, $preferences['background_id']);
+        self::assertSame('/files/backgrounds/'.$second, $preferences['background_url']);
+        $listed = $this->json($this->request('GET', '/api/v1/preferences/backgrounds', cookie: $cookie))['data'];
+        self::assertSame([$first, $second], array_column($listed, 'id'));
+        self::assertSame(200, $this->request('GET', '/files/backgrounds/'.$first, cookie: $cookie)->status);
+
+        // Re-selecting an earlier upload, then a preset theme, keeps the list intact.
+        $selected = $this->api('PATCH', '/api/v1/preferences', ['background_id' => $first], $cookie, $csrf);
+        self::assertSame($first, $this->json($selected)['data']['background_id']);
+        $preset = $this->api('PATCH', '/api/v1/preferences', ['visual_theme' => 'forest', 'background_id' => ''], $cookie, $csrf);
+        self::assertSame('', $this->json($preset)['data']['background_id']);
+        self::assertSame('', $this->json($preset)['data']['background_url']);
+        self::assertCount(2, $this->json($this->request('GET', '/api/v1/preferences/backgrounds', cookie: $cookie))['data']);
+
+        // Another account can neither see, select, serve nor delete these images.
+        self::assertSame([], $this->json($this->request('GET', '/api/v1/preferences/backgrounds', cookie: $otherCookie))['data']);
+        self::assertSame(404, $this->api('PATCH', '/api/v1/preferences', ['background_id' => $first], $otherCookie, $otherCsrf)->status);
+        self::assertSame(404, $this->request('GET', '/files/backgrounds/'.$first, cookie: $otherCookie)->status);
+        self::assertSame(404, $this->api('DELETE', '/api/v1/preferences/backgrounds/'.$first, [], $otherCookie, $otherCsrf)->status);
+        self::assertSame(422, $this->api('PATCH', '/api/v1/preferences', ['background_id' => 'not-an-id'], $cookie, $csrf)->status);
+
+        // Removing the selected upload falls back to the preset theme and deletes its bytes.
+        $this->api('PATCH', '/api/v1/preferences', ['background_id' => $first], $cookie, $csrf);
+        $path = $this->pdo->query("SELECT path FROM user_backgrounds WHERE id = '$first'")->fetchColumn();
+        self::assertIsString($path);
+        $absolute = $this->storage->resolve($path);
+        self::assertSame(204, $this->api('DELETE', '/api/v1/preferences/backgrounds/'.$first, [], $cookie, $csrf)->status);
+        self::assertFalse(file_exists($absolute));
+        $preferences = $this->json($this->request('GET', '/api/v1/preferences', cookie: $cookie))['data'];
+        self::assertSame('', $preferences['background_id']);
+        self::assertSame('forest', $preferences['visual_theme']);
+        self::assertSame([$second], array_column($this->json($this->request('GET', '/api/v1/preferences/backgrounds', cookie: $cookie))['data'], 'id'));
+        self::assertSame(404, $this->request('GET', '/files/backgrounds/'.$first, cookie: $cookie)->status);
+    }
+
     public function test_image_attachment_preview_serves_detected_type_and_original_bytes(): void
     {
         [$cookie, $csrf] = $this->registerAccount('preview@example.test');
@@ -707,7 +763,7 @@ SQL);
 
     private function clearManagedStorage(): void
     {
-        foreach (['attachments', 'avatars'] as $directory) {
+        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
             $path = $this->storage->root().'/'.$directory;
 
             foreach (new \FilesystemIterator($path, \FilesystemIterator::SKIP_DOTS) as $item) {

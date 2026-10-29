@@ -269,7 +269,7 @@ export class NoteSharing {
         );
         // Unknown addresses succeed silently so sharing never reveals who has an account.
         this.shareDialog.querySelector('[data-share-status]').textContent = t(
-            'If that email belongs to a Planner account, they will receive an invitation.',
+            t('If that email belongs to a Planner account, they will receive an invitation.'),
         );
         form.reset();
     }
@@ -318,7 +318,9 @@ export class NoteSharing {
         } catch (error) {
             if (error.status === 409 && error.payload?.current) {
                 status.textContent = t(
-                    'Someone else changed this note. Copy your text, then reload the latest version.',
+                    t(
+                        'Someone else changed this note. Copy your text, then reload the latest version.',
+                    ),
                 );
                 this.openShared.version = error.payload.current.version;
                 return;

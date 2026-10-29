@@ -11,7 +11,7 @@ final readonly class PdoTaskSeriesRepository
     private const COLUMNS = [
         'goal_id', 'milestone_id', 'name', 'description', 'expected_result',
         'completion_criteria', 'importance', 'frequency', 'interval_count',
-        'weekday_mask', 'start_date', 'end_date', 'timezone', 'local_time',
+        'weekday_mask', 'start_date', 'end_date', 'timezone', 'local_time', 'reminder_time',
         'duration_minutes', 'deadline_offset_days', 'state', 'cursor_date',
         'paused_at', 'last_error_code',
     ];
@@ -156,6 +156,16 @@ SQL);
         ]);
 
         return $statement->rowCount();
+    }
+
+    /** Ends and archives the repeating series placed under a Goal or Milestone being archived. */
+    public function archiveForParent(int $userId, string $parentColumn, string $parentId, string $timestamp): void
+    {
+        if (!in_array($parentColumn, ['goal_id', 'milestone_id'], true)) {
+            throw new \LogicException('Unsafe Task Series parent column.');
+        }
+        $statement = $this->pdo->prepare("UPDATE task_series SET state = 'Ended', archived_at = :archived_at, version = version + 1, updated_at = :updated_at WHERE user_id = :user_id AND $parentColumn = :parent_id AND archived_at IS NULL");
+        $statement->execute(['archived_at' => $timestamp, 'updated_at' => $timestamp, 'user_id' => $userId, 'parent_id' => $parentId]);
     }
 
     /** @param list<int|string> $ids */

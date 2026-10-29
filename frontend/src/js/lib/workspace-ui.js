@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // Native dialogs retain their forms when closed. Only an acknowledged creation
 // clears a draft; a pending write cannot be dismissed or submitted twice.
 const formStates = new WeakMap();
@@ -61,7 +62,7 @@ export function reportWorkspaceError(root, error) {
     output.textContent =
         Object.values(error.payload?.errors || {}).flat()[0] ||
         error.message ||
-        'Unable to complete the request.';
+        t('Unable to complete the request.');
     output.classList.remove('is-hidden');
 }
 
@@ -74,7 +75,9 @@ export function guardWorkspaceLeave(check) {
     const allow = () => {
         if (!hasDraft()) return true;
         leaveAccepted = window.confirm(
-            'Leave this page? Unsaved changes will be lost. A save already sent may still complete.',
+            t(
+                'Leave this page? Unsaved changes will be lost. A save already sent may still complete.',
+            ),
         );
         return leaveAccepted;
     };

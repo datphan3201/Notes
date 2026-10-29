@@ -21,7 +21,7 @@
             </div>
         </div>
         <div data-review-list aria-live="polite"></div>
-        <div class="collection-pagination" data-review-pagination aria-label="Review pages"></div>
+        <div class="collection-pagination" data-review-pagination aria-label="<?= $view->e($view->t('Review pages')) ?>"></div>
     </section>
     <section class="planning-panel" data-review-editor hidden>
         <button class="button button-quiet" type="button" data-review-back><?= $view->e($view->t('← Back to reviews')) ?></button>
@@ -31,12 +31,13 @@
                 <button class="button button-quiet" type="button" data-review-refresh><?= $view->e($view->t('Refresh facts')) ?></button>
                 <button class="button button-primary" type="button" data-review-finalize><?= $view->e($view->t('Finalize')) ?></button>
                 <button class="button button-quiet is-hidden" type="button" data-review-reopen><?= $view->e($view->t('Reopen')) ?></button>
+                <button class="button button-danger-quiet" type="button" data-review-delete><?= $view->e($view->t('Delete')) ?></button>
             </div>
         </div>
         <div class="review-period-navigation">
-            <button class="icon-button" type="button" data-review-previous aria-label="Previous review">‹</button>
+            <button class="icon-button" type="button" data-review-previous aria-label="<?= $view->e($view->t('Previous review')) ?>">‹</button>
             <span data-review-period></span>
-            <button class="icon-button" type="button" data-review-next aria-label="Next review">›</button>
+            <button class="icon-button" type="button" data-review-next aria-label="<?= $view->e($view->t('Next review')) ?>">›</button>
         </div>
         <div class="review-metrics">
             <article class="insight-card">
@@ -71,7 +72,7 @@
             </div>
         </aside>
         <form class="stack-form" data-review-edit-form>
-            <nav class="workspace-section-menu" role="tablist" aria-label="Reflection sections">
+            <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Reflection sections')) ?>">
                 <button type="button" role="tab" id="reflection-tab-reflection" aria-controls="reflection-panel-reflection" aria-selected="true" tabindex="0" data-workspace-tab="reflection"><?= $view->e($view->t('Reflection')) ?></button>
                 <button type="button" role="tab" id="reflection-tab-went_well" aria-controls="reflection-panel-went_well" aria-selected="false" tabindex="-1" data-workspace-tab="went_well"><?= $view->e($view->t('What went well')) ?></button>
                 <button type="button" role="tab" id="reflection-tab-went_wrong" aria-controls="reflection-panel-went_wrong" aria-selected="false" tabindex="-1" data-workspace-tab="went_wrong"><?= $view->e($view->t('What went wrong')) ?></button>
@@ -110,7 +111,7 @@
     <dialog id="new-review-dialog" class="workspace-dialog" aria-labelledby="new-review-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="new-review-dialog-title"><?= $view->e($view->t('New review')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close new review">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </header>
         <form class="stack-form" data-review-create-form>
             <div class="field">

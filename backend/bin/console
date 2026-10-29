@@ -5,11 +5,13 @@ declare(strict_types=1);
 
 use Planner\Application\Files\ProcessFileDeletion;
 use Planner\Application\Files\PruneFiles;
+use Planner\Application\Scheduling\Scheduler;
 use Planner\Infrastructure\Database\MigrationRunner;
 use Planner\Infrastructure\Logging\LoggerFactory;
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
 use Planner\Infrastructure\Persistence\Pdo\Files\AttachmentRepository;
 use Planner\Infrastructure\Persistence\Pdo\Files\PendingDeletionRepository;
+use Planner\Infrastructure\Persistence\Pdo\Scheduling\PdoScheduledJobRepository;
 use Planner\Infrastructure\Storage\LocalPrivateStorage;
 use Planner\Application\Planning\PlanningService;
 use Planner\Domain\Planning\GoalProgressCalculator;
@@ -24,18 +26,122 @@ use Planner\Infrastructure\Session\SessionPruner;
 $application = require dirname(__DIR__).'/bootstrap/app.php';
 $command = $argv[1] ?? 'help';
 
+// The HTTP runtime is built once, only for jobs that need its services.
+$http = null;
+$runtime = static function () use (&$http): array {
+    return $http ??= require dirname(__DIR__).'/bootstrap/http.php';
+};
+
+/**
+ * Periodic jobs. Each returns [summary, succeeded] and is also available as
+ * its own command. Intervals are in seconds for `schedule:run`/`schedule:work`.
+ *
+ * @var array<string, array{interval:int, run:Closure(): array{0:string,1:bool}}> $jobs
+ */
+$jobs = [
+    'reminders:send' => ['interval' => 60, 'run' => static function () use ($runtime): array {
+        $result = $runtime()['reminder_service']->send();
+
+        return [sprintf('Reminders sent: %d; failed owners: %d', $result['sent'], $result['failed']), $result['failed'] === 0];
+    }],
+    'recurrence:materialize' => ['interval' => 3600, 'run' => static function () use ($runtime): array {
+        $result = $runtime()['task_series_service']->materialize();
+        $summary = sprintf('Created occurrences: %d; failed series: %d', $result['created'], count($result['failed']));
+
+        return [$result['failed'] === [] ? $summary : $summary.' ('.implode(', ', $result['failed']).')', $result['failed'] === []];
+    }],
+    'snapshots:capture' => ['interval' => 21600, 'run' => static function () use ($runtime): array {
+        $result = $runtime()['goal_snapshot_service']->capture();
+
+        return [sprintf('Created snapshots: %d; warnings: %d; failed users: %d', $result['created'], count($result['warnings']), count($result['failed'])), $result['warnings'] === [] && $result['failed'] === []];
+    }],
+    'history:prune' => ['interval' => 3600, 'run' => static function () use ($application): array {
+        $result = (new \Planner\Application\Planning\TaskHistoryService(
+            new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository($application['pdo']),
+            new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($application['pdo']),
+            $application['transactions'], $application['clock'],
+        ))->prune();
+
+        return [sprintf('History checked for %d users; archived %d tasks.', $result['users'], $result['archived']), true];
+    }],
+    'sessions:prune' => ['interval' => 3600, 'run' => static function () use ($application): array {
+        return ['Expired sessions deleted: '.(new SessionPruner($application['pdo']))->pruneExpired(), true];
+    }],
+    'rate-limits:prune' => ['interval' => 3600, 'run' => static function () use ($application): array {
+        return ['Expired rate-limit buckets deleted: '.(new RateLimiter($application['pdo']))->pruneExpired(), true];
+    }],
+    'files:prune' => ['interval' => 86400, 'run' => static function () use ($application): array {
+        $storage = new LocalPrivateStorage(
+            $application['config']->string('storage.private_root'),
+            $application['config']->string('app.base_path').'/public',
+            $application['uuid'],
+        );
+        $logger = (new LoggerFactory($application['config']))->create();
+        $result = (new PruneFiles(
+            new ProcessFileDeletion(new PendingDeletionRepository($application['pdo']), $storage, $logger, $application['clock']),
+            new AttachmentRepository($application['pdo']),
+            new PdoAccountRepository($application['pdo']),
+            $storage,
+            $application['clock'],
+            $logger,
+        ))->run();
+
+        return [sprintf(
+            'Pending cleaned: %d; pending failed: %d; orphans cleaned: %d; orphans failed: %d',
+            $result['pending_completed'],
+            $result['pending_failed'],
+            $result['orphans_deleted'],
+            $result['orphans_failed'],
+        ), $result['pending_failed'] === 0 && $result['orphans_failed'] === 0];
+    }],
+];
+
+$scheduler = static fn (): Scheduler => new Scheduler(
+    new PdoScheduledJobRepository($application['pdo']),
+    $application['clock'],
+    array_map(static fn (array $job): array => [
+        'interval' => $job['interval'],
+        'run' => static function () use ($job): string {
+            [$summary, $succeeded] = ($job['run'])();
+
+            return $succeeded ? $summary : 'failed: '.$summary;
+        },
+    ], $jobs),
+);
+
 try {
     switch ($command) {
         case 'reminders:send':
-            $result = (new \Planner\Application\Planning\TaskReminderService(
-                new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoReminderRepository($application['pdo']),
-                new PdoAccountRepository($application['pdo']), $application['transactions'],
-                new \Planner\Infrastructure\Mail\PasswordResetMailer($application['config']->string('app.env'), $application['config']->string('storage.private_root'), $application['config']->string('mail.from')),
-                $application['clock'], $application['config']->string('app.url'),
-            ))->send();
-            fwrite(STDOUT, sprintf("Reminders sent: %d; failed owners: %d\n", $result['sent'], $result['failed']));
-            if ($result['failed'] > 0) { exit(1); }
+        case 'recurrence:materialize':
+        case 'snapshots:capture':
+        case 'history:prune':
+        case 'sessions:prune':
+        case 'rate-limits:prune':
+        case 'files:prune':
+            [$summary, $succeeded] = ($jobs[$command]['run'])();
+            fwrite($succeeded ? STDOUT : STDERR, $summary."\n");
+            if (!$succeeded) {
+                exit(1);
+            }
             break;
+
+        case 'schedule:run':
+            foreach ($scheduler()->runDue() as $name => $status) {
+                fwrite(STDOUT, sprintf("%-24s %s\n", $name, $status));
+            }
+            break;
+
+        case 'schedule:work':
+            // Long-running alternative to cron: checks the schedule every minute.
+            fwrite(STDOUT, "Scheduler running. Press Ctrl+C to stop.\n");
+            $worker = $scheduler();
+            while (true) {
+                $started = time();
+                foreach ($worker->runDue() as $name => $status) {
+                    fwrite(STDOUT, sprintf("[%s] %-24s %s\n", gmdate('Y-m-d H:i:s'), $name, $status));
+                }
+                sleep(max(1, 60 - (time() - $started)));
+            }
 
         case 'migrate':
             $completed = $application['migrations']->migrate();
@@ -54,9 +160,7 @@ try {
             break;
 
         case 'routes':
-            $http = require dirname(__DIR__).'/bootstrap/http.php';
-
-            foreach ($http['router']->routes() as $route) {
+            foreach ($runtime()['router']->routes() as $route) {
                 fwrite(STDOUT, sprintf(
                     "%-12s %-48s %s\n",
                     implode('|', $route->methods),
@@ -64,48 +168,6 @@ try {
                     $route->name,
                 ));
             }
-            break;
-
-        case 'files:prune':
-            $storage = new LocalPrivateStorage(
-                $application['config']->string('storage.private_root'),
-                $application['config']->string('app.base_path').'/public',
-                $application['uuid'],
-            );
-            $pending = new PendingDeletionRepository($application['pdo']);
-            $attachments = new AttachmentRepository($application['pdo']);
-            $accounts = new PdoAccountRepository($application['pdo']);
-            $logger = (new LoggerFactory($application['config']))->create();
-            $cleanup = new ProcessFileDeletion($pending, $storage, $logger, $application['clock']);
-            $result = (new PruneFiles(
-                $cleanup,
-                $attachments,
-                $accounts,
-                $storage,
-                $application['clock'],
-                $logger,
-            ))->run();
-            fwrite(STDOUT, sprintf(
-                "Pending cleaned: %d; pending failed: %d; orphans cleaned: %d; orphans failed: %d\n",
-                $result['pending_completed'],
-                $result['pending_failed'],
-                $result['orphans_deleted'],
-                $result['orphans_failed'],
-            ));
-
-            if ($result['pending_failed'] > 0 || $result['orphans_failed'] > 0) {
-                exit(1);
-            }
-            break;
-
-        case 'sessions:prune':
-            $deleted = (new SessionPruner($application['pdo']))->pruneExpired();
-            fwrite(STDOUT, "Expired sessions deleted: $deleted\n");
-            break;
-
-        case 'rate-limits:prune':
-            $deleted = (new RateLimiter($application['pdo']))->pruneExpired();
-            fwrite(STDOUT, "Expired rate-limit buckets deleted: $deleted\n");
             break;
 
         case 'areas:backfill':
@@ -120,25 +182,6 @@ try {
                 new PdoTaskSeriesRepository($application['pdo']),
             );
             fwrite(STDOUT, 'Created Areas: '.$service->backfillDefaultAreas()."\n");
-            break;
-
-        case 'recurrence:materialize':
-            $http = require dirname(__DIR__).'/bootstrap/http.php';
-            $result = $http['task_series_service']->materialize();
-            $http['session']->close();
-            fwrite(STDOUT, sprintf("Created occurrences: %d; failed series: %d\n", $result['created'], count($result['failed'])));
-            if ($result['failed'] !== []) {
-                fwrite(STDERR, 'Failed series: '.implode(', ', $result['failed'])."\n");
-                exit(1);
-            }
-            break;
-
-        case 'snapshots:capture':
-            $http = require dirname(__DIR__).'/bootstrap/http.php';
-            $result = $http['goal_snapshot_service']->capture();
-            $http['session']->close();
-            fwrite(STDOUT, sprintf("Created snapshots: %d; warnings: %d; failed users: %d\n", $result['created'], count($result['warnings']), count($result['failed'])));
-            if ($result['warnings'] !== [] || $result['failed'] !== []) exit(1);
             break;
 
         case 'users:role':
@@ -158,17 +201,20 @@ try {
             fwrite(STDOUT, sprintf("%s is now %s.\n", $email, $role));
             break;
 
-        case 'history:prune':
-            $result = (new \Planner\Application\Planning\TaskHistoryService(
-                new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository($application['pdo']),
-                new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($application['pdo']),
-                $application['transactions'], $application['clock'],
-            ))->prune();
-            fwrite(STDOUT, sprintf("History checked for %d users; archived %d tasks.\n", $result['users'], $result['archived']));
+        case 'mail:test':
+            $recipient = trim((string) ($argv[2] ?? ''));
+            if (filter_var($recipient, FILTER_VALIDATE_EMAIL) === false) {
+                fwrite(STDERR, "Usage: php bin/console mail:test <email>\n");
+                exit(2);
+            }
+            $runtime()['mailer']->sendMessage($recipient, 'Planner test email', "This message confirms that Planner can send email.\n");
+            fwrite(STDOUT, $runtime()['mailer']->delivers()
+                ? "Test email sent to $recipient.\n"
+                : "No SMTP server is configured; the message was saved to the local mail outbox.\n");
             break;
 
         case 'help':
-            fwrite(STDOUT, "Available commands:\n  users:role <email> admin|user\n  history:prune\n  reminders:send\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  files:prune\n  sessions:prune\n  rate-limits:prune\n  areas:backfill\n  recurrence:materialize\n  snapshots:capture\n");
+            fwrite(STDOUT, "Available commands:\n  schedule:run    run periodic jobs that are due (call from cron every minute)\n  schedule:work   keep running periodic jobs every minute\n  mail:test <email>\n  users:role <email> admin|user\n  ".implode("\n  ", array_keys($jobs))."\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  areas:backfill\n");
             break;
 
         default:
@@ -178,4 +224,8 @@ try {
 } catch (Throwable $exception) {
     fwrite(STDERR, $exception->getMessage()."\n");
     exit(1);
+} finally {
+    if ($http !== null) {
+        $http['session']->close();
+    }
 }

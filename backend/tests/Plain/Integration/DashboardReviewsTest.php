@@ -91,7 +91,7 @@ final class DashboardReviewsTest extends TestCase
         self::assertSame(0, $this->runtime['goal_snapshot_service']->capture()['created']);
     }
 
-    public function test_dashboard_shows_only_goal_related_habits_with_period_specific_counts(): void
+    public function test_dashboard_shows_every_habit_with_period_specific_counts_and_streaks(): void
     {
         $planning = $this->runtime['planning_service'];
         $area = $planning->create('area', $this->owner, ['name' => 'Health']);
@@ -137,7 +137,12 @@ final class DashboardReviewsTest extends TestCase
         $names = array_keys($byName);
         sort($names);
 
-        self::assertSame(['Strength training', 'Walk'], $names);
+        // Every active Habit is listed, linked to a Goal or not.
+        self::assertSame(['Strength training', 'Unrelated habit', 'Walk'], $names);
+        // Walk was checked in on Monday and today; they are adjacent only on Tuesday.
+        $walkRun = $weekStart === $today ? 1 : ($weekStart === $this->runtime['clock']->now()->modify('-1 day')->format('Y-m-d') ? 2 : 1);
+        self::assertSame(['count' => $walkRun, 'unit' => 'days', 'through_date' => $today], $byName['Walk']['streak']);
+        self::assertTrue($byName['Walk']['done_today']);
         self::assertSame(1, $byName['Walk']['completed_days']);
         self::assertSame(2, $byName['Strength training']['completed_days']);
         self::assertSame(3, $byName['Strength training']['target_frequency']);
@@ -153,14 +158,19 @@ final class DashboardReviewsTest extends TestCase
         $habits->checkIn($this->owner,$second['id'],$today->format('Y-m-d'));
         $dashboard=$this->runtime['dashboard_service'];
         self::assertSame(4,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $current=$dashboard->dashboard($this->owner,null);
+        // Tracking starts at the earliest back-dated check-in.
+        self::assertSame($today->modify('-3 days')->format('Y-m-d'),$current['habit_streak']['tracking_since']);
         $habits->undoCheckIn($this->owner,$first['id'],$today->modify('-1 day')->format('Y-m-d'));
         self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        // Read is now unfinished today and missed yesterday, so no day is complete.
         $habits->undoCheckIn($this->owner,$first['id'],$today->format('Y-m-d'));
-        self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        self::assertSame(0,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
         $habits->undoCheckIn($this->owner,$second['id'],$today->format('Y-m-d'));
         self::assertSame(0,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
         $other=(new PdoAccountRepository($this->pdo))->insertUser('streak-other@example.test','Other',password_hash('password',PASSWORD_BCRYPT),'2026-09-17 12:00:00.000000')->id;
         self::assertSame(0,$dashboard->dashboard($other,null)['habit_streak']['days']);
+        self::assertNull($dashboard->dashboard($other,null)['habit_streak']['tracking_since']);
     }
 
     public function test_week_and_review_completion_use_real_denominators_and_saved_snapshots(): void

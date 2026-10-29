@@ -54,14 +54,20 @@ export function initNotifications(root = document.querySelector('[data-notificat
                         body: new Date(task.reminder_at).toLocaleString(),
                         url: task.url || `/tasks/${encodeURIComponent(task.id)}`,
                         unread: true,
+                        // Opening a reminder dismisses it from the bell.
+                        onOpen: () => {
+                            post(`/api/v1/reminders/${encodeURIComponent(task.id)}/read`, {}).catch(
+                                () => {},
+                            );
+                        },
                     }),
                 );
             }
             for (const notification of items) {
                 list.append(
                     item({
-                        title: notification.payload.title || notification.type,
-                        body: notification.payload.body,
+                        title: t(notification.payload.title || notification.type),
+                        body: notification.payload.body ? t(notification.payload.body) : '',
                         url: notification.payload.url,
                         unread: !notification.read_at,
                         onOpen: () => {

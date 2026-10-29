@@ -1,4 +1,5 @@
-import { get, patch, post } from '../lib/http.js';
+import { get, patch, post, remove } from '../lib/http.js';
+import { t } from '../lib/i18n.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars } from './insights-ui.js';
 import { DraftBuffer } from './draft-buffer.js';
@@ -39,14 +40,14 @@ export function initReviewsPage(root) {
         const finalized = current?.status === 'Finalized';
         const dirty = buffer()?.dirty;
         state.textContent = pending
-            ? 'Saving…'
+            ? t('Saving…')
             : dirty && finalized
-              ? 'Finalized · your draft is preserved. Reopen to edit.'
+              ? t('Finalized · your draft is preserved. Reopen to edit.')
               : dirty
-                ? 'Unsaved changes · save before finalizing'
+                ? t('Unsaved changes · save before finalizing')
                 : finalized
-                  ? 'Finalized · read-only'
-                  : 'Saved';
+                  ? t('Finalized · read-only')
+                  : t('Saved');
         for (const field of fields) form.elements[field].disabled = !current || finalized;
         form.querySelector('button[type="submit"]').disabled = pending || finalized || !!conflict;
         root.querySelector('[data-review-finalize]').disabled = pending || dirty || !!conflict;
@@ -56,6 +57,7 @@ export function initReviewsPage(root) {
             root.querySelector(`[data-review-${action}]`).classList.toggle('is-hidden', finalized);
         root.querySelector('[data-review-reopen]').classList.toggle('is-hidden', !finalized);
         root.querySelector('[data-review-back]').disabled = pending;
+        root.querySelector('[data-review-delete]').disabled = pending || !current;
         const periods = reviews
             .filter((review) => review.kind === current?.kind)
             .sort((a, b) => a.period_start.localeCompare(b.period_start));
@@ -75,9 +77,9 @@ export function initReviewsPage(root) {
         editor.hidden = false;
         root.querySelector('[data-review-new]').hidden = true;
         root.querySelector('[data-review-heading]').textContent =
-            `${review.kind} review · ${review.period_start} to ${review.period_end} · ${review.status}`;
+            `${t(review.kind)} · ${review.period_start} – ${review.period_end} · ${t(review.status)}`;
         root.querySelector('[data-review-facts]').textContent =
-            `${review.snapshot.activities.length} completed activities · Facts for this period`;
+            `${review.snapshot.activities.length} ${t('completed activities')} · ${t('Facts for this period')}`;
         root.querySelector('[data-review-period]').textContent =
             `${review.period_start} – ${review.period_end}`;
         const activities = review.snapshot.activities.filter((item) =>
@@ -87,19 +89,19 @@ export function initReviewsPage(root) {
         const previous = review.snapshot.previous_activity_count;
         root.querySelector('[data-review-change]').textContent =
             previous == null
-                ? 'Previous-period comparison unavailable'
-                : `${activities.length - previous > 0 ? '+' : ''}${activities.length - previous} vs previous period`;
+                ? t('Previous-period comparison unavailable')
+                : `${activities.length - previous > 0 ? '+' : ''}${activities.length - previous} ${t('vs previous period')}`;
         const taskSummary = review.snapshot.task_summary;
         renderRing(
             root.querySelector('[data-review-ring]'),
             taskSummary?.total ? (taskSummary.completed / taskSummary.total) * 100 : null,
-            'Finite tasks completed at fact capture',
+            t('Finite tasks completed at fact capture'),
         );
         root.querySelector('[data-review-task-denominator]').textContent = taskSummary
             ? taskSummary.total
-                ? `${taskSummary.completed}/${taskSummary.total} finite tasks`
-                : 'No tasks in period'
-            : 'Snapshot unavailable';
+                ? `${taskSummary.completed}/${taskSummary.total} ${t('finite tasks')}`
+                : t('No tasks in period')
+            : t('Snapshot unavailable');
         root.querySelector('[data-review-wins]').textContent = activities.filter((item) =>
             ['task', 'milestone'].includes(item.source_type),
         ).length;
@@ -115,7 +117,7 @@ export function initReviewsPage(root) {
         const facts = root.querySelector('[data-review-fact-details]');
         facts.replaceChildren();
         const summary = document.createElement('p');
-        summary.textContent = `Generated ${new Date(review.snapshot.generated_at).toLocaleString()} · ${review.timezone}. ${review.snapshot.overdue_tasks.length} overdue tasks. ${review.snapshot.goal_snapshots.length ? `${review.snapshot.goal_snapshots.length} goal snapshots available.` : 'Historical goal snapshots unavailable for this period.'}`;
+        summary.textContent = `${t('Generated')} ${new Date(review.snapshot.generated_at).toLocaleString()} · ${review.timezone}. ${review.snapshot.overdue_tasks.length} ${t('overdue tasks')}. ${review.snapshot.goal_snapshots.length ? `${review.snapshot.goal_snapshots.length} ${t('goal snapshots available.')}` : t('Historical goal snapshots unavailable for this period.')}`;
         facts.append(summary);
         const entries = document.createElement('ul');
         for (const activity of review.snapshot.activities) {
@@ -124,12 +126,12 @@ export function initReviewsPage(root) {
                 typeof activity.metadata === 'string'
                     ? JSON.parse(activity.metadata)
                     : activity.metadata;
-            item.textContent = `${activity.effective_date} · ${metadata?.name || { task: 'Task', checklist: 'Checklist item', habit: 'Habit check-in', milestone: 'Milestone' }[activity.source_type] || 'Activity'} completed`;
+            item.textContent = `${activity.effective_date} · ${metadata?.name || t({ task: 'Task', checklist: 'Checklist item', habit: 'Habit check-in', milestone: 'Milestone' }[activity.source_type] || 'Activity')} · ${t('completed')}`;
             entries.append(item);
         }
         for (const task of review.snapshot.overdue_tasks) {
             const item = document.createElement('li');
-            item.textContent = `${task.name} · due ${task.deadline} · ${task.status}`;
+            item.textContent = `${task.name} · ${t('Due')} ${task.deadline} · ${t(task.status)}`;
             entries.append(item);
         }
         facts.append(entries);
@@ -155,11 +157,11 @@ export function initReviewsPage(root) {
             button.type = 'button';
             button.className = 'planning-list-item';
             const copy = document.createElement('strong');
-            copy.textContent = `${review.kind} · ${review.period_start}`;
+            copy.textContent = `${t(review.kind)} · ${review.period_start}`;
             const status = document.createElement('span');
             status.textContent = drafts.get(review.id)?.dirty
-                ? `${review.status} · Unsaved changes`
-                : review.status;
+                ? `${t(review.status)} · ${t('Unsaved changes')}`
+                : t(review.status);
             button.append(copy, status);
             button.addEventListener('click', () => {
                 selectedButton = review.id;
@@ -305,6 +307,33 @@ export function initReviewsPage(root) {
                 updateControls();
             }
         });
+    root.querySelector('[data-review-delete]').addEventListener('click', async () => {
+        if (!current || pending) return;
+        if (
+            !window.confirm(
+                `${t('Delete this review?')} ${t(current.kind)} · ${current.period_start}`,
+            )
+        )
+            return;
+        pending = true;
+        updateControls();
+        try {
+            await remove(`/api/v1/reviews/${current.id}`, { base_version: buffer().version });
+            drafts.delete(current.id);
+            current = null;
+            conflict = null;
+            editor.hidden = true;
+            collection.hidden = false;
+            root.querySelector('[data-review-new]').hidden = false;
+            await load();
+            root.querySelector('[data-review-new]').focus();
+        } catch (error) {
+            await showConflict(error);
+        } finally {
+            pending = false;
+            updateControls();
+        }
+    });
     for (const [selector, keepDraft] of [
         ['[data-review-use-saved]', false],
         ['[data-review-keep-draft]', true],

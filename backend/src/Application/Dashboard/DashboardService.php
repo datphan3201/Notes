@@ -8,7 +8,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
+use Planner\Application\Habits\HabitProgress;
 use Planner\Domain\Habits\HabitStreak;
+use Planner\Infrastructure\Persistence\Pdo\Habits\PdoHabitRepository;
 use Planner\Infrastructure\Database\TransactionManager;
 use Planner\Infrastructure\Persistence\Pdo\Dashboard\PdoDashboardRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
@@ -22,6 +24,8 @@ final readonly class DashboardService
         private PdoPlanningRepository $planning,
         private TransactionManager $transactions,
         private Clock $clock,
+        private PdoHabitRepository $habits,
+        private HabitProgress $progress,
     ) {
     }
 
@@ -101,14 +105,9 @@ final readonly class DashboardService
             $date = (string) $row['effective_date'];
             $daily[$date] = ($daily[$date] ?? 0) + (int) $row['count'];
         }
-        $streak = (new HabitStreak)->current($this->dashboard->latestHabitRun($userId, $today), $today);
-        $streakStart = $dayStart->modify('-6 days')->format('Y-m-d');
-        $habitDates = $this->dashboard->habitDates($userId, $streakStart, $today);
-        $recentDays = [];
-        for ($offset = 6; $offset >= 0; $offset--) {
-            $date = $dayStart->modify("-$offset days")->format('Y-m-d');
-            $recentDays[] = ['date' => $date, 'checked' => in_array($date, $habitDates, true)];
-        }
+        [$habits, $dailyHabits] = $this->habitProgress($userId);
+        $streak = (new HabitStreak)->overall($dailyHabits, $today);
+        $trackingSince = $dailyHabits === [] ? null : min(array_column($dailyHabits, 'since'));
 
         return [
             'timezone' => $timezone, 'month' => $month, 'today' => $today,
@@ -121,10 +120,47 @@ final readonly class DashboardService
                 'previous_percentage' => $previousPercentage,
                 'change_points' => $percentage === null || $previousPercentage === null ? null : round($percentage - $previousPercentage, 1),
                 'daily_activity' => $daily],
-            'habit_streak' => [...$streak, 'recent_days' => $recentDays],
+            'habit_streak' => [...$streak, 'tracking_since' => $trackingSince],
             'selected_milestones' => $this->serializeRows($this->dashboard->selections('milestone', $userId, $weekStart)),
-            'habits' => $this->habitRows($this->dashboard->habits($userId, $today, $weekStart, $weekEnd)),
+            'habits' => $habits,
         ];
+    }
+
+    /**
+     * Every active Habit with its own streak and current-period count, plus
+     * the daily Habits' facts for the combined streak.
+     *
+     * @return array{0: list<array<string, mixed>>, 1: list<array{since:string,done:array<string,true>,rest:array<string,true>}>}
+     */
+    private function habitProgress(int $userId): array
+    {
+        $days = $this->habits->days($userId);
+        $rows = [];
+        $daily = [];
+        foreach ($this->habits->list($userId) as $habit) {
+            $id = (string) $habit['id'];
+            $done = $days['done'][$id] ?? [];
+            $rest = $days['rest'][$id] ?? [];
+            $progress = $this->progress->describe($userId, $habit, $days);
+            $today = $progress['today'];
+            $from = $habit['period'] === 'weekly' ? HabitStreak::monday($today) : $today;
+            $rows[] = [
+                'id' => $id,
+                'name' => (string) $habit['name'],
+                'period' => (string) $habit['period'],
+                'target_frequency' => (int) $habit['target_frequency'],
+                'primary_goal_id' => $habit['primary_goal_id'] === null ? null : (string) $habit['primary_goal_id'],
+                'completed_days' => count(array_filter(array_keys($done), static fn (int|string $date): bool => (string) $date >= $from && (string) $date <= $today)),
+                'done_today' => isset($done[$today]),
+                'rest_today' => isset($rest[$today]),
+                'streak' => $progress['streak'],
+            ];
+            if ($habit['period'] === 'daily') {
+                $daily[] = ['since' => $progress['since'], 'done' => $done, 'rest' => $rest];
+            }
+        }
+
+        return [$rows, $daily];
     }
 
     /** @return list<array<string, mixed>> */
@@ -203,15 +239,6 @@ final readonly class DashboardService
             unset($row['user_id']);
             foreach (['version', 'position', 'importance', 'selection_position', 'estimated_minutes'] as $field) if (isset($row[$field])) $row[$field] = (int) $row[$field];
             foreach (['scheduled_start', 'scheduled_end'] as $field) if (array_key_exists($field, $row)) $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
-            return $row;
-        }, $rows);
-    }
-    private function habitRows(array $rows): array
-    {
-        return array_map(function (array $row): array {
-            $row['completed_days'] = (int) $row['completed_days'];
-            $row['target_frequency'] = (int) $row['target_frequency'];
-            unset($row['user_id']);
             return $row;
         }, $rows);
     }

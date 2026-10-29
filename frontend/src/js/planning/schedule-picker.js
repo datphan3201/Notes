@@ -127,7 +127,7 @@ function calendarView(menu, { today, initial, withTime, onSave }) {
     };
     render();
     view.append(heading, grid, time, footer);
-    menu.replaceChildren(view);
+    setMenuBody(menu, view);
     grid.querySelector('.is-selected')?.focus();
 }
 
@@ -197,8 +197,51 @@ function customRepeatView(menu, { current, onSave }) {
         });
         closeScheduleMenu();
     });
-    menu.replaceChildren(form);
+    setMenuBody(menu, form);
     interval.focus();
+}
+
+// Keeps the menu fully on screen, e.g. after it grows into a calendar.
+function keepInView(menu) {
+    const rect = menu.getBoundingClientRect();
+    menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8))}px`;
+    menu.style.top = `${Math.max(8, Math.min(rect.top, window.innerHeight - rect.height - 8))}px`;
+}
+
+function setMenuBody(menu, ...nodes) {
+    menu.querySelector('.schedule-menu-body').replaceChildren(...nodes);
+    keepInView(menu);
+}
+
+// The grip at the top lets the menu be dragged anywhere inside the viewport.
+function dragHandle(menu) {
+    const handle = document.createElement('div');
+    handle.className = 'schedule-drag-handle';
+    handle.title = t('Drag to move');
+    handle.setAttribute('aria-hidden', 'true');
+    handle.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const rect = menu.getBoundingClientRect();
+        const dx = event.clientX - rect.left;
+        const dy = event.clientY - rect.top;
+        handle.setPointerCapture(event.pointerId);
+        menu.classList.add('is-dragging');
+        const move = (next) => {
+            menu.style.left = `${Math.max(8, Math.min(next.clientX - dx, window.innerWidth - rect.width - 8))}px`;
+            menu.style.top = `${Math.max(8, Math.min(next.clientY - dy, window.innerHeight - rect.height - 8))}px`;
+        };
+        const stop = () => {
+            menu.classList.remove('is-dragging');
+            handle.removeEventListener('pointermove', move);
+            handle.removeEventListener('pointerup', stop);
+            handle.removeEventListener('pointercancel', stop);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', stop);
+        handle.addEventListener('pointercancel', stop);
+    });
+    return handle;
 }
 
 /**
@@ -215,6 +258,9 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
         'aria-label',
         t({ date: 'Due date', reminder: 'Remind me', repeat: 'Repeat' }[kind]),
     );
+    const body = document.createElement('div');
+    body.className = 'schedule-menu-body';
+    menu.append(dragHandle(menu), body);
     const choose = (next) => {
         onSelect(next);
         closeScheduleMenu();
@@ -223,7 +269,7 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
     if (kind === 'date') {
         const tomorrow = addDays(today, 1);
         const week = nextWeek(today);
-        menu.append(
+        body.append(
             button(t('Today'), weekdayName(today), () => choose(today)),
             button(t('Tomorrow'), weekdayName(tomorrow), () => choose(tomorrow)),
             button(t('Next week'), weekdayName(week), () => choose(week)),
@@ -239,7 +285,7 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
                 hour: 'numeric',
                 minute: '2-digit',
             });
-        menu.append(
+        body.append(
             button(t('Later today'), describe(presets[0]), () => choose(presets[0])),
             button(t('Tomorrow'), describe(presets[1]), () => choose(presets[1])),
             button(t('Next week'), describe(presets[2]), () => choose(presets[2])),
@@ -255,10 +301,10 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
             ['monthly', 'Monthly'],
             ['yearly', 'Yearly'],
         ])
-            menu.append(
+            body.append(
                 button(t(label), null, () => choose({ kind: choice, end: value?.end || null })),
             );
-        menu.append(
+        body.append(
             button(t('Custom'), null, () =>
                 customRepeatView(menu, { current: value, onSave: onSelect }),
             ),
@@ -275,7 +321,7 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
             () => choose(null),
         );
         clear.classList.add('is-danger');
-        menu.append(clear);
+        body.append(clear);
     }
     (anchor.closest('dialog') || document.body).append(menu);
     const rect = anchor.getBoundingClientRect();

@@ -44,6 +44,7 @@ final readonly class TwoFactorController
             'old' => [],
             'method' => $user->twoFactorMethod,
             'status' => is_string($status) ? $status : null,
+            'locale' => \Planner\Http\GuestLocale::resolve($request, $this->session),
         ], 'layouts/guest'));
     }
 
@@ -62,7 +63,7 @@ final readonly class TwoFactorController
         $this->session->forget('two_factor_sent');
         $this->auth->completeTwoFactor($user);
 
-        return Response::redirect('/');
+        return Response::redirect('/dashboard');
     }
 
     /** Email fallback for authenticator users, or a resend for email users. */

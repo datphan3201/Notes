@@ -77,6 +77,10 @@ final readonly class NotificationService
     public function markRead(int $userId, ?string $id): void
     {
         $this->notifications->markRead($userId, $id, Timestamp::database($this->clock->now()));
+        // "Mark all read" also clears due reminders from the bell.
+        if ($id === null) {
+            $this->reminders->markRead($userId);
+        }
     }
 
     public function resolveSubject(int $userId, string $type, string $subjectId): void

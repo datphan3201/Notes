@@ -34,10 +34,11 @@ final readonly class AuthService
         $this->dummyHash = password_hash('dummy password used only to equalize login timing', PASSWORD_BCRYPT);
     }
 
-    public function register(string $email, string $displayName, string $password): UserRecord
+    public function register(string $email, string $displayName, string $password, string $locale = 'en'): UserRecord
     {
+        $locale = in_array($locale, ['en', 'vi'], true) ? $locale : 'en';
         try {
-            $user = $this->transactions->run(function () use ($email, $displayName, $password): UserRecord {
+            $user = $this->transactions->run(function () use ($email, $displayName, $password, $locale): UserRecord {
                 $timestamp = $this->timestamp();
                 $user = $this->accounts->insertUser(
                     $email,
@@ -45,11 +46,16 @@ final readonly class AuthService
                     password_hash($password, PASSWORD_BCRYPT),
                     $timestamp,
                 );
+                // Placeholder Areas follow the language chosen before sign-up and stay editable.
+                $areaName = $locale === 'vi' ? 'Lĩnh vực' : 'Area';
                 $this->planning->insertDefaultAreas($user->id, [
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 1', 'position' => 0],
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 2', 'position' => 1],
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 3', 'position' => 2],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 1", 'position' => 0],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 2", 'position' => 1],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 3", 'position' => 2],
                 ], $timestamp);
+                if ($locale !== 'en') {
+                    $this->accounts->updatePreferences($user->id, ['locale' => $locale], $timestamp);
+                }
 
                 return $user;
             });

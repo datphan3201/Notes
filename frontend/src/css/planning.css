@@ -651,11 +651,15 @@
     border-radius: 5px;
 }
 .task-marker.is-complete {
+    display: grid;
+    place-items: center;
     color: var(--accent);
     background: var(--accent-soft);
     border-color: var(--accent-soft);
-    line-height: 15px;
-    text-align: center;
+}
+.task-marker .check-mark {
+    width: 11px;
+    height: 11px;
 }
 .dashboard-item-copy {
     display: grid;

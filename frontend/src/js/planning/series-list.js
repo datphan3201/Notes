@@ -12,7 +12,7 @@ export function renderSeriesList(container, series, { today, reload, onError }) 
         const name = document.createElement('strong');
         name.textContent = item.name;
         const meta = document.createElement('small');
-        meta.textContent = `${t(item.state)} · ${t(item.frequency[0].toUpperCase() + item.frequency.slice(1))} · ${t('from')} ${item.start_date}${item.end_date ? ` ${t('to')} ${item.end_date}` : ''}`;
+        meta.textContent = `${t(item.state)} · ${t(item.frequency[0].toUpperCase() + item.frequency.slice(1))} · ${t('from')} ${item.start_date}${item.end_date ? ` ${t('to')} ${item.end_date}` : ''}${item.reminder_time ? ` · ${t('Reminder')} ${item.reminder_time.slice(0, 5)}` : ''}`;
         copy.append(name, meta);
         const actions = document.createElement('div');
         actions.className = 'action-row';

@@ -110,66 +110,6 @@ SQL);
         }
     }
 
-    /** @return list<array<string, mixed>> */
-    public function habits(int $userId, string $today, string $weekStart, string $weekEnd): array
-    {
-        $statement = $this->pdo->prepare(<<<'SQL'
-SELECT habit.*, COUNT(check_in.id) AS completed_days
-FROM habits habit
-LEFT JOIN habit_check_ins check_in ON check_in.user_id = habit.user_id AND check_in.habit_id = habit.id
-  AND (
-      (habit.period = 'daily' AND check_in.local_date = :today)
-      OR (habit.period = 'weekly' AND check_in.local_date BETWEEN :week_start AND :week_end)
-  )
-WHERE habit.user_id = :user_id AND habit.archived_at IS NULL
-  AND (
-      habit.primary_goal_id IS NOT NULL
-      OR EXISTS (
-          SELECT 1 FROM habit_contributions contribution
-          WHERE contribution.user_id = habit.user_id AND contribution.habit_id = habit.id
-      )
-  )
-GROUP BY habit.id
-ORDER BY habit.position, habit.id
-SQL);
-        $statement->execute([
-            'user_id' => $userId,
-            'today' => $today,
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd,
-        ]);
-
-        return $statement->fetchAll();
-    }
-
-    /** @return array{last_date:string,days:int}|null */
-    public function latestHabitRun(int $userId, string $today): ?array
-    {
-        // Consecutive date islands avoid transferring an entire check-in history.
-        $statement = $this->pdo->prepare(<<<'SQL'
-WITH days AS (
-    SELECT DISTINCT local_date FROM habit_check_ins WHERE user_id = :user_id AND local_date <= :today
-), numbered AS (
-    SELECT local_date, ROW_NUMBER() OVER (ORDER BY local_date) AS sequence_number FROM days
-), islands AS (
-    SELECT local_date, DATE_SUB(local_date, INTERVAL sequence_number DAY) AS island FROM numbered
-)
-SELECT MAX(local_date) AS last_date, COUNT(*) AS days FROM islands
-GROUP BY island ORDER BY last_date DESC LIMIT 1
-SQL);
-        $statement->execute(['user_id' => $userId, 'today' => $today]);
-        $row = $statement->fetch();
-        return is_array($row) ? ['last_date' => (string) $row['last_date'], 'days' => (int) $row['days']] : null;
-    }
-
-    /** @return list<string> */
-    public function habitDates(int $userId, string $from, string $to): array
-    {
-        $statement = $this->pdo->prepare('SELECT DISTINCT local_date FROM habit_check_ins WHERE user_id = :user_id AND local_date BETWEEN :from_date AND :to_date ORDER BY local_date');
-        $statement->execute(['user_id' => $userId, 'from_date' => $from, 'to_date' => $to]);
-        return $statement->fetchAll(PDO::FETCH_COLUMN);
-    }
-
     /** @return array{0:string,1:string,2:string} */
     private function selectionTables(string $type): array
     {

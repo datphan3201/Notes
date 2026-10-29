@@ -92,6 +92,19 @@ final readonly class ReviewService
         });
     }
 
+    /** Permanently deletes a Review; nothing else refers to it. */
+    public function delete(int $userId, string $id, array $input): void
+    {
+        $this->keys($input, ['base_version']);
+        $version = $this->version($input);
+        $this->transactions->run(function () use ($userId, $id, $version): void {
+            $this->planning->lockOwner($userId);
+            $current = $this->owned($userId, $id, true);
+            $this->assertVersion($current, $version);
+            $this->reviews->delete($userId, $id);
+        });
+    }
+
     private function mutateDraft(int $userId, string $id, int $version, array $changes): array
     {
         return $this->transactions->run(function () use ($userId, $id, $version, $changes): array {

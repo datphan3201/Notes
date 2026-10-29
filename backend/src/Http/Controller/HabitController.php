@@ -48,6 +48,14 @@ final readonly class HabitController
         $this->habits->undoCheckIn($this->userId(), $parameters['id'], $parameters['date']);
         return new Response(204);
     }
+    public function rest(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->habits->rest($this->userId(), $parameters['id'], $parameters['date'])]);
+    }
+    public function cancelRest(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->habits->cancelRest($this->userId(), $parameters['id'], $parameters['date'])]);
+    }
     public function addContribution(Request $request, array $parameters): Response
     {
         return Response::json(['data' => $this->habits->addContribution($this->userId(), $parameters['id'], $request->input())]);

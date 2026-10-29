@@ -38,6 +38,12 @@ final readonly class PdoReviewRepository
         return $this->find($userId, $id) ?? throw new \RuntimeException('Review could not be reloaded.');
     }
 
+    public function delete(int $userId, string $id): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM reviews WHERE user_id = :user_id AND id = :id');
+        $statement->execute(['user_id' => $userId, 'id' => $id]);
+    }
+
     /** @param array<string, mixed> $changes @return array<string, mixed> */
     public function update(int $userId, string $id, array $changes, string $timestamp): array
     {

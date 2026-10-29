@@ -29,6 +29,12 @@ final readonly class TaskReminderService
         return [...$personal, ...$team];
     }
 
+    /** Dismisses one due reminder from the bell, or every due reminder when $taskId is null. */
+    public function markRead(int $userId, ?string $taskId = null): void
+    {
+        $this->reminders->markRead($userId, $taskId, Timestamp::database($this->clock->now()));
+    }
+
     /** @return array{sent:int,failed:int} */
     public function send(): array
     {
@@ -44,7 +50,7 @@ final readonly class TaskReminderService
                         return 0;
                     }
                     $count = 0;
-                    foreach ($this->reminders->due($userId, $now, true) as $task) {
+                    foreach ($this->reminders->dueForEmail($userId, $now) as $task) {
                         $this->mail->sendMessage($user->email, 'Planner task reminder', 'Task: '.$task['name']."\n".$this->appUrl.'/tasks/'.$task['id']);
                         $this->reminders->sent($userId, $task['id'], $now);
                         $count++;

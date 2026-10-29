@@ -80,7 +80,7 @@ SQL);
     /** @return list<array<string, mixed>> members in stable user order, with identity */
     public function members(string $goalId, bool $forUpdate = false): array
     {
-        $statement = $this->pdo->prepare('SELECT m.*, u.display_name, u.email, u.avatar_path FROM team_members m JOIN users u ON u.id = m.user_id WHERE m.team_goal_id = :goal ORDER BY m.user_id'.($forUpdate ? ' FOR UPDATE' : ''));
+        $statement = $this->pdo->prepare('SELECT m.*, u.display_name, u.email, u.avatar_path, u.biography FROM team_members m JOIN users u ON u.id = m.user_id WHERE m.team_goal_id = :goal ORDER BY m.user_id'.($forUpdate ? ' FOR UPDATE' : ''));
         $statement->execute(['goal' => $goalId]);
 
         return $statement->fetchAll();
@@ -140,7 +140,7 @@ SQL);
         $assignments = ['version = :version', 'updated_at = :now'];
         $bindings = ['id' => $taskId, 'version' => $version, 'now' => $now];
         foreach ($changes as $field => $value) {
-            if (! in_array($field, ['name', 'description', 'importance', 'assignee_id', 'status', 'start_date', 'due_date', 'estimated_minutes', 'reminder_at', 'repeat_rule', 'completed_at', 'archived_at'], true)) {
+            if (! in_array($field, ['name', 'description', 'importance', 'assignee_id', 'status', 'start_date', 'due_date', 'estimated_minutes', 'reminder_at', 'reminder_read_at', 'repeat_rule', 'completed_at', 'archived_at'], true)) {
                 throw new \LogicException('Unexpected team task field.');
             }
             $assignments[] = "$field = :$field";

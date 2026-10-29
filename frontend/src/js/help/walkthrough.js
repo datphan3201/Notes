@@ -1,13 +1,18 @@
 import { post } from '../lib/http.js';
 import { RecoveryStore } from '../lib/recovery-store.js';
 import { walkthroughSteps } from './walkthrough-content.js';
-import placeholderImage from '../../images/walkthrough-placeholder.svg';
+import { visualThemes } from '../settings/theme-catalog.js';
+import { t } from '../lib/i18n.js';
 
 export function initWalkthrough({ ready = Promise.resolve() } = {}) {
     const dialog = document.querySelector('[data-walkthrough]');
     const trigger = document.querySelector('[data-open-walkthrough]');
     const bootstrap = window.notesBootstrap;
     if (!dialog || !trigger || !bootstrap?.user) return;
+    // Steps carry both languages; the account language picks one.
+    const language = bootstrap.preferences?.locale === 'vi' ? 'vi' : 'en';
+    const pick = (text) => (typeof text === 'string' ? text : text[language] || text.en);
+    const themeImages = Object.fromEntries(visualThemes.map((theme) => [theme.id, theme.image]));
 
     const topic = dialog.querySelector('[data-walkthrough-topic]');
     const title = dialog.querySelector('[data-walkthrough-title]');
@@ -29,16 +34,17 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
 
     const groups = new Map();
     for (const [stepIndex, step] of walkthroughSteps.entries()) {
-        if (!groups.has(step.group)) {
+        const groupName = pick(step.group);
+        if (!groups.has(groupName)) {
             const group = document.createElement('optgroup');
-            group.label = step.group;
-            groups.set(step.group, group);
+            group.label = groupName;
+            groups.set(groupName, group);
             topic.append(group);
         }
         const option = document.createElement('option');
         option.value = String(stepIndex);
-        option.textContent = `${stepIndex + 1}. ${step.title}`;
-        groups.get(step.group).append(option);
+        option.textContent = `${stepIndex + 1}. ${pick(step.title)}`;
+        groups.get(groupName).append(option);
     }
 
     // Existing Notes dialogs use ARIA; planning dialogs use the native top layer.
@@ -61,29 +67,28 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
     const render = (focusTitle = true) => {
         const step = walkthroughSteps[index];
         topic.value = String(index);
-        title.textContent = step.title;
-        dialog.querySelector('[data-walkthrough-intro]').textContent = step.intro;
+        title.textContent = pick(step.title);
+        dialog.querySelector('[data-walkthrough-intro]').textContent = pick(step.intro);
         dialog.querySelector('[data-walkthrough-progress]').textContent =
-            `Step ${index + 1} of ${walkthroughSteps.length} · ${step.group}`;
+            `${t('Step')} ${index + 1} / ${walkthroughSteps.length} · ${pick(step.group)}`;
         const instructions = dialog.querySelector('[data-walkthrough-instructions]');
         instructions.replaceChildren(
             ...step.instructions.map((text) => {
                 const item = document.createElement('li');
-                item.textContent = text;
+                item.textContent = pick(text);
                 return item;
             }),
         );
         const image = dialog.querySelector('[data-walkthrough-image]');
-        image.src = step.image || placeholderImage;
-        image.alt = step.image
-            ? step.imageAlt || step.title
-            : 'Placeholder illustration of a workspace';
-        dialog.querySelector('[data-walkthrough-caption]').textContent = step.image
-            ? step.imageCaption || step.title
-            : 'Illustration placeholder · final UI images will be added later';
+        // Theme scenery illustrates each topic; it is decorative, so alt stays empty.
+        image.src = step.image || themeImages[step.theme] || themeImages.mountain;
+        image.alt = step.imageAlt ? pick(step.imageAlt) : '';
+        const caption = dialog.querySelector('[data-walkthrough-caption]');
+        caption.textContent = step.imageCaption ? pick(step.imageCaption) : '';
+        caption.hidden = !step.imageCaption;
         back.disabled = index === 0;
-        next.textContent = index === walkthroughSteps.length - 1 ? 'Finish' : 'Next';
-        status.textContent = `Step ${index + 1} of ${walkthroughSteps.length}: ${step.title}`;
+        next.textContent = index === walkthroughSteps.length - 1 ? t('Finish') : t('Next');
+        status.textContent = `${t('Step')} ${index + 1} / ${walkthroughSteps.length}: ${pick(step.title)}`;
         dialog.querySelector('[data-walkthrough-content]').scrollTop = 0;
         if (focusTitle) title.focus({ preventScroll: true });
     };
@@ -111,7 +116,7 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
         controls.forEach((control) => {
             control.disabled = true;
         });
-        status.textContent = 'Remembering your choice…';
+        status.textContent = t('Remembering your choice…');
         try {
             const { payload } = await post('/api/v1/walkthrough/dismiss', {});
             if (payload?.data?.dismissed !== true)
@@ -120,8 +125,9 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
             bootstrap.walkthrough = { dismissed: true };
             close();
         } catch {
-            dialog.querySelector('[data-walkthrough-error]').textContent =
-                'Could not remember your choice. Retry Close, Skip, or Finish, or close for now. The guide may open again until your choice is saved.';
+            dialog.querySelector('[data-walkthrough-error]').textContent = t(
+                'Could not remember your choice. Retry Close, Skip, or Finish, or close for now. The guide may open again until your choice is saved.',
+            );
             feedback.hidden = false;
             status.textContent = '';
         } finally {

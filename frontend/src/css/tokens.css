@@ -8,6 +8,9 @@
     --accent: #216e80;
     --accent-soft: #e8f2f5;
     --on-accent: #ffffff;
+    /* Same path as the #icon-check sprite symbol. */
+    --check-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 4 4L19 6'/%3E%3C/svg%3E");
+    --cross-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 6 12 12M18 6 6 18'/%3E%3C/svg%3E");
     --danger: #b42332;
     --danger-soft: #fbe6e9;
     --focus: #1d4ed8;

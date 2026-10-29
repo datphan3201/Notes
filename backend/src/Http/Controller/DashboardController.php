@@ -6,16 +6,18 @@ namespace Planner\Http\Controller;
 
 use Planner\Application\Account\AuthService;
 use Planner\Application\Dashboard\DashboardService;
+use Planner\Application\Recurrence\TaskSeriesService;
 use Planner\Http\Request;
 use Planner\Http\Response;
 
 final readonly class DashboardController
 {
-    public function __construct(private AuthService $auth, private DashboardService $dashboard)
+    public function __construct(private AuthService $auth, private DashboardService $dashboard, private ?TaskSeriesService $series = null)
     {
     }
     public function show(Request $request, array $parameters = []): Response
     {
+        $this->series?->materializeDue($this->userId());
         return Response::json(['data' => $this->dashboard->dashboard($this->userId(), $request->query['month'] ?? null)]);
     }
     public function activity(Request $request, array $parameters = []): Response

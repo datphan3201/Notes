@@ -5,7 +5,7 @@
             <h1 id="settings-title"><?= $view->e($view->t('Appearance')) ?></h1>
             <p><?= $view->e($view->t('Choose a workspace that is comfortable to read and use.')) ?></p>
         </div>
-        <a class="button button-quiet" href="/"><?= $view->e($view->t('← Back to notes')) ?></a>
+        <a class="button button-quiet" href="/dashboard"><?= $view->e($view->t('← Back to Dashboard')) ?></a>
     </header>
     <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Appearance sections')) ?>">
         <?php foreach (['themes'=>'Themes', 'decoration'=>'Scenery and quote'] as $key=>$label): ?>

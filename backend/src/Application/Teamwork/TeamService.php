@@ -255,6 +255,10 @@ final readonly class TeamService
             if (array_key_exists('status', $fields) && $fields['status'] !== $task['status']) {
                 $fields['completed_at'] = $fields['status'] === 'done' ? $this->now() : null;
             }
+            // A new reminder time (or a new assignee) brings the reminder back to the bell.
+            if (array_key_exists('reminder_at', $fields) || array_key_exists('assignee_id', $fields)) {
+                $fields['reminder_read_at'] = null;
+            }
             $this->teams->updateTask($taskId, $fields, (int) $task['version'] + 1, $this->now());
             if (($fields['status'] ?? null) === 'done' && $task['status'] !== 'done') {
                 $this->repeatTask([...$task, ...$fields], $userId);
@@ -378,6 +382,7 @@ final readonly class TeamService
                 'id' => (string) $id,
                 'display_name' => (string) $member['display_name'],
                 'email' => (string) $member['email'],
+                'biography' => (string) ($member['biography'] ?? ''),
                 'role' => (string) $member['role'],
                 'status' => (string) $member['status'],
                 'assigned' => $stats[$id]['assigned'] ?? 0,

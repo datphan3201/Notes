@@ -20,7 +20,7 @@ final readonly class PdoPlanningRepository
         'area' => ['name', 'description', 'position'],
         'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'status', 'deadline', 'position', 'completed_at'],
         'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'status', 'deadline', 'position', 'completed_at'],
-        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'estimated_minutes', 'position', 'completed_at'],
+        'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'reminder_read_at', 'estimated_minutes', 'position', 'completed_at'],
         'checklist' => ['task_id', 'title', 'checked', 'position', 'checked_at'],
     ];
 
@@ -124,6 +124,29 @@ final readonly class PdoPlanningRepository
 
         return $this->find($type, $userId, $id, includeArchived: true)
             ?? throw new \RuntimeException('Archived planning record could not be reloaded.');
+    }
+
+    /** Archives every active record of $type whose $foreignColumn points at $foreignId. */
+    public function archiveWhere(string $type, int $userId, string $foreignColumn, string $foreignId, string $timestamp): int
+    {
+        $table = $this->table($type);
+
+        if ($type === 'checklist' || !in_array($foreignColumn, self::COLUMNS[$type], true)) {
+            throw new \LogicException('Unsafe planning archive column.');
+        }
+
+        $statement = $this->pdo->prepare(
+            "UPDATE $table SET archived_at = :archived_at, version = version + 1, updated_at = :updated_at WHERE user_id = :user_id AND $foreignColumn = :foreign_id AND archived_at IS NULL",
+        );
+        $statement->execute(['archived_at' => $timestamp, 'updated_at' => $timestamp, 'user_id' => $userId, 'foreign_id' => $foreignId]);
+
+        return $statement->rowCount();
+    }
+
+    public function removeMilestoneDependencies(int $userId, string $milestoneId): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM milestone_dependencies WHERE user_id = :user_id AND (milestone_id = :dependent OR prerequisite_id = :prerequisite)');
+        $statement->execute(['user_id' => $userId, 'dependent' => $milestoneId, 'prerequisite' => $milestoneId]);
     }
 
     public function activeCount(string $type, int $userId, string $foreignColumn, string $foreignId): int

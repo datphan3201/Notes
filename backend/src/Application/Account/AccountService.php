@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Planner\Application\Account;
 
 use Planner\Domain\Account\UserRecord;
+use Planner\Http\HttpException;
 use Planner\Infrastructure\Database\TransactionManager;
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
 use Planner\Support\Clock;
@@ -44,6 +45,13 @@ final readonly class AccountService
     {
         return $this->transactions->run(function () use ($userId, $changes): array {
             $this->accounts->findById($userId, true) ?? throw new \RuntimeException('Authenticated user disappeared.');
+            if (array_key_exists('background_id', $changes)) {
+                if ($changes['background_id'] !== null && $this->accounts->backgroundPath($userId, (string) $changes['background_id']) === null) {
+                    throw new HttpException(404, 'NOT_FOUND', 'Background not found.');
+                }
+                // A chosen image or preset replaces any RGB background color.
+                $changes['background_color'] ??= '';
+            }
 
             return $this->accounts->updatePreferences($userId, $changes, $this->timestamp());
         });

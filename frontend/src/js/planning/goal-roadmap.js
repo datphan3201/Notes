@@ -1,9 +1,13 @@
 import { taskCaptureValues, createCapturedTask } from './task-capture.js';
-import { get, patch, post } from '../lib/http.js';
+import { get, patch, post, remove } from '../lib/http.js';
+import { t, statusLabel } from '../lib/i18n.js';
+import { renderContributions } from './contributions-ui.js';
+import { createTagPicker, sameTagIds } from './tag-picker.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { transitionEntity } from './transitions.js';
 import { reportWorkspaceError } from '../lib/workspace-ui.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
+import { checkMark } from '../lib/check-mark.js';
 
 const detailFields = [
     'name',
@@ -60,6 +64,20 @@ export function initGoalDetail(root) {
     let pending = false;
     let loading = false;
     let conflict = null;
+    let selectedMilestones = new Set();
+    // Goal tags save immediately; the details form keeps its own draft.
+    const goalTags = createTagPicker({
+        onChange: (ids) =>
+            mutation(async () => {
+                if (sameTagIds(ids, data.goal.tag_ids)) return;
+                await patch(`/api/v1/goals/${encodeURIComponent(id)}`, {
+                    base_version: data.goal.version,
+                    tag_ids: ids,
+                });
+                await load();
+            }),
+    });
+    find('[data-goal-tags]').append(goalTags.element);
 
     function report(error) {
         reportWorkspaceError(root, error);
@@ -73,30 +91,37 @@ export function initGoalDetail(root) {
             output.textContent = '';
         }
     }
+    // Capture forms start with non-empty defaults (repeat interval 1, Normal
+    // importance); only values the user actually entered count as a draft.
+    const captureDefaults = { repeat_interval: '1', importance: '3' };
+    const entered = (name, value) => {
+        const text = String(value ?? '').trim();
+        return text !== '' && text !== (captureDefaults[name] ?? '');
+    };
     function dirty() {
         return (
             strategy.dirty ||
             details.dirty ||
             [...milestoneTaskDrafts.values()].some((draft) =>
-                Object.values(draft).some((value) => value.trim() !== ''),
+                Object.entries(draft).some(([name, value]) => entered(name, value)),
             ) ||
             [
                 ...root.querySelectorAll(
-                    '[data-milestone-create-form] input, [data-milestone-create-form] textarea, [data-milestone-task-create-form] input, [data-milestone-task-create-form] textarea, [data-goal-task-create-form] input',
+                    '[data-milestone-create-form] :is(input, textarea, select), [data-milestone-task-create-form] :is(input, textarea, select), [data-goal-task-create-form] :is(input, textarea, select), [data-goal-child-create-form] input',
                 ),
-            ].some((control) => control.value.trim() !== '')
+            ].some((control) => entered(control.name, control.value))
         );
     }
     function status() {
         find('[data-strategy-state]').textContent = strategy.dirty
-            ? 'Unsaved changes'
+            ? t('Unsaved changes')
             : strategy.version
-              ? 'Saved'
+              ? t('Saved')
               : '';
         find('[data-details-state]').textContent = details.dirty
-            ? 'Unsaved changes'
+            ? t('Unsaved changes')
             : details.version
-              ? 'Saved'
+              ? t('Saved')
               : '';
     }
     function writeForm(form, values) {
@@ -107,19 +132,19 @@ export function initGoalDetail(root) {
         data.goal = goal;
         find('[data-goal-name]').textContent = goal.name;
         find('[data-goal-meta]').textContent =
-            `${goal.status} · ${goal.progress ?? data.progress ?? 0}% progress`;
+            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')}`;
         const headName = map.querySelector('[data-roadmap-goal-name]');
         const headState = map.querySelector('[data-roadmap-goal-state]');
         if (headName) headName.textContent = goal.name;
         map.querySelector('[data-open-goal-information]')?.setAttribute(
             'aria-label',
-            `View goal information: ${goal.name}`,
+            `${t('View goal information')}: ${goal.name}`,
         );
         find('[data-goal-information-name]').textContent = goal.name;
         find('[data-goal-information-meta]').textContent =
-            `${goal.status} · ${goal.progress ?? data.progress ?? 0}% progress · Importance ${goal.importance}/5${goal.deadline ? ` · Due ${goal.deadline}` : ''}`;
+            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')} · ${t('Importance')} ${goal.importance}/5${goal.deadline ? ` · ${t('Due')} ${goal.deadline}` : ''}`;
         find('[data-goal-information-description]').textContent =
-            goal.description || 'No description yet. Open Edit goal to add one.';
+            goal.description || t('No description yet. Open Edit goal to add one.');
         for (const [key, value] of [
             ['outcome', goal.expected_result],
             ['criteria', goal.completion_criteria],
@@ -128,7 +153,7 @@ export function initGoalDetail(root) {
             find(`[data-goal-information-${key}-row]`).hidden = !value;
         }
         if (headState)
-            headState.textContent = `${goal.progress ?? data.progress ?? 0}% · ${goal.status}`;
+            headState.textContent = `${goal.progress ?? data.progress ?? 0}% · ${statusLabel(goal.status)}`;
         requestAnimationFrame(drawConnections);
         if (strategy.receive(strategyValues(goal), goal.version))
             writeForm(strategyForm, strategy.values);
@@ -137,7 +162,8 @@ export function initGoalDetail(root) {
         strategyForm.elements.strategy_notes.disabled = false;
         for (const control of detailsForm.elements) control.disabled = false;
         find('[data-goal-transition]').textContent =
-            goal.status === 'Completed' ? 'Reopen goal' : 'Complete goal';
+            goal.status === 'Completed' ? t('Reopen goal') : t('Complete goal');
+        if (!sameTagIds(goalTags.value, goal.tag_ids)) goalTags.value = goal.tag_ids;
         status();
     }
     function updateControls() {
@@ -173,14 +199,14 @@ export function initGoalDetail(root) {
             data?.goal.status === 'Active' && hasFiniteSteps && data.goal.progress < 100;
         if (awaitingSteps) goalTransition.disabled = true;
         goalTransition.title = awaitingSteps
-            ? 'Complete the finite goal steps before completing this goal.'
+            ? t('Complete the finite goal steps before completing this goal.')
             : '';
         const milestone = data?.milestones.find((item) => item.id === selected);
         const taskDialogTitle = find('#new-milestone-task-title');
         if (milestone && taskDialogTitle) {
-            taskDialogTitle.textContent = 'Create new task';
+            taskDialogTitle.textContent = t('Create new task');
             find('[data-milestone-task-context]').textContent =
-                `${data.goal.name} › ${milestone.name} · ${milestone.progress.completed}/${milestone.progress.total} tasks completed`;
+                `${data.goal.name} › ${milestone.name} · ${milestone.progress.completed}/${milestone.progress.total} ${t('tasks completed')}`;
         }
         if (milestone?.completion_locked && milestone.status !== 'Completed')
             find('[data-milestone-transition]').disabled = true;
@@ -313,14 +339,14 @@ export function initGoalDetail(root) {
         center.dataset.openGoalInformation = '';
         center.setAttribute('aria-haspopup', 'dialog');
         center.setAttribute('aria-controls', 'goal-information-dialog');
-        center.setAttribute('aria-label', `View goal information: ${data.goal.name}`);
+        center.setAttribute('aria-label', `${t('View goal information')}: ${data.goal.name}`);
         center.dataset.roadmapCenter = '';
         center.append(referenceDecoration('anchor'));
         const headName = element('span', data.goal.name, 'roadmap-goal-name');
         headName.dataset.roadmapGoalName = '';
         const headState = element(
             'span',
-            `${data.goal.progress}% · ${data.goal.status}`,
+            `${data.goal.progress}% · ${statusLabel(data.goal.status)}`,
             'roadmap-goal-state',
         );
         headState.dataset.roadmapGoalState = '';
@@ -361,18 +387,21 @@ export function initGoalDetail(root) {
                 element('strong', milestone.name),
                 element(
                     'small',
-                    `${milestone.progress.completed}/${milestone.progress.total} tasks · ${milestone.status.replace(/([a-z])([A-Z])/g, '$1 $2')}`,
+                    `${milestone.progress.completed}/${milestone.progress.total} ${t('tasks')} · ${statusLabel(milestone.status)}`,
                 ),
             );
             if (milestone.completion_locked)
-                branch.append(element('small', 'Prerequisites unfinished', 'roadmap-locked'));
+                branch.append(element('small', t('Prerequisites unfinished'), 'roadmap-locked'));
             const preview = element('ul', undefined, 'roadmap-task-preview');
             for (const task of (milestone.tasks.some((task) => task.status !== 'Done')
                 ? milestone.tasks.filter((task) => task.status !== 'Done')
                 : milestone.tasks
-            ).slice(0, 2))
-                preview.append(element('li', `${task.status === 'Done' ? '✓ ' : ''}${task.name}`));
-            if (!milestone.tasks.length) preview.append(element('li', 'Add your first task'));
+            ).slice(0, 2)) {
+                const item = element('li', task.name);
+                if (task.status === 'Done') item.prepend(checkMark(), ' ');
+                preview.append(item);
+            }
+            if (!milestone.tasks.length) preview.append(element('li', t('Add your first task')));
             const track = element('span', undefined, 'progress-track');
             const fill = element('i');
             fill.style.setProperty('--progress', `${milestone.progress.percentage}%`);
@@ -385,16 +414,16 @@ export function initGoalDetail(root) {
             map.append(
                 element(
                     'p',
-                    'Add milestones to turn this goal into a roadmap.',
+                    t('Add milestones to turn this goal into a roadmap.'),
                     'roadmap-empty subtle-copy',
                 ),
             );
         if (data.milestones.length > 6) {
             const pages = element('div', undefined, 'roadmap-pagination action-row');
-            const previous = element('button', 'Previous milestones', 'button button-quiet');
+            const previous = element('button', t('Previous milestones'), 'button button-quiet');
             previous.type = 'button';
             previous.disabled = page === 0;
-            const next = element('button', 'Next milestones', 'button button-quiet');
+            const next = element('button', t('Next milestones'), 'button button-quiet');
             next.type = 'button';
             next.disabled = (page + 1) * 6 >= data.milestones.length;
             previous.addEventListener('click', () => {
@@ -407,7 +436,10 @@ export function initGoalDetail(root) {
             });
             pages.append(
                 previous,
-                element('span', `Page ${page + 1} of ${Math.ceil(data.milestones.length / 6)}`),
+                element(
+                    'span',
+                    `${t('Page')} ${page + 1} / ${Math.ceil(data.milestones.length / 6)}`,
+                ),
                 next,
             );
             map.append(pages);
@@ -416,18 +448,18 @@ export function initGoalDetail(root) {
     }
     function taskRows(container, tasks, withActions = true) {
         container.replaceChildren();
-        if (!tasks.length) container.append(element('p', 'No tasks here yet.', 'subtle-copy'));
+        if (!tasks.length) container.append(element('p', t('No tasks here yet.'), 'subtle-copy'));
         for (const task of tasks) {
             const row = element('article', undefined, 'planning-list-item');
             const copy = element('div');
             const link = element('a', task.name);
             link.href = `/tasks/${encodeURIComponent(task.id)}`;
-            copy.append(link, element('small', task.status.replace(/([a-z])([A-Z])/g, '$1 $2')));
+            copy.append(link, element('small', statusLabel(task.status)));
             row.append(copy);
             if (withActions) {
                 const button = element(
                     'button',
-                    task.status === 'Done' ? 'Reopen' : 'Complete',
+                    task.status === 'Done' ? t('Reopen') : t('Complete'),
                     'button button-quiet',
                 );
                 button.type = 'button';
@@ -462,16 +494,24 @@ export function initGoalDetail(root) {
         find('[data-milestone-title]').textContent = milestone.name;
         const unfinished = milestone.prerequisites.filter((item) => item.status !== 'Completed');
         find('[data-milestone-meta]').textContent = unfinished.length
-            ? `Completion requires: ${unfinished.map((item) => item.name).join(', ')}. Tasks remain available.`
-            : `${milestone.status} · ${milestone.progress.completed}/${milestone.progress.total} finite tasks complete`;
+            ? `${t('Completion requires')}: ${unfinished.map((item) => item.name).join(', ')}. ${t('Tasks remain available.')}`
+            : `${statusLabel(milestone.status)} · ${milestone.progress.completed}/${milestone.progress.total} ${t('finite tasks complete')}${milestone.deadline ? ` · ${t('Due')} ${milestone.deadline}` : ''}`;
         find('[data-milestone-criteria]').textContent =
             milestone.completion_criteria ||
-            'Define success by completing the finite tasks or explicitly acknowledging unfinished work.';
+            t(
+                'Define success by completing the finite tasks or explicitly acknowledging unfinished work.',
+            );
         find('[data-milestone-transition]').textContent =
-            milestone.status === 'Completed' ? 'Reopen milestone' : 'Complete milestone';
-        find('[data-milestone-week]').textContent = 'Select for week';
+            milestone.status === 'Completed' ? t('Reopen milestone') : t('Complete milestone');
+        const week = find('[data-milestone-week]');
+        week.textContent = selectedMilestones.has(milestone.id)
+            ? t('Remove from this week')
+            : t('Select for week');
+        week.setAttribute('aria-pressed', String(selectedMilestones.has(milestone.id)));
         taskRows(find('[data-milestone-tasks]'), milestone.tasks);
         taskRows(find('[data-milestone-recurring]'), milestone.recurring_tasks);
+        renderPrerequisites(milestone);
+        if (find('.milestone-links').open) renderMilestoneContributions(milestone);
         updateControls();
     }
     function openMilestone(milestoneId) {
@@ -523,12 +563,81 @@ export function initGoalDetail(root) {
             map.querySelector(`[data-roadmap-branch="${previous}"]`)?.focus();
         });
     });
+    // Prerequisites only gate Milestone completion; the Milestone's Tasks stay usable.
+    function renderPrerequisites(milestone) {
+        const container = find('[data-milestone-prerequisites]');
+        container.replaceChildren();
+        for (const prerequisite of milestone.prerequisites) {
+            const row = element('div', undefined, 'contribution-row');
+            const name = element(
+                'span',
+                `${prerequisite.name} · ${statusLabel(prerequisite.status)}`,
+            );
+            const unlink = element('button', '×', 'icon-button');
+            unlink.type = 'button';
+            unlink.title = t('Remove prerequisite');
+            unlink.setAttribute('aria-label', `${t('Remove prerequisite')} ${prerequisite.name}`);
+            unlink.addEventListener('click', () =>
+                mutation(async () => {
+                    await remove(
+                        `/api/v1/milestones/${encodeURIComponent(milestone.id)}/prerequisites/${encodeURIComponent(prerequisite.id)}`,
+                        { base_version: milestone.version },
+                    );
+                    await load();
+                }),
+            );
+            row.append(name, unlink);
+            container.append(row);
+        }
+        if (!milestone.prerequisites.length)
+            container.append(element('p', t('No prerequisites.'), 'subtle-copy'));
+        const linked = new Set(milestone.prerequisites.map((item) => item.id));
+        const options = data.milestones.filter(
+            (item) => item.id !== milestone.id && !linked.has(item.id),
+        );
+        if (!options.length) return;
+        const form = element('form', undefined, 'inline-form contribution-form');
+        const select = element('select');
+        select.setAttribute('aria-label', t('Prerequisite milestone'));
+        select.append(new Option(t('Add a prerequisite…'), ''));
+        for (const item of options) select.append(new Option(item.name, item.id));
+        const add = element('button', t('Add'), 'button button-quiet');
+        add.type = 'submit';
+        form.append(select, add);
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (!select.value) return;
+            mutation(async () => {
+                await post(`/api/v1/milestones/${encodeURIComponent(milestone.id)}/prerequisites`, {
+                    prerequisite_id: select.value,
+                    base_version: milestone.version,
+                });
+                await load();
+            });
+        });
+        container.append(form);
+    }
+    function renderMilestoneContributions(milestone) {
+        renderContributions(find('[data-milestone-contributions]'), {
+            type: 'milestone',
+            id: milestone.id,
+            excludeGoalId: id,
+            onError: report,
+        });
+    }
+    find('.milestone-links').addEventListener('toggle', (event) => {
+        const milestone = data?.milestones.find((item) => item.id === selected);
+        if (event.currentTarget.open && milestone) renderMilestoneContributions(milestone);
+    });
     function renderRelated() {
         if (!data) return;
         const kind = find('[data-goal-related-kind]').value;
         const list = find('[data-goal-related-list]');
         find('[data-goal-task-create-form]').hidden = kind !== 'direct_tasks';
+        find('[data-goal-child-create-form]').hidden = kind !== 'child_goals';
         if (kind === 'direct_tasks' || kind === 'recurring_tasks') taskRows(list, data[kind]);
+        else if (kind === 'contributions')
+            renderContributions(list, { type: 'goal', id, onError: report });
         else {
             list.replaceChildren();
             for (const item of data[kind]) {
@@ -537,7 +646,7 @@ export function initGoalDetail(root) {
                 list.append(link);
             }
             if (!data[kind].length)
-                list.append(element('p', 'No related items in this section.', 'subtle-copy'));
+                list.append(element('p', t('No related items in this section.'), 'subtle-copy'));
         }
     }
     find('[data-goal-related-kind]').addEventListener('change', () => {
@@ -551,7 +660,11 @@ export function initGoalDetail(root) {
         updateControls();
         clearError();
         try {
-            const response = await get(`/api/v1/goals/${encodeURIComponent(id)}/roadmap`);
+            const [response, weekly] = await Promise.all([
+                get(`/api/v1/goals/${encodeURIComponent(id)}/roadmap`),
+                get('/api/v1/weekly-selections/milestone'),
+            ]);
+            selectedMilestones = new Set(weekly.payload.data.map((item) => item.id));
             data = response.payload.data;
             receiveGoal(data.goal);
             renderMap();
@@ -592,10 +705,97 @@ export function initGoalDetail(root) {
     );
     find('[data-milestone-week]').addEventListener('click', () =>
         mutation(async () => {
-            await post('/api/v1/weekly-selections/milestone', { id: selected, position: 0 });
-            find('[data-milestone-week]').textContent = 'Selected for week';
+            if (selectedMilestones.has(selected))
+                await remove(`/api/v1/weekly-selections/milestone/${encodeURIComponent(selected)}`);
+            else await post('/api/v1/weekly-selections/milestone', { id: selected, position: 0 });
+            await load();
         }),
     );
+    const milestoneEditForm = find('[data-milestone-edit-form]');
+    find('[data-milestone-edit]').addEventListener('click', () => {
+        const milestone = data?.milestones.find((item) => item.id === selected);
+        if (!milestone) return;
+        milestoneEditForm.elements.name.value = milestone.name;
+        milestoneEditForm.elements.completion_criteria.value = milestone.completion_criteria || '';
+        milestoneEditForm.elements.deadline.value = milestone.deadline || '';
+    });
+    milestoneEditForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const milestone = data?.milestones.find((item) => item.id === selected);
+        if (!milestone) return;
+        mutation(async () => {
+            await patch(`/api/v1/milestones/${encodeURIComponent(milestone.id)}`, {
+                base_version: milestone.version,
+                name: milestoneEditForm.elements.name.value,
+                completion_criteria: milestoneEditForm.elements.completion_criteria.value,
+                deadline: milestoneEditForm.elements.deadline.value || null,
+            });
+            milestoneEditForm.closest('dialog').close();
+            await load();
+        });
+    });
+    find('[data-milestone-archive]').addEventListener('click', () => {
+        const milestone = data?.milestones.find((item) => item.id === selected);
+        if (!milestone) return;
+        const count = milestone.tasks.length + milestone.recurring_tasks.length;
+        if (
+            !window.confirm(
+                `${t('Remove milestone')} “${milestone.name}”?${count ? ` ${t('Its tasks are removed too:')} ${count}.` : ''}`,
+            )
+        )
+            return;
+        mutation(async () => {
+            await remove(`/api/v1/milestones/${encodeURIComponent(milestone.id)}`, {
+                base_version: milestone.version,
+                include_contents: true,
+            });
+            selected = null;
+            focus.hidden = true;
+            overview.hidden = false;
+            await load();
+        });
+    });
+    find('[data-goal-archive]').addEventListener('click', () => {
+        if (!data) return;
+        const parts = [
+            [data.child_goals.length, t('sub-goals')],
+            [data.milestones.length, t('milestones')],
+            [
+                data.direct_tasks.length +
+                    data.milestones.reduce((sum, item) => sum + item.tasks.length, 0),
+                t('tasks'),
+            ],
+        ]
+            .filter(([count]) => count)
+            .map(([count, label]) => `${count} ${label}`);
+        if (
+            !window.confirm(
+                `${t('Remove goal')} “${data.goal.name}”?${parts.length ? ` ${t('This also removes')} ${parts.join(', ')}.` : ''}`,
+            )
+        )
+            return;
+        mutation(async () => {
+            await remove(`/api/v1/goals/${encodeURIComponent(id)}`, {
+                base_version: data.goal.version,
+                include_contents: true,
+            });
+            leaveAccepted = true;
+            window.location.href = '/goals';
+        });
+    });
+    const childForm = find('[data-goal-child-create-form]');
+    childForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        mutation(async () => {
+            await post('/api/v1/goals', {
+                area_id: null,
+                parent_goal_id: id,
+                name: childForm.elements.name.value,
+            });
+            childForm.reset();
+            await load();
+        });
+    });
     const milestoneForm = find('[data-milestone-create-form]');
     milestoneForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -653,7 +853,8 @@ export function initGoalDetail(root) {
                     field,
                     field === 'importance'
                         ? Number(values.get(field))
-                        : field === 'deadline'
+                        : field === 'deadline' ||
+                            (values.get(field) === '' && buffer.saved[field] == null)
                           ? values.get(field) || null
                           : values.get(field),
                 ]),
@@ -731,7 +932,9 @@ export function initGoalDetail(root) {
     const allowLeave = () => {
         if (!dirty() && !pending) return true;
         leaveAccepted = window.confirm(
-            'Leave this goal? Unsaved edits will be lost. A save already sent may still complete.',
+            t(
+                'Leave this goal? Unsaved edits will be lost. A save already sent may still complete.',
+            ),
         );
         return leaveAccepted;
     };

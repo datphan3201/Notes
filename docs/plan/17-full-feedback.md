@@ -68,7 +68,9 @@ validation, versioned mutations and migration immutability still apply.
 
 - Settings groups Profile, Appearance, Security (password + 2FA), Notifications
   and Task history. Appearance offers an "Add" tile beside the preset themes that
-  uploads a private background or chooses an RGB color.
+  uploads a private background or chooses an RGB color. Each upload joins the
+  picker as its own tile; any preset or upload can be selected again, and an ×
+  in an upload tile's top-right corner removes it from the account's list.
 - Task history thresholds are user preferences: completed for N hours
   (1–720, default 24) and overdue for N days (1–365, default 3). History has a
   search field. A user retention preference (`null` = keep, or 1–3650 days) and

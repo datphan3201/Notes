@@ -141,7 +141,7 @@
 .streak-days {
     gap: 6px;
 }
-.streak-days span {
+.streak-days > div > span {
     width: 15px;
     height: 15px;
     border: 1px solid #a8bed7;
@@ -155,7 +155,21 @@
     color: white;
     background: var(--success);
     border-color: var(--success);
-    font-size: var(--font-size-caption);
+}
+.streak-days .is-missed {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: var(--danger);
+}
+.streak-days .is-rest {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-style: dashed;
+    border-color: var(--accent);
+}
+.streak-days .check-mark {
+    width: 9px;
+    height: 9px;
 }
 .dashboard-roadmap {
     padding: 16px;
@@ -733,7 +747,7 @@
     bottom: 0;
     width: calc(100% - 188px);
     height: 180px;
-    opacity: 0.09;
+    opacity: 0.29;
     mask-image: linear-gradient(transparent, black);
     z-index: -1;
 }
@@ -745,7 +759,7 @@
     display: none;
 }
 [data-theme='dark'] .reference-backdrop {
-    opacity: 0.07;
+    opacity: 0.27;
 }
 .goal-roadmap .reference-hiker {
     left: 0.43%;
@@ -916,7 +930,7 @@ body:not(:has(.settings-page)) .account-nav,
 }
 [data-habit-list] .planning-list-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content 44px;
+    grid-template-columns: minmax(0, 1fr) max-content max-content;
     align-items: center;
     gap: 12px;
     padding: 12px 0;
@@ -930,51 +944,83 @@ body:not(:has(.settings-page)) .account-nav,
 [data-habit-list] .planning-list-item:last-child {
     border-bottom: 0;
 }
-[data-habit-list] .planning-list-item > div:first-child {
-    position: relative;
-    padding-left: 28px;
+.habit-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
-.habit-row-marker {
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--control-border);
-    border-radius: 4px;
-    position: absolute;
-    top: 3px;
-    left: 0;
+.habit-tick {
     display: grid;
     place-items: center;
-    font-size: var(--font-size-caption);
-}
-.habit-row-marker.is-checked {
-    background: var(--accent);
-    color: var(--on-accent);
-    border-color: var(--accent);
-}
-.habit-today-action {
-    font-size: 0;
     width: 44px;
     height: 44px;
-    min-width: 0;
     padding: 0;
+    color: var(--muted);
+    background: transparent;
     border: 0;
     border-radius: 50%;
-    background: transparent;
+    cursor: pointer;
 }
-.habit-today-action::before {
-    content: '✓';
+.habit-tick-circle {
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--control-border);
+    width: 26px;
+    height: 26px;
+    border: 1.5px solid var(--control-border);
     border-radius: 50%;
-    font-size: var(--font-size-meta);
 }
-.habit-today-action[data-checked='true']::before {
-    background: var(--accent-soft);
+.habit-tick .check-mark {
+    width: 14px;
+    height: 14px;
+    opacity: 0.35;
+}
+.habit-tick:hover .habit-tick-circle {
     border-color: var(--accent);
+}
+.habit-tick.is-checked .habit-tick-circle {
+    color: var(--on-accent);
+    background: var(--success);
+    border-color: var(--success);
+}
+.habit-tick.is-checked .check-mark {
+    opacity: 1;
+}
+.habit-tick.is-rest .habit-tick-circle {
+    border-style: dashed;
+    border-color: var(--accent);
+}
+.habit-rest-note {
+    display: block;
     color: var(--accent);
+}
+.habit-action-menu {
+    width: 280px;
+    gap: 4px;
+}
+.habit-menu-heading {
+    margin-top: 6px;
+    padding: 0 8px;
+}
+.habit-menu-hint {
+    padding: 0 8px 4px;
+    color: var(--muted);
+}
+.habit-rest-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+.habit-rest-option {
+    justify-content: center;
+    gap: 4px;
+}
+.habit-rest-option[aria-pressed='true'] {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.habit-rest-option .check-mark {
+    width: 12px;
+    height: 12px;
 }
 @media (max-width: 600px) {
     .habit-summary [data-habit-streak] {
@@ -989,13 +1035,13 @@ body:not(:has(.settings-page)) .account-nav,
         grid-row: 3;
     }
     [data-habit-list] .planning-list-item {
-        grid-template-columns: minmax(0, 1fr) 44px;
+        grid-template-columns: minmax(0, 1fr) max-content;
     }
     [data-habit-list] .habit-checkin-days {
         grid-column: 1/-1;
         grid-row: 2;
     }
-    .habit-today-action {
+    .habit-row-actions {
         grid-column: 2;
         grid-row: 1;
     }
@@ -1013,11 +1059,6 @@ body:not(:has(.settings-page)) .account-nav,
 [data-goals-page]:has([data-planning-error]:not(.is-hidden)) > [data-planning-retry] {
     display: inline-flex;
     margin-bottom: 12px;
-}
-[data-habit-list] .planning-list-item .habit-today-action {
-    font-size: 0;
-    padding: 0;
-    min-height: 44px;
 }
 
 [data-review-edit-form] textarea {

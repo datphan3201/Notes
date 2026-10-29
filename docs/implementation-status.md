@@ -360,3 +360,89 @@ Evidence: full `phpunit` **106 tests / 896 assertions** pass, including `TeamTas
 129 assertions) pass; Node suite **67** pass; `format:check` and `build` pass.
 Not done: no real-browser walkthrough; `php bin/console migrate` must be run on
 goals_dev for 0021.
+
+## Unified check marks and stronger theme backgrounds — 2026-10-28
+
+Every completion/check-in marker now draws one shape: the `--check-mark` CSS
+mask (same path as `#icon-check`) via `frontend/src/js/lib/check-mark.js`,
+replacing the mixed `✓`/`○`/`☑` glyphs on Dashboard, Tasks, Task detail, Goal
+roadmap previews, Habits, streaks, Teamwork and the note Check box button.
+Native checkboxes use `appearance: none` with the same mask. Theme background
+imagery shows 20 points more (veil 100%/89% → 80%/69%; Mountain backdrop
+opacity 0.09/0.07 → 0.29/0.27). Task "Select for this week" and Dashboard
+"Complete" labels now pass through `t()`.
+Evidence: full `phpunit` **106 tests / 896 assertions** pass; Node suite **67**
+pass; `format:check` and `build` pass.
+Not done: no real-browser visual check of the new markers or backgrounds.
+
+## Goal leave prompt, missed Habit days and background list — 2026-10-28
+
+- Goal detail no longer asks "Leave this goal?" without edits: the draft check
+  ignored that Task capture forms start with `repeat_interval` 1 and Normal
+  importance, so every visit counted as unsaved. Clearing an optional field back
+  to empty also no longer leaves the Goal edit form dirty.
+- Habit dots: checked dates show the check mark, past unchecked dates since
+  tracking began show an x (missed), today stays open, earlier dates are
+  unmarked. Dashboard `habit_streak.tracking_since` gives the account-local date
+  of the first Habit; per-Habit dots use that Habit's creation date.
+- Personal backgrounds are a private per-account list (migration
+  `0022_create_user_backgrounds`, at most 12). Each upload appears as a picker
+  tile; presets and uploads can be reselected (`background_id` preference) and
+  an × removes an upload. Contracts 03, 04, 12 and 17 were updated first.
+Evidence: full `phpunit` **107 tests / 923 assertions** pass, including the new
+background list HTTP test and `tracking_since` assertions; Node suite **70**
+pass; `format:check` and `build` pass; changed PHP lints clean.
+Not done: no real-browser check; `php bin/console migrate` must be run on
+goals_dev for 0022 before the app is used.
+
+## Password toggle, task icons, draggable date picker, AI page, Habit Rest Days — 2026-10-29
+
+- Password fields (login, register, reset, Security) show an eye icon inside
+  the right edge of the input instead of a Show/Hide text button.
+- Task rows use single-colour line icons (calendar, clock, repeat, pin) instead
+  of colour emoji; reminders read "Reminder" in task and team facts.
+- The due-date/reminder/repeat menu has a drag grip, can be moved anywhere in
+  the viewport, and re-clamps itself on screen when it grows into the calendar.
+- The `/ai` proposal page and its "Request a planning proposal" link were
+  removed; the floating AI chat stays. The proposal API is unchanged.
+- Habits: "List of habits" heading; Edit (dialog) and Delete (archive) per
+  Habit; a centred tick opens "Mark today as done" plus Rest Day choices for
+  the next 3 days (migration `0023_create_habit_rest_days`,
+  `PUT/DELETE /api/v1/habits/{id}/rest-days/{date}`). Per-Habit streaks
+  (days or weeks) and a combined Dashboard streak that only counts a day when
+  no daily Habit was missed. Dashboard lists every active Habit with its streak.
+  Contracts 03, 04 and 12 were updated.
+Evidence: `php bin/console migrate` applied 0023 on goals_dev; full `phpunit`
+**112 tests / 940 assertions** pass (new Rest Day window, back-dated rest,
+streak unit tests, /ai 404); Node suite **73** pass; `format:check` and
+`build` pass.
+Not done: no real-browser visual check.
+
+## Product completion pass: email, reminders, archive, i18n — 2026-10-29
+
+- Email: one mailer for every message. With `MAIL_HOST` set it uses a built-in
+  SMTP client (STARTTLS/SSL, AUTH PLAIN/LOGIN, UTF-8 encoded headers);
+  otherwise production uses the system transport and local/testing keep
+  messages in `storage/app/private/mail-outbox`. `php bin/console mail:test`
+  checks delivery. Registration sends a verification link; Profile shows the
+  state, resends it and changes the email through a confirmation link.
+- Background jobs: `schedule:run` (cron, every minute) and `schedule:work`
+  (long-running) run reminders, recurrence, history, snapshots and clean-up at
+  their intervals (migration `0024_complete_product_gaps`). Repeating Tasks are
+  also topped up when Tasks or Dashboard are read.
+- Reminders: dismissible from the bell; editing the Task time uses local time
+  instead of UTC; repeating Tasks can carry a reminder time.
+- Management gaps closed: remove Goals/Milestones with their contents, remove
+  Areas and Reviews, edit Milestones, rename/remove checklist items, add
+  sub-goals, prerequisites, links to other goals, tags on Goals/Tasks/Habits
+  with a Task tag filter, Habit-to-Goal links, a two-way week toggle, member
+  biographies in Teamwork.
+- Language: guest pages switch language, Reviews/roadmap/confirmations/Notes
+  status texts and view attributes are translated, and a Node test fails when a
+  literal `t()` string has no Vietnamese entry. The guide was rewritten in 17
+  bilingual steps with theme illustrations instead of placeholders.
+Evidence: new `SmtpTransportTest` (fake SMTP server), `ProductCompletionTest`
+and `AccountEmailHttpTest` pass; frontend Node suite 75 pass, `format:check`
+and `build` pass. Full `phpunit` **123 tests / 1023 assertions** pass; migration 0024 applied on goals_dev.
+Not done: real SMTP delivery needs the owner's SMTP credentials; the AI
+proposal API stays without a UI until the AI work resumes; no real-browser pass.

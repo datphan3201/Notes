@@ -18,6 +18,7 @@ use Planner\Application\Notes\NoteSerializer;
 use Planner\Application\Notes\NoteService;
 use Planner\Application\Notes\NoteValidator;
 use Planner\Application\Planning\PlanningService;
+use Planner\Application\Habits\HabitProgress;
 use Planner\Application\Habits\HabitService;
 use Planner\Application\Recurrence\TaskSeriesService;
 use Planner\Application\Dashboard\DashboardService;
@@ -106,6 +107,27 @@ $views = new ViewRenderer(
         $config->string('app.env'),
     )),
 );
+$mailHost = $config->nullableString('mail.host');
+$mailer = new \Planner\Infrastructure\Mail\PasswordResetMailer(
+    $config->string('app.env'),
+    $config->string('storage.private_root'),
+    $config->string('mail.from'),
+    $mailHost === null ? null : new \Planner\Infrastructure\Mail\SmtpTransport(
+        $mailHost,
+        $config->int('mail.port'),
+        $config->string('mail.encryption'),
+        $config->nullableString('mail.username'),
+        $config->nullableString('mail.password'),
+        (string) (parse_url($config->string('app.url'), PHP_URL_HOST) ?: 'localhost'),
+    ),
+    $config->string('mail.from_name'),
+);
+$emailVerificationService = new \Planner\Application\Account\EmailVerificationService(
+    $accountRepository,
+    new \Planner\Infrastructure\Persistence\Pdo\Account\PdoEmailTokenRepository($services['pdo']),
+    $services['transactions'], $rateLimiter, $services['clock'],
+    $mailer, $logger, $config->string('app.url'),
+);
 $accountController = new AccountController(
     $auth,
     $accountService,
@@ -114,12 +136,14 @@ $accountController = new AccountController(
     $accountRepository,
     $session,
     $views,
+    $emailVerificationService,
 );
+$emailController = new \Planner\Http\Controller\EmailController($auth, $emailVerificationService, $validator, $accountRepository, $mailer, $views, $session);
 $passwordResetService = new \Planner\Application\Account\PasswordResetService(
     $accountRepository,
     new \Planner\Infrastructure\Persistence\Pdo\Account\PdoPasswordResetRepository($services['pdo']),
     $services['transactions'], $rateLimiter, $services['clock'],
-    new \Planner\Infrastructure\Mail\PasswordResetMailer($config->string('app.env'), $config->string('storage.private_root'), $config->string('mail.from')),
+    $mailer,
     $logger, $config->string('app.url'),
 );
 $passwordResetController = new \Planner\Http\Controller\PasswordResetController($passwordResetService, $validator, $views, $session);
@@ -173,7 +197,7 @@ $attachmentController = new AttachmentController(
     $uploadValidator,
     new AttachmentSerializer,
 );
-$backgroundService = new \Planner\Application\Files\BackgroundService($accountRepository, $services['transactions'], $storage, $pendingDeletionRepository, $services['clock']);
+$backgroundService = new \Planner\Application\Files\BackgroundService($accountRepository, $services['transactions'], $storage, $pendingDeletionRepository, $services['clock'], $services['uuid'], $cleanup);
 $profileFileController = new ProfileFileController(
     $auth,
     $fileService,
@@ -194,8 +218,8 @@ $planningService = new PlanningService(
     $activityRepository,
     $taskSeriesRepository,
 );
-$planningController = new PlanningController($auth, $planningService);
 $habitRepository = new PdoHabitRepository($services['pdo']);
+$habitProgress = new HabitProgress($habitRepository, $services['clock']);
 $habitService = new HabitService(
     $habitRepository,
     $planningRepository,
@@ -203,6 +227,7 @@ $habitService = new HabitService(
     $services['transactions'],
     $services['uuid'],
     $services['clock'],
+    $habitProgress,
 );
 $taskSeriesService = new TaskSeriesService(
     $taskSeriesRepository,
@@ -213,14 +238,15 @@ $taskSeriesService = new TaskSeriesService(
     $services['uuid'],
     $services['clock'],
 );
+$planningController = new PlanningController($auth, $planningService, $taskSeriesService);
 $habitController = new HabitController($auth, $habitService);
 $taskSeriesController = new TaskSeriesController($auth, $taskSeriesService);
 $dashboardRepository = new PdoDashboardRepository($services['pdo']);
-$dashboardService = new DashboardService($dashboardRepository, $planningRepository, $services['transactions'], $services['clock']);
+$dashboardService = new DashboardService($dashboardRepository, $planningRepository, $services['transactions'], $services['clock'], $habitRepository, $habitProgress);
 $reviewRepository = new PdoReviewRepository($services['pdo']);
 $reviewService = new ReviewService($reviewRepository, $planningRepository, $services['transactions'], $services['uuid'], $services['clock']);
 $snapshotService = new GoalSnapshotService($reviewRepository, $planningRepository, $planningService, $services['transactions'], $services['uuid'], $services['clock']);
-$dashboardController = new DashboardController($auth, $dashboardService);
+$dashboardController = new DashboardController($auth, $dashboardService, $taskSeriesService);
 $reviewController = new ReviewController($auth, $reviewService);
 $aiProvider = $config->bool('ai.enabled') && $config->nullableString('ai.key') !== null
     ? new GoogleAIProvider($config->string('ai.key'), $config->string('ai.model'))
@@ -231,12 +257,11 @@ $aiController = new AIActionController($auth, $aiService);
 $reminderService = new \Planner\Application\Planning\TaskReminderService(
     new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoReminderRepository($services['pdo']),
     $accountRepository, $services['transactions'],
-    new \Planner\Infrastructure\Mail\PasswordResetMailer($config->string('app.env'), $config->string('storage.private_root'), $config->string('mail.from')),
+    $mailer,
     $services['clock'], $config->string('app.url'),
 );
 $reminderController = new \Planner\Http\Controller\ReminderController($auth, $reminderService);
 $inputValidator = new InputValidator;
-$mailer = new \Planner\Infrastructure\Mail\PasswordResetMailer($config->string('app.env'), $config->string('storage.private_root'), $config->string('mail.from'));
 $notificationService = new \Planner\Application\Notifications\NotificationService(
     new \Planner\Infrastructure\Persistence\Pdo\Notifications\PdoNotificationRepository($services['pdo']),
     $accountRepository, $reminderService, $mailer, $services['uuid'], $services['clock'], $logger, $config->string('app.url'),
@@ -308,6 +333,7 @@ $router = new Router($routeFactory(
     $twoFactorController,
     $teamController,
     $aiChatController,
+    $emailController,
 ));
 $application = new Application(
     $router,
@@ -323,6 +349,8 @@ return [
     'password_reset_service' => $passwordResetService,
     'background_service' => $backgroundService,
     'reminder_service' => $reminderService,
+    'mailer' => $mailer,
+    'email_verification_service' => $emailVerificationService,
     'notification_service' => $notificationService,
     'note_share_service' => $noteShareService,
     'report_service' => $reportService,

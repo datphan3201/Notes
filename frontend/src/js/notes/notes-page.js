@@ -312,7 +312,7 @@ export class NotesPage {
         pin.className = 'icon-button';
         pin.type = 'button';
         pin.textContent = note.is_pinned ? '◆' : '◇';
-        pin.setAttribute('aria-label', note.is_pinned ? 'Unpin note' : 'Pin note');
+        pin.setAttribute('aria-label', t(note.is_pinned ? 'Unpin note' : 'Pin note'));
         pin.addEventListener('click', (event) => {
             event.stopPropagation();
             this.togglePin(note.id);
@@ -396,7 +396,7 @@ export class NotesPage {
         if (!this.labels.length) {
             const copy = document.createElement('p');
             copy.className = 'subtle-copy';
-            copy.textContent = 'No tags yet';
+            copy.textContent = t('No tags yet');
             list.append(copy);
             return;
         }
@@ -426,7 +426,7 @@ export class NotesPage {
         const row = this.root.querySelector('[data-active-filter-row]');
         const copy = this.root.querySelector('[data-active-filter-copy]');
         const parts = [];
-        if (this.query.q) parts.push('Search “' + this.query.q + '”');
+        if (this.query.q) parts.push(t('Search') + ' “' + this.query.q + '”');
         if (this.query.labelIds.length) parts.push(this.query.labelIds.length + ' selected tags');
         row.classList.toggle('is-hidden', parts.length === 0);
         copy.textContent = parts.join(' · ');
@@ -475,7 +475,7 @@ export class NotesPage {
         this.list.classList.toggle('is-hidden', view !== 'list');
         // One View button: it shows the layout it switches to.
         const toggle = this.root.querySelector('[data-view-toggle]');
-        const nextLabel = view === 'grid' ? 'Show list view' : 'Show grid view';
+        const nextLabel = t(view === 'grid' ? 'Show list view' : 'Show grid view');
         toggle.textContent = view === 'grid' ? '☷' : '▦';
         toggle.setAttribute('aria-label', t(nextLabel));
         toggle.title = t(nextLabel);
@@ -504,7 +504,7 @@ export class NotesPage {
         if (!this.labels.length) {
             const empty = document.createElement('p');
             empty.className = 'subtle-copy';
-            empty.textContent = 'No tags yet.';
+            empty.textContent = t('No tags yet.');
             list.append(empty);
             return;
         }
@@ -613,8 +613,8 @@ export class NotesPage {
     }
 
     confirm(title, message) {
-        this.confirmDialog.querySelector('[data-confirm-title]').textContent = title;
-        this.confirmDialog.querySelector('[data-confirm-message]').textContent = message;
+        this.confirmDialog.querySelector('[data-confirm-title]').textContent = t(title);
+        this.confirmDialog.querySelector('[data-confirm-message]').textContent = t(message);
         this.confirmDialog.classList.remove('is-hidden');
         this.confirmBackdrop.classList.remove('is-hidden');
         return new Promise((resolve) => {
@@ -631,18 +631,21 @@ export class NotesPage {
     }
 
     setFeedback(message, error = false) {
-        this.feedback.textContent = message;
+        this.feedback.textContent = t(message);
         this.feedback.classList.toggle('is-error', error);
     }
 
     formatDate(value) {
         if (!value) return '';
         try {
-            return new Intl.DateTimeFormat('en-US', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-            }).format(new Date(value));
+            return new Intl.DateTimeFormat(
+                document.documentElement.lang === 'vi' ? 'vi-VN' : 'en-US',
+                {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                },
+            ).format(new Date(value));
         } catch {
             return '';
         }
@@ -652,7 +655,7 @@ export class NotesPage {
         const region = document.querySelector('[data-toast-region]');
         const toast = document.createElement('div');
         toast.className = 'toast' + (error ? ' is-error' : '');
-        toast.textContent = message;
+        toast.textContent = t(message);
         region.append(toast);
         window.setTimeout(() => toast.remove(), 3600);
     }

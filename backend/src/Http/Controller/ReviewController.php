@@ -34,6 +34,11 @@ final readonly class ReviewController
     {
         return Response::json(['data' => $this->reviews->transition($this->userId(), $parameters['id'], $parameters['action'], $request->input())]);
     }
+    public function destroy(Request $request, array $parameters): Response
+    {
+        $this->reviews->delete($this->userId(), $parameters['id'], $request->input());
+        return new Response(204);
+    }
     private function userId(): int
     {
         return $this->auth->requireUser()->id;

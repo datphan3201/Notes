@@ -14,7 +14,7 @@
         </div>
     </header>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
-    <section aria-label="Goal roadmap">
+    <section aria-label="<?= $view->e($view->t('Goal roadmap')) ?>">
         <div data-roadmap-overview>
             <div class="section-heading">
                 <div>
@@ -35,12 +35,21 @@
                     <p data-milestone-meta></p>
                 </div>
                 <div class="action-row">
+                    <button class="button button-quiet" type="button" data-milestone-edit data-open-dialog="edit-milestone-dialog"><?= $view->e($view->t('Edit')) ?></button>
+                    <button class="button button-quiet" type="button" data-milestone-archive><?= $view->e($view->t('Remove')) ?></button>
                     <button class="button button-quiet" type="button" data-milestone-week><?= $view->e($view->t('Select for week')) ?></button>
                     <button class="button button-primary" type="button" data-milestone-transition></button>
                 </div>
             </div>
             <p class="roadmap-criteria" data-milestone-criteria></p>
-            <div class="goal-section-menu" role="tablist" aria-label="Milestone task types">
+            <details class="milestone-links">
+                <summary><?= $view->e($view->t('Prerequisites and related goals')) ?></summary>
+                <h3><?= $view->e($view->t('Finish these milestones first')) ?></h3>
+                <div data-milestone-prerequisites></div>
+                <h3><?= $view->e($view->t('This milestone also supports')) ?></h3>
+                <div data-milestone-contributions></div>
+            </details>
+            <div class="goal-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Milestone task types')) ?>">
                 <button type="button" role="tab" id="finite-task-tab" aria-controls="finite-task-panel" aria-selected="true" data-milestone-task-tab="finite"><?= $view->e($view->t('Tasks')) ?></button>
                 <button type="button" role="tab" id="recurring-task-tab" aria-controls="recurring-task-panel" aria-selected="false" tabindex="-1" data-milestone-task-tab="recurring"><?= $view->e($view->t('Recurring work')) ?></button>
             </div>
@@ -61,7 +70,7 @@
                 <h2 id="goal-information-title" data-goal-information-name tabindex="-1" autofocus></h2>
                 <p class="subtle-copy" data-goal-information-meta></p>
             </div>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close goal information">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </div>
         <div class="goal-information-content">
             <p data-goal-information-description></p>
@@ -130,7 +139,7 @@
             <form class="stack-form" data-goal-strategy-form>
                 <div class="field">
                     <label for="goal-strategy"><?= $view->e($view->t('Strategy notes')) ?></label>
-                    <textarea id="goal-strategy" name="strategy_notes" rows="9" maxlength="20000" placeholder="Diagnostic → Mental model → Theory → Build → Debug → Explain…" disabled></textarea>
+                    <textarea id="goal-strategy" name="strategy_notes" rows="9" maxlength="20000" placeholder="<?= $view->e($view->t('Methods, resources and principles you want to follow')) ?>" disabled></textarea>
                 </div>
                 <button class="button button-primary" type="submit" disabled><?= $view->e($view->t('Save strategy')) ?></button>
             </form>
@@ -151,19 +160,57 @@
                 </div>
             </div>
             <div data-goal-related-list></div>
+            <form class="inline-form" data-goal-child-create-form hidden>
+                <label class="sr-only" for="goal-child-name"><?= $view->e($view->t('Sub-goal name')) ?></label>
+                <input id="goal-child-name" name="name" maxlength="200" placeholder="<?= $view->e($view->t('New sub-goal')) ?>" required>
+                <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add sub-goal')) ?></button>
+            </form>
             <form class="inline-form" data-goal-task-create-form hidden>
                 <label class="sr-only" for="goal-task-name"><?= $view->e($view->t('Direct task name')) ?></label>
-                <input id="goal-task-name" name="name" maxlength="200" placeholder="New direct task" required>
+                <input id="goal-task-name" name="name" maxlength="200" placeholder="<?= $view->e($view->t('New direct task')) ?>" required>
                 <?php require __DIR__.'/task-capture-fields.php'; ?>
                 <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add task')) ?></button>
             </form>
         </details>
+        <details name="goal-information-sections" class="goal-information-section">
+            <summary><?= $view->e($view->t('Tags')) ?></summary>
+            <div data-goal-tags></div>
+        </details>
+        <section class="danger-zone">
+            <p class="subtle-copy"><?= $view->e($view->t('Removing a goal also removes its sub-goals, milestones and tasks from your lists.')) ?></p>
+            <button class="button button-danger-quiet" type="button" data-goal-archive><?= $view->e($view->t('Remove goal')) ?></button>
+        </section>
+        <p class="field-error is-hidden" data-dialog-error role="alert"></p>
+    </dialog>
+    <dialog id="edit-milestone-dialog" class="workspace-dialog" aria-labelledby="edit-milestone-title" data-workspace-dialog>
+        <div class="section-heading">
+            <h2 id="edit-milestone-title"><?= $view->e($view->t('Edit milestone')) ?></h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </div>
+        <form class="stack-form" data-milestone-edit-form>
+            <div class="field">
+                <label for="milestone-edit-name"><?= $view->e($view->t('Milestone name')) ?></label>
+                <input id="milestone-edit-name" name="name" maxlength="200" required>
+            </div>
+            <div class="field">
+                <label for="milestone-edit-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
+                <textarea id="milestone-edit-criteria" name="completion_criteria" rows="3" maxlength="10000"></textarea>
+            </div>
+            <div class="field">
+                <label for="milestone-edit-deadline"><?= $view->e($view->t('Deadline')) ?></label>
+                <input id="milestone-edit-deadline" name="deadline" type="date">
+            </div>
+            <div class="dialog-footer">
+                <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
+                <button class="button button-primary" type="submit"><?= $view->e($view->t('Save changes')) ?></button>
+            </div>
+        </form>
         <p class="field-error is-hidden" data-dialog-error role="alert"></p>
     </dialog>
     <dialog class="workspace-dialog draft-conflict" aria-labelledby="goal-conflict-title" data-goal-conflict data-workspace-dialog>
         <div class="section-heading">
             <h2 id="goal-conflict-title"><?= $view->e($view->t('The goal changed while you were editing')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close goal conflict">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </div>
         <p><?= $view->e($view->t('Your draft is still here. Choose how to reconcile it with the latest saved version.')) ?></p>
         <dl class="detail-list" data-goal-conflict-server></dl>
@@ -175,7 +222,7 @@
     <dialog id="new-milestone-dialog" class="workspace-dialog" aria-labelledby="new-milestone-title" data-workspace-dialog>
         <div class="section-heading">
             <h2 id="new-milestone-title"><?= $view->e($view->t('New milestone')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close new milestone">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </div>
         <form class="stack-form" data-milestone-create-form>
             <div class="field">
@@ -196,7 +243,7 @@
     <dialog id="new-milestone-task-dialog" class="workspace-dialog" aria-labelledby="new-milestone-task-title" data-workspace-dialog>
         <div class="section-heading">
             <h2 id="new-milestone-task-title"><?= $view->e($view->t('New task for this milestone')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close new milestone task">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </div>
         <p class="context-chip" data-milestone-task-context></p>
         <form class="stack-form roadmap-task-form" data-milestone-task-create-form>
@@ -211,7 +258,7 @@
             </div>
             <div class="field">
                 <label for="milestone-task-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
-                <textarea id="milestone-task-criteria" name="completion_criteria" maxlength="10000" rows="2" placeholder="What will show this step is done?"></textarea>
+                <textarea id="milestone-task-criteria" name="completion_criteria" maxlength="10000" rows="2" placeholder="<?= $view->e($view->t('What will show this step is done?')) ?>"></textarea>
             </div>
             <div class="capture-suggestions" data-capture-suggestions="completion_criteria">
                 <button type="button"><?= $view->e($view->t('Works end-to-end')) ?></button>

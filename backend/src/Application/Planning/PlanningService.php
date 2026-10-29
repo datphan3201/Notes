@@ -227,10 +227,15 @@ final readonly class PlanningService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public function archive(string $type, int $userId, string $id, array $input): array
     {
-        $this->keys($input, ['base_version']);
+        $this->keys($input, in_array($type, ['goal', 'milestone'], true) ? ['base_version', 'include_contents'] : ['base_version']);
         $baseVersion = $this->baseVersion($input);
+        if (array_key_exists('include_contents', $input) && !is_bool($input['include_contents'])) {
+            throw new ValidationException(['include_contents' => ['The value must be boolean.']]);
+        }
+        // Explicit opt-in: archive everything beneath the Goal or Milestone in one step.
+        $cascade = ($input['include_contents'] ?? false) === true;
 
-        return $this->transactions->run(function () use ($type, $userId, $id, $baseVersion): array {
+        return $this->transactions->run(function () use ($type, $userId, $id, $baseVersion, $cascade): array {
             $this->repository->lockOwner($userId);
             $current = $this->owned($type, $userId, $id, true);
             $this->assertVersion($current, $baseVersion);
@@ -241,10 +246,14 @@ final readonly class PlanningService
                 }
 
                 $this->requireEmpty('goal', $userId, 'area_id', $id, 'The Area still contains active Goals.');
+            } elseif ($type === 'goal' && $cascade) {
+                $this->archiveGoalContents($userId, $id);
             } elseif ($type === 'goal') {
                 $this->requireEmpty('goal', $userId, 'parent_goal_id', $id, 'The Goal still has child Goals.');
                 $this->requireEmpty('milestone', $userId, 'goal_id', $id, 'The Goal still has Milestones.');
                 $this->requireEmpty('task', $userId, 'goal_id', $id, 'The Goal still has Tasks.');
+            } elseif ($type === 'milestone' && $cascade) {
+                $this->archiveMilestoneContents($userId, $id);
             } elseif ($type === 'milestone') {
                 $this->requireEmpty('task', $userId, 'milestone_id', $id, 'The Milestone still has Tasks.');
 
@@ -255,6 +264,47 @@ final readonly class PlanningService
 
             return $this->serialize($this->repository->archive($type, $userId, $id, $this->now()));
         });
+    }
+
+    /** Archives child Goals, Milestones, Tasks and repeating series beneath a Goal (not the Goal itself). */
+    private function archiveGoalContents(int $userId, string $goalId): void
+    {
+        $children = [];
+        foreach ($this->repository->list('goal', $userId) as $goal) {
+            if ($goal['parent_goal_id'] !== null) {
+                $children[(string) $goal['parent_goal_id']][] = (string) $goal['id'];
+            }
+        }
+        $goals = [$goalId];
+        for ($index = 0; $index < count($goals); $index++) {
+            foreach ($children[$goals[$index]] ?? [] as $child) {
+                $goals[] = $child;
+            }
+        }
+        $milestones = $this->repository->list('milestone', $userId);
+        $now = $this->now();
+        foreach ($goals as $current) {
+            foreach ($milestones as $milestone) {
+                if ((string) $milestone['goal_id'] === $current) {
+                    $this->archiveMilestoneContents($userId, (string) $milestone['id']);
+                    $this->repository->archive('milestone', $userId, (string) $milestone['id'], $now);
+                }
+            }
+            $this->repository->archiveWhere('task', $userId, 'goal_id', $current, $now);
+            $this->series->archiveForParent($userId, 'goal_id', $current, $now);
+            if ($current !== $goalId) {
+                $this->repository->archive('goal', $userId, $current, $now);
+            }
+        }
+    }
+
+    /** Archives a Milestone's Tasks and repeating series and drops its prerequisite links. */
+    private function archiveMilestoneContents(int $userId, string $milestoneId): void
+    {
+        $now = $this->now();
+        $this->repository->removeMilestoneDependencies($userId, $milestoneId);
+        $this->repository->archiveWhere('task', $userId, 'milestone_id', $milestoneId, $now);
+        $this->series->archiveForParent($userId, 'milestone_id', $milestoneId, $now);
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
@@ -889,6 +939,7 @@ final readonly class PlanningService
         if ($type === 'task') {
             if (array_key_exists('reminder_at', $changes)) {
                 $changes['reminder_sent_at'] = null;
+                $changes['reminder_read_at'] = null;
             }
             $this->validateDates($changes);
         }
@@ -1084,7 +1135,7 @@ final readonly class PlanningService
             $row['checked'] = (bool) $row['checked'];
         }
 
-        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at'] as $field) {
+        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'reminder_read_at'] as $field) {
             if (array_key_exists($field, $row)) {
                 $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
             }

@@ -127,7 +127,7 @@ final class FullFeedbackHttpTest extends TestCase
         self::assertNull($this->session->userId());
 
         $this->api('POST', "/api/v1/admin/users/$ownerId/unlock", [], $admin);
-        self::assertSame('/', $this->login('author@example.test')->headers['Location']);
+        self::assertSame('/dashboard', $this->login('author@example.test')->headers['Location']);
         self::assertSame(200, $this->data($this->api('PATCH', '/api/v1/admin/settings', ['history_limit' => 100], $admin)) === ['history_limit' => 100] ? 200 : 500);
     }
 
@@ -151,7 +151,7 @@ final class FullFeedbackHttpTest extends TestCase
         $wrong = $this->request('POST', '/two-factor', ['_token' => $token[1], 'code' => '000000'], $cookie);
         self::assertSame('/two-factor', $wrong->headers['Location']);
         $right = $this->request('POST', '/two-factor', ['_token' => $token[1], 'code' => Totp::code($setup['secret'], $this->runtime['clock']->now()->getTimestamp())], $cookie);
-        self::assertSame('/', $right->headers['Location']);
+        self::assertSame('/dashboard', $right->headers['Location']);
         self::assertSame(200, $this->request('GET', '/api/v1/session', cookie: $this->session->id())->status);
     }
 

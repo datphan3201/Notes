@@ -17,11 +17,11 @@
                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
                     <?= $view->e($view->t('Tasks')) ?>
                 </h2>
-                <button class="icon-button" type="button" data-planning-retry aria-label="Refresh tasks">
+                <button class="icon-button" type="button" data-planning-retry aria-label="<?= $view->e($view->t('Refresh tasks')) ?>">
                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
                 </button>
             </div>
-            <div class="task-view-menu" role="group" aria-label="Task time filters">
+            <div class="task-view-menu" role="group" aria-label="<?= $view->e($view->t('Task time filters')) ?>">
                 <button type="button" data-task-view="today" aria-pressed="true">
                     <?= $view->e($view->t('Today')) ?>
                     <span class="count-badge" data-task-view-count="today">—</span>
@@ -61,6 +61,12 @@
                             <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
                             <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
                             <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
+                        </select>
+                    </div>
+                    <div class="field" hidden>
+                        <label for="task-tag"><?= $view->e($view->t('Tag')) ?></label>
+                        <select id="task-tag" data-task-tag>
+                            <option value=""><?= $view->e($view->t('All tags')) ?></option>
                         </select>
                     </div>
                 </div>

@@ -109,13 +109,22 @@ final class ConfigLoader
 
         $aiEnabled = $boolean('AI_ENABLED', false);
         $aiProvider = $env('AI_PROVIDER', 'google') ?? 'google';
-        $aiModel = $env('AI_MODEL', 'gemini-2.5-flash-lite') ?? '';
+        $aiModel = $env('AI_MODEL', 'gemini-3.5-flash-lite') ?? '';
         $aiKey = $env('GOOGLE_AI_API_KEY');
         if (! in_array($aiProvider, ['google'], true)) {
             throw new InvalidArgumentException('AI_PROVIDER must be google.');
         }
         if ($aiEnabled && ($aiModel === '' || $aiKey === null || trim($aiKey) === '')) {
             throw new InvalidArgumentException('Enabled AI requires AI_MODEL and GOOGLE_AI_API_KEY.');
+        }
+
+        // SMTP is used whenever MAIL_HOST is set; otherwise see PasswordResetMailer.
+        $mailHost = trim($env('MAIL_HOST', '') ?? '');
+        $mailPort = filter_var($env('MAIL_PORT', '587'), FILTER_VALIDATE_INT);
+        $mailEncryption = strtolower(trim($env('MAIL_ENCRYPTION', 'tls') ?? 'tls'));
+        if ($mailHost !== '' && ($mailPort === false || $mailPort < 1 || $mailPort > 65535
+            || ! in_array($mailEncryption, ['tls', 'ssl', 'none'], true))) {
+            throw new InvalidArgumentException('MAIL_PORT must be a port and MAIL_ENCRYPTION must be tls, ssl or none.');
         }
         $databaseUser = $env('PLANNER_DB_USERNAME');
         if ($databaseUser === null || trim($databaseUser) === '') {
@@ -150,7 +159,15 @@ final class ConfigLoader
                 'path' => $env('LOG_PATH', $base.'/storage/logs/planner.log') ?? '',
                 'level' => $env('LOG_LEVEL', 'debug') ?? 'debug',
             ],
-            'mail' => ['from' => $env('MAIL_FROM_ADDRESS', '') ?? ''],
+            'mail' => [
+                'from' => $env('MAIL_FROM_ADDRESS', '') ?? '',
+                'from_name' => $env('MAIL_FROM_NAME', 'Planner') ?? 'Planner',
+                'host' => $mailHost === '' ? null : $mailHost,
+                'port' => $mailPort === false ? 587 : $mailPort,
+                'encryption' => $mailEncryption,
+                'username' => ($env('MAIL_USERNAME', '') ?? '') === '' ? null : $env('MAIL_USERNAME'),
+                'password' => $env('MAIL_PASSWORD'),
+            ],
             'vite' => ['dev_url' => $env('VITE_DEV_URL')],
             'ai' => [
                 'enabled' => $aiEnabled,

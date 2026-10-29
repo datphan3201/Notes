@@ -8,6 +8,8 @@ use Planner\Application\Account\AccountSerializer;
 use Planner\Application\Account\AccountService;
 use Planner\Application\Account\AccountValidator;
 use Planner\Application\Account\AuthService;
+use Planner\Application\Account\EmailVerificationService;
+use Planner\Http\GuestLocale;
 use Planner\Http\Request;
 use Planner\Http\Response;
 use Planner\Http\ValidationException;
@@ -25,16 +27,17 @@ final readonly class AccountController
         private PdoAccountRepository $repository,
         private SessionManager $session,
         private ViewRenderer $views,
+        private EmailVerificationService $emailVerification,
     ) {
     }
 
     public function loginPage(Request $request): Response
     {
         if ($this->auth->currentUser() !== null) {
-            return Response::redirect('/');
+            return Response::redirect('/dashboard');
         }
 
-        return Response::html($this->renderAuth('auth/login', 'Sign in'));
+        return Response::html($this->renderAuth('auth/login', 'Sign in', $request));
     }
 
     public function login(Request $request): Response
@@ -60,23 +63,23 @@ final readonly class AccountController
             return Response::redirect('/login');
         }
 
-        return Response::redirect('/');
+        return Response::redirect('/dashboard');
     }
 
     public function registerPage(Request $request): Response
     {
         if ($this->auth->currentUser() !== null) {
-            return Response::redirect('/');
+            return Response::redirect('/dashboard');
         }
 
-        return Response::html($this->renderAuth('auth/register', 'Create account'));
+        return Response::html($this->renderAuth('auth/register', 'Create account', $request));
     }
 
     public function register(Request $request): Response
     {
         try {
             $input = $this->validator->registration($request->input());
-            $this->auth->register($input['email'], $input['display_name'], $input['password']);
+            $user = $this->auth->register($input['email'], $input['display_name'], $input['password'], GuestLocale::resolve($request, $this->session));
         } catch (ValidationException $exception) {
             $this->session->flash('errors', $exception->errors);
             $this->session->flash('old', [
@@ -86,8 +89,9 @@ final readonly class AccountController
 
             return Response::redirect('/register');
         }
+        $this->emailVerification->sendVerificationQuietly($user->id);
 
-        return Response::redirect('/');
+        return Response::redirect('/dashboard');
     }
 
     public function logout(Request $request): Response
@@ -187,7 +191,6 @@ final readonly class AccountController
             $request->path === '/habits' => ['planning/habits', 'Habits', 'planning.habits'],
             $request->path === '/dashboard' => ['planning/dashboard', 'Dashboard', 'planning.dashboard'],
             $request->path === '/reviews' => ['planning/reviews', 'Reviews', 'planning.reviews'],
-            $request->path === '/ai' => ['planning/ai', 'AI assistant', 'planning.ai'],
             $request->path === '/teamwork' => ['planning/teamwork', 'Teamwork', 'planning.teamwork'],
             default => throw new \LogicException('Unexpected planning page route.'),
         };
@@ -209,7 +212,7 @@ final readonly class AccountController
         return Response::html($this->renderApplicationPage($template, $title, $route, $extra));
     }
 
-    private function renderAuth(string $template, string $title): string
+    private function renderAuth(string $template, string $title, Request $request): string
     {
         $errors = $this->session->pullFlash('errors', []);
         $old = $this->session->pullFlash('old', []);
@@ -219,6 +222,7 @@ final readonly class AccountController
             'csrf_token' => $this->session->csrfToken(),
             'errors' => is_array($errors) ? $errors : [],
             'old' => is_array($old) ? $old : [],
+            'locale' => GuestLocale::resolve($request, $this->session),
         ], 'layouts/guest');
     }
 

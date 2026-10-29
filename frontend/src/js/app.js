@@ -22,7 +22,6 @@ import {
 } from './planning/planning-page';
 import { initHabitsPage } from './planning/habits-page';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
-import { initAIPage } from './planning/ai-page';
 import { initTeamworkPage } from './planning/teamwork-page.js';
 import { initAdminPage } from './admin/admin-page.js';
 import { initTwoFactor } from './settings/two-factor.js';
@@ -33,6 +32,7 @@ import { initDialogBackdropClose } from './lib/dialog-backdrop.js';
 import { initWalkthrough } from './help/walkthrough';
 import { applyAppearance } from './settings/theme-catalog';
 import { patch } from './lib/http.js';
+import { t } from './lib/i18n.js';
 import { decorateReference } from './settings/reference-decoration';
 
 window.Alpine = Alpine;
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.assign(window.notesBootstrap.preferences, response.payload.data);
             applyAppearance(response.payload.data);
         } catch (error) {
-            window.alert(error.message || 'Unable to change appearance.');
+            window.alert(error.message || t('Unable to change appearance.'));
         } finally {
             button.disabled = false;
         }
@@ -131,8 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboard) initDashboardPage(dashboard);
     const reviews = document.querySelector('[data-reviews-page]');
     if (reviews) initReviewsPage(reviews);
-    const ai = document.querySelector('[data-ai-page]');
-    if (ai) initAIPage(ai);
     const teamwork = document.querySelector('[data-teamwork-page]');
     if (teamwork) initTeamworkPage(teamwork);
     const admin = document.querySelector('[data-admin-page]');
@@ -147,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = window.notesBootstrap?.user?.avatar_url;
         if (!url) return;
         const image = document.createElement('img');
-        image.alt = 'Profile picture';
+        image.alt = t('Profile picture');
         image.src = url;
         avatar.replaceChildren(image);
     });

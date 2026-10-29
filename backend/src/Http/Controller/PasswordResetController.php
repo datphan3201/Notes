@@ -29,7 +29,11 @@ final readonly class PasswordResetController
             'csrf_token' => $this->session->csrfToken(),
             'errors' => $this->session->pullFlash('errors', []),
             'notice' => $this->session->pullFlash('notice', ''),
-        ], 'layouts/guest'))->withHeaders(['Referrer-Policy' => 'no-referrer']);
+            'locale' => \Planner\Http\GuestLocale::resolve($request, $this->session),
+        // same-origin keeps the reset token out of other sites' Referer while the
+        // form's own POST still carries its Origin; no-referrer made browsers send
+        // "Origin: null", which the CSRF guard rejects with 419.
+        ], 'layouts/guest'))->withHeaders(['Referrer-Policy' => 'same-origin']);
     }
 
     public function request(Request $request): Response

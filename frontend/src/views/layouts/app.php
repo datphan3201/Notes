@@ -74,7 +74,7 @@ $accountNavigation = [
                         <span class="avatar avatar-small" data-avatar-fallback><?= $view->e($view->initial($user['display_name'])) ?></span>
                         <span class="sidebar-user-copy">
                             <strong><?= $view->e($user['display_name']) ?></strong>
-                            <small><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Email not verified')) ?></small>
+                            <small><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Verify your email')) ?></small>
                         </span>
                     </a>
                     <form action="/logout" method="post" data-leave-guard-form>
@@ -117,12 +117,6 @@ $accountNavigation = [
                     </div>
                 </header>
                 <main class="app-main" id="main-content" tabindex="-1">
-                    <?php if (!$user['email_verified'] && $current_route === 'settings.profile'): ?>
-                    <div class="notice notice-info account-notice" role="status">
-                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>
-                        <span><?= $view->e($view->t('Your email address has not been verified.')) ?></span>
-                    </div>
-                    <?php endif; ?>
                     <?= $content ?>
                 </main>
             </div>
@@ -141,7 +135,6 @@ $accountNavigation = [
                 <label class="sr-only" for="assistant-question"><?= $view->e($view->t('Your question')) ?></label>
                 <textarea id="assistant-question" name="question" rows="2" maxlength="2000" required placeholder="<?= $view->e($view->t('What should I focus on this week?')) ?>"></textarea>
                 <div class="action-row">
-                    <a class="button button-quiet" href="/ai" data-leave-guard><?= $view->e($view->t('Request a planning proposal')) ?></a>
                     <button class="button button-primary" type="submit"><?= $view->e($view->t('Ask')) ?></button>
                 </div>
             </form>

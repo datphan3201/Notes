@@ -4,7 +4,7 @@
             <p class="walkthrough-label"><?= $view->e($view->t('Planner guide')) ?></p>
             <p class="walkthrough-progress" data-walkthrough-progress></p>
         </div>
-        <button class="icon-button" type="button" data-walkthrough-dismiss aria-label="Close walkthrough" title="Close walkthrough">×</button>
+        <button class="icon-button" type="button" data-walkthrough-dismiss aria-label="<?= $view->e($view->t('Close')) ?>" title="<?= $view->e($view->t('Close')) ?>">×</button>
     </header>
     <div class="walkthrough-topic field">
         <label for="walkthrough-topic"><?= $view->e($view->t('Choose a topic')) ?></label>
@@ -12,8 +12,8 @@
     </div>
     <section class="walkthrough-content" data-walkthrough-content tabindex="-1" aria-labelledby="walkthrough-title">
         <figure class="walkthrough-figure">
-            <img data-walkthrough-image alt="Placeholder illustration of a workspace" width="800" height="360">
-            <figcaption data-walkthrough-caption><?= $view->e($view->t('Illustration placeholder · final UI images will be added later')) ?></figcaption>
+            <img data-walkthrough-image alt="" width="800" height="360">
+            <figcaption data-walkthrough-caption hidden></figcaption>
         </figure>
         <h2 id="walkthrough-title" data-walkthrough-title tabindex="-1"></h2>
         <p class="walkthrough-intro" data-walkthrough-intro></p>

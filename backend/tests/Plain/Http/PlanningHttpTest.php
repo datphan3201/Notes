@@ -45,7 +45,9 @@ final class PlanningHttpTest extends TestCase
     public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts(): void
     {
         [$cookie,$csrf]=$this->register();
-        foreach(['/goals','/tasks','/habits','/dashboard','/reviews','/ai'] as $page) self::assertSame(200,$this->request('GET',$page,cookie:$cookie)->status);
+        foreach(['/goals','/tasks','/habits','/dashboard','/reviews'] as $page) self::assertSame(200,$this->request('GET',$page,cookie:$cookie)->status);
+        // Proposals have no page any more; the floating chat is the only AI entry point.
+        self::assertSame(404,$this->request('GET','/ai',cookie:$cookie)->status);
         self::assertSame(419,$this->request('POST','/api/v1/goals',['name'=>'No CSRF'],$cookie,json:true)->status);
         $areas=$this->json($this->request('GET','/api/v1/areas',cookie:$cookie))['data'];
         $goal=$this->json($this->request('POST','/api/v1/goals',['area_id'=>$areas[0]['id'],'parent_goal_id'=>null,'name'=>'Backend','completion_criteria'=>'Can ship'], $cookie,$csrf,true))['data'];

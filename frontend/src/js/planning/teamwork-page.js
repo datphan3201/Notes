@@ -4,6 +4,7 @@ import { repeatRule } from '../lib/calendar.js';
 import { finishCreation } from '../lib/workspace-ui.js';
 import { captureRepeatChoice, taskCaptureValues } from './task-capture.js';
 import { localDate } from './task-views.js';
+import { checkMark } from '../lib/check-mark.js';
 
 const STATUS_LABELS = { todo: 'To do', in_progress: 'In progress', done: 'Completed' };
 const CHAT_POLL_MS = 5000;
@@ -258,6 +259,8 @@ export function initTeamworkPage(root) {
                 member.assigned ? `${member.done}/${member.assigned} · ${memberPercent}%` : '—',
             ),
         );
+        // The member's own profile biography, so teammates know who they work with.
+        if (member.biography) name.append(element('p', 'team-member-bio', member.biography));
         row.append(avatar(member), name, bar);
         if (canManage && String(member.id) !== String(window.notesBootstrap.user.id)) {
             const role = element('select');
@@ -321,7 +324,8 @@ export function initTeamworkPage(root) {
             'article',
             `planning-list-item team-task${done ? ' is-done' : ''}${overdue ? ' is-overdue' : ''}`,
         );
-        const tick = element('button', 'task-completion-button', done ? '✓' : '○');
+        const tick = element('button', 'task-completion-button');
+        if (done) tick.append(checkMark());
         tick.type = 'button';
         tick.disabled = !canEditTasks && !mine;
         tick.setAttribute('aria-pressed', String(done));
@@ -337,7 +341,7 @@ export function initTeamworkPage(root) {
         if (task.due_date) meta.push(`${overdue ? t('Overdue') : t('Due')}: ${task.due_date}`);
         if (task.reminder_at)
             meta.push(
-                `⏰ ${new Date(task.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}`,
+                `${t('Reminder')}: ${new Date(task.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}`,
             );
         if (task.repeat) meta.push(`↻ ${teamRepeatLabel(task.repeat)}`);
         if (task.estimated_minutes) meta.push(`${task.estimated_minutes} ${t('min')}`);

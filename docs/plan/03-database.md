@@ -29,6 +29,19 @@ quote uses the theme's preset. `0009_add_task_estimate` adds nullable
 remain NULL, never inferred from illustrative numbers. This is an estimate, not
 tracked time or a timer. Both migrations leave applied predecessors intact.
 
+`0022_create_user_backgrounds` adds the owned `user_backgrounds` list (UUID id,
+user_id, private path, created_at) and nullable `user_preferences.background_id`
+referencing (user_id, id). It moves each existing `background_path` into the
+list, keeps it selected and clears the legacy column.
+
+`0024_complete_product_gaps` adds `tasks.reminder_read_at` and
+`team_tasks.reminder_read_at` (an in-app reminder dismissed from the bell,
+independent of `reminder_sent_at` for email), `task_series.reminder_time` (TIME,
+the local reminder time copied to each generated occurrence), `email_tokens`
+(one hashed verification or email-change link per account and purpose, with
+the target address and expiry) and `scheduled_jobs` (last run and outcome of
+each periodic job).
+
 | Table | Required columns and constraints |
 | --- | --- |
 | `areas` | UUID, owner, name(80), description(10000), position, version, archived/timestamps; unique owner/name |
@@ -38,6 +51,7 @@ tracked time or a timer. Both migrations leave applied predecessors intact.
 | `checklist_items` | UUID, owner, Task, title(500), checked, position, checked/deleted/timestamps, version |
 | `habits` | UUID, owner, nullable primary Goal, name, description, importance, period daily/weekly, target, timezone, archived/timestamps |
 | `habit_check_ins` | UUID, owner, Habit, local date, timezone, recorded timestamp; unique Habit/date |
+| `habit_rest_days` | UUID, owner, Habit, local date, created timestamp; unique Habit/date (migration 0023) |
 
 Text columns use `TEXT` unless the existing Note contract requires `MEDIUMTEXT`. Empty optional text is stored as `''`; nullable is reserved for missing relationships/dates.
 

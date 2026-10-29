@@ -255,8 +255,51 @@ select:focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 3px;
 }
+.check-mark {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 0.9em;
+    height: 0.9em;
+    background: currentColor;
+    mask: var(--check-mark) center / contain no-repeat;
+    vertical-align: -0.1em;
+}
+.check-mark.is-cross {
+    mask-image: var(--cross-mark);
+}
+/* Native checkboxes draw the same --check-mark as every other marker. */
 input[type='checkbox'] {
-    accent-color: var(--accent);
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    border: 1.5px solid var(--control-border, var(--border));
+    border-radius: 4px;
+    background: var(--surface);
+    vertical-align: middle;
+    cursor: pointer;
+}
+input[type='checkbox']::before {
+    content: '';
+    width: 11px;
+    height: 11px;
+    background: var(--on-accent);
+    mask: var(--check-mark) center / contain no-repeat;
+    transform: scale(0);
+}
+input[type='checkbox']:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+input[type='checkbox']:checked::before {
+    transform: scale(1);
+}
+input[type='checkbox']:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 .ui-icon {
     width: 20px;

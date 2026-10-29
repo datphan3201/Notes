@@ -136,8 +136,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Write down what matters';
-        this.eyebrow.textContent = 'New note';
+        this.heading.textContent = t('Write down what matters');
+        this.eyebrow.textContent = t('New note');
         this.writeFields({ title: '', content: '' });
         this.machine = this.createMachine(
             {
@@ -161,7 +161,7 @@ export class NoteEditor {
         this.show();
         this.title.readOnly = true;
         this.contentEditor.setReadOnly(true);
-        this.heading.textContent = 'Opening note…';
+        this.heading.textContent = t('Opening note…');
         this.eyebrow.textContent = 'Note';
         this.setStatus('Loading…');
         try {
@@ -170,7 +170,7 @@ export class NoteEditor {
             this.note = result.payload.data;
             this.writeFields(this.note);
             this.machine = this.createMachine(this.note, true);
-            this.heading.textContent = this.note.title || 'Untitled note';
+            this.heading.textContent = this.note.title || t('Untitled note');
             this.eyebrow.textContent = 'Editing';
             this.renderState(this.machine.state);
             this.title.focus();
@@ -294,7 +294,7 @@ export class NoteEditor {
         const note = state.acknowledgedNote || this.note;
         if (note) {
             this.note = note;
-            this.heading.textContent = note.title || 'Untitled note';
+            this.heading.textContent = note.title || t('Untitled note');
             this.deleteButton.classList.toggle('is-hidden', !state.persisted);
             this.root
                 .querySelector('[data-editor-share]')
@@ -332,7 +332,7 @@ export class NoteEditor {
             'aria-pressed',
             state.draftSnapshot.is_pinned ? 'true' : 'false',
         );
-        this.pinLabel.textContent = state.draftSnapshot.is_pinned ? 'Unpin' : 'Pin';
+        this.pinLabel.textContent = t(state.draftSnapshot.is_pinned ? 'Unpin' : 'Pin');
         this.titleError.textContent = state.validationErrors.title || '';
         this.titleError.classList.toggle('is-hidden', !state.validationErrors.title);
         this.contentError.textContent = state.validationErrors.content || '';
@@ -357,9 +357,11 @@ export class NoteEditor {
             ['error', 'conflict', 'auth_expired', 'unavailable'].includes(state.phase),
         );
         if (state.phase === 'conflict') this.onConflict(this.machine);
-        this.meta.textContent = state.persisted ? 'Version ' + state.baseVersion : 'New draft';
+        this.meta.textContent = state.persisted
+            ? t('Version') + ' ' + state.baseVersion
+            : t('New draft');
         if (state.recoveryAvailable === false)
-            this.meta.textContent += ' · local recovery unavailable';
+            this.meta.textContent += ' · ' + t('local recovery unavailable');
         if (state.phase === 'saved') this.onChanged?.(this.note);
         if (this.pendingClose && state.phase === 'saved') {
             this.pendingClose = false;
@@ -399,7 +401,7 @@ export class NoteEditor {
     }
 
     setStatus(text, error = false) {
-        this.status.textContent = text;
+        this.status.textContent = t(text);
         this.status.classList.toggle('is-error', error);
         this.status.classList.toggle('is-success', text === 'Saved');
     }
@@ -523,8 +525,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Write down what matters';
-        this.eyebrow.textContent = 'Recovered draft';
+        this.heading.textContent = t('Write down what matters');
+        this.eyebrow.textContent = t('Recovered draft');
         const snapshot = normalizeSnapshot(record.draftSnapshot);
         this.writeFields(snapshot);
         this.machine = this.createMachine(
@@ -735,7 +737,7 @@ export class NoteEditor {
         removeButton.className = 'icon-button';
         removeButton.type = 'button';
         removeButton.textContent = '×';
-        removeButton.setAttribute('aria-label', 'Delete ' + attachment.original_name);
+        removeButton.setAttribute('aria-label', t('Delete') + ' ' + attachment.original_name);
         removeButton.addEventListener('click', () => this.deleteAttachment(attachment));
         row.append(copy, download, removeButton);
         return row;
@@ -751,7 +753,7 @@ export class NoteEditor {
         const meta = document.createElement('small');
         meta.textContent =
             item.status === 'uploading'
-                ? 'Uploading ' + item.progress + '%'
+                ? t('Uploading') + ' ' + item.progress + '%'
                 : item.status === 'error'
                   ? item.error
                   : 'Waiting';
@@ -768,7 +770,7 @@ export class NoteEditor {
         cancel.className = 'icon-button';
         cancel.type = 'button';
         cancel.textContent = '×';
-        cancel.setAttribute('aria-label', 'Cancel upload for ' + item.file.name);
+        cancel.setAttribute('aria-label', t('Cancel upload for') + ' ' + item.file.name);
         cancel.addEventListener('click', () => this.cancelUpload(item));
         row.append(copy);
         if (retry) row.append(retry);

@@ -116,6 +116,51 @@ final readonly class PdoHabitRepository
         return $statement->fetchAll();
     }
 
+    /** @return array<string, mixed>|null */
+    public function restDay(int $userId, string $habitId, string $date, bool $forUpdate = false): ?array
+    {
+        $statement = $this->pdo->prepare('SELECT * FROM habit_rest_days WHERE user_id = :user_id AND habit_id = :habit_id AND local_date = :local_date'.($forUpdate ? ' FOR UPDATE' : ''));
+        $statement->execute(['user_id' => $userId, 'habit_id' => $habitId, 'local_date' => $date]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $row : null;
+    }
+
+    public function insertRestDay(string $id, int $userId, string $habitId, string $date, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('INSERT INTO habit_rest_days (id, user_id, habit_id, local_date, created_at) VALUES (:id, :user_id, :habit_id, :local_date, :created_at)');
+        $statement->execute(['id' => $id, 'user_id' => $userId, 'habit_id' => $habitId, 'local_date' => $date, 'created_at' => $timestamp]);
+    }
+
+    public function deleteRestDay(int $userId, string $habitId, string $date): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM habit_rest_days WHERE user_id = :user_id AND habit_id = :habit_id AND local_date = :local_date');
+        $statement->execute(['user_id' => $userId, 'habit_id' => $habitId, 'local_date' => $date]);
+    }
+
+    /**
+     * Check-in and Rest Day dates of the owner's active Habits, keyed by Habit.
+     *
+     * @return array{done: array<string, array<string, true>>, rest: array<string, array<string, true>>}
+     */
+    public function days(int $userId, ?string $habitId = null): array
+    {
+        $result = ['done' => [], 'rest' => []];
+        foreach (['done' => 'habit_check_ins', 'rest' => 'habit_rest_days'] as $kind => $table) {
+            $statement = $this->pdo->prepare(<<<SQL
+SELECT day.habit_id, day.local_date FROM $table day
+JOIN habits habit ON habit.user_id = day.user_id AND habit.id = day.habit_id AND habit.archived_at IS NULL
+WHERE day.user_id = :user_id
+SQL.($habitId === null ? '' : ' AND day.habit_id = :habit_id'));
+            $statement->execute(['user_id' => $userId, ...($habitId === null ? [] : ['habit_id' => $habitId])]);
+            foreach ($statement->fetchAll() as $row) {
+                $result[$kind][(string) $row['habit_id']][(string) $row['local_date']] = true;
+            }
+        }
+
+        return $result;
+    }
+
     public function setTags(int $userId, string $habitId, array $tagIds): void
     {
         $delete = $this->pdo->prepare('DELETE FROM habit_tags WHERE user_id = :user_id AND habit_id = :habit_id');

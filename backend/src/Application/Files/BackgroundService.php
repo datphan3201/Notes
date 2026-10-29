@@ -12,50 +12,87 @@ use Planner\Infrastructure\Persistence\Pdo\Files\PendingDeletionRepository;
 use Planner\Infrastructure\Storage\LocalPrivateStorage;
 use Planner\Support\Clock;
 use Planner\Support\Timestamp;
+use Planner\Support\UuidGenerator;
 
 final readonly class BackgroundService
 {
-    public function __construct(private PdoAccountRepository $accounts, private TransactionManager $transactions, private LocalPrivateStorage $storage, private PendingDeletionRepository $pending, private Clock $clock)
+    /** Upper bound on private uploads kept per account. */
+    public const MAX_BACKGROUNDS = 12;
+
+    public function __construct(private PdoAccountRepository $accounts, private TransactionManager $transactions, private LocalPrivateStorage $storage, private PendingDeletionRepository $pending, private Clock $clock, private UuidGenerator $uuids, private ProcessFileDeletion $cleanup)
     {
     }
 
-    public function replace(int $userId, UploadedFile $file): void
+    /** Adds an uploaded image to the account's list and selects it. @return array{id:string,url:string,created_at:?string} */
+    public function add(int $userId, UploadedFile $file): array
     {
         $path = $this->storage->putBytes('backgrounds', $this->jpeg($file), 'jpg');
+        $id = $this->uuids->generate();
+        $now = Timestamp::database($this->clock->now());
         try {
-            $this->transactions->run(function () use ($userId, $path): void {
+            $this->transactions->run(function () use ($userId, $path, $id, $now): void {
                 $this->accounts->findById($userId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'Account not found.');
-                $old = $this->accounts->backgroundPath($userId);
-                $this->accounts->setBackgroundPath($userId, $path, Timestamp::database($this->clock->now()));
-                if ($old !== null) {
-                    $this->pending->queue($userId, $old, Timestamp::database($this->clock->now()));
+                if ($this->accounts->backgroundCount($userId) >= self::MAX_BACKGROUNDS) {
+                    throw new ValidationException(['background' => ['Remove one of your '.self::MAX_BACKGROUNDS.' backgrounds before adding another.']]);
                 }
+                $this->accounts->insertBackground($userId, $id, $path, $now);
+                $this->accounts->selectBackground($userId, $id, $now);
             });
         } catch (\Throwable $error) {
             $this->storage->delete($path);
             throw $error;
         }
+
+        return $this->serialize(['id' => $id, 'created_at' => $now]);
     }
 
+    /** @return list<array{id:string,url:string,created_at:?string}> */
+    public function list(int $userId): array
+    {
+        return array_map($this->serialize(...), $this->accounts->backgrounds($userId));
+    }
+
+    /** Removes one uploaded image; if it was selected, the preset theme shows again. */
+    public function delete(int $userId, string $backgroundId): void
+    {
+        $path = $this->transactions->run(function () use ($userId, $backgroundId): string {
+            $this->accounts->findById($userId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'Account not found.');
+            $path = $this->accounts->backgroundPath($userId, $backgroundId) ?? throw new HttpException(404, 'NOT_FOUND', 'Background not found.');
+            $now = Timestamp::database($this->clock->now());
+            if ($this->accounts->selectedBackgroundId($userId) === $backgroundId) {
+                $this->accounts->selectBackground($userId, null, $now);
+            }
+            $this->accounts->deleteBackground($userId, $backgroundId);
+            $this->pending->queue($userId, $path, $now);
+            return $path;
+        });
+        // Bytes go only after commit; a failed attempt stays queued for prune.
+        $this->cleanup->handle([$path]);
+    }
+
+    /** Deletes the selected image (the original single-background contract). */
     public function remove(int $userId): void
     {
-        $this->transactions->run(function () use ($userId): void {
-            $this->accounts->findById($userId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'Account not found.');
-            $path = $this->accounts->backgroundPath($userId);
-            $this->accounts->setBackgroundPath($userId, null, Timestamp::database($this->clock->now()));
-            if ($path !== null) {
-                $this->pending->queue($userId, $path, Timestamp::database($this->clock->now()));
-            }
-        });
+        $selected = $this->accounts->selectedBackgroundId($userId);
+        if ($selected !== null) {
+            $this->delete($userId, $selected);
+        }
     }
 
-    public function authorized(int $userId): string
+    public function authorized(int $userId, ?string $backgroundId = null): string
     {
-        $path = $this->accounts->backgroundPath($userId);
+        $backgroundId ??= $this->accounts->selectedBackgroundId($userId);
+        $path = $backgroundId === null ? null : $this->accounts->backgroundPath($userId, $backgroundId);
         if ($path === null) {
             throw new HttpException(404, 'NOT_FOUND', 'No background image.');
         }
         return $this->storage->resolve($path);
+    }
+
+    /** @param array{id:string,created_at:string} $row @return array{id:string,url:string,created_at:?string} */
+    private function serialize(array $row): array
+    {
+        return ['id' => (string) $row['id'], 'url' => PdoAccountRepository::backgroundUrl((string) $row['id']), 'created_at' => Timestamp::api((string) $row['created_at'])];
     }
 
     private function jpeg(UploadedFile $file): string

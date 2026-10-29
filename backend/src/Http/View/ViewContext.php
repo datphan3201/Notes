@@ -20,6 +20,11 @@ final readonly class ViewContext
         return new self($this->assets, in_array($locale, ['en', 'vi'], true) ? $locale : 'en');
     }
 
+    public function locale(): string
+    {
+        return $this->locale;
+    }
+
     public function t(string $message): string
     {
         return $this->translations[$message] ?? $message;

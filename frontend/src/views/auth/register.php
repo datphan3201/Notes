@@ -8,29 +8,29 @@
             <label for="display_name"><?= $view->e($view->t('Display name')) ?></label>
             <input id="display_name" name="display_name" type="text" value="<?= $view->e($view->old($old, 'display_name')) ?>" autocomplete="name" maxlength="80" required autofocus>
             <?php if ($message = $view->error($errors, 'display_name')): ?>
-            <p class="field-error"><?= $view->e($message) ?></p>
+            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
             <?php endif; ?>
         </div>
         <div class="field">
             <label for="email"><?= $view->e($view->t('Email')) ?></label>
             <input id="email" name="email" type="email" value="<?= $view->e($view->old($old, 'email')) ?>" autocomplete="email" maxlength="254" required>
             <?php if ($message = $view->error($errors, 'email')): ?>
-            <p class="field-error"><?= $view->e($message) ?></p>
+            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
             <?php endif; ?>
         </div>
         <div class="field">
             <label for="password"><?= $view->e($view->t('Password')) ?></label>
             <input id="password" name="password" type="password" autocomplete="new-password" required>
-            <p class="field-hint"><?= $view->e($view->t('At least 10 characters and at most 72 bytes.')) ?></p>
+            <p class="field-hint"><?= $view->e($view->t('Use at least 10 characters.')) ?></p>
             <?php if ($message = $view->error($errors, 'password')): ?>
-            <p class="field-error"><?= $view->e($message) ?></p>
+            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
             <?php endif; ?>
         </div>
         <div class="field">
             <label for="password_confirmation"><?= $view->e($view->t('Confirm password')) ?></label>
             <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
             <?php if ($message = $view->error($errors, 'password_confirmation')): ?>
-            <p class="field-error"><?= $view->e($message) ?></p>
+            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
             <?php endif; ?>
         </div>
         <button class="button button-primary button-wide" type="submit"><?= $view->e($view->t('Create account')) ?></button>

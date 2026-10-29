@@ -1,9 +1,11 @@
-import { t } from '../lib/i18n.js';
+import { t, statusLabel } from '../lib/i18n.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
 import { get } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars, renderStreak } from './insights-ui.js';
 import { transitionEntity } from './transitions.js';
+import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
+import { streakLabel } from '../lib/habit-days.js';
 
 function message(root, error) {
     const output = root.querySelector('[data-planning-error]');
@@ -26,9 +28,12 @@ function rows(container, items, empty, type = 'task') {
         const marker = document.createElement('span');
         marker.className = 'task-marker';
         marker.setAttribute('aria-hidden', 'true');
-        const complete = item.status === 'Done' || item.status === 'Completed';
+        const complete =
+            type === 'habit'
+                ? item.done_today
+                : item.status === 'Done' || item.status === 'Completed';
         marker.classList.toggle('is-complete', complete);
-        marker.textContent = complete ? '✓' : '';
+        if (complete) marker.append(checkMark());
         const copy = document.createElement('span');
         copy.className = 'dashboard-item-copy';
         const name = document.createElement('strong');
@@ -36,8 +41,8 @@ function rows(container, items, empty, type = 'task') {
         const meta = document.createElement('small');
         meta.textContent =
             type === 'habit'
-                ? `${item.completed_days} of ${item.target_frequency} days completed`
-                : `${(item.status || 'Not started').replace(/([a-z])([A-Z])/g, '$1 $2')}${item.deadline ? ` · Due ${item.deadline}` : ''}`;
+                ? `${item.completed_days}/${item.target_frequency} ${t(item.period === 'weekly' ? 'this week' : 'today')} · ${t('Streak')}: ${streakLabel(item.streak, t)}${item.rest_today ? ` · ${t('Rest day')}` : ''}`
+                : `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${item.deadline}` : ''}`;
         copy.append(name, meta);
         row.append(marker, copy);
         container.append(row);
@@ -47,7 +52,7 @@ function rows(container, items, empty, type = 'task') {
         link.className = 'section-link';
         link.href =
             type === 'habit' ? '/habits' : type === 'milestone' ? '/goals' : '/tasks?view=all';
-        link.textContent = `View all ${items.length} ${type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks'} →`;
+        link.textContent = `${t('View all')} ${items.length} ${t(type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks')} →`;
         container.append(link);
     }
 }
@@ -101,7 +106,7 @@ function renderYearActivity(root, data, direction = 0) {
     const grid = root.querySelector('[data-activity-grid]');
     const label = String(data.year);
     root.querySelector('[data-activity-summary]').textContent =
-        `${data.total} ${data.total === 1 ? 'contribution' : 'contributions'} in ${label}`;
+        `${data.total} ${data.total === 1 ? t('contribution') : t('contributions')} · ${label}`;
     root.querySelector('[data-activity-total]').textContent = data.total;
     root.querySelector('[data-activity-unit]').textContent =
         data.total === 1 ? t('contribution') : t('contributions');
@@ -194,23 +199,26 @@ export function yearWindow(year, currentYear) {
 }
 
 function dayLabel(day) {
-    const date = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        timeZone: 'UTC',
-    }).format(new Date(`${day.date}T00:00:00Z`));
-    if (!day.total) return `No contributions on ${date}`;
+    const date = new Intl.DateTimeFormat(
+        window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
+        {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC',
+        },
+    ).format(new Date(`${day.date}T00:00:00Z`));
+    if (!day.total) return `${t('No completions on')} ${date}`;
 
     const details = Object.entries(day.counts)
         .filter(([, count]) => count > 0)
         .map(([type, count]) => {
             const labels = activityTypes[type] || [type, `${type}s`];
-            return `${count} ${count === 1 ? labels[0] : labels[1]}`;
+            return `${count} ${t(count === 1 ? labels[0] : labels[1])}`;
         })
         .join(', ');
-    const contribution = day.total === 1 ? 'contribution' : 'contributions';
-    return `${day.total} ${contribution} on ${date}${details ? ` — ${details}` : ''}`;
+    const contribution = day.total === 1 ? t('contribution') : t('contributions');
+    return `${day.total} ${contribution} · ${date}${details ? ` — ${details}` : ''}`;
 }
 
 export function initDashboardPage(root) {
@@ -306,9 +314,9 @@ export function initDashboardPage(root) {
             const data = payload.data;
             displayedMonth = data.month;
             root.querySelector('[data-dashboard-timezone]').textContent =
-                `Your time zone: ${data.timezone}`;
+                `${t('Your time zone')}: ${data.timezone}`;
             root.querySelector('[data-dashboard-date]').textContent = new Intl.DateTimeFormat(
-                'en-US',
+                window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
                 {
                     weekday: 'long',
                     month: 'long',
@@ -329,22 +337,23 @@ export function initDashboardPage(root) {
                     timeZone: data.timezone,
                 }).format(new Date()),
             );
-            root.querySelector('[data-dashboard-greeting]').textContent =
-                hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!';
+            root.querySelector('[data-dashboard-greeting]').textContent = t(
+                hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!',
+            );
             root.querySelector('[data-dashboard-greeting]').append(referenceDecoration('greeting'));
             renderRing(
                 root.querySelector('[data-week-ring]'),
                 data.week_summary.percentage,
-                'Selected tasks completed',
+                t('Selected tasks completed'),
             );
             root.querySelector('[data-week-completed]').textContent =
                 `${data.week_summary.completed} / ${data.week_summary.total}`;
             root.querySelector('[data-week-change]').textContent =
                 data.week_summary.change_points == null
                     ? data.week_summary.total
-                        ? 'No previous-week selections'
-                        : 'Select tasks to shape your week'
-                    : `${data.week_summary.change_points > 0 ? '+' : ''}${data.week_summary.change_points} points vs previous week’s selections`;
+                        ? t('No previous-week selections')
+                        : t('Select tasks to shape your week')
+                    : `${data.week_summary.change_points > 0 ? '+' : ''}${data.week_summary.change_points} ${t('points vs previous week’s selections')}`;
             const weekEnd = new Date(`${data.week_start}T00:00:00Z`);
             weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
             renderDayBars(
@@ -374,21 +383,21 @@ export function initDashboardPage(root) {
                 description.textContent =
                     focus.description ||
                     focus.completion_criteria ||
-                    'Open this task and take the next small step.';
+                    t('Open this task and take the next small step.');
                 const actions = document.createElement('div');
                 actions.className = 'focus-actions';
                 const edit = document.createElement('a');
                 edit.className = 'button button-quiet';
                 edit.href = `/tasks/${focus.id}#edit`;
                 edit.textContent = '✎';
-                edit.setAttribute('aria-label', `Edit ${focus.name}`);
-                edit.title = 'Edit task';
+                edit.setAttribute('aria-label', `${t('Edit')} ${focus.name}`);
+                edit.title = t('Edit task');
                 const complete = document.createElement('button');
                 complete.type = 'button';
                 complete.dataset.focusComplete = '';
                 complete.disabled = true;
                 complete.className = 'button button-primary';
-                complete.textContent = '✓ Complete';
+                setCheckedLabel(complete, t('Complete'));
                 complete.addEventListener('click', async () => {
                     complete.disabled = true;
                     try {
@@ -431,7 +440,7 @@ export function initDashboardPage(root) {
                     }
                     root.querySelector('[data-dashboard-roadmap-link]').href = `/goals/${goal.id}`;
                     root.querySelector('[data-dashboard-roadmap-link]').textContent =
-                        'View full roadmap →';
+                        t('View full roadmap →');
                     for (const milestone of (roadmap.milestones || []).slice(0, 6)) {
                         const link = document.createElement('a');
                         link.href = `/goals/${goal.id}#milestone=${milestone.id}`;
@@ -445,10 +454,12 @@ export function initDashboardPage(root) {
                         link.textContent = goal.name;
                         preview.append(link);
                     }
-                } else preview.textContent = 'Create a goal to give your next steps a direction.';
+                } else
+                    preview.textContent = t('Create a goal to give your next steps a direction.');
             } catch {
-                root.querySelector('[data-dashboard-roadmap]').textContent =
-                    'Roadmap unavailable. Open Goals or refresh to try again.';
+                root.querySelector('[data-dashboard-roadmap]').textContent = t(
+                    'Roadmap unavailable. Open Goals or refresh to try again.',
+                );
             }
             rows(root.querySelector('[data-today-tasks]'), data.today_tasks, {
                 title: 'A little room to focus.',
@@ -485,7 +496,7 @@ export function initDashboardPage(root) {
                 data.habits,
                 {
                     title: 'Build a steady rhythm.',
-                    description: 'Habits linked to your goals will appear here.',
+                    description: 'Create a habit and it will appear here with its own streak.',
                     icon: 'habits',
                     href: '/habits',
                     action: 'Explore habits',
@@ -496,11 +507,12 @@ export function initDashboardPage(root) {
             message(root, error);
             if (!displayedMonth) {
                 root.querySelectorAll('.loading-copy').forEach((node) => {
-                    node.textContent = 'Unable to load. Use Refresh to try again.';
+                    node.textContent = t('Unable to load. Use Refresh to try again.');
                 });
                 root.querySelector('[data-activity-days]').textContent = 'Activity unavailable';
-                root.querySelector('[data-activity-summary]').textContent =
-                    'Activity unavailable. Use Refresh to try again.';
+                root.querySelector('[data-activity-summary]').textContent = t(
+                    'Activity unavailable. Use Refresh to try again.',
+                );
             }
         } finally {
             loading = false;

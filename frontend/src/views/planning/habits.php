@@ -22,7 +22,7 @@
         </div>
         <section class="planning-panel habit-today-panel">
             <div class="section-heading">
-                <h2><?= $view->e($view->t('Today')) ?></h2>
+                <h2><?= $view->e($view->t('List of habits')) ?></h2>
                 <div class="action-row">
                     <button class="button button-quiet" type="button" data-planning-retry><?= $view->e($view->t('Refresh')) ?></button>
                 </div>
@@ -35,7 +35,7 @@
     <dialog id="new-habit-dialog" class="workspace-dialog" aria-labelledby="new-habit-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="new-habit-dialog-title"><?= $view->e($view->t('New habit')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close new habit">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
         </header>
         <form class="stack-form" data-habit-create-form>
             <div class="field">
@@ -57,7 +57,54 @@
                 <label for="habit-target"><?= $view->e($view->t('Target days')) ?></label>
                 <input id="habit-target" name="target_frequency" type="number" min="1" max="7" value="1" required>
             </div>
+            <div class="field">
+                <label for="habit-goal"><?= $view->e($view->t('Supports goal (optional)')) ?></label>
+                <select id="habit-goal" name="primary_goal_id" data-habit-goal-select>
+                    <option value=""><?= $view->e($view->t('No goal')) ?></option>
+                </select>
+            </div>
+            <div class="field" data-habit-tags></div>
             <button class="button button-primary" type="submit"><?= $view->e($view->t('Create habit')) ?></button>
+        </form>
+        <p class="field-error is-hidden" data-dialog-error role="alert"></p>
+    </dialog>
+    <dialog id="edit-habit-dialog" class="workspace-dialog" aria-labelledby="edit-habit-dialog-title" data-workspace-dialog>
+        <header class="section-heading">
+            <h2 id="edit-habit-dialog-title"><?= $view->e($view->t('Edit habit')) ?></h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <form class="stack-form" data-habit-edit-form>
+            <div class="field">
+                <label for="habit-edit-name"><?= $view->e($view->t('Name')) ?></label>
+                <input id="habit-edit-name" name="name" maxlength="200" required>
+            </div>
+            <div class="field">
+                <label for="habit-edit-description"><?= $view->e($view->t('Description (optional)')) ?></label>
+                <textarea id="habit-edit-description" name="description" rows="3" maxlength="10000"></textarea>
+            </div>
+            <div class="field">
+                <label for="habit-edit-period"><?= $view->e($view->t('Period')) ?></label>
+                <select id="habit-edit-period" name="period">
+                    <option value="daily"><?= $view->e($view->t('Daily')) ?></option>
+                    <option value="weekly"><?= $view->e($view->t('Weekly')) ?></option>
+                </select>
+                <small data-habit-period-locked hidden><?= $view->e($view->t('The period cannot change after the first check-in.')) ?></small>
+            </div>
+            <div class="field">
+                <label for="habit-edit-target"><?= $view->e($view->t('Target days')) ?></label>
+                <input id="habit-edit-target" name="target_frequency" type="number" min="1" max="7" value="1" required>
+            </div>
+            <div class="field">
+                <label for="habit-edit-goal"><?= $view->e($view->t('Supports goal (optional)')) ?></label>
+                <select id="habit-edit-goal" name="primary_goal_id" data-habit-goal-select>
+                    <option value=""><?= $view->e($view->t('No goal')) ?></option>
+                </select>
+            </div>
+            <div class="field" data-habit-tags></div>
+            <div class="dialog-footer">
+                <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
+                <button class="button button-primary" type="submit"><?= $view->e($view->t('Save changes')) ?></button>
+            </div>
         </form>
         <p class="field-error is-hidden" data-dialog-error role="alert"></p>
     </dialog>

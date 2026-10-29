@@ -22,7 +22,7 @@
                 <h2><?= $view->e($view->t('Note text size')) ?></h2>
                 <p class="subtle-copy"><?= $view->e($view->t('Applies to note content and previews.')) ?></p>
             </div>
-            <div class="segmented-control" role="group" aria-label="Text size">
+            <div class="segmented-control" role="group" aria-label="<?= $view->e($view->t('Text size')) ?>">
                 <button class="segment-button" type="button" data-pref="note_font_size" data-value="14"><?= $view->e($view->t('Small')) ?></button>
                 <button class="segment-button" type="button" data-pref="note_font_size" data-value="16"><?= $view->e($view->t('Medium')) ?></button>
                 <button class="segment-button" type="button" data-pref="note_font_size" data-value="18"><?= $view->e($view->t('Large')) ?></button>
@@ -33,12 +33,12 @@
                 <h2><?= $view->e($view->t('New note color')) ?></h2>
                 <p class="subtle-copy"><?= $view->e($view->t('Applies only to notes created after this selection.')) ?></p>
             </div>
-            <div class="preference-color-options" role="group" aria-label="Default note color">
-                <button class="preference-color color-neutral" type="button" data-pref="default_note_color" data-value="neutral" aria-label="Default"></button>
-                <button class="preference-color color-lemon" type="button" data-pref="default_note_color" data-value="lemon" aria-label="Light yellow"></button>
-                <button class="preference-color color-mint" type="button" data-pref="default_note_color" data-value="mint" aria-label="Light green"></button>
-                <button class="preference-color color-sky" type="button" data-pref="default_note_color" data-value="sky" aria-label="Light blue"></button>
-                <button class="preference-color color-rose" type="button" data-pref="default_note_color" data-value="rose" aria-label="Light pink"></button>
+            <div class="preference-color-options" role="group" aria-label="<?= $view->e($view->t('Default note color')) ?>">
+                <button class="preference-color color-neutral" type="button" data-pref="default_note_color" data-value="neutral" aria-label="<?= $view->e($view->t('Default')) ?>"></button>
+                <button class="preference-color color-lemon" type="button" data-pref="default_note_color" data-value="lemon" aria-label="<?= $view->e($view->t('Light yellow')) ?>"></button>
+                <button class="preference-color color-mint" type="button" data-pref="default_note_color" data-value="mint" aria-label="<?= $view->e($view->t('Light green')) ?>"></button>
+                <button class="preference-color color-sky" type="button" data-pref="default_note_color" data-value="sky" aria-label="<?= $view->e($view->t('Light blue')) ?>"></button>
+                <button class="preference-color color-rose" type="button" data-pref="default_note_color" data-value="rose" aria-label="<?= $view->e($view->t('Light pink')) ?>"></button>
             </div>
         </section>
         <section class="preference-section">
@@ -54,7 +54,7 @@
         <p role="status" data-note-preference-status></p>
     </details>
     <div class="workspace-layout">
-        <aside class="notes-filter-panel" aria-label="Note filters">
+        <aside class="notes-filter-panel" aria-label="<?= $view->e($view->t('Note filters')) ?>">
             <button class="filter-all is-active" type="button" data-filter-all>
                 <span class="filter-icon" aria-hidden="true">▦</span>
                 <span><?= $view->e($view->t('All notes')) ?></span>
@@ -83,8 +83,8 @@
                 <div class="search-field">
                     <span aria-hidden="true">⌕</span>
                     <label class="sr-only" for="notes-search"><?= $view->e($view->t('Search notes')) ?></label>
-                    <input id="notes-search" type="search" placeholder="Search titles and content…" autocomplete="off" data-notes-search>
-                    <button class="search-clear icon-button is-hidden" type="button" data-clear-search aria-label="Clear search">×</button>
+                    <input id="notes-search" type="search" placeholder="<?= $view->e($view->t('Search titles and content…')) ?>" autocomplete="off" data-notes-search>
+                    <button class="search-clear icon-button is-hidden" type="button" data-clear-search aria-label="<?= $view->e($view->t('Clear search')) ?>">×</button>
                 </div>
                 <button class="view-button" type="button" data-view-toggle aria-label="<?= $view->e($view->t('View')) ?>" title="<?= $view->e($view->t('View')) ?>">▦</button>
                 <label class="note-sort">
@@ -119,7 +119,7 @@
             <h2 id="editor-heading" data-editor-heading><?= $view->e($view->t('Write down what matters')) ?></h2>
             <p class="sr-only" id="editor-description"><?= $view->e($view->t('Content is saved automatically after the server confirms it.')) ?></p>
         </div>
-        <button class="icon-button" type="button" data-close-editor aria-label="Close editor">×</button>
+        <button class="icon-button" type="button" data-close-editor aria-label="<?= $view->e($view->t('Close editor')) ?>">×</button>
     </div>
     <div class="editor-status-row">
         <span class="save-status" data-editor-status role="status"></span>
@@ -138,18 +138,18 @@
         </div>
         <div class="field editor-body-field">
             <label for="editor-content"><?= $view->e($view->t('Content')) ?></label>
-            <textarea id="editor-content" class="editor-content-input" maxlength="50000" placeholder="Start writing…" data-editor-content></textarea>
+            <textarea id="editor-content" class="editor-content-input" maxlength="50000" placeholder="<?= $view->e($view->t('Start writing…')) ?>" data-editor-content></textarea>
             <p class="field-error is-hidden" data-editor-content-error></p>
         </div>
         <div class="editor-controls">
             <div class="editor-control-group">
                 <span class="control-label"><?= $view->e($view->t('Note color')) ?></span>
                 <div class="color-options" role="group" aria-label="<?= $view->e($view->t('Note color')) ?>" data-editor-colors>
-                    <button type="button" class="color-swatch color-neutral is-selected" data-color="neutral" aria-label="Default" aria-pressed="true"></button>
-                    <button type="button" class="color-swatch color-lemon" data-color="lemon" aria-label="Light yellow" aria-pressed="false"></button>
-                    <button type="button" class="color-swatch color-mint" data-color="mint" aria-label="Light green" aria-pressed="false"></button>
-                    <button type="button" class="color-swatch color-sky" data-color="sky" aria-label="Light blue" aria-pressed="false"></button>
-                    <button type="button" class="color-swatch color-rose" data-color="rose" aria-label="Light pink" aria-pressed="false"></button>
+                    <button type="button" class="color-swatch color-neutral is-selected" data-color="neutral" aria-label="<?= $view->e($view->t('Default')) ?>" aria-pressed="true"></button>
+                    <button type="button" class="color-swatch color-lemon" data-color="lemon" aria-label="<?= $view->e($view->t('Light yellow')) ?>" aria-pressed="false"></button>
+                    <button type="button" class="color-swatch color-mint" data-color="mint" aria-label="<?= $view->e($view->t('Light green')) ?>" aria-pressed="false"></button>
+                    <button type="button" class="color-swatch color-sky" data-color="sky" aria-label="<?= $view->e($view->t('Light blue')) ?>" aria-pressed="false"></button>
+                    <button type="button" class="color-swatch color-rose" data-color="rose" aria-label="<?= $view->e($view->t('Light pink')) ?>" aria-pressed="false"></button>
                     <label class="color-swatch color-custom" title="<?= $view->e($view->t('Any RGB color')) ?>">
                         <span class="sr-only"><?= $view->e($view->t('Any RGB color')) ?></span>
                         <input type="color" value="#fde68a" data-color-custom>
@@ -208,7 +208,7 @@
             <p class="eyebrow"><?= $view->e($view->t('Keep things organized')) ?></p>
             <h2 id="label-dialog-heading"><?= $view->e($view->t('Manage tags')) ?></h2>
         </div>
-        <button class="icon-button" type="button" data-close-label-manager aria-label="Close tag manager">×</button>
+        <button class="icon-button" type="button" data-close-label-manager aria-label="<?= $view->e($view->t('Close tag manager')) ?>">×</button>
     </div>
     <form class="inline-add-form" data-label-create-form>
         <label class="sr-only" for="new-label-name"><?= $view->e($view->t('Tag name')) ?></label>
@@ -225,7 +225,7 @@
             <p class="eyebrow"><?= $view->e($view->t('Your decision is needed')) ?></p>
             <h2 id="conflict-heading"><?= $view->e($view->t('This note has changed')) ?></h2>
         </div>
-        <button class="icon-button" type="button" data-close-conflict aria-label="Close conflict dialog">×</button>
+        <button class="icon-button" type="button" data-close-conflict aria-label="<?= $view->e($view->t('Close conflict dialog')) ?>">×</button>
     </div>
     <p class="modal-intro"><?= $view->e($view->t('This note changed in another window. Choose which version to continue with.')) ?></p>
     <div class="conflict-compare">

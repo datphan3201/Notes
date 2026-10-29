@@ -18,7 +18,7 @@
         </div>
     </header>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
-    <nav class="workspace-section-menu" role="tablist" aria-label="Dashboard sections">
+    <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Dashboard sections')) ?>">
         <button type="button" role="tab" id="dashboard-tab-today" aria-controls="dashboard-panel-today" aria-selected="true" tabindex="0" data-workspace-tab="today"><?= $view->e($view->t('Today')) ?></button>
         <button type="button" role="tab" id="dashboard-tab-week" aria-controls="dashboard-panel-week" aria-selected="false" tabindex="-1" data-workspace-tab="week"><?= $view->e($view->t('This week')) ?></button>
         <button type="button" role="tab" id="dashboard-tab-activity" aria-controls="dashboard-panel-activity" aria-selected="false" tabindex="-1" data-workspace-tab="activity"><?= $view->e($view->t('Activity')) ?></button>
@@ -161,7 +161,7 @@
                 </div>
             </div>
             <div class="activity-footer">
-                <div class="activity-legend" aria-label="Activity intensity from less to more">
+                <div class="activity-legend" aria-label="<?= $view->e($view->t('Activity intensity from less to more')) ?>">
                     <span><?= $view->e($view->t('Less')) ?></span>
                     <i data-level="0"></i>
                     <i data-level="1"></i>

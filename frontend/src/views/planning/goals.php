@@ -18,7 +18,7 @@
         <?= $view->e($view->t('Retry loading goals')) ?>
     </button>
     <div data-main-goal></div>
-    <div class="task-view-menu" role="group" aria-label="Goal views">
+    <div class="task-view-menu" role="group" aria-label="<?= $view->e($view->t('Goal views')) ?>">
         <button type="button" data-goals-view="areas" aria-pressed="true"><?= $view->e($view->t('Areas')) ?></button>
         <button type="button" data-goals-view="timeline" aria-pressed="false"><?= $view->e($view->t('Timeline')) ?></button>
         <button type="button" data-goals-expand><?= $view->e($view->t('Expand all')) ?></button>
@@ -41,7 +41,7 @@
     <dialog id="new-goal-dialog" class="workspace-dialog" aria-labelledby="new-goal-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="new-goal-dialog-title"><?= $view->e($view->t('New goal')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close new goal">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close new goal')) ?>">×</button>
         </header>
         <form class="stack-form" data-goal-create-form>
             <div class="field">
@@ -56,11 +56,11 @@
                 <summary><?= $view->e($view->t('Add details (optional)')) ?></summary>
                 <div class="field">
                     <label for="goal-result"><?= $view->e($view->t('Desired outcome')) ?></label>
-                    <textarea id="goal-result" name="expected_result" rows="3" maxlength="10000" placeholder="What will be different?"></textarea>
+                    <textarea id="goal-result" name="expected_result" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('What will be different?')) ?>"></textarea>
                 </div>
                 <div class="field">
                     <label for="goal-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
-                    <textarea id="goal-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="How will you know you've succeeded?"></textarea>
+                    <textarea id="goal-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('How will you know you\'ve succeeded?')) ?>"></textarea>
                 </div>
             </details>
             <button class="button button-primary" type="submit">
@@ -73,7 +73,7 @@
     <dialog id="areas-dialog" class="workspace-dialog" aria-labelledby="areas-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="areas-dialog-title"><?= $view->e($view->t('Manage areas')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close manage areas">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close manage areas')) ?>">×</button>
         </header>
         <p class="panel-description"><?= $view->e($view->t('Areas give your goals a home. Two to four is a good place to start.')) ?></p>
         <div data-area-list aria-live="polite">
@@ -81,7 +81,7 @@
         </div>
         <form class="inline-form" data-area-create-form>
             <label class="sr-only" for="area-name"><?= $view->e($view->t('New area name')) ?></label>
-            <input id="area-name" name="name" maxlength="80" placeholder="Another life area" required>
+            <input id="area-name" name="name" maxlength="80" placeholder="<?= $view->e($view->t('Another life area')) ?>" required>
             <button class="button button-primary" type="submit"><?= $view->e($view->t('Add area')) ?></button>
         </form>
         <p class="field-error is-hidden" data-dialog-error role="alert"></p>

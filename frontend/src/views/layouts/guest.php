@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="<?= $view->e($view->locale()) ?>">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="<?= $view->e($csrf_token) ?>">
-        <title><?= $view->e($title ?? 'Planner') ?> · Planner</title>
+        <title><?= $view->e($view->t($title ?? 'Planner')) ?> · Planner</title>
         <?= $view->assets() ?>
     </head>
     <body class="guest-page">
@@ -26,7 +26,7 @@
                         <?= $view->e($view->t('Small, steady steps.')) ?>
                     </h2>
                     <p><?= $view->e($view->t('Give your goals a direction, your tasks a place, and your progress a little perspective.')) ?></p>
-                    <div class="guest-path" aria-label="From goals to daily progress">
+                    <div class="guest-path" aria-label="<?= $view->e($view->t('From goals to daily progress')) ?>">
                         <div>
                             <svg class="ui-icon" aria-hidden="true"><use href="#icon-goals"/></svg>
                             <span>
@@ -52,7 +52,15 @@
                 </div>
                 <p class="guest-footnote"><?= $view->e($view->t('Your plans. Your pace.')) ?></p>
             </section>
-            <div class="guest-form-region"><?= $content ?></div>
+            <div class="guest-form-region">
+                <?= $content ?>
+                <?php $query = array_filter($_GET, static fn (mixed $value): bool => is_string($value)); ?>
+                <nav class="guest-language" aria-label="<?= $view->e($view->t('Language')) ?>">
+                    <?php foreach (['en' => 'English', 'vi' => 'Tiếng Việt'] as $code => $name): ?>
+                    <a href="?<?= $view->e(http_build_query([...$query, 'lang' => $code])) ?>"<?= $view->locale() === $code ? ' aria-current="true"' : '' ?>><?= $view->e($name) ?></a>
+                    <?php endforeach; ?>
+                </nav>
+            </div>
         </main>
     </body>
 </html>

@@ -73,9 +73,6 @@
 .label-filter-option:hover {
     background: var(--surface);
 }
-.label-filter-option input {
-    accent-color: var(--accent);
-}
 .label-filter-option span {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -460,9 +457,6 @@
     gap: 8px;
     align-items: center;
     padding: 5px 0;
-}
-.editor-label-check input {
-    accent-color: var(--accent);
 }
 .attachments-section {
     margin-top: 8px;

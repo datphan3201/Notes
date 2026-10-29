@@ -12,12 +12,16 @@ export function initPreferences(root) {
     let quoteSaving = false;
     const status = root.querySelector('[data-preference-status]');
     const picker = root.querySelector('[data-theme-picker]');
+    // Preset themes and uploaded images share one picker. A preset clears the
+    // selected upload; an upload keeps the preset's quote and decorations.
     for (const theme of visualThemes) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'theme-option';
-        button.dataset.pref = 'visual_theme';
-        button.dataset.value = theme.id;
+        button.dataset.sceneryTheme = theme.id;
+        button.addEventListener('click', () =>
+            changeScenery({ visual_theme: theme.id, background_id: '' }),
+        );
         const image = document.createElement('img');
         image.src = theme.image;
         image.alt = '';
@@ -45,6 +49,38 @@ export function initPreferences(root) {
     addLabel.textContent = t('Your image or color');
     add.append(plus, addLabel);
     picker.append(add);
+    let backgrounds = [];
+    const renderBackgrounds = () => {
+        picker.querySelectorAll('[data-scenery-upload]').forEach((tile) => tile.remove());
+        for (const background of backgrounds) {
+            const tile = document.createElement('div');
+            tile.className = 'theme-option-upload';
+            tile.dataset.sceneryUpload = background.id;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'theme-option';
+            const image = document.createElement('img');
+            image.src = background.url;
+            image.alt = '';
+            image.width = 320;
+            image.height = 126;
+            image.loading = 'lazy';
+            const label = document.createElement('strong');
+            label.textContent = t('Your image');
+            button.append(image, label);
+            button.addEventListener('click', () => changeScenery({ background_id: background.id }));
+            const discard = document.createElement('button');
+            discard.type = 'button';
+            discard.className = 'theme-option-remove';
+            discard.textContent = '×';
+            discard.setAttribute('aria-label', t('Remove this background'));
+            discard.title = t('Remove this background');
+            discard.addEventListener('click', () => deleteBackground(background, discard));
+            tile.append(button, discard);
+            picker.insertBefore(tile, add);
+        }
+        render();
+    };
     const buttons = [...root.querySelectorAll('[data-pref]')];
     const toggles = [...root.querySelectorAll('[data-pref-toggle]')];
     const quoteForm = root.querySelector('[data-quote-form]');
@@ -62,6 +98,21 @@ export function initPreferences(root) {
         toggles.forEach((toggle) => {
             toggle.checked = preferences[toggle.dataset.prefToggle];
         });
+        // An RGB color overrides both, so neither kind of tile is selected then.
+        const scenery = preferences.background_color
+            ? null
+            : preferences.background_id || `theme:${preferences.visual_theme}`;
+        picker.querySelectorAll('[data-scenery-theme]').forEach((button) => {
+            const selected = scenery === `theme:${button.dataset.sceneryTheme}`;
+            button.classList.toggle('is-selected', selected);
+            button.setAttribute('aria-pressed', String(selected));
+        });
+        picker.querySelectorAll('[data-scenery-upload]').forEach((tile) => {
+            const selected = scenery === tile.dataset.sceneryUpload;
+            const button = tile.querySelector('.theme-option');
+            button.classList.toggle('is-selected', selected);
+            button.setAttribute('aria-pressed', String(selected));
+        });
         applyAppearance(preferences);
     };
     const pump = async () => {
@@ -70,21 +121,22 @@ export function initPreferences(root) {
         while (queue.length) {
             const item = queue.shift();
             try {
-                const result = await patch('/api/v1/preferences', { [item.key]: item.value });
+                const result = await patch('/api/v1/preferences', changesOf(item));
                 Object.assign(serverPreferences, result.payload.data);
                 Object.assign(window.notesBootstrap.preferences, serverPreferences);
                 Object.assign(preferences, serverPreferences);
-                for (const pending of queue) preferences[pending.key] = pending.value;
+                for (const pending of queue) applyLocally(pending);
                 status.textContent = queue.length
-                    ? 'Saving…'
+                    ? t('Saving…')
                     : quote.value !== serverPreferences.custom_quote
-                      ? 'Preferences saved · unsaved quote'
-                      : 'Saved';
+                      ? t('Preferences saved · unsaved quote')
+                      : t('Saved');
                 status.className = 'save-status is-success';
                 item.resolve?.(result.payload.data);
             } catch (error) {
-                preferences[item.key] = serverPreferences[item.key];
-                status.textContent = error.message || 'Unable to save this preference.';
+                for (const key of [...Object.keys(changesOf(item)), ...sceneryDerived])
+                    preferences[key] = serverPreferences[key];
+                status.textContent = error.message || t('Unable to save this preference.');
                 status.className = 'save-status is-error';
                 const discarded = queue.filter((queued) => queued.key === item.key);
                 discarded.forEach((queued) => queued.reject?.(error));
@@ -95,15 +147,54 @@ export function initPreferences(root) {
         }
         running = false;
     };
+    // "scenery" items carry several fields: a theme or upload choice and the
+    // background color it clears are saved together.
+    const sceneryDerived = ['background_color', 'background_url'];
+    const changesOf = (item) => (item.key === 'scenery' ? item.value : { [item.key]: item.value });
+    const applyLocally = (item) => {
+        Object.assign(preferences, changesOf(item));
+        if (item.key !== 'scenery') return;
+        const id = preferences.background_id;
+        preferences.background_color = '';
+        preferences.background_url = id
+            ? backgrounds.find((background) => background.id === id)?.url || ''
+            : '';
+    };
     const change = (key, value) => {
-        preferences[key] = value;
+        const queued = queue.find((item) => item.key === key);
+        if (queued) queued.value = key === 'scenery' ? { ...queued.value, ...value } : value;
+        else queue.push({ key, value });
+        applyLocally({ key, value });
         render();
         status.textContent = t('Saving…');
-        const queued = queue.find((item) => item.key === key);
-        if (queued) queued.value = value;
-        else queue.push({ key, value });
         pump();
     };
+    function changeScenery(fields) {
+        change('scenery', fields);
+    }
+    async function deleteBackground(background, control) {
+        if (!window.confirm(t('Remove this background from your images?'))) return;
+        control.disabled = true;
+        try {
+            await remove(`/api/v1/preferences/backgrounds/${encodeURIComponent(background.id)}`);
+            backgrounds = backgrounds.filter((item) => item.id !== background.id);
+            await refreshPreferences();
+            renderBackgrounds();
+            status.textContent = t('Background removed');
+            status.className = 'save-status is-success';
+        } catch (error) {
+            control.disabled = false;
+            status.textContent = error.message;
+            status.className = 'save-status is-error';
+        }
+    }
+    async function refreshPreferences() {
+        const saved = (await get('/api/v1/preferences')).payload.data;
+        Object.assign(preferences, saved);
+        Object.assign(serverPreferences, saved);
+        Object.assign(window.notesBootstrap.preferences, saved);
+        for (const pending of queue) applyLocally(pending);
+    }
     buttons.forEach((button) =>
         button.addEventListener('click', () => {
             const key = button.dataset.pref;
@@ -123,7 +214,7 @@ export function initPreferences(root) {
         controls.forEach((button) => {
             button.disabled = true;
         });
-        status.textContent = 'Saving quote…';
+        status.textContent = t('Saving quote…');
         try {
             const saved = await new Promise((resolve, reject) => {
                 queue.push({ key: 'custom_quote', value, resolve, reject });
@@ -135,11 +226,11 @@ export function initPreferences(root) {
             render();
             status.textContent =
                 quote.value === serverPreferences.custom_quote
-                    ? 'Saved'
-                    : 'Saved · newer quote edits are unsaved';
+                    ? t('Saved')
+                    : t('Saved · newer quote edits are unsaved');
             status.className = 'save-status is-success';
         } catch (error) {
-            status.textContent = error.message || 'Unable to save your quote.';
+            status.textContent = error.message || t('Unable to save your quote.');
             status.className = 'save-status is-error';
         } finally {
             quoteSaving = false;
@@ -158,7 +249,7 @@ export function initPreferences(root) {
     });
     quote.addEventListener('input', () => {
         status.textContent =
-            quote.value === serverPreferences.custom_quote ? 'Saved' : 'Unsaved quote';
+            quote.value === serverPreferences.custom_quote ? t('Saved') : t('Unsaved quote');
     });
     const backgroundDialog = root.querySelector('#personal-background-dialog');
     root.querySelector('[data-background-color-form]').addEventListener('submit', (event) => {
@@ -166,16 +257,10 @@ export function initPreferences(root) {
         change('background_color', new FormData(event.currentTarget).get('background_color'));
         backgroundDialog?.close();
     });
-    root.querySelector('[data-reset-background]').addEventListener('click', async () => {
-        try {
-            await remove('/api/v1/preferences/background');
-            preferences.background_url = serverPreferences.background_url = '';
-            window.notesBootstrap.preferences.background_url = '';
-            change('background_color', '');
-            backgroundDialog?.close();
-        } catch (error) {
-            status.textContent = error.message;
-        }
+    // Uploaded images stay in the picker; this only switches back to the preset.
+    root.querySelector('[data-reset-background]').addEventListener('click', () => {
+        changeScenery({ background_id: '' });
+        backgroundDialog?.close();
     });
     root.querySelector('[data-background-upload]').addEventListener('change', async (event) => {
         const input = event.currentTarget;
@@ -184,18 +269,19 @@ export function initPreferences(root) {
         input.disabled = true;
         const data = new FormData();
         data.append('background', file);
-        status.textContent = 'Uploading background…';
+        status.textContent = t('Uploading background…');
         try {
-            await upload('/api/v1/preferences/background', data);
-            const saved = (await get('/api/v1/preferences')).payload.data;
-            Object.assign(preferences, saved);
-            Object.assign(serverPreferences, saved);
-            Object.assign(window.notesBootstrap.preferences, saved);
-            render();
-            status.textContent = 'Background saved';
+            const added = (await upload('/api/v1/preferences/background', data)).payload.data;
+            backgrounds = [...backgrounds, added];
+            await refreshPreferences();
+            renderBackgrounds();
+            status.textContent = t('Background saved');
+            status.className = 'save-status is-success';
             backgroundDialog?.close();
         } catch (error) {
-            status.textContent = error.message;
+            status.textContent =
+                Object.values(error.payload?.errors || {}).flat()[0] || error.message;
+            status.className = 'save-status is-error';
         } finally {
             input.value = '';
             input.disabled = false;
@@ -221,4 +307,13 @@ export function initPreferences(root) {
         }
     });
     render();
+    get('/api/v1/preferences/backgrounds')
+        .then((response) => {
+            backgrounds = response.payload.data;
+            renderBackgrounds();
+        })
+        .catch((error) => {
+            status.textContent = error.message;
+            status.className = 'save-status is-error';
+        });
 }

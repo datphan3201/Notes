@@ -15,7 +15,7 @@
         </div>
     </header>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
-    <nav class="workspace-section-menu" role="tablist" aria-label="Task sections">
+    <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Task sections')) ?>">
         <button type="button" role="tab" id="task-tab-work" aria-controls="task-panel-work" aria-selected="true" tabindex="0" data-workspace-tab="work"><?= $view->e($view->t('Overview')) ?></button>
         <button type="button" role="tab" id="task-tab-notes" aria-controls="task-panel-notes" aria-selected="false" tabindex="-1" data-workspace-tab="notes"><?= $view->e($view->t('Notes')) ?></button>
         <button type="button" role="tab" id="task-tab-related" aria-controls="task-panel-related" aria-selected="false" tabindex="-1" data-workspace-tab="related"><?= $view->e($view->t('Related work')) ?></button>
@@ -33,6 +33,10 @@
                     <div>
                         <dt><?= $view->e($view->t('Estimated time')) ?></dt>
                         <dd data-task-estimate>—</dd>
+                    </div>
+                    <div>
+                        <dt><?= $view->e($view->t('Tags')) ?></dt>
+                        <dd data-task-tags></dd>
                     </div>
                 </dl>
                 <details class="task-extra-definition">
@@ -68,14 +72,14 @@
                     <button class="button button-primary" type="button" data-note-keep-draft><?= $view->e($view->t('Keep my draft')) ?></button>
                 </div>
             </aside>
-            <nav class="workspace-section-menu" role="tablist" aria-label="Working note views">
+            <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Working note views')) ?>">
                 <button type="button" role="tab" id="task-note-tab-editor" aria-controls="task-note-panel-editor" aria-selected="true" tabindex="0" data-workspace-tab="note-editor"><?= $view->e($view->t('Write')) ?></button>
                 <button type="button" role="tab" id="task-note-tab-resources" aria-controls="task-note-panel-resources" aria-selected="false" tabindex="-1" data-workspace-tab="note-resources"><?= $view->e($view->t('Resources')) ?></button>
             </nav>
             <section id="task-note-panel-editor" role="tabpanel" aria-labelledby="task-note-tab-editor" data-workspace-panel="note-editor">
                 <form class="stack-form" data-task-note-form>
                     <label class="sr-only" for="task-note-body"><?= $view->e($view->t('Task note')) ?></label>
-                    <textarea id="task-note-body" name="body" maxlength="50000" rows="8" placeholder="Research, links, decisions, and working notes…"></textarea>
+                    <textarea id="task-note-body" name="body" maxlength="50000" rows="8" placeholder="<?= $view->e($view->t('Research, links, decisions, and working notes…')) ?>"></textarea>
                     <button class="button button-primary" type="submit"><?= $view->e($view->t('Save note')) ?></button>
                 </form>
                 <section class="task-note-checklist" aria-labelledby="task-completion-checklist-title">
@@ -89,7 +93,7 @@
                         <summary><?= $view->e($view->t('Add completion check')) ?></summary>
                         <form class="inline-form" data-checklist-form>
                             <label class="sr-only" for="checklist-title"><?= $view->e($view->t('New completion check')) ?></label>
-                            <input id="checklist-title" name="title" maxlength="500" placeholder="What needs to be done?" required>
+                            <input id="checklist-title" name="title" maxlength="500" placeholder="<?= $view->e($view->t('What needs to be done?')) ?>" required>
                             <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add')) ?></button>
                         </form>
                     </details>
@@ -103,14 +107,14 @@
     <section id="task-panel-related" role="tabpanel" aria-labelledby="task-tab-related" data-workspace-panel="related" hidden>
         <article class="planning-panel">
             <h2><?= $view->e($view->t('Context and contributions')) ?></h2>
-            <p class="subtle-copy"><?= $view->e($view->t('Other goals this work supports.')) ?></p>
+            <p class="subtle-copy"><?= $view->e($view->t('Link other goals this task also moves forward. Its main goal or milestone is shown in Overview.')) ?></p>
             <div data-task-related></div>
         </article>
     </section>
     <dialog id="edit-task-dialog" class="workspace-dialog" aria-labelledby="edit-task-title" data-workspace-dialog data-wait-for-data>
         <header class="section-heading">
             <h2 id="edit-task-title"><?= $view->e($view->t('Edit task')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="Close edit task">×</button>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close edit task')) ?>">×</button>
         </header>
         <aside class="draft-conflict is-hidden" data-task-edit-conflict role="alert">
             <p><?= $view->e($view->t('This task changed elsewhere. Your edits are preserved.')) ?></p>
@@ -166,15 +170,15 @@
                     <input id="edit-task-deadline" name="deadline" type="date">
                 </div>
                 <div class="field">
-                    <label for="edit-task-reminder"><?= $view->e($view->t('Reminder (UTC)')) ?></label>
+                    <label for="edit-task-reminder"><?= $view->e($view->t('Reminder')) ?></label>
                     <input id="edit-task-reminder" name="reminder_at" type="datetime-local">
                 </div>
                 <div class="field">
-                    <label for="edit-task-scheduled-start"><?= $view->e($view->t('Scheduled start (UTC)')) ?></label>
+                    <label for="edit-task-scheduled-start"><?= $view->e($view->t('Scheduled start')) ?></label>
                     <input id="edit-task-scheduled-start" name="scheduled_start" type="datetime-local">
                 </div>
                 <div class="field">
-                    <label for="edit-task-scheduled-end"><?= $view->e($view->t('Scheduled end (UTC)')) ?></label>
+                    <label for="edit-task-scheduled-end"><?= $view->e($view->t('Scheduled end')) ?></label>
                     <input id="edit-task-scheduled-end" name="scheduled_end" type="datetime-local">
                 </div>
             </details>
