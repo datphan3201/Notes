@@ -8,6 +8,8 @@ use Planner\Application\Account\AccountSerializer;
 use Planner\Application\Account\AccountService;
 use Planner\Application\Account\AccountValidator;
 use Planner\Application\Account\AuthService;
+use Planner\Application\Account\EmailVerificationService;
+use Planner\Http\GuestLocale;
 use Planner\Http\Request;
 use Planner\Http\Response;
 use Planner\Http\ValidationException;
@@ -25,15 +27,17 @@ final readonly class AccountController
         private PdoAccountRepository $repository,
         private SessionManager $session,
         private ViewRenderer $views,
-    ) {}
+        private EmailVerificationService $emailVerification,
+    ) {
+    }
 
     public function loginPage(Request $request): Response
     {
         if ($this->auth->currentUser() !== null) {
-            return Response::redirect('/');
+            return Response::redirect('/dashboard');
         }
 
-        return Response::html($this->renderAuth('auth/login', 'Sign in'));
+        return Response::html($this->renderAuth('auth/login', 'Sign in', $request));
     }
 
     public function login(Request $request): Response
@@ -41,8 +45,14 @@ final readonly class AccountController
         try {
             $credentials = $this->validator->login($request->input());
 
-            if (! $this->auth->attempt($credentials['email'], $credentials['password'], $request->clientIp())) {
+            $result = $this->auth->attempt($credentials['email'], $credentials['password'], $request->clientIp());
+
+            if ($result === 'failed') {
                 throw new ValidationException(['email' => ['The email or password is incorrect.']]);
+            }
+
+            if ($result === 'two_factor') {
+                return Response::redirect('/two-factor');
             }
         } catch (ValidationException $exception) {
             $this->session->flash('errors', $exception->errors);
@@ -53,23 +63,23 @@ final readonly class AccountController
             return Response::redirect('/login');
         }
 
-        return Response::redirect('/');
+        return Response::redirect('/dashboard');
     }
 
     public function registerPage(Request $request): Response
     {
         if ($this->auth->currentUser() !== null) {
-            return Response::redirect('/');
+            return Response::redirect('/dashboard');
         }
 
-        return Response::html($this->renderAuth('auth/register', 'Create account'));
+        return Response::html($this->renderAuth('auth/register', 'Create account', $request));
     }
 
     public function register(Request $request): Response
     {
         try {
             $input = $this->validator->registration($request->input());
-            $this->auth->register($input['email'], $input['display_name'], $input['password']);
+            $user = $this->auth->register($input['email'], $input['display_name'], $input['password'], GuestLocale::resolve($request, $this->session));
         } catch (ValidationException $exception) {
             $this->session->flash('errors', $exception->errors);
             $this->session->flash('old', [
@@ -79,8 +89,9 @@ final readonly class AccountController
 
             return Response::redirect('/register');
         }
+        $this->emailVerification->sendVerificationQuietly($user->id);
 
-        return Response::redirect('/');
+        return Response::redirect('/dashboard');
     }
 
     public function logout(Request $request): Response
@@ -110,8 +121,10 @@ final readonly class AccountController
     public function updateProfile(Request $request): Response
     {
         $user = $this->auth->requireUser();
-        $displayName = $this->validator->profile($request->input());
-        $updated = $this->accounts->updateDisplayName($user->id, $displayName);
+        $input = $request->input();
+        $displayName = $this->validator->profile($input);
+        $biography = array_key_exists('biography', $input) ? $this->validator->biography($input['biography']) : null;
+        $updated = $this->accounts->updateProfile($user->id, $displayName, $biography);
 
         return Response::json(['data' => $this->serializer->user($updated)]);
     }
@@ -159,7 +172,9 @@ final readonly class AccountController
         $page = match ($request->path) {
             '/settings/profile' => ['settings/profile', 'Profile', 'settings.profile'],
             '/settings/preferences' => ['settings/preferences', 'Appearance', 'settings.preferences'],
-            '/settings/password' => ['settings/password', 'Change password', 'settings.password'],
+            '/settings/notifications' => ['settings/notifications', 'Notifications', 'settings.notifications'],
+            '/settings/password' => ['settings/password', 'Security', 'settings.password'],
+            '/settings/history' => ['settings/history', 'Task history', 'settings.history'],
             default => throw new \LogicException('Unexpected settings route.'),
         };
 
@@ -176,7 +191,7 @@ final readonly class AccountController
             $request->path === '/habits' => ['planning/habits', 'Habits', 'planning.habits'],
             $request->path === '/dashboard' => ['planning/dashboard', 'Dashboard', 'planning.dashboard'],
             $request->path === '/reviews' => ['planning/reviews', 'Reviews', 'planning.reviews'],
-            $request->path === '/ai' => ['planning/ai', 'AI assistant', 'planning.ai'],
+            $request->path === '/teamwork' => ['planning/teamwork', 'Teamwork', 'planning.teamwork'],
             default => throw new \LogicException('Unexpected planning page route.'),
         };
         $extra = [];
@@ -191,7 +206,13 @@ final readonly class AccountController
         return Response::html($this->renderApplicationPage($template, $title, $route, $extra));
     }
 
-    private function renderAuth(string $template, string $title): string
+    /** @param array<string, mixed> $extra */
+    public function applicationPage(string $template, string $title, string $route, array $extra = []): Response
+    {
+        return Response::html($this->renderApplicationPage($template, $title, $route, $extra));
+    }
+
+    private function renderAuth(string $template, string $title, Request $request): string
     {
         $errors = $this->session->pullFlash('errors', []);
         $old = $this->session->pullFlash('old', []);
@@ -201,6 +222,7 @@ final readonly class AccountController
             'csrf_token' => $this->session->csrfToken(),
             'errors' => is_array($errors) ? $errors : [],
             'old' => is_array($old) ? $old : [],
+            'locale' => GuestLocale::resolve($request, $this->session),
         ], 'layouts/guest');
     }
 

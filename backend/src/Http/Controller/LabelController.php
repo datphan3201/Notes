@@ -19,7 +19,8 @@ final readonly class LabelController
         private TagService $tags,
         private TagValidator $validator,
         private LabelSerializer $serializer,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, string> $parameters */
     public function index(Request $request, array $parameters = []): Response

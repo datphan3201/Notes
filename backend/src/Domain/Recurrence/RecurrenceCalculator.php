@@ -28,13 +28,13 @@ final readonly class RecurrenceCalculator
 
         $weekdays = array_values(array_unique($rule['weekdays']));
         sort($weekdays, SORT_NUMERIC);
-        if ($rule['frequency'] === 'daily' && $weekdays !== []) {
+        if ($rule['frequency'] !== 'weekly' && $weekdays !== []) {
             throw new InvalidArgumentException('Daily recurrence cannot define weekdays.');
         }
         if ($rule['frequency'] === 'weekly' && ($weekdays === [] || min($weekdays) < 1 || max($weekdays) > 7)) {
             throw new InvalidArgumentException('Weekly recurrence requires weekdays 1 through 7.');
         }
-        if (!in_array($rule['frequency'], ['daily', 'weekly'], true)) {
+        if (!in_array($rule['frequency'], ['daily', 'weekly', 'monthly', 'yearly'], true)) {
             throw new InvalidArgumentException('Unsupported recurrence frequency.');
         }
 
@@ -49,12 +49,22 @@ final readonly class RecurrenceCalculator
             if ($rule['frequency'] === 'daily') {
                 $days = (int) $start->diff($candidate)->format('%a');
                 $eligible = $days % $rule['interval_count'] === 0;
-            } else {
+            } elseif ($rule['frequency'] === 'weekly') {
                 $startMonday = $start->modify('monday this week');
                 $candidateMonday = $candidate->modify('monday this week');
                 $weeks = intdiv((int) $startMonday->diff($candidateMonday)->format('%a'), 7);
                 $eligible = $weeks % $rule['interval_count'] === 0
                     && in_array((int) $candidate->format('N'), $weekdays, true);
+            } elseif ($rule['frequency'] === 'monthly') {
+                $months = ((int) $candidate->format('Y') - (int) $start->format('Y')) * 12
+                    + (int) $candidate->format('n') - (int) $start->format('n');
+                $eligible = $months % $rule['interval_count'] === 0
+                    && (int) $candidate->format('j') === min((int) $start->format('j'), (int) $candidate->format('t'));
+            } else {
+                $years = (int) $candidate->format('Y') - (int) $start->format('Y');
+                $eligible = $years % $rule['interval_count'] === 0
+                    && $candidate->format('m') === $start->format('m')
+                    && (int) $candidate->format('j') === min((int) $start->format('j'), (int) $candidate->format('t'));
             }
 
             if ($eligible) {

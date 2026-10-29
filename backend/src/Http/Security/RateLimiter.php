@@ -14,7 +14,9 @@ final readonly class RateLimiter
 {
     private const PRUNE_BATCH_SIZE = 1_000;
 
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function consume(string $scope, string $identity, int $limit, int $windowSeconds): void
     {

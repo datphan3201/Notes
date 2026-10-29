@@ -26,5 +26,7 @@ final readonly class NoteRecord
         public array $labels = [],
         public array $attachments = [],
         public int $attachmentCount = 0,
-    ) {}
+        public ?string $backgroundAttachmentId = null,
+    ) {
+    }
 }

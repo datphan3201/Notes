@@ -4,7 +4,7 @@
 
 Maintain the framework-free PHP Planner application and improve its existing workflows according to `PLAN.md` and `docs/plan/`. Preserve verified behavior unless an approved contract change replaces it.
 
-The application is a personal goal/task system, not a generic Notion clone. It supports independent user accounts but no collaboration.
+The application is a personal goal/task system, not a generic Notion clone. It supports independent user accounts, owner-controlled Note sharing and Teamwork goals.
 
 ## Authoritative product boundaries
 
@@ -17,7 +17,8 @@ The application is a personal goal/task system, not a generic Notion clone. It s
 - Tags classify major entities and may have a parent Tag.
 - Reviews and Activity are persisted subsystems.
 - AI proposes structured changes and applies approved creates through normal domain services.
-- Excluded: teams, sharing, real-time collaboration, arbitrary custom properties, Task dependencies, graph databases, microservices, advanced notifications, mobile applications, and gamification.
+- Roles, Note sharing, notifications, 2FA and Teamwork follow `docs/plan/17-full-feedback.md`.
+- Excluded: WebSocket real-time collaboration, arbitrary custom properties, Task dependencies, graph databases, microservices, mobile applications, and gamification.
 
 ## Technology boundary
 

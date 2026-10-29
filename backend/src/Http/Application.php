@@ -20,7 +20,8 @@ final readonly class Application
         private CsrfGuard $csrf,
         private RateLimiter $rateLimiter,
         private ErrorHandler $errors,
-    ) {}
+    ) {
+    }
 
     public function handle(Request $request): Response
     {
@@ -68,6 +69,8 @@ final readonly class Application
             'mutations' => [240, 60],
             'uploads' => [30, 60],
             'password-change' => [5, 60],
+            'two-factor' => [10, 60],
+            'ai-chat' => [30, 3600],
             'ai-generation' => [10, 3600],
             'ai-apply' => [30, 3600],
             default => throw new \LogicException("Unknown rate limit bucket [$bucket]."),
@@ -80,7 +83,7 @@ final readonly class Application
             'X-Request-ID' => $requestId,
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
-            'Referrer-Policy' => 'same-origin',
+            'Referrer-Policy' => $response->headers['Referrer-Policy'] ?? 'same-origin',
         ];
 
         if (str_starts_with($response->headers['Content-Type'] ?? '', 'text/html')) {

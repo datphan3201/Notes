@@ -9,7 +9,9 @@ use Planner\Config\Config;
 
 final readonly class ConnectionFactory
 {
-    public function __construct(private Config $config) {}
+    public function __construct(private Config $config)
+    {
+    }
 
     public function create(): PDO
     {

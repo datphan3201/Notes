@@ -1,3 +1,5 @@
+import { t } from '../lib/i18n.js';
+import { NoteSharing } from './note-sharing.js';
 import { get, patch, post, remove, upload } from '../lib/http';
 import { RecoveryStore } from '../lib/recovery-store';
 import { secureUuidV4 } from '../lib/uuid.js';
@@ -53,6 +55,22 @@ export class NoteEditor {
 
     bind() {
         this.title.addEventListener('input', () => this.input());
+        this.root
+            .querySelector('[data-editor-save]')
+            ?.addEventListener('click', () => this.requestClose());
+        // Clicking the dimmed page behind the editor saves and closes, like Save.
+        this.backdrop.addEventListener('click', () => {
+            if (!document.querySelector('[data-confirm-dialog]:not(.is-hidden)'))
+                this.requestClose();
+        });
+        this.root
+            .querySelector('[data-color-custom]')
+            ?.addEventListener('change', (event) =>
+                this.setColor(event.currentTarget.value.toLowerCase()),
+            );
+        this.root
+            .querySelector('[data-note-background]')
+            ?.addEventListener('change', (event) => this.setBackground(event.currentTarget.value));
         this.content.addEventListener('input', () => this.input());
         this.title.addEventListener('compositionstart', () => this.machine?.compositionStart());
         this.content.addEventListener('compositionstart', () => this.machine?.compositionStart());
@@ -118,8 +136,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Write down what matters';
-        this.eyebrow.textContent = 'New note';
+        this.heading.textContent = t('Write down what matters');
+        this.eyebrow.textContent = t('New note');
         this.writeFields({ title: '', content: '' });
         this.machine = this.createMachine(
             {
@@ -143,7 +161,7 @@ export class NoteEditor {
         this.show();
         this.title.readOnly = true;
         this.contentEditor.setReadOnly(true);
-        this.heading.textContent = 'Opening note…';
+        this.heading.textContent = t('Opening note…');
         this.eyebrow.textContent = 'Note';
         this.setStatus('Loading…');
         try {
@@ -152,7 +170,7 @@ export class NoteEditor {
             this.note = result.payload.data;
             this.writeFields(this.note);
             this.machine = this.createMachine(this.note, true);
-            this.heading.textContent = this.note.title || 'Untitled note';
+            this.heading.textContent = this.note.title || t('Untitled note');
             this.eyebrow.textContent = 'Editing';
             this.renderState(this.machine.state);
             this.title.focus();
@@ -220,6 +238,36 @@ export class NoteEditor {
         this.machine?.input({ color });
     }
 
+    /** Background images live outside the autosave snapshot; saving them never conflicts. */
+    async setBackground(attachmentId) {
+        if (!this.note?.id) return;
+        try {
+            const response = await NoteSharing.setBackground(this.note.id, attachmentId);
+            this.note = { ...this.note, ...response.payload.data, version: this.note.version };
+            this.renderBackground(this.note);
+            this.onChanged?.();
+        } catch (error) {
+            this.toast(error.message || 'Unable to change the background.', true);
+        }
+    }
+
+    renderBackground(note) {
+        const field = this.root.querySelector('[data-note-background-field]');
+        const select = this.root.querySelector('[data-note-background]');
+        if (!field || !select) return;
+        const images = (note.attachments || []).filter((attachment) => attachment.kind === 'image');
+        field.classList.toggle('is-hidden', !images.length);
+        select.replaceChildren(new Option(t('None'), ''));
+        for (const image of images) select.append(new Option(image.original_name, image.id));
+        select.value = note.background_attachment_id || '';
+        this.root
+            .querySelector('.editor-card, .modal-card')
+            ?.style.setProperty(
+                '--note-background-image',
+                note.background_url ? `url("${note.background_url}")` : 'none',
+            );
+    }
+
     setLabels(labelIds) {
         this.machine?.input({ label_ids: labelIds });
     }
@@ -238,7 +286,7 @@ export class NoteEditor {
             .classList.toggle('is-hidden', !['error', 'retry_wait'].includes(state.phase));
         this.root
             .querySelectorAll(
-                '[data-editor-pin], [data-editor-labels], [data-color], [data-attachment-input]',
+                '[data-editor-pin], [data-editor-labels], [data-color], [data-color-custom], [data-note-background], [data-attachment-input]',
             )
             .forEach((control) => {
                 control.disabled = locked || !state.persisted;
@@ -246,12 +294,18 @@ export class NoteEditor {
         const note = state.acknowledgedNote || this.note;
         if (note) {
             this.note = note;
-            this.heading.textContent = note.title || 'Untitled note';
+            this.heading.textContent = note.title || t('Untitled note');
             this.deleteButton.classList.toggle('is-hidden', !state.persisted);
+            this.root
+                .querySelector('[data-editor-share]')
+                ?.classList.toggle('is-hidden', !state.persisted);
+            this.renderBackground(note);
             this.attachmentsSection.classList.toggle('is-hidden', !state.persisted);
             this.renderAttachments(note.attachments || []);
         } else {
             this.deleteButton.classList.add('is-hidden');
+            this.root.querySelector('[data-editor-share]')?.classList.add('is-hidden');
+            this.root.querySelector('[data-note-background-field]')?.classList.add('is-hidden');
             this.attachmentsSection.classList.add('is-hidden');
             this.renderAttachments([]);
         }
@@ -262,11 +316,23 @@ export class NoteEditor {
             button.classList.toggle('is-selected', selected);
             button.setAttribute('aria-pressed', selected ? 'true' : 'false');
         });
+        const custom = this.root.querySelector('[data-color-custom]');
+        if (custom) {
+            const isCustom = state.draftSnapshot.color?.startsWith('#');
+            custom.closest('.color-custom').classList.toggle('is-selected', !!isCustom);
+            if (isCustom) custom.value = state.draftSnapshot.color;
+        }
+        this.root
+            .querySelector('.editor-dialog, [data-editor-dialog]')
+            ?.style.setProperty(
+                '--note-custom-color',
+                state.draftSnapshot.color?.startsWith('#') ? state.draftSnapshot.color : '',
+            );
         this.pinButton.setAttribute(
             'aria-pressed',
             state.draftSnapshot.is_pinned ? 'true' : 'false',
         );
-        this.pinLabel.textContent = state.draftSnapshot.is_pinned ? 'Unpin' : 'Pin';
+        this.pinLabel.textContent = t(state.draftSnapshot.is_pinned ? 'Unpin' : 'Pin');
         this.titleError.textContent = state.validationErrors.title || '';
         this.titleError.classList.toggle('is-hidden', !state.validationErrors.title);
         this.contentError.textContent = state.validationErrors.content || '';
@@ -291,9 +357,11 @@ export class NoteEditor {
             ['error', 'conflict', 'auth_expired', 'unavailable'].includes(state.phase),
         );
         if (state.phase === 'conflict') this.onConflict(this.machine);
-        this.meta.textContent = state.persisted ? 'Version ' + state.baseVersion : 'New draft';
+        this.meta.textContent = state.persisted
+            ? t('Version') + ' ' + state.baseVersion
+            : t('New draft');
         if (state.recoveryAvailable === false)
-            this.meta.textContent += ' · local recovery unavailable';
+            this.meta.textContent += ' · ' + t('local recovery unavailable');
         if (state.phase === 'saved') this.onChanged?.(this.note);
         if (this.pendingClose && state.phase === 'saved') {
             this.pendingClose = false;
@@ -333,7 +401,7 @@ export class NoteEditor {
     }
 
     setStatus(text, error = false) {
-        this.status.textContent = text;
+        this.status.textContent = t(text);
         this.status.classList.toggle('is-error', error);
         this.status.classList.toggle('is-success', text === 'Saved');
     }
@@ -457,8 +525,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.show();
-        this.heading.textContent = 'Write down what matters';
-        this.eyebrow.textContent = 'Recovered draft';
+        this.heading.textContent = t('Write down what matters');
+        this.eyebrow.textContent = t('Recovered draft');
         const snapshot = normalizeSnapshot(record.draftSnapshot);
         this.writeFields(snapshot);
         this.machine = this.createMachine(
@@ -669,7 +737,7 @@ export class NoteEditor {
         removeButton.className = 'icon-button';
         removeButton.type = 'button';
         removeButton.textContent = '×';
-        removeButton.setAttribute('aria-label', 'Delete ' + attachment.original_name);
+        removeButton.setAttribute('aria-label', t('Delete') + ' ' + attachment.original_name);
         removeButton.addEventListener('click', () => this.deleteAttachment(attachment));
         row.append(copy, download, removeButton);
         return row;
@@ -685,7 +753,7 @@ export class NoteEditor {
         const meta = document.createElement('small');
         meta.textContent =
             item.status === 'uploading'
-                ? 'Uploading ' + item.progress + '%'
+                ? t('Uploading') + ' ' + item.progress + '%'
                 : item.status === 'error'
                   ? item.error
                   : 'Waiting';
@@ -702,7 +770,7 @@ export class NoteEditor {
         cancel.className = 'icon-button';
         cancel.type = 'button';
         cancel.textContent = '×';
-        cancel.setAttribute('aria-label', 'Cancel upload for ' + item.file.name);
+        cancel.setAttribute('aria-label', t('Cancel upload for') + ' ' + item.file.name);
         cancel.addEventListener('click', () => this.cancelUpload(item));
         row.append(copy);
         if (retry) row.append(retry);

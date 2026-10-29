@@ -14,5 +14,6 @@ final readonly class InspectedUpload
         public int $size,
         public string $sha256,
         public string $extension,
-    ) {}
+    ) {
+    }
 }

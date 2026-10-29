@@ -17,5 +17,6 @@ final readonly class TagRecord
         public string $color = 'neutral',
         public int $position = 0,
         public ?string $archivedAt = null,
-    ) {}
+    ) {
+    }
 }

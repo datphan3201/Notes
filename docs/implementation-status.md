@@ -211,3 +211,238 @@ Save, checklist refresh/tab draft preservation and late-save acknowledgements.
 Desktop/mobile captures were inspected; temporary captures and verification
 records were removed after inspection. Native OS IME and other browser engines
 were not exercised by this run.
+
+## Feedback sections 1–3 — 2026-10-19, paused at user request
+
+The user confirmed Settings/account, Tasks/Goals and Task history (not the
+three recommendation steps). Retention is keep-all; two-factor authentication
+is explicitly postponed. English/Vietnamese interface selection is approved.
+
+Implemented in the working tree:
+
+- Settings navigation grouping, direct light/dark action, password visibility,
+  biography, private re-encoded background upload/RGB color, notification choices.
+  Note defaults move to Notes without changing its autosave state machine.
+- Recovery forms and one-use hashed 30-minute tokens, owner-before-token locking,
+  request/attempt throttles, auth-version bump and session invalidation. Local
+  delivery uses private outbox files; production needs system mail configuration.
+- Shared Task capture fields for Tasks/Goal/Milestone, native date/time presets,
+  versioned importance toggle, edit links, circular completion/reopen, confirmed
+  archive, reversible weekly selection, Completed/History filters retaining data.
+- Daily/weekly/monthly/yearly recurrence with stable month-end/leap-day anchors,
+  custom weekly days/intervals and atomic initial occurrence materialization.
+  Individual Tasks support reminders; delivery is opt-in with reminders:send.
+- Account-persisted en/vi locale with a shared static UI catalog and selected
+  dynamic Task/Settings controls. Arbitrary owned content is not translated.
+  Browser checks switched vi -> en and created a Task whose mixed-language title
+  stayed unchanged, with no console errors during that flow. Browser mutations
+  used goals_test on a separate :8081 server, not the user's goals_dev records.
+- Fixed an existing walkthrough empty-hash error found during real-browser QA.
+- Added forward migrations 0010–0015 and applied them to goals_dev; current
+  migrate:check reports healthy. Old migrations were not edited.
+
+Evidence so far: narrow backend gate 26 tests / 346 assertions; focused recovery
+and owner-isolation suite 2 / 21; ViewTest 4 / 14; Node suite 56 passing; Vite build
+and frontend format:check pass. Full backend run and final status follow below.
+
+Not yet accepted as a complete feedback release: browser coverage of background
+upload, reminder delivery, shared capture/draft preservation and history/reopen
+needs completion; dynamic error/help/summary localization needs an audit. No
+production mail delivery or cron setup was performed. Recurring reminders must
+be configured on generated occurrences; series-wide reminder rules are not yet
+implemented. No 2FA, destructive retention, admin, sharing or Teamwork was added.
+No further feature work continues until the user resumes.
+
+### Final checkpoint before pausing — 2026-10-19
+
+- `php backend/vendor/bin/phpunit -c backend/phpunit.xml`: **94 tests / 743
+  assertions**, all pass, 123.761 seconds, real guarded goals_test.
+- `npm --prefix frontend run test:unit`: **56 tests**, all pass.
+- `npm --prefix frontend run format:check`: pass.
+- `npm --prefix frontend run build`: pass (52 modules).
+- First-party syntax sweep: **157 PHP files**, zero errors; final view sweep
+  after localization also reports zero syntax errors.
+- `git diff --check`: pass. `php backend/bin/console migrate:check`: healthy.
+- `curl -fsS http://localhost:8000/up`: status ok.
+- Real Chromium on isolated :8081/goals_test: registration/password-visibility,
+  first-visit walkthrough dismissal, account language vi -> en persistence, Task
+  creation while UI is Vietnamese, unchanged mixed-language Task title after
+  switching back to English. That flow logged zero console errors/warnings.
+- Temporary QA browser and :8081 server were closed. Normal local :8000 server
+  remains available. No production deployment, mail-provider verification, cron
+  installation or automatic Task deletion was performed.
+
+Paused at the user's explicit request after finishing the current core language
+section and verification. Resume with the outstanding acceptance checks above;
+do not treat the three feedback sections as fully accepted/release-certified.
+
+## Feedback audit fixes — 2026-10-27
+
+An audit of the user's feedback PDF against the paused feedback release found
+and fixed these defects inside the approved scope:
+
+- Habit and Task-series creation rejected browser time zones such as
+  `Asia/Saigon` ("The time zone is invalid") because the local PHP 8.5.4 uses a
+  system tz database without legacy links. `Planner\Support\TimeZoneNames` maps
+  aliases to an equivalent identifier through ext-intl; Habit, Task series and
+  account preference validation store the canonical name.
+- Task filter count badges applied the active view's status rule, so Completed
+  showed 0 while Today was open. Each badge now applies its own view's rule.
+- Unfinished Tasks overdue for one or two dates appeared in no filter except All.
+  Today now carries them until History takes them, marked "Overdue" in text and
+  danger colors (contract updated in `docs/plan/05-ui-ux.md`).
+- Removed triple escaping in the sidebar account caption and localized remaining
+  Appearance, archive-confirmation and repeating-capture messages.
+
+Evidence: `php backend/vendor/bin/phpunit -c backend/phpunit.xml` **96 tests /
+751 assertions** pass on guarded goals_test; `npm --prefix frontend run
+test:unit` **58** pass; `format:check` and `build` pass. No real-browser check of
+these changes was performed. `frontend/package-lock.json` already had unrelated
+uncommitted dependency updates dated 2026-10-26 that this work did not change.
+
+## Full feedback extension — 2026-10-27
+
+The user directed that every feedback-PDF item be delivered and conflicting
+rules be changed. PLAN.md, 01-scope, 09-deferred, agent.md and the new contract
+`docs/plan/17-full-feedback.md` record the decision. Forward migrations
+0016–0020 add roles/locking/reports/system settings, Note shares and
+notifications, two-factor codes, history preferences and RGB/background Note
+styles, and Teamwork tables. Old migrations were not edited.
+
+Implemented:
+
+- Roles and administration: `users:role` console command, `/admin` with
+  report review (snapshot, not live Note), resolve/dismiss with reply, account
+  lock/unlock (sessions invalidated, login refused) and the history limit.
+- Note sharing: owner invites by email (no account enumeration), view/edit
+  permission, change/remove, recipient accept/decline/leave, "Shared with me",
+  title/content editing with version conflicts, reporting, notifications.
+- Notifications: bell with unread count (60 s polling), share/report/team
+  events and Task reminders; opt-out and email copies follow Settings.
+- Two-step verification: email codes or RFC 6238 authenticator (secret
+  encrypted with the session key, manual key/otpauth link, email fallback).
+- Settings: Security groups password and 2FA; Appearance "+" tile for a private
+  image or RGB color; Settings → Task history with Find, user thresholds and
+  retention; `history:prune` archives expired history and anything beyond the
+  administrator limit (never hard-deletes).
+- Dashboard Activity: full-year grid with month labels and a year list.
+- Tasks/Goals: shared capture with visible description and icon menus for due
+  date, reminder and repeat (presets, month calendar, time, custom interval);
+  rows with tick, schedule icons, week pin, Edit, Remove, Important star;
+  Completed list under the active list; Repeating view replaces the Habits tab.
+- Habits: Recurring tab removed; optional description.
+- Notes: one View toggle, Sort by title/modified/created, explicit Save, any RGB
+  color, background from an attached image, Share.
+- AI: sidebar tab replaced by a floating chat that answers from a bounded,
+  read-only summary; proposals remain at /ai.
+- Teamwork: team goals with members/roles (admin/editor/viewer), invitations,
+  assigned tasks with status, per-member completion and polled team chat.
+
+Evidence: full `phpunit` **102 tests / 824 assertions** pass on guarded
+goals_test, plus the later page-render test (1 test / 52 assertions) for every
+changed page; new coverage includes sharing permissions/isolation, reports and
+locking, TOTP login, Teamwork roles/chat and RFC 6238 vectors. Node suite **62**
+pass; `format:check` and `build` pass; changed PHP and views lint clean.
+Not done: no real-browser walkthrough of the new UI, no `migrate` on goals_dev,
+no production mail/cron setup, and authenticator setup has no QR image (manual
+key and otpauth link only). `frontend/package-lock.json` changes predate this work.
+
+## Teamwork layout and team task capture — 2026-10-28
+
+Implemented contract `docs/plan/17-full-feedback.md` §11.1: Teamwork search box,
+4-per-page goal carousel with page arrows, Goal details | Members and Tasks |
+Team chat layout with scrolling panels, Invite dialog, and a team task dialog
+that reuses the Tasks capture fields plus assignee. Migration
+`0021_extend_team_tasks` adds importance, start date, estimate, reminder and
+repeat rule; completing a repeating team task creates the next occurrence and due
+team reminders reach the assignee's bell.
+Evidence: full `phpunit` **106 tests / 896 assertions** pass, including `TeamTaskRepeatTest` (2 tests) and `FullFeedbackHttpTest` (6 tests /
+129 assertions) pass; Node suite **67** pass; `format:check` and `build` pass.
+Not done: no real-browser walkthrough; `php bin/console migrate` must be run on
+goals_dev for 0021.
+
+## Unified check marks and stronger theme backgrounds — 2026-10-28
+
+Every completion/check-in marker now draws one shape: the `--check-mark` CSS
+mask (same path as `#icon-check`) via `frontend/src/js/lib/check-mark.js`,
+replacing the mixed `✓`/`○`/`☑` glyphs on Dashboard, Tasks, Task detail, Goal
+roadmap previews, Habits, streaks, Teamwork and the note Check box button.
+Native checkboxes use `appearance: none` with the same mask. Theme background
+imagery shows 20 points more (veil 100%/89% → 80%/69%; Mountain backdrop
+opacity 0.09/0.07 → 0.29/0.27). Task "Select for this week" and Dashboard
+"Complete" labels now pass through `t()`.
+Evidence: full `phpunit` **106 tests / 896 assertions** pass; Node suite **67**
+pass; `format:check` and `build` pass.
+Not done: no real-browser visual check of the new markers or backgrounds.
+
+## Goal leave prompt, missed Habit days and background list — 2026-10-28
+
+- Goal detail no longer asks "Leave this goal?" without edits: the draft check
+  ignored that Task capture forms start with `repeat_interval` 1 and Normal
+  importance, so every visit counted as unsaved. Clearing an optional field back
+  to empty also no longer leaves the Goal edit form dirty.
+- Habit dots: checked dates show the check mark, past unchecked dates since
+  tracking began show an x (missed), today stays open, earlier dates are
+  unmarked. Dashboard `habit_streak.tracking_since` gives the account-local date
+  of the first Habit; per-Habit dots use that Habit's creation date.
+- Personal backgrounds are a private per-account list (migration
+  `0022_create_user_backgrounds`, at most 12). Each upload appears as a picker
+  tile; presets and uploads can be reselected (`background_id` preference) and
+  an × removes an upload. Contracts 03, 04, 12 and 17 were updated first.
+Evidence: full `phpunit` **107 tests / 923 assertions** pass, including the new
+background list HTTP test and `tracking_since` assertions; Node suite **70**
+pass; `format:check` and `build` pass; changed PHP lints clean.
+Not done: no real-browser check; `php bin/console migrate` must be run on
+goals_dev for 0022 before the app is used.
+
+## Password toggle, task icons, draggable date picker, AI page, Habit Rest Days — 2026-10-29
+
+- Password fields (login, register, reset, Security) show an eye icon inside
+  the right edge of the input instead of a Show/Hide text button.
+- Task rows use single-colour line icons (calendar, clock, repeat, pin) instead
+  of colour emoji; reminders read "Reminder" in task and team facts.
+- The due-date/reminder/repeat menu has a drag grip, can be moved anywhere in
+  the viewport, and re-clamps itself on screen when it grows into the calendar.
+- The `/ai` proposal page and its "Request a planning proposal" link were
+  removed; the floating AI chat stays. The proposal API is unchanged.
+- Habits: "List of habits" heading; Edit (dialog) and Delete (archive) per
+  Habit; a centred tick opens "Mark today as done" plus Rest Day choices for
+  the next 3 days (migration `0023_create_habit_rest_days`,
+  `PUT/DELETE /api/v1/habits/{id}/rest-days/{date}`). Per-Habit streaks
+  (days or weeks) and a combined Dashboard streak that only counts a day when
+  no daily Habit was missed. Dashboard lists every active Habit with its streak.
+  Contracts 03, 04 and 12 were updated.
+Evidence: `php bin/console migrate` applied 0023 on goals_dev; full `phpunit`
+**112 tests / 940 assertions** pass (new Rest Day window, back-dated rest,
+streak unit tests, /ai 404); Node suite **73** pass; `format:check` and
+`build` pass.
+Not done: no real-browser visual check.
+
+## Product completion pass: email, reminders, archive, i18n — 2026-10-29
+
+- Email: one mailer for every message. With `MAIL_HOST` set it uses a built-in
+  SMTP client (STARTTLS/SSL, AUTH PLAIN/LOGIN, UTF-8 encoded headers);
+  otherwise production uses the system transport and local/testing keep
+  messages in `storage/app/private/mail-outbox`. `php bin/console mail:test`
+  checks delivery. Registration sends a verification link; Profile shows the
+  state, resends it and changes the email through a confirmation link.
+- Background jobs: `schedule:run` (cron, every minute) and `schedule:work`
+  (long-running) run reminders, recurrence, history, snapshots and clean-up at
+  their intervals (migration `0024_complete_product_gaps`). Repeating Tasks are
+  also topped up when Tasks or Dashboard are read.
+- Reminders: dismissible from the bell; editing the Task time uses local time
+  instead of UTC; repeating Tasks can carry a reminder time.
+- Management gaps closed: remove Goals/Milestones with their contents, remove
+  Areas and Reviews, edit Milestones, rename/remove checklist items, add
+  sub-goals, prerequisites, links to other goals, tags on Goals/Tasks/Habits
+  with a Task tag filter, Habit-to-Goal links, a two-way week toggle, member
+  biographies in Teamwork.
+- Language: guest pages switch language, Reviews/roadmap/confirmations/Notes
+  status texts and view attributes are translated, and a Node test fails when a
+  literal `t()` string has no Vietnamese entry. The guide was rewritten in 17
+  bilingual steps with theme illustrations instead of placeholders.
+Evidence: new `SmtpTransportTest` (fake SMTP server), `ProductCompletionTest`
+and `AccountEmailHttpTest` pass; frontend Node suite 75 pass, `format:check`
+and `build` pass. Full `phpunit` **123 tests / 1023 assertions** pass; migration 0024 applied on goals_dev.
+Not done: real SMTP delivery needs the owner's SMTP credentials; the AI
+proposal API stays without a UI until the AI work resumes; no real-browser pass.

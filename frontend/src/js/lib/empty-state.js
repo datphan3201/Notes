@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // Copy is supplied by the feature; user content always uses textContent.
 export function renderEmptyState(container, { title, description, icon = 'tasks', href, action }) {
     const state = document.createElement('div');
@@ -9,15 +10,15 @@ export function renderEmptyState(container, { title, description, icon = 'tasks'
     use.setAttribute('href', `#icon-${icon}`);
     graphic.append(use);
     const heading = document.createElement('strong');
-    heading.textContent = title;
+    heading.textContent = t(title);
     const copy = document.createElement('p');
-    copy.textContent = description;
+    copy.textContent = t(description);
     state.append(graphic, heading, copy);
     if (href && action) {
         const link = document.createElement('a');
         link.className = 'empty-action';
         link.href = href;
-        link.textContent = action;
+        link.textContent = t(action);
         state.append(link);
     }
     container.replaceChildren(state);

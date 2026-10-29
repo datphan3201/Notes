@@ -9,7 +9,9 @@ use Planner\Domain\Account\UserRecord;
 
 final readonly class PdoAccountRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function findByEmail(string $email): ?UserRecord
     {
@@ -56,7 +58,7 @@ SQL);
     public function preferences(int $userId): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote FROM user_preferences WHERE user_id = :user_id',
+            'SELECT theme, note_font_size, default_note_color, notes_view, timezone, visual_theme, show_background, show_illustrations, show_quote, custom_quote, background_color, notifications_enabled, email_notifications, background_id, locale, history_completed_hours, history_overdue_days, history_retention_days FROM user_preferences WHERE user_id = :user_id',
         );
         $statement->execute(['user_id' => $userId]);
         $row = $statement->fetch();
@@ -76,6 +78,15 @@ SQL);
             'show_illustrations' => (bool) $row['show_illustrations'],
             'show_quote' => (bool) $row['show_quote'],
             'custom_quote' => (string) $row['custom_quote'],
+            'locale' => (string) $row['locale'],
+            'background_color' => (string) $row['background_color'],
+            'background_id' => $row['background_id'] === null ? '' : (string) $row['background_id'],
+            'background_url' => $row['background_id'] === null ? '' : self::backgroundUrl((string) $row['background_id']),
+            'notifications_enabled' => (bool) $row['notifications_enabled'],
+            'email_notifications' => (bool) $row['email_notifications'],
+            'history_completed_hours' => (int) $row['history_completed_hours'],
+            'history_overdue_days' => (int) $row['history_overdue_days'],
+            'history_retention_days' => $row['history_retention_days'] === null ? null : (int) $row['history_retention_days'],
         ];
     }
 
@@ -121,7 +132,7 @@ SQL);
     /** @param array<string, string|int|bool> $changes */
     public function updatePreferences(int $userId, array $changes, string $timestamp): array
     {
-        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote'];
+        $allowed = ['theme', 'note_font_size', 'default_note_color', 'notes_view', 'timezone', 'visual_theme', 'show_background', 'show_illustrations', 'show_quote', 'custom_quote', 'background_color', 'background_id', 'notifications_enabled', 'email_notifications', 'locale', 'history_completed_hours', 'history_overdue_days', 'history_retention_days'];
         $assignments = [];
         $bindings = ['user_id' => $userId, 'updated_at' => $timestamp];
 
@@ -143,6 +154,86 @@ SQL);
         }
 
         return $this->preferences($userId);
+    }
+
+    public static function backgroundUrl(string $backgroundId): string
+    {
+        return '/files/backgrounds/'.rawurlencode($backgroundId);
+    }
+
+    public function selectedBackgroundId(int $userId): ?string
+    {
+        $statement = $this->pdo->prepare('SELECT background_id FROM user_preferences WHERE user_id = :user');
+        $statement->execute(['user' => $userId]);
+        $id = $statement->fetchColumn();
+        return is_string($id) ? $id : null;
+    }
+
+    /** Selecting an uploaded image (or none) also clears any RGB background color. */
+    public function selectBackground(int $userId, ?string $backgroundId, string $now): void
+    {
+        $statement = $this->pdo->prepare('UPDATE user_preferences SET background_id = :background, background_color = :color, updated_at = :now WHERE user_id = :user');
+        $statement->execute(['background' => $backgroundId, 'color' => '', 'now' => $now, 'user' => $userId]);
+    }
+
+    /** @return list<array{id:string,path:string,created_at:string}> */
+    public function backgrounds(int $userId): array
+    {
+        $statement = $this->pdo->prepare('SELECT id, path, created_at FROM user_backgrounds WHERE user_id = :user ORDER BY created_at, id');
+        $statement->execute(['user' => $userId]);
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function backgroundPath(int $userId, string $backgroundId): ?string
+    {
+        $statement = $this->pdo->prepare('SELECT path FROM user_backgrounds WHERE user_id = :user AND id = :id');
+        $statement->execute(['user' => $userId, 'id' => $backgroundId]);
+        $path = $statement->fetchColumn();
+        return is_string($path) ? $path : null;
+    }
+
+    public function backgroundCount(int $userId): int
+    {
+        $statement = $this->pdo->prepare('SELECT COUNT(*) FROM user_backgrounds WHERE user_id = :user');
+        $statement->execute(['user' => $userId]);
+        return (int) $statement->fetchColumn();
+    }
+
+    public function insertBackground(int $userId, string $backgroundId, string $path, string $now): void
+    {
+        $statement = $this->pdo->prepare('INSERT INTO user_backgrounds (id, user_id, path, created_at) VALUES (:id, :user, :path, :now)');
+        $statement->execute(['id' => $backgroundId, 'user' => $userId, 'path' => $path, 'now' => $now]);
+    }
+
+    public function deleteBackground(int $userId, string $backgroundId): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM user_backgrounds WHERE user_id = :user AND id = :id');
+        $statement->execute(['user' => $userId, 'id' => $backgroundId]);
+    }
+
+    /** @return list<string> */
+    public function backgroundPaths(): array
+    {
+        return $this->pdo->query('SELECT path FROM user_backgrounds UNION SELECT background_path FROM user_preferences WHERE background_path IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public function updateBiography(int $userId, string $biography): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET biography = :biography WHERE id = :user');
+        $statement->execute(['biography' => $biography, 'user' => $userId]);
+    }
+
+    public function markEmailVerified(int $userId, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET email_verified_at = :verified_at, updated_at = :updated_at WHERE id = :id');
+        $statement->execute(['verified_at' => $timestamp, 'updated_at' => $timestamp, 'id' => $userId]);
+    }
+
+    /** A confirmed email change also verifies the new address. */
+    public function updateEmail(int $userId, string $email, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET email = :email, email_verified_at = :verified_at, updated_at = :updated_at WHERE id = :id');
+        $statement->execute(['email' => $email, 'verified_at' => $timestamp, 'updated_at' => $timestamp, 'id' => $userId]);
     }
 
     public function updatePasswordAndVersion(int $userId, string $hash, int $authVersion, string $timestamp): void
@@ -177,6 +268,71 @@ SQL);
         )->fetchAll(PDO::FETCH_COLUMN)));
     }
 
+    public function setRole(int $userId, string $role, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET role = :role, updated_at = :now WHERE id = :id');
+        $statement->execute(['role' => $role, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    /** Locking bumps auth_version so every existing session is rejected. */
+    public function setLocked(int $userId, ?string $lockedAt, ?string $reason, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET locked_at = :locked_at, locked_reason = :reason, auth_version = auth_version + IF(:locking = 1, 1, 0), updated_at = :now WHERE id = :id');
+        $statement->execute(['locked_at' => $lockedAt, 'reason' => $reason, 'locking' => $lockedAt === null ? 0 : 1, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    public function setTwoFactor(int $userId, ?string $method, ?string $secret, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare('UPDATE users SET two_factor_method = :method, two_factor_secret = :secret, updated_at = :now WHERE id = :id');
+        $statement->execute(['method' => $method, 'secret' => $secret, 'now' => $timestamp, 'id' => $userId]);
+    }
+
+    /** @return list<int> */
+    public function adminIds(): array
+    {
+        return array_map('intval', $this->pdo->query("SELECT id FROM users WHERE role = 'admin' AND locked_at IS NULL ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    /** @return array<string, mixed>|null id, display name, email and avatar of an account by exact email */
+    public function publicByEmail(string $email): ?array
+    {
+        $statement = $this->pdo->prepare('SELECT id, email, display_name, avatar_path FROM users WHERE email = :email AND locked_at IS NULL LIMIT 1');
+        $statement->execute(['email' => strtolower(trim($email))]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $row : null;
+    }
+
+    /**
+     * @param list<int> $userIds
+     * @return array<int, array{id:string,display_name:string,email:string}>
+     */
+    public function publicProfiles(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+        $userIds = array_values(array_unique($userIds));
+        $statement = $this->pdo->prepare('SELECT id, email, display_name FROM users WHERE id IN ('.implode(',', array_fill(0, count($userIds), '?')).')');
+        $statement->execute($userIds);
+        $profiles = [];
+        foreach ($statement->fetchAll() as $row) {
+            $profiles[(int) $row['id']] = ['id' => (string) $row['id'], 'display_name' => (string) $row['display_name'], 'email' => (string) $row['email']];
+        }
+
+        return $profiles;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function adminUserList(string $query): array
+    {
+        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $query);
+        $statement = $this->pdo->prepare("SELECT id, email, display_name, role, locked_at, locked_reason, created_at FROM users WHERE email LIKE :q_email ESCAPE '!' OR display_name LIKE :q_name ESCAPE '!' ORDER BY (locked_at IS NULL), id LIMIT 100");
+        $statement->execute(['q_email' => '%'.$escaped.'%', 'q_name' => '%'.$escaped.'%']);
+
+        return $statement->fetchAll();
+    }
+
     public function deleteSessions(int $userId): void
     {
         $statement = $this->pdo->prepare('DELETE FROM sessions WHERE user_id = :user_id');
@@ -197,6 +353,11 @@ SQL);
             $row['email_verified_at'] === null ? null : (string) $row['email_verified_at'],
             $row['avatar_path'] === null ? null : (string) $row['avatar_path'],
             (int) $row['auth_version'],
+            (string) ($row['biography'] ?? ''),
+            (string) ($row['role'] ?? 'user'),
+            isset($row['locked_at']) ? (string) $row['locked_at'] : null,
+            isset($row['two_factor_method']) ? (string) $row['two_factor_method'] : null,
+            isset($row['two_factor_secret']) ? (string) $row['two_factor_secret'] : null,
         );
     }
 }

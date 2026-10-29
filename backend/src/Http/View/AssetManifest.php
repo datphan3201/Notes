@@ -12,7 +12,8 @@ final readonly class AssetManifest
         private string $publicRoot,
         private ?string $developmentUrl,
         private string $environment,
-    ) {}
+    ) {
+    }
 
     /** @param non-empty-list<string> $entries */
     public function tags(array $entries): string

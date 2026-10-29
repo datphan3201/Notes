@@ -23,12 +23,15 @@ final readonly class GoalSnapshotService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return array{created:int,warnings:list<string>,failed:list<int>} */
     public function capture(): array
     {
-        $created = 0; $warnings = []; $failed = [];
+        $created = 0;
+        $warnings = [];
+        $failed = [];
         foreach ($this->reviews->users() as $owner) {
             $userId = (int) $owner['user_id'];
             try {

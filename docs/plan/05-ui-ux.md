@@ -128,8 +128,10 @@ blocked work is not promoted as the recommended next Task. Edit uses an icon in
 20% of the action row; the remaining 80% is Complete. It uses the same Checklist
 and ancestor acknowledgement flow as other Task controls.
 
-Tasks adds Today, Next, This week, Backlog, and All filters with factual counts.
-Today uses local due/start/occurrence dates or a schedule overlapping today;
+Tasks adds Today, Next, This week, Backlog, All and Repeating filters with factual counts.
+Today uses local due/start/occurrence dates or a schedule overlapping today, and
+also carries unfinished Tasks whose deadline is before today but not yet in
+History; those rows are visibly marked overdue with text, not color alone;
 Next uses future start/deadline/occurrence/scheduled dates; This week uses existing
 selections; Backlog has no date/schedule and is not selected. Filters can overlap;
 they are not status changes. Search/status remain available under Filter.
@@ -316,3 +318,23 @@ The user selects context and requested capability, previews what will be sent, a
 ## Responsive/accessibility requirements
 
 Support 360×800, 768×1024, and 1440×900 without significant horizontal overflow. Use minimum 44px touch targets where practical, visible focus, semantic headings/landmarks, labeled controls, `aria-live` for async status, and reduced-motion preferences. Do not convey status using color alone. Preserve literal user text; do not render Note/description HTML.
+
+## Approved feedback delivery — 2026-10-19
+
+Settings groups Profile, Appearance, Security and Notifications. Appearance has
+a direct account-persisted light/dark action in the top bar, private JPEG/PNG/WebP
+background upload, optional RGB background and en/vi language selection.
+Biography stays private to the account. Note preferences move to Notes without
+changing Note autosave/recovery or existing per-note controls.
+Task and Goal capture share description/date/priority/estimate/recurrence fields.
+Native date/time pickers include Today/Tomorrow/Next-week presets. Task rows have
+a circular completion/reopen control, versioned importance toggle, Edit deep link,
+reversible weekly selection and confirmed archive (never destructive delete).
+Completed work appears in a Completed list under the active list and moves to
+Settings → Task history after the user's thresholds (default 24h completed, 3 days overdue). The
+source rows are retained. Details and existing completion acknowledgements remain.
+Localization applies only to predefined interface copy. User names, Task names,
+Notes, descriptions and other owned content are never translated. Static views
+share a Vietnamese catalog with browser modules; language defaults to English.
+The initial catalog covers static views and core Task/Settings controls; full
+translation of all dynamic help, validation and summary copy needs a later audit.

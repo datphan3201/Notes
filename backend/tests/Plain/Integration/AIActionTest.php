@@ -26,13 +26,23 @@ final class AIActionTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION=[]; $_COOKIE=[];
-        $this->runtime=require dirname(__DIR__,3).'/bootstrap/http.php'; $this->pdo=$this->runtime['pdo'];
+        session_id('');
+        $_SESSION=[];
+        $_COOKIE=[];
+        $this->runtime=require dirname(__DIR__,3).'/bootstrap/http.php';
+        $this->pdo=$this->runtime['pdo'];
         self::assertSame('goals_test',$this->pdo->query('SELECT DATABASE()')->fetchColumn());
-        $this->wipe(); (new MigrationRunner($this->pdo,dirname(__DIR__,3).'/database/plain-migrations','goals_test'))->migrate();
+        $this->wipe();
+        (new MigrationRunner($this->pdo,dirname(__DIR__,3).'/database/plain-migrations','goals_test'))->migrate();
         $this->owner=(new PdoAccountRepository($this->pdo))->insertUser('ai@example.test','AI Owner',password_hash('correct horse battery staple',PASSWORD_BCRYPT),'2026-09-17 12:00:00.000000')->id;
     }
-    protected function tearDown(): void { $this->runtime['session']->close(); session_id(''); $_SESSION=[]; $_COOKIE=[]; }
+    protected function tearDown(): void
+    {
+        $this->runtime['session']->close();
+        session_id('');
+        $_SESSION=[];
+        $_COOKIE=[];
+    }
 
     public function test_generation_writes_no_domain_data_and_apply_uses_normal_task_validation_idempotently(): void
     {
@@ -51,10 +61,14 @@ final class AIActionTest extends TestCase
     public function test_invalid_ai_task_is_rejected_by_the_same_domain_service_and_transaction_rolls_back(): void
     {
         $proposal=json_encode(['schema_version'=>1,'summary'=>'Invalid task','operations'=>[['op'=>'create_task','local_id'=>'t1','parent'=>null,'fields'=>['name'=>'','importance'=>5]]]],JSON_THROW_ON_ERROR);
-        $service=$this->service($proposal); $action=$service->generate($this->owner,['capability'=>'suggest_tasks','instruction'=>'Help','context'=>[],'consent'=>true]);
+        $service=$this->service($proposal);
+        $action=$service->generate($this->owner,['capability'=>'suggest_tasks','instruction'=>'Help','context'=>[],'consent'=>true]);
         $this->expectException(ValidationException::class);
-        try { $service->apply($this->owner,$action['id'],['base_version'=>$action['version'],'proposal_hash'=>$action['proposal_hash']]); }
-        finally { self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM tasks')->fetchColumn()); }
+        try {
+            $service->apply($this->owner,$action['id'],['base_version'=>$action['version'],'proposal_hash'=>$action['proposal_hash']]);
+        } finally {
+            self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM tasks')->fetchColumn());
+        }
     }
 
     public function test_duplicate_json_keys_are_rejected(): void
@@ -219,17 +233,40 @@ final class AIActionTest extends TestCase
     private function service(string $proposal): AIActionService
     {
         $provider=new class($proposal) implements AIProviderInterface {
-            public function __construct(private string $proposal) {}
-            public function name(): string { return 'fake'; }
-            public function model(): string { return 'fake-v1'; }
-            public function generate(GenerationRequest $request): GenerationResult { return new GenerationResult($this->proposal); }
+            public function __construct(private string $proposal)
+            {
+            }
+            public function name(): string
+            {
+                return 'fake';
+            }
+            public function answer(string $question, array $context): string
+            {
+                return 'fake answer';
+            }
+            public function model(): string
+            {
+                return 'fake-v1';
+            }
+            public function generate(GenerationRequest $request): GenerationResult
+            {
+                return new GenerationResult($this->proposal);
+            }
         };
         return new AIActionService($provider,new ProposalValidator,$this->runtime['ai_action_repository'],$this->runtime['planning_repository'],$this->runtime['planning_service'],$this->runtime['review_service'],$this->runtime['transactions'],$this->runtime['uuid'],$this->runtime['clock']);
     }
 
     private function wipe(): void
     {
-        $tables=$this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema='goals_test' AND table_type='BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN); $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
-        try { foreach($tables as $table){ if(!is_string($table)||preg_match('/^[a-z0-9_]+$/',$table)!==1)throw new RuntimeException('Unsafe table.'); $this->pdo->exec("DROP TABLE `$table`"); } } finally { $this->pdo->exec('SET FOREIGN_KEY_CHECKS=1'); }
+        $tables=$this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema='goals_test' AND table_type='BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+        try {
+            foreach($tables as $table) {
+                if(!is_string($table)||preg_match('/^[a-z0-9_]+$/',$table)!==1)throw new RuntimeException('Unsafe table.');
+                $this->pdo->exec("DROP TABLE `$table`");
+            }
+        } finally {
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

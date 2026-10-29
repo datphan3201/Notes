@@ -9,7 +9,9 @@ use Planner\Domain\Tags\TagRecord;
 
 final readonly class PdoTagRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<TagRecord> */
     public function listForOwner(int $userId): array

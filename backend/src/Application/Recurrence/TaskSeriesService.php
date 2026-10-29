@@ -15,6 +15,7 @@ use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Infrastructure\Persistence\Pdo\Recurrence\PdoTaskSeriesRepository;
 use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 use Throwable;
@@ -29,7 +30,8 @@ final readonly class TaskSeriesService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array
@@ -66,9 +68,19 @@ final readonly class TaskSeriesService
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
+    public function createAndMaterialize(int $userId, array $input): array
+    {
+        return $this->transactions->run(function () use ($userId, $input): array {
+            $created = $this->create($userId, $input);
+            $this->materializeSeries($userId, $created['id']);
+            return $this->show($userId, $created['id']);
+        });
+    }
+
+    /** @param array<string, mixed> $input @return array<string, mixed> */
     public function update(int $userId, string $id, array $input): array
     {
-        $this->keys($input, ['base_version', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'goal_id', 'milestone_id', 'frequency', 'interval_count', 'weekdays', 'start_date', 'end_date', 'timezone', 'local_time', 'duration_minutes', 'deadline_offset_days', 'checklist', 'tag_ids', 'contribution_goal_ids']);
+        $this->keys($input, ['base_version', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'goal_id', 'milestone_id', 'frequency', 'interval_count', 'weekdays', 'start_date', 'end_date', 'timezone', 'local_time', 'reminder_time', 'duration_minutes', 'deadline_offset_days', 'checklist', 'tag_ids', 'contribution_goal_ids']);
         $baseVersion = $this->version($input);
         unset($input['base_version']);
 
@@ -163,6 +175,28 @@ final readonly class TaskSeriesService
         return ['created' => $created, 'failed' => $failed];
     }
 
+    /**
+     * Keeps an owner's repeating work generated even when no scheduler runs:
+     * series whose generated horizon is under four weeks are topped up on read.
+     */
+    public function materializeDue(int $userId): void
+    {
+        foreach ($this->series->list($userId) as $series) {
+            if ($series['state'] !== 'Active') {
+                continue;
+            }
+            $soon = $this->clock->now()->setTimezone(new DateTimeZone((string) $series['timezone']))->modify('+28 days')->format('Y-m-d');
+            if ((string) $series['cursor_date'] >= $soon || ($series['end_date'] !== null && (string) $series['cursor_date'] >= (string) $series['end_date'])) {
+                continue;
+            }
+            try {
+                $this->materializeSeries($userId, (string) $series['id']);
+            } catch (Throwable) {
+                // Reads never fail because a series cannot be extended; the scheduler retries.
+            }
+        }
+    }
+
     private function materializeSeries(int $userId, string $id): int
     {
         return $this->transactions->run(function () use ($userId, $id): int {
@@ -188,6 +222,7 @@ final readonly class TaskSeriesService
                 $start = $this->calculator->localDateTimeToUtc($date, $series['local_time'] === null ? null : (string) $series['local_time'], (string) $series['timezone']);
                 $end = $start !== null && $series['duration_minutes'] !== null ? $start->modify('+'.(int) $series['duration_minutes'].' minutes') : null;
                 $deadline = $series['deadline_offset_days'] === null ? null : (new DateTimeImmutable($date))->modify('+'.(int) $series['deadline_offset_days'].' days')->format('Y-m-d');
+                $reminder = $series['reminder_time'] === null ? null : $this->calculator->localDateTimeToUtc($date, (string) $series['reminder_time'], (string) $series['timezone']);
                 $task = $this->planning->createOccurrence($userId, $id, $date, [
                     'goal_id' => $series['goal_id'],
                     'milestone_id' => $series['milestone_id'],
@@ -200,6 +235,7 @@ final readonly class TaskSeriesService
                     'deadline' => $deadline,
                     'scheduled_start' => $start?->format(DATE_ATOM),
                     'scheduled_end' => $end?->format(DATE_ATOM),
+                    'reminder_at' => $reminder?->format(DATE_ATOM),
                     'tag_ids' => array_map('strval', $this->series->tagIds($userId, $id)),
                 ]);
                 foreach ($this->series->checklistTemplate($userId, $id) as $item) {
@@ -220,14 +256,14 @@ final readonly class TaskSeriesService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     private function validateCreate(array $input): array
     {
-        $this->keys($input, ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'goal_id', 'milestone_id', 'frequency', 'interval_count', 'weekdays', 'start_date', 'end_date', 'timezone', 'local_time', 'duration_minutes', 'deadline_offset_days', 'checklist', 'tag_ids', 'contribution_goal_ids']);
+        $this->keys($input, ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'goal_id', 'milestone_id', 'frequency', 'interval_count', 'weekdays', 'start_date', 'end_date', 'timezone', 'local_time', 'reminder_time', 'duration_minutes', 'deadline_offset_days', 'checklist', 'tag_ids', 'contribution_goal_ids']);
         $name = $this->text($input['name'] ?? null, 'name', 200, true);
         $frequency = $input['frequency'] ?? null;
-        if (!in_array($frequency, ['daily', 'weekly'], true)) {
+        if (!in_array($frequency, ['daily', 'weekly', 'monthly', 'yearly'], true)) {
             throw new ValidationException(['frequency' => ['The frequency is invalid.']]);
         }
         $weekdays = $this->weekdays($input['weekdays'] ?? []);
-        if (($frequency === 'daily' && $weekdays !== []) || ($frequency === 'weekly' && $weekdays === [])) {
+        if (($frequency !== 'weekly' && $weekdays !== []) || ($frequency === 'weekly' && $weekdays === [])) {
             throw new ValidationException(['weekdays' => ['The selected weekdays do not match the frequency.']]);
         }
         $start = $this->requiredDate($input['start_date'] ?? null, 'start_date');
@@ -258,7 +294,7 @@ final readonly class TaskSeriesService
             'importance' => $this->integer($input['importance'] ?? 3, 'importance', 1, 5),
             'frequency' => $frequency, 'interval_count' => $this->integer($input['interval_count'] ?? 1, 'interval_count', 1, 52),
             'weekday_mask' => $this->weekdayMask($weekdays), 'start_date' => $start, 'end_date' => $end,
-            'timezone' => $timezone, 'local_time' => $localTime,
+            'timezone' => $timezone, 'local_time' => $localTime, 'reminder_time' => $this->timeOfDay($input['reminder_time'] ?? null, 'reminder_time'),
             'duration_minutes' => ($input['duration_minutes'] ?? null) === null ? null : $this->integer($input['duration_minutes'], 'duration_minutes', 1, 65_535),
             'deadline_offset_days' => ($input['deadline_offset_days'] ?? null) === null ? null : $this->integer($input['deadline_offset_days'], 'deadline_offset_days', 0, 365),
             'state' => 'Active', 'cursor_date' => (new DateTimeImmutable($start))->modify('-1 day')->format('Y-m-d'),
@@ -266,6 +302,19 @@ final readonly class TaskSeriesService
             'tag_ids' => $this->numericIds($input['tag_ids'] ?? [], 'tag_ids'),
             'contribution_goal_ids' => $this->uuidIds($input['contribution_goal_ids'] ?? [], 'contribution_goal_ids'),
         ];
+    }
+
+    /** "HH:MM" or "HH:MM:SS" in the series time zone, normalized to "HH:MM:SS". */
+    private function timeOfDay(mixed $value, string $field): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (!is_string($value) || preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/D', $value) !== 1) {
+            throw new ValidationException([$field => ['The time is invalid.']]);
+        }
+
+        return strlen($value) === 5 ? $value.':00' : $value;
     }
 
     /** @param array<string, mixed> $row @param array<string, mixed> $changes @return array<string, mixed> */
@@ -277,7 +326,7 @@ final readonly class TaskSeriesService
             'goal_id' => $row['goal_id'], 'milestone_id' => $row['milestone_id'], 'frequency' => $row['frequency'],
             'interval_count' => (int) $row['interval_count'], 'weekdays' => $this->maskWeekdays((int) $row['weekday_mask']),
             'start_date' => $row['start_date'], 'end_date' => $row['end_date'], 'timezone' => $row['timezone'],
-            'local_time' => $row['local_time'], 'duration_minutes' => $row['duration_minutes'] === null ? null : (int) $row['duration_minutes'],
+            'local_time' => $row['local_time'], 'reminder_time' => $row['reminder_time'], 'duration_minutes' => $row['duration_minutes'] === null ? null : (int) $row['duration_minutes'],
             'deadline_offset_days' => $row['deadline_offset_days'] === null ? null : (int) $row['deadline_offset_days'],
             'checklist' => array_map(static fn (array $item): array => ['title' => $item['title'], 'position' => (int) $item['position']], $this->series->checklistTemplate((int) $row['user_id'], (string) $row['id'])),
             'tag_ids' => $this->series->tagIds((int) $row['user_id'], (string) $row['id']),
@@ -365,8 +414,14 @@ final readonly class TaskSeriesService
     }
 
     /** @param array<string, mixed> $input */
-    private function version(array $input): int { return $this->integer($input['base_version'] ?? null, 'base_version', 1, PHP_INT_MAX); }
-    private function now(): string { return Timestamp::database($this->clock->now()); }
+    private function version(array $input): int
+    {
+        return $this->integer($input['base_version'] ?? null, 'base_version', 1, PHP_INT_MAX);
+    }
+    private function now(): string
+    {
+        return Timestamp::database($this->clock->now());
+    }
     private function text(mixed $value, string $field, int $max, bool $required): string
     {
         if (!is_string($value)) throw new ValidationException([$field => ['The value must be a string.']]);
@@ -382,7 +437,12 @@ final readonly class TaskSeriesService
     private function timezone(mixed $value): string
     {
         if (!is_string($value)) throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
-        try { new DateTimeZone($value); } catch (\Exception) { throw new ValidationException(['timezone' => ['The time zone is invalid.']]); }
+        try {
+            new DateTimeZone($value);
+        } catch (\Exception) {
+            return TimeZoneNames::canonical($value)
+                ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
+        }
         return $value;
     }
     private function requiredDate(mixed $value, string $field): string
@@ -403,33 +463,62 @@ final readonly class TaskSeriesService
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException(['weekdays' => ['The weekday list is invalid.']]);
         foreach ($value as $day) if (!is_int($day) || $day < 1 || $day > 7) throw new ValidationException(['weekdays' => ['The weekday list is invalid.']]);
-        $value = array_values(array_unique($value)); sort($value); return $value;
+        $value = array_values(array_unique($value));
+        sort($value);
+        return $value;
     }
     /** @param list<int> $days */
-    private function weekdayMask(array $days): int { return array_reduce($days, static fn (int $mask, int $day): int => $mask | (1 << ($day - 1)), 0); }
+    private function weekdayMask(array $days): int
+    {
+        return array_reduce($days, static fn (int $mask, int $day): int => $mask | (1 << ($day - 1)), 0);
+    }
     /** @return list<int> */
-    private function maskWeekdays(int $mask): array { $days = []; for ($day = 1; $day <= 7; $day++) if (($mask & (1 << ($day - 1))) !== 0) $days[] = $day; return $days; }
+    private function maskWeekdays(int $mask): array
+    {
+        $days = [];
+        for ($day = 1; $day <= 7; $day++) if (($mask & (1 << ($day - 1))) !== 0) $days[] = $day;
+        return $days;
+    }
     /** @return list<int> */
     private function numericIds(mixed $value, string $field): array
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException([$field => ['The list is invalid.']]);
-        $ids = []; foreach ($value as $id) { if ((!is_int($id) && !is_string($id)) || !ctype_digit((string) $id) || (int) $id < 1) throw new ValidationException([$field => ['The list is invalid.']]); $ids[] = (int) $id; }
-        $ids = array_values(array_unique($ids)); sort($ids); return $ids;
+        $ids = [];
+        foreach ($value as $id) {
+            if ((!is_int($id) && !is_string($id)) || !ctype_digit((string) $id) || (int) $id < 1) throw new ValidationException([$field => ['The list is invalid.']]);
+            $ids[] = (int) $id;
+        }
+        $ids = array_values(array_unique($ids));
+        sort($ids);
+        return $ids;
     }
     /** @return list<string> */
     private function uuidIds(mixed $value, string $field): array
     {
         if (!is_array($value) || !array_is_list($value)) throw new ValidationException([$field => ['The list is invalid.']]);
-        $ids = []; foreach ($value as $id) { $id = $this->nullableUuid($id, $field); if ($id !== null) $ids[] = $id; }
-        $ids = array_values(array_unique($ids)); sort($ids); return $ids;
+        $ids = [];
+        foreach ($value as $id) {
+            $id = $this->nullableUuid($id, $field);
+            if ($id !== null) $ids[] = $id;
+        }
+        $ids = array_values(array_unique($ids));
+        sort($ids);
+        return $ids;
     }
     /** @return list<array{title:string,position:int}> */
     private function checklist(mixed $value): array
     {
         if (!is_array($value) || !array_is_list($value) || count($value) > 100) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]);
-        $items = []; foreach ($value as $position => $item) { if (!is_array($item) || array_diff(array_keys($item), ['title', 'position']) !== []) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]); $items[] = ['title' => $this->text($item['title'] ?? null, 'checklist', 500, true), 'position' => isset($item['position']) ? $this->integer($item['position'], 'position', 0, PHP_INT_MAX) : $position]; }
+        $items = [];
+        foreach ($value as $position => $item) {
+            if (!is_array($item) || array_diff(array_keys($item), ['title', 'position']) !== []) throw new ValidationException(['checklist' => ['The Checklist is invalid.']]);
+            $items[] = ['title' => $this->text($item['title'] ?? null, 'checklist', 500, true), 'position' => isset($item['position']) ? $this->integer($item['position'], 'position', 0, PHP_INT_MAX) : $position];
+        }
         return $items;
     }
     /** @param array<string, mixed> $input @param list<string> $allowed */
-    private function keys(array $input, array $allowed): void { if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]); }
+    private function keys(array $input, array $allowed): void
+    {
+        if (array_diff(array_keys($input), $allowed) !== []) throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]);
+    }
 }

@@ -8,7 +8,9 @@ use PDO;
 
 final readonly class PendingDeletionRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function queue(?int $userId, string $path, string $timestamp): void
     {

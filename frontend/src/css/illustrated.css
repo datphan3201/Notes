@@ -50,7 +50,11 @@ body {
     z-index: -1;
     inset: 0;
     background:
-        linear-gradient(var(--canvas), color-mix(in srgb, var(--canvas) 89%, transparent)),
+        /* Theme imagery shows through 20 points more than the original 100%/89% veil. */
+        linear-gradient(
+            color-mix(in srgb, var(--canvas) 80%, transparent),
+            color-mix(in srgb, var(--canvas) 69%, transparent)
+        ),
         var(--theme-scene) bottom right/cover no-repeat;
     pointer-events: none;
 }
@@ -225,12 +229,15 @@ h1 {
     justify-items: center;
     gap: 4px;
 }
-.streak-days span {
+.streak-days > div > span {
     color: var(--muted);
     font-size: 1.0625rem;
 }
 .streak-days .is-checked {
     color: var(--success);
+}
+.streak-days .is-missed {
+    color: var(--danger);
 }
 .streak-days small {
     font-size: var(--font-size-caption);
@@ -435,6 +442,55 @@ h1 {
 }
 .habit-checkin-days button.is-checked {
     color: var(--success);
+}
+.habit-checkin-dot {
+    display: grid;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+}
+.habit-checkin-days button.is-checked .habit-checkin-dot {
+    color: var(--on-accent);
+    background: var(--success);
+    border-color: var(--success);
+}
+.habit-checkin-days button.is-missed {
+    color: var(--danger);
+}
+.habit-checkin-days button.is-missed .habit-checkin-dot {
+    background: var(--danger-soft);
+}
+.habit-checkin-days button.is-untracked .habit-checkin-dot {
+    border-style: dashed;
+    opacity: 0.6;
+}
+.habit-checkin-days button.is-rest {
+    color: var(--accent);
+}
+.habit-checkin-days button.is-rest .habit-checkin-dot {
+    font-size: 0.625rem;
+    font-weight: 700;
+    border-style: dashed;
+    background: var(--accent-soft);
+}
+.habit-checkin-days button.is-future:not(.is-rest) .habit-checkin-dot {
+    border-style: dotted;
+    opacity: 0.55;
+}
+.habit-checkin-days button.is-today small {
+    color: var(--text);
+    font-weight: 700;
+}
+.habit-checkin-days button.is-today + .is-future {
+    margin-left: 6px;
+    padding-left: 6px;
+    border-left: 1px dashed var(--border);
+}
+.habit-checkin-dot .check-mark {
+    width: 0.7rem;
+    height: 0.7rem;
 }
 .habit-checkin-days small {
     font-size: var(--font-size-caption);

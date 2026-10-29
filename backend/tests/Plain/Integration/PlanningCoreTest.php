@@ -398,16 +398,24 @@ final class PlanningCoreTest extends TestCase
         $task = $this->planning->create('task', $this->owner, ['name'=>'Estimate', 'estimated_minutes'=>45]);
         self::assertSame(45, $task['estimated_minutes']);
         foreach ([0,1441,'30',1.5] as $invalid) {
-            try { $this->planning->update('task', $this->owner, $task['id'], ['base_version'=>$task['version'], 'estimated_minutes'=>$invalid]); self::fail('Invalid estimate must be rejected.'); }
-            catch (ValidationException $error) { self::assertArrayHasKey('estimated_minutes', $error->errors); }
+            try {
+                $this->planning->update('task', $this->owner, $task['id'], ['base_version'=>$task['version'], 'estimated_minutes'=>$invalid]);
+                self::fail('Invalid estimate must be rejected.');
+            } catch (ValidationException $error) {
+                self::assertArrayHasKey('estimated_minutes', $error->errors);
+            }
         }
         $updated=$this->planning->update('task', $this->owner, $task['id'], ['base_version'=>$task['version'], 'estimated_minutes'=>null]);
         self::assertNull($updated['estimated_minutes']);
         self::assertSame(2,$updated['version']);
         self::assertSame('NotStarted',$updated['status']);
         self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM activities')->fetchColumn());
-        try { $this->planning->update('task',$this->owner,$task['id'],['base_version'=>1,'estimated_minutes'=>60]); self::fail('Stale estimate must conflict.'); }
-        catch (HttpException $error) { self::assertSame(409,$error->status); }
+        try {
+            $this->planning->update('task',$this->owner,$task['id'],['base_version'=>1,'estimated_minutes'=>60]);
+            self::fail('Stale estimate must conflict.');
+        } catch (HttpException $error) {
+            self::assertSame(409,$error->status);
+        }
     }
 
     private function goal(?string $areaId, ?string $parentId, string $name): array

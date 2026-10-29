@@ -19,5 +19,6 @@ final readonly class AttachmentRecord
         public ?string $deletedAt,
         public string $createdAt,
         public string $updatedAt,
-    ) {}
+    ) {
+    }
 }

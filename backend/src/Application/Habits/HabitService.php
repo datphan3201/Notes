@@ -6,6 +6,7 @@ namespace Planner\Application\Habits;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Planner\Domain\Habits\HabitStreak;
 use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
 use Planner\Infrastructure\Database\TransactionManager;
@@ -14,6 +15,7 @@ use Planner\Infrastructure\Persistence\Pdo\Habits\PdoHabitRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
+use Planner\Support\TimeZoneNames;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 
@@ -26,12 +28,16 @@ final readonly class HabitService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
-    ) {}
+        private HabitProgress $progress,
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array
     {
-        return array_map(fn (array $row): array => $this->serialize($row), $this->habits->list($userId));
+        $days = $this->habits->days($userId);
+
+        return array_map(fn (array $row): array => $this->serialize($row, $days), $this->habits->list($userId));
     }
 
     /** @return array<string, mixed> */
@@ -152,6 +158,46 @@ final readonly class HabitService
         });
     }
 
+    /**
+     * Plans a Rest Day. Only the next HabitStreak::REST_WINDOW_DAYS dates in the
+     * Habit's time zone are open; today, the past and later dates are not.
+     *
+     * @return array<string, mixed> the updated Habit
+     */
+    public function rest(int $userId, string $habitId, string $date): array
+    {
+        return $this->transactions->run(function () use ($userId, $habitId, $date): array {
+            $this->planning->lockOwner($userId);
+            $habit = $this->owned($userId, $habitId, true);
+            $this->assertCalendarDate($date);
+            $today = $this->progress->today($habit);
+            if ($date <= $today || $date > HabitStreak::shift($today, HabitStreak::REST_WINDOW_DAYS)) {
+                throw new ValidationException(['date' => ['Choose one of the next '.HabitStreak::REST_WINDOW_DAYS.' days for a rest day.']]);
+            }
+            if ($this->habits->restDay($userId, $habitId, $date, true) === null) {
+                $this->habits->insertRestDay($this->uuid->generate(), $userId, $habitId, $date, $this->now());
+            }
+
+            return $this->serialize($habit);
+        });
+    }
+
+    /** Cancels a future Rest Day; today's and past Rest Days are kept. @return array<string, mixed> */
+    public function cancelRest(int $userId, string $habitId, string $date): array
+    {
+        return $this->transactions->run(function () use ($userId, $habitId, $date): array {
+            $this->planning->lockOwner($userId);
+            $habit = $this->owned($userId, $habitId, true);
+            $this->assertCalendarDate($date);
+            if ($date <= $this->progress->today($habit)) {
+                throw new ValidationException(['date' => ['Only future rest days can be cancelled.']]);
+            }
+            $this->habits->deleteRestDay($userId, $habitId, $date);
+
+            return $this->serialize($habit);
+        });
+    }
+
     /** @return list<array<string, mixed>> */
     public function history(int $userId, string $habitId): array
     {
@@ -251,9 +297,23 @@ final readonly class HabitService
             ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
     }
 
-    /** @param array<string, mixed> $row @return array<string, mixed> */
-    private function serialize(array $row): array
+    /**
+     * @param array<string, mixed> $row
+     * @param array{done: array<string, array<string, true>>, rest: array<string, array<string, true>>}|null $days
+     * @return array<string, mixed>
+     */
+    private function serialize(array $row, ?array $days = null): array
     {
+        if (isset($row['id']) && $row['archived_at'] === null) {
+            $progress = $this->progress->describe((int) $row['user_id'], $row, $days);
+            $row += [
+                'streak' => $progress['streak'],
+                'rest_days' => $progress['rest_days'],
+                'rest_window' => $progress['rest_window'],
+                'tracking_since' => $progress['since'],
+                'today' => $progress['today'],
+            ];
+        }
         foreach (['id', 'primary_goal_id'] as $field) {
             if (array_key_exists($field, $row) && $row[$field] !== null) {
                 $row[$field] = (string) $row[$field];
@@ -358,7 +418,8 @@ final readonly class HabitService
         try {
             new DateTimeZone($value);
         } catch (\Exception) {
-            throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
+            return TimeZoneNames::canonical($value)
+                ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
         }
 
         return $value;

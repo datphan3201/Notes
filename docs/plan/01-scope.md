@@ -23,16 +23,16 @@ Maintain an understandable personal Notes, goal and task management system on th
 
 ## Explicitly excluded
 
-- Teams, workspaces, sharing, comments, assignees, roles, and live collaboration.
+- Real-time (WebSocket) collaboration and comments. Roles, sharing, Teamwork and notifications are governed by [17-full-feedback.md](17-full-feedback.md).
 - Notion-style databases, arbitrary custom properties, formulas, and generic graph storage.
 - Task dependency graphs.
 - Core numeric metrics or productivity scores.
-- Advanced notification infrastructure, gamification, mobile apps, microservices.
+- Gamification, mobile apps, microservices.
 - Monthly recurring Tasks, time entries, timers, email verification/reset, and offline/PWA functionality in this delivery.
 
 ## Product rules
 
-1. Every object belongs to one user.
+1. Every object belongs to one user; shared Notes and Teamwork goals add explicit, revocable member access (see 17-full-feedback.md).
 2. A Goal has exactly one primary location: Area or parent Goal.
 3. A Milestone belongs to one Goal. A Task has at most one Goal or Milestone parent.
 4. Contributions add meaning without moving or duplicating an object.

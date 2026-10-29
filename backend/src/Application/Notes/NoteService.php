@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Planner\Application\Notes;
 
 use PDOException;
+use Planner\Domain\Account\UserRecord;
 use Planner\Domain\Notes\NoteRecord;
 use Planner\Domain\Notes\NoteSnapshot;
 use Planner\Http\HttpException;
@@ -25,7 +26,9 @@ final readonly class NoteService
         private TransactionManager $transactions,
         private NoteSerializer $serializer,
         private Clock $clock,
-    ) {}
+        private ?NoteShareService $shares = null,
+    ) {
+    }
 
     /**
      * @param  array{id:string,title:string,content:string,color?:string}  $input
@@ -110,7 +113,7 @@ final readonly class NoteService
         $desired = NoteSnapshot::fromInput($input);
 
         return $this->transactions->run(function () use ($userId, $noteId, $input, $desired): NoteRecord {
-            $this->lockOwner($userId);
+            $owner = $this->lockOwner($userId);
             $current = $this->notes->findOwned($userId, $noteId, true, true);
 
             if ($current === null) {
@@ -145,7 +148,7 @@ final readonly class NoteService
                 ? ($current->pinnedAt ?? $timestamp)
                 : null;
 
-            return $this->notes->updateSnapshot(
+            $updated = $this->notes->updateSnapshot(
                 $userId,
                 $noteId,
                 $desired['title'],
@@ -156,6 +159,37 @@ final readonly class NoteService
                 $timestamp,
                 $desired['label_ids'],
             );
+
+            if ($current->title !== $updated->title || $current->content !== $updated->content) {
+                $this->shares?->noteChangedByOwner($updated, $owner->displayName);
+            }
+
+            return $updated;
+        });
+    }
+
+    /**
+     * Uses one of the Note's own active images as its background. This is a
+     * display setting outside the versioned autosave snapshot, so it never
+     * creates an autosave conflict.
+     */
+    public function setBackground(int $userId, string $noteId, ?string $attachmentId): NoteRecord
+    {
+        return $this->transactions->run(function () use ($userId, $noteId, $attachmentId): NoteRecord {
+            $this->lockOwner($userId);
+            $note = $this->notes->findOwned($userId, $noteId, false, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+
+            if ($attachmentId !== null) {
+                $image = array_filter($note->attachments, static fn (array $attachment): bool => $attachment['id'] === $attachmentId && $attachment['kind'] === 'image');
+                if ($image === []) {
+                    throw new ValidationException(['attachment_id' => ['Choose an image attached to this note.']]);
+                }
+            }
+
+            $this->notes->setBackground($userId, $noteId, $attachmentId);
+
+            return $this->notes->findOwned($userId, $noteId) ?? throw new \RuntimeException('Note disappeared.');
         });
     }
 
@@ -192,9 +226,9 @@ final readonly class NoteService
         });
     }
 
-    private function lockOwner(int $userId): void
+    private function lockOwner(int $userId): UserRecord
     {
-        $this->accounts->findById($userId, true)
+        return $this->accounts->findById($userId, true)
             ?? throw new \RuntimeException('Authenticated user disappeared.');
     }
 

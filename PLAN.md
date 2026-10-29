@@ -31,12 +31,13 @@ Do not infer that a planned feature exists. `docs/implementation-status.md` is t
 - Frontend content that is not used for comparison belongs in separate sections or components selected through navigation; do not combine unrelated functions into one scrolling canvas.
 - Minimize unnecessary scrolling through progressive disclosure: show the current task's essential content first, open short actions in a dialog/drawer, and navigate to focused components or pages for longer work. Scroll only when the selected content itself requires it; preserve readable text, drafts, keyboard access, and context on return.
 - Provide a complete illustrated walkthrough of existing browser features, with replaceable placeholder images until the UI is finalized. Show one step at a time, allow topic selection, and expose Help beside Appearance. Automatically introduce it on the first authenticated visit for an account that has not dismissed it; Skip, Close, Escape, and Finish dismiss it account-wide. Preserve current work and prioritize existing dialogs/recovery.
-- Apply the approved illustrated interface reference across the app. Supply Mountain journey, Forest, Ocean, Pisces, and Starry sky themes with separate Light/Dark and account-persisted background/illustration/quote visibility. Quotes may be overridden with personal text; theme imagery is bundled and never uploaded by users.
+- Apply the approved illustrated interface reference across the app. Supply Mountain journey, Forest, Ocean, Pisces, and Starry sky themes with separate Light/Dark and account-persisted background/illustration/quote visibility. Quotes may be overridden with personal text; preset theme imagery stays bundled; the approved feedback extension adds private account background uploads and RGB colors.
 - Add optional Task estimated minutes and a focused explicit Task edit flow. Replace Start focus with an edit icon (20%) and completion action (80%), preserving completion acknowledgements. Tasks Today/Next/This week/Backlog are derived filters, not new statuses or containers. Habit streak counts consecutive local dates with at least one check-in. All summary percentages and changes must state their actual denominator and remain factual.
 - Notes and Task working notes support a Check box action for inline checkable lines. Preserve plain-text storage, literal content, existing save/recovery/conflict behavior and keyboard editing. The existing Task completion Checklist appears inside the working-note component, keeps its own owned/versioned mutations and completion acknowledgement, and is distinguished from personal checkable note lines.
-- Recurring Tasks support daily and weekly schedules in v1. Monthly recurrence and timers are deferred.
-- AI may read selected context, suggest, and create after explicit approval. It cannot silently modify/delete data or bypass normal use cases.
-- Do not add teams, collaboration, shared workspaces, arbitrary custom fields, Task dependency graphs, notification infrastructure, or mobile/microservice architecture.
+- Recurring Tasks support daily, weekly, monthly and yearly schedules after the approved feedback extension; timers and completion-relative schedules remain deferred.
+- AI may read selected context, answer questions about the user's Planner, suggest, and create after explicit approval. It cannot silently modify/delete data or bypass normal use cases.
+- The 2026-10-27 full feedback extension ([contract](docs/plan/17-full-feedback.md)) supersedes earlier exclusions for: user/admin roles, note reports and account locking, owner-controlled Note sharing with view/edit permissions, in-app notifications, two-factor authentication, configurable Task history with retention, and Teamwork goals with members, assigned team tasks and team chat. All of these remain same-origin, polling-based (no WebSockets), owner/member scoped and auditable.
+- Do not add arbitrary custom fields, Task dependency graphs, or mobile/microservice architecture.
 
 ## Read order for implementation
 
@@ -90,3 +91,24 @@ Dependent work does not start until the prior gate passes. Work inside a phase m
 ## Handoff
 
 Follow [repository instructions](AGENTS.md), the relevant contract and phase specification. Inspect current implementation and tests, preserve unrelated work, and record current checks and limitations before handing off.
+
+## Full feedback extension — 2026-10-27
+
+The user directed that every item of the feedback PDF be implemented and that any
+conflicting earlier rule be changed. [docs/plan/17-full-feedback.md](docs/plan/17-full-feedback.md)
+is the contract for that work and takes precedence over the narrower 2026-10-19
+approval below where they differ (two-factor authentication, sharing, admin roles,
+Teamwork, history retention and the Notes/Habit/Activity/AI interface changes).
+
+## Approved feedback maintenance — 2026-10-19
+
+The user approved sections 1–3 of the feedback analysis: Settings/account,
+Tasks/Goals capture and management, and Task history. This does not approve
+Notes/Habit/Activity redesign, sharing, admin roles, or Teamwork. Preserve the
+illustrated style, existing owned/versioned mutation boundaries and autosave.
+Password recovery and visibility, Settings grouping, account biography,
+appearance personalization, security options, Task dates/priority and derived
+history are approved extensions. History initially retains records; permanent
+retention cleanup requires an explicit retention rule. The user chose retained history with no automatic deletion, postponed two-factor
+authentication, and approved English/Vietnamese interface localization. Production email delivery requires
+configured mail infrastructure. Old migration files remain immutable.

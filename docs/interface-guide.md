@@ -4,7 +4,7 @@ Start the application using [the hosting and startup runbook](hosting.md), then 
 
 ## Find your way around
 
-The sidebar contains Dashboard, Goals, Tasks, Habits, Notes, Reviews, and AI assistant. Your name in the sidebar footer opens Profile. Account settings then show Profile, Appearance, and Password; the top-right Appearance icon also opens theme settings. On a phone or tablet, use the menu button in the top bar. Escape closes the menu, and keyboard focus returns to the button. Detail pages keep the relevant sidebar section selected.
+The sidebar contains Dashboard, Goals, Tasks, Habits, Notes, and Reviews; the round AI button in the corner opens the AI assistant chat. Your name in the sidebar footer opens Profile. Account settings then show Profile, Appearance, and Password; the top-right Appearance icon also opens theme settings. On a phone or tablet, use the menu button in the top bar. Escape closes the menu, and keyboard focus returns to the button. Detail pages keep the relevant sidebar section selected.
 
 Use Appearance to switch between light and dark themes. This also controls note text size, the default color for new notes, and grid/list layout. The appearance icon in the top bar opens the same settings page.
 
@@ -56,7 +56,7 @@ The five colors mean 0, 1, 2–3, 4–6, or 7+ unreversed completions. Tasks, ch
 
 **Reviews** captures facts for a daily, weekly, or monthly period. Use **New review**, then open a review in its focused editor. Select a reflection section, expand facts when needed, and use **Back to reviews** to return without losing drafts. Save reflections before finalizing. Actions, completion, wins, and daily bars use the selected saved snapshot. Completion counts finite Tasks due in that period plus selected Tasks for Weekly Reviews, at fact capture. Old snapshots without the denominator show — until explicit **Refresh facts**. Arrows open existing reviews of the same kind, preserving drafts. Facts refresh preserves unsaved text; finalized reviews remain read-only until explicit Reopen.
 
-**AI assistant** sends only the context you select after consent. Generated proposals remain suggestions until you review and apply them. Availability depends on the server's AI configuration; see the [AI contract](plan/13-ai-contract.md).
+**AI assistant** is a chat opened from the round AI button. It reads only a summary of your planning data and never changes it. Availability depends on the server's AI configuration; see the [AI contract](plan/13-ai-contract.md).
 
 ## When a request fails
 

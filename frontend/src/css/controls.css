@@ -1,0 +1,83 @@
+/*
+ * One look for every text field, date/time picker, number box, and select.
+ * :where() keeps the specificity at zero, so purpose-built controls
+ * (the Notes search pill, the note editor, colour swatches) still win.
+ */
+:where(
+    input:not(
+        [type='checkbox'],
+        [type='radio'],
+        [type='color'],
+        [type='file'],
+        [type='range'],
+        [type='hidden'],
+        [type='button'],
+        [type='submit'],
+        [type='reset'],
+        [type='image']
+    ),
+    select,
+    textarea
+) {
+    max-width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--control-border, var(--border));
+    border-radius: var(--radius-control);
+}
+:where(textarea) {
+    resize: vertical;
+}
+:where(select) {
+    cursor: pointer;
+}
+:where(input, textarea)::placeholder {
+    color: var(--muted);
+    opacity: 0.78;
+}
+:where(input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[readonly]) {
+    background: var(--surface-soft);
+    cursor: not-allowed;
+}
+:where(
+    input:not(
+        [type='checkbox'],
+        [type='radio'],
+        [type='color'],
+        [type='file'],
+        [type='range'],
+        [type='hidden'],
+        [type='button'],
+        [type='submit'],
+        [type='reset'],
+        [type='image']
+    ),
+    select,
+    textarea
+):focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+:where(
+    input[type='date'],
+    input[type='datetime-local'],
+    input[type='time'],
+    input[type='month']
+)::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+}
+[data-theme='dark']
+    :where(
+        input[type='date'],
+        input[type='datetime-local'],
+        input[type='time'],
+        input[type='month']
+    )::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+:where(input[type='number']) {
+    min-width: 5rem;
+}

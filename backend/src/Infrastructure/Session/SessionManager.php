@@ -14,7 +14,8 @@ final class SessionManager
         private readonly PdoSessionHandler $handler,
         private readonly bool $secure,
         private readonly int $lifetimeMinutes,
-    ) {}
+    ) {
+    }
 
     public function start(Request $request): void
     {
@@ -107,6 +108,47 @@ final class SessionManager
             'samesite' => 'Lax',
         ]);
         $this->started = false;
+    }
+
+    /**
+     * A password-verified login awaiting its second factor. It never sets
+     * user_id, so the session stays unauthenticated until the code is checked.
+     */
+    public function beginTwoFactor(int $userId, int $authVersion): void
+    {
+        session_regenerate_id(true);
+        $_SESSION['two_factor'] = ['user_id' => $userId, 'auth_version' => $authVersion, 'started' => time()];
+    }
+
+    /** @return array{user_id:int,auth_version:int}|null pending for at most 10 minutes */
+    public function pendingTwoFactor(): ?array
+    {
+        $pending = $_SESSION['two_factor'] ?? null;
+        if (! is_array($pending) || ! is_int($pending['user_id'] ?? null) || time() - (int) ($pending['started'] ?? 0) > 600) {
+            return null;
+        }
+
+        return ['user_id' => $pending['user_id'], 'auth_version' => (int) $pending['auth_version']];
+    }
+
+    public function clearTwoFactor(): void
+    {
+        unset($_SESSION['two_factor']);
+    }
+
+    public function put(string $key, mixed $value): void
+    {
+        $_SESSION[$key] = $value;
+    }
+
+    public function get(string $key, mixed $default = null): mixed
+    {
+        return $_SESSION[$key] ?? $default;
+    }
+
+    public function forget(string $key): void
+    {
+        unset($_SESSION[$key]);
     }
 
     public function flash(string $key, mixed $value): void

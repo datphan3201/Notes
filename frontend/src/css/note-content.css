@@ -63,7 +63,6 @@
     height: 17px;
     margin: 0;
     vertical-align: middle;
-    accent-color: var(--accent);
     cursor: pointer;
 }
 .note-content-line.is-checked [data-note-line-text] {

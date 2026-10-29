@@ -30,7 +30,12 @@ ownership, and explicit completion contracts remain authoritative.
 
 Dashboard adds `week_summary` (selected Task denominator/completed/percentage,
 previous-week percentage or null, percentage-point change or null, daily factual
-activity counts), and `habit_streak` (days, through_date, seven-day check-in flags).
+activity counts), and `habit_streak` (days, through_date, seven `recent_days` each
+with `date`, `state` checked/missed/rest/open/untracked, `done` and `total` daily
+Habits, and `tracking_since` account-local date or null when no daily Habit
+exists). Dashboard `habits` lists every active Habit (`id`, `name`, `period`,
+`target_frequency`, `primary_goal_id`, current-period `completed_days`,
+`done_today`, `rest_today`, and its own `streak`).
 Dashboard Today also recognizes existing Task start dates, recurring occurrence dates, and schedules overlapping the account-local day; scheduled timestamps serialize in UTC ISO format. These read-only facts do not create a scoring system. Review snapshots may add
 `task_summary` and `previous_activity_count`; existing stored snapshots without
 these keys remain valid and display unavailable metrics until explicit Refresh.
@@ -52,14 +57,14 @@ It does not accept a user identifier or change appearance preferences.
 | Checklist | `GET/POST /tasks/{id}/checklist`, `PATCH/DELETE /tasks/{id}/checklist/{id}`, `POST /tasks/{id}/checklist/reorder` |
 | Contributions | `GET/POST /{sourceType}/{id}/contributions`, `DELETE /{sourceType}/{id}/contributions/{goalId}` for Goal/Milestone/Task/Habit |
 | Tags | CRUD `/tags`, `POST /tags/{id}/move`; entity PATCH accepts complete `tag_ids` snapshot |
-| Habits | CRUD plus `GET /habits/{id}/history`, `PUT/DELETE /habits/{id}/check-ins/{date}` |
+| Habits | CRUD plus `GET /habits/{id}/history`, `PUT/DELETE /habits/{id}/check-ins/{date}`, `PUT/DELETE /habits/{id}/rest-days/{date}`; active Habit responses add `streak` (`count`, `unit` days/weeks, `through_date`), `rest_days`, `rest_window` (`from`, `to`), `tracking_since` and the Habit-local `today` |
 | Task series | `GET/POST /task-series`, `GET/PATCH /task-series/{id}`, `POST /task-series/{id}/pause|resume|end` |
-| Reviews | `GET/POST /reviews`, `GET/PATCH /reviews/{id}`, `POST /reviews/{id}/refresh|finalize|reopen` |
+| Reviews | `GET/POST /reviews`, `GET/PATCH /reviews/{id}`, `DELETE /reviews/{id}` (base_version; permanent), `POST /reviews/{id}/refresh|finalize|reopen` |
 | Dashboard | `GET /dashboard?month=YYYY-MM` |
 | Weekly selection | GET/POST Task and Milestone selection collections; DELETE item; POST reorder |
 | AI | `POST /ai/actions`, `GET /ai/actions/{id}`, `POST /ai/actions/{id}/apply|reject` |
 
-HTML pages are `/`, `/dashboard`, `/goals`, `/goals/{id}`, `/tasks`, `/habits`, `/reviews`, `/ai`, auth, and settings. `/` remains Notes for compatibility.
+HTML pages are `/`, `/dashboard`, `/goals`, `/goals/{id}`, `/tasks`, `/habits`, `/reviews`, `/teamwork`, auth, and settings. There is no `/ai` page: the floating AI chat is the only AI entry point. `/` remains Notes for compatibility.
 
 `GET /goals/{id}/roadmap` returns `goal`, `child_goals`, `milestones` (each
 including `tasks`, `recurring_tasks`, `prerequisites`, `progress`, and
@@ -124,3 +129,51 @@ Create Task series:
 ```
 
 All field bounds, state transitions, and relationship rules are defined in documents 10–13 and must be converted into endpoint tests before controller implementation.
+
+## Approved feedback account and Task extension — 2026-10-19
+
+- GET/POST /forgot-password and /reset-password provide CSRF-protected recovery.
+- Guest pages accept `?lang=en|vi` (kept for the session; otherwise
+  Accept-Language decides). Registration stores that language, names the
+  starting Areas in it, sends a verification link, and redirects to
+  /dashboard; sign-in and two-step verification also land on /dashboard.
+- GET /verify-email?token= verifies the address from the emailed link (24
+  hours). GET /api/v1/email returns {email, verified, pending_email, delivered};
+  POST /api/v1/email/verification resends the link; POST /api/v1/email/change
+  {current_password, email} returns 202 and mails a one-hour link to the new
+  address; GET /confirm-email?token= applies the change, marks it verified and
+  notifies the previous address. Invalid or expired links render 422.
+- POST /api/v1/reminders/{id}/read dismisses one due reminder (personal or
+  assigned team task) from the bell; POST /api/v1/notifications/read also
+  dismisses every due reminder. A new reminder time or assignee shows it again.
+- DELETE /goals/{id} and /milestones/{id} accept `include_contents: true` to
+  archive everything beneath them (sub-goals, milestones, tasks, repeating
+  series, prerequisite links) in one transaction; without it the previous
+  empty-container rule applies.
+- Task series accept `reminder_time` (HH:MM); each generated occurrence gets a
+  reminder at that local time. Listing Tasks or reading the Dashboard tops up
+  series whose generated horizon is under 28 days.
+- Team goal members include the member's `biography`.
+- Profile PATCH additionally accepts optional plain-text biography (0–2,000 code
+  points); omission preserves the current biography.
+- Preferences PATCH additionally accepts background_color (empty or #RRGGBB),
+  locale (en/vi), notifications_enabled and email_notifications (booleans).
+  Existing preference fields remain accepted; background_url is read-only.
+  background_id (empty string or an owned upload ID) selects an uploaded image;
+  empty shows the preset visual_theme. Either choice clears background_color.
+  An ID the account does not own returns 404.
+- POST /api/v1/preferences/background accepts one multipart background image,
+  adds it to the account's private list (at most 12) and selects it, returning
+  201 with {id, url, created_at}. GET /api/v1/preferences/backgrounds lists the
+  account's uploads oldest first. DELETE /api/v1/preferences/backgrounds/{id}
+  removes one upload (404 when not owned); when it was selected, the preset theme
+  shows again. DELETE /api/v1/preferences/background removes the selected upload.
+  Mutations require authentication and CSRF. GET /files/backgrounds/{id} and
+  GET /files/background (selected upload) serve only the authenticated
+  account's images, or 404; no owner ID is accepted.
+- GET /api/v1/reminders lists at most 100 due unsent, active non-Done owned Tasks
+  when notifications are enabled.
+- Tasks accept nullable reminder_at as an explicit UTC timestamp; editing it
+  resets delivery metadata. Delivery metadata is never client-writable.
+- TaskSeries additionally supports monthly/yearly; old daily/weekly inputs retain
+  their semantics. History/Completed are derived browser filters, not statuses.

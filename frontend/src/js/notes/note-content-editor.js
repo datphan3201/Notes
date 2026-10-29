@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { bodyText } from '../lib/normalization.js';
 import {
     addNoteCheckbox,
@@ -7,6 +8,7 @@ import {
     replaceNoteText,
     toggleNoteCheckbox,
 } from '../lib/note-checkbox-text.js';
+import { setCheckedLabel } from '../lib/check-mark.js';
 
 // Keep the textarea as the canonical form/snapshot value. The DOM is only a
 // safe text-and-checkbox projection, shared by Notes autosave and Task Note Save.
@@ -29,8 +31,8 @@ export class NoteContentEditor {
         this.addButton.type = 'button';
         this.addButton.className = 'button button-quiet';
         this.addButton.dataset.addNoteCheckbox = '';
-        this.addButton.textContent = '☑ Check box';
-        this.addButton.title = 'Turn this line into a check box';
+        setCheckedLabel(this.addButton, t('Check box'));
+        this.addButton.title = t('Turn this line into a check box');
         toolbar.append(this.addButton);
 
         this.root = document.createElement('div');
@@ -45,7 +47,7 @@ export class NoteContentEditor {
             label.id ||= `${textarea.id}-label`;
             this.root.setAttribute('aria-labelledby', label.id);
             label.addEventListener('click', () => this.focus());
-        } else this.root.setAttribute('aria-label', 'Note content');
+        } else this.root.setAttribute('aria-label', t('Note content'));
         this.frame.append(toolbar, this.root);
         textarea.before(this.frame);
         textarea.hidden = true;
@@ -313,7 +315,7 @@ export class NoteContentEditor {
                 input.dataset.noteLineCheck = String(index);
                 input.checked = line.checked;
                 input.disabled = this.readOnly || this.composing;
-                input.setAttribute('aria-label', line.text || 'Empty note check box');
+                input.setAttribute('aria-label', line.text || t('Empty note check box'));
                 row.classList.toggle('is-checked', line.checked);
             }
             return row;

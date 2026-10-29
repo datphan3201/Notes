@@ -10,7 +10,9 @@ use Planner\Domain\Files\InspectedUpload;
 
 final readonly class AttachmentRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<AttachmentRecord> */
     public function listForActiveNote(int $userId, string $noteId): array
@@ -133,6 +135,10 @@ SET original_name = '', path = NULL, mime_type = '', kind = 'file', size_bytes =
 WHERE user_id = :user_id AND id = :id AND deleted_at IS NULL
 SQL);
         $statement->execute(['deleted_at' => $timestamp, 'updated_at' => $timestamp, 'user_id' => $userId, 'id' => $attachmentId]);
+        // A deleted image can no longer serve as its Note's background.
+        // (Owner-scoped: the same user owns the attachment and the Note.)
+        $this->pdo->prepare('UPDATE notes SET background_attachment_id = NULL WHERE user_id = :user_id AND background_attachment_id = :id')
+            ->execute(['user_id' => $userId, 'id' => $attachmentId]);
     }
 
     /** @return list<string> */

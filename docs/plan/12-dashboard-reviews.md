@@ -58,13 +58,26 @@ completion facts. Empty denominators display no selected work rather than a
 fabricated success rate. Historical comparisons describe the currently retained
 selections, not an immutable historical progress snapshot.
 
-Habit streak uses distinct `habit_check_ins.local_date` across the owner (the
-check-in's frozen calendar date, including retained historical archived Habits).
-Multiple Habits on one date count once. The latest contiguous run is current if
-it ends today or yesterday in the account timezone; otherwise zero. Yesterday's
-run is labeled through yesterday, allowing today's practice before day end.
-Compute runs with date islands in SQL rather than loading a full history in the
-browser. Seven-day dots mean whether any check-in exists on each displayed date.
+Rest Days: on each Habit-local day a Rest Day may be planned only for the
+next 3 dates (today 1 opens 2, 3 and 4; the window slides one day each day).
+Today, past dates and later dates are rejected with 422. A future Rest Day can
+be cancelled and re-planned inside the current window; today's and past ones
+are kept. A Rest Day never counts as a completion and never lengthens a streak;
+it only stops that day from ending one.
+
+Per-Habit streak, in the Habit's own timezone from `tracking_since` (creation
+date or an earlier back-dated check-in): daily Habits count consecutive checked
+days; weekly Habits count consecutive Monday weeks whose check-ins met the
+target, each Rest Day in that week lowering the target by one. An unfinished
+today or current week never ends a run.
+
+Dashboard streak combines active daily Habits: a day counts only when every
+daily Habit tracked that day was checked or resting and at least one was
+checked. Any missed Habit makes the day missed and ends the run; an all-rest day
+is neutral; today stays open until complete. `recent_days` gives each of the
+last seven days' state with done/total counts. Deleting (archiving) a Habit
+removes it from all streak calculations. Per-Habit dots on the Habits page show
+the last seven days plus the three-day Rest Day window.
 
 New/explicitly refreshed Review snapshots add a Task completion denominator:
 distinct active finite Tasks due in that Review period, plus active Tasks selected

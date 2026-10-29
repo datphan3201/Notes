@@ -23,18 +23,31 @@ final class PlanningHttpTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION=[]; $_COOKIE=[];
+        session_id('');
+        $_SESSION=[];
+        $_COOKIE=[];
         $this->runtime=require dirname(__DIR__,3).'/bootstrap/http.php';
-        $this->application=$this->runtime['application']; $this->session=$this->runtime['session']; $this->pdo=$this->runtime['pdo'];
+        $this->application=$this->runtime['application'];
+        $this->session=$this->runtime['session'];
+        $this->pdo=$this->runtime['pdo'];
         self::assertSame('goals_test',$this->pdo->query('SELECT DATABASE()')->fetchColumn());
-        $this->wipe(); (new MigrationRunner($this->pdo,dirname(__DIR__,3).'/database/plain-migrations','goals_test'))->migrate();
+        $this->wipe();
+        (new MigrationRunner($this->pdo,dirname(__DIR__,3).'/database/plain-migrations','goals_test'))->migrate();
     }
-    protected function tearDown(): void { $this->session->close(); session_id(''); $_SESSION=[]; $_COOKIE=[]; }
+    protected function tearDown(): void
+    {
+        $this->session->close();
+        session_id('');
+        $_SESSION=[];
+        $_COOKIE=[];
+    }
 
     public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts(): void
     {
         [$cookie,$csrf]=$this->register();
-        foreach(['/goals','/tasks','/habits','/dashboard','/reviews','/ai'] as $page) self::assertSame(200,$this->request('GET',$page,cookie:$cookie)->status);
+        foreach(['/goals','/tasks','/habits','/dashboard','/reviews'] as $page) self::assertSame(200,$this->request('GET',$page,cookie:$cookie)->status);
+        // Proposals have no page any more; the floating chat is the only AI entry point.
+        self::assertSame(404,$this->request('GET','/ai',cookie:$cookie)->status);
         self::assertSame(419,$this->request('POST','/api/v1/goals',['name'=>'No CSRF'],$cookie,json:true)->status);
         $areas=$this->json($this->request('GET','/api/v1/areas',cookie:$cookie))['data'];
         $goal=$this->json($this->request('POST','/api/v1/goals',['area_id'=>$areas[0]['id'],'parent_goal_id'=>null,'name'=>'Backend','completion_criteria'=>'Can ship'], $cookie,$csrf,true))['data'];
@@ -90,17 +103,41 @@ final class PlanningHttpTest extends TestCase
 
     private function register(): array
     {
-        $page=$this->request('GET','/register'); preg_match('/name="_token" value="([a-f0-9]{64})"/',$page->body,$match); $cookie=$this->session->id();
+        $page=$this->request('GET','/register');
+        preg_match('/name="_token" value="([a-f0-9]{64})"/',$page->body,$match);
+        $cookie=$this->session->id();
         $this->request('POST','/register',['_token'=>$match[1],'display_name'=>'Planner','email'=>'planner-http@example.test','password'=>'correct horse battery staple','password_confirmation'=>'correct horse battery staple'],$cookie);
-        $cookie=$this->session->id(); $response=$this->request('GET','/api/v1/session',cookie:$cookie);
+        $cookie=$this->session->id();
+        $response=$this->request('GET','/api/v1/session',cookie:$cookie);
         return [$cookie,$this->json($response)['data']['csrf_token']];
     }
     private function request(string $method,string $path,array $input=[],?string $cookie=null,?string $csrf=null,bool $json=false): Response
     {
-        $headers=['accept'=>str_starts_with($path,'/api/')?'application/json':'text/html']; $form=$input; $body='';
-        if($json){$headers['content-type']='application/json';$body=json_encode($input,JSON_THROW_ON_ERROR);$form=[];} if($csrf!==null)$headers['x-csrf-token']=$csrf;
+        $headers=['accept'=>str_starts_with($path,'/api/')?'application/json':'text/html'];
+        $form=$input;
+        $body='';
+        if($json) {
+            $headers['content-type']='application/json';
+            $body=json_encode($input,JSON_THROW_ON_ERROR);
+            $form=[];
+        } if($csrf!==null)$headers['x-csrf-token']=$csrf;
         return $this->application->handle(new Request($method,$path,headers:$headers,cookies:$cookie===null?[]:['planner_session'=>$cookie],form:$form,server:['REMOTE_ADDR'=>'198.51.100.77'],rawBody:$body));
     }
-    private function json(Response $response): array { return json_decode($response->body,true,512,JSON_THROW_ON_ERROR); }
-    private function wipe(): void { $tables=$this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema='goals_test' AND table_type='BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);$this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');try{foreach($tables as $table){if(!is_string($table)||preg_match('/^[a-z0-9_]+$/',$table)!==1)throw new RuntimeException('Unsafe table.');$this->pdo->exec("DROP TABLE `$table`");}}finally{$this->pdo->exec('SET FOREIGN_KEY_CHECKS=1');} }
+    private function json(Response $response): array
+    {
+        return json_decode($response->body,true,512,JSON_THROW_ON_ERROR);
+    }
+    private function wipe(): void
+    {
+        $tables=$this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema='goals_test' AND table_type='BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);
+        $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+        try {
+            foreach($tables as $table) {
+                if(!is_string($table)||preg_match('/^[a-z0-9_]+$/',$table)!==1)throw new RuntimeException('Unsafe table.');
+                $this->pdo->exec("DROP TABLE `$table`");
+            }
+        } finally {
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
 }

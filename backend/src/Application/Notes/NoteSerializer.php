@@ -10,7 +10,9 @@ use Planner\Support\Timestamp;
 
 final readonly class NoteSerializer
 {
-    public function __construct(private LabelSerializer $labels) {}
+    public function __construct(private LabelSerializer $labels)
+    {
+    }
 
     /** @return array<string, mixed> */
     public function full(NoteRecord $note): array
@@ -43,6 +45,8 @@ final readonly class NoteSerializer
             'labels' => array_map($this->labels->one(...), $note->labels),
             'attachments' => $attachments,
             'attachment_count' => count($attachments),
+            'background_attachment_id' => $note->backgroundAttachmentId,
+            'background_url' => $this->backgroundUrl($note),
             'created_at' => Timestamp::api($note->createdAt),
             'updated_at' => Timestamp::api($note->updatedAt),
         ];
@@ -61,8 +65,16 @@ final readonly class NoteSerializer
             'version' => $note->version,
             'labels' => array_map($this->labels->one(...), $note->labels),
             'attachment_count' => $note->attachmentCount,
+            'background_url' => $this->backgroundUrl($note),
             'created_at' => Timestamp::api($note->createdAt),
             'updated_at' => Timestamp::api($note->updatedAt),
         ];
+    }
+
+    private function backgroundUrl(NoteRecord $note): ?string
+    {
+        return $note->backgroundAttachmentId === null
+            ? null
+            : '/files/attachments/'.rawurlencode($note->backgroundAttachmentId).'/preview';
     }
 }

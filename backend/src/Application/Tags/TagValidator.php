@@ -10,7 +10,9 @@ use Planner\Support\TextNormalizer;
 
 final readonly class TagValidator
 {
-    public function __construct(private InputValidator $input) {}
+    public function __construct(private InputValidator $input)
+    {
+    }
 
     /** @param array<string, mixed> $input */
     public function create(array $input): string

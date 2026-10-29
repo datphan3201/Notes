@@ -2,11 +2,11 @@
 
 ## Deferred extensions
 
-- Monthly or completion-relative recurring Tasks.
+- Completion-relative recurring Tasks. Monthly/yearly schedules are approved in the 2026-10-19 feedback extension.
 - Time estimates, actual time entries, timer UI, and time analytics.
 - Habit streaks and richer trend analytics.
-- Deadline/Habit/Milestone reminders and delivery channels.
-- Email verification and password recovery.
+- Habit/Milestone reminders and general delivery infrastructure. One-time Task reminders are approved.
+- Email verification. Password recovery is approved.
 - Offline/PWA access and synchronization.
 - Public deployment/containerization unless separately requested.
 - AI Modify/Delete permissions, additional providers, and larger autonomous actions.
@@ -20,8 +20,8 @@ M01–M10 must not add a timer column or running-process state prematurely.
 
 ## Explicitly excluded
 
-- Teams, workspaces, sharing, comments, assignees, collaboration roles, and WebSockets.
-- Per-Note passwords and shared Notes.
+- WebSockets and comments (Teamwork, sharing and roles: see 17-full-feedback.md).
+- Per-Note passwords.
 - User-defined fields, schemas, formulas, Notion-like databases.
 - Task dependencies or a generic graph database.
 - Gamification/productivity scores.

@@ -24,6 +24,8 @@ php bin/console rate-limits:prune
 php bin/console areas:backfill
 php bin/console recurrence:materialize
 php bin/console snapshots:capture
+php bin/console history:prune
+php bin/console users:role <email> admin|user
 ```
 
 These commands are implemented. All return nonzero on partial failure and
@@ -86,3 +88,18 @@ Laravel has been retired. Keep the active runtime and build framework-free:
 
 The original migration gates remain in the phase specifications; new changes
 must preserve this boundary.
+
+## Approved feedback operations — 2026-10-19
+
+New migrations 0010–0015 add reset tokens, personal settings, recurrence
+constraints, private background references, Task reminders and en/vi locale.
+Apply with migrate and verify with migrate:check; never edit older migrations.
+`php bin/console reminders:send` sends eligible owner-opted-in reminder emails
+and returns nonzero on delivery failures. Run every minute with a non-overlap
+OS lock. Local/testing deliveries are restrictive .eml files under private
+storage/mail-outbox, outside the public root; use a file viewer to inspect them.
+Production requires MAIL_FROM_ADDRESS and a configured PHP/system mail transport.
+No real provider delivery is certified by deterministic/local tests. Reminder
+mail is at-least-once across a delivery/crash boundary; a crash after delivery
+before commit can duplicate a message. Clear expired development mail manually
+when no longer needed; links contain secrets and must never be committed.

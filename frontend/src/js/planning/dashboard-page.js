@@ -1,8 +1,11 @@
+import { t, statusLabel } from '../lib/i18n.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
 import { get } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars, renderStreak } from './insights-ui.js';
 import { transitionEntity } from './transitions.js';
+import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
+import { streakLabel } from '../lib/habit-days.js';
 
 function message(root, error) {
     const output = root.querySelector('[data-planning-error]');
@@ -25,9 +28,12 @@ function rows(container, items, empty, type = 'task') {
         const marker = document.createElement('span');
         marker.className = 'task-marker';
         marker.setAttribute('aria-hidden', 'true');
-        const complete = item.status === 'Done' || item.status === 'Completed';
+        const complete =
+            type === 'habit'
+                ? item.done_today
+                : item.status === 'Done' || item.status === 'Completed';
         marker.classList.toggle('is-complete', complete);
-        marker.textContent = complete ? '✓' : '';
+        if (complete) marker.append(checkMark());
         const copy = document.createElement('span');
         copy.className = 'dashboard-item-copy';
         const name = document.createElement('strong');
@@ -35,8 +41,8 @@ function rows(container, items, empty, type = 'task') {
         const meta = document.createElement('small');
         meta.textContent =
             type === 'habit'
-                ? `${item.completed_days} of ${item.target_frequency} days completed`
-                : `${(item.status || 'Not started').replace(/([a-z])([A-Z])/g, '$1 $2')}${item.deadline ? ` · Due ${item.deadline}` : ''}`;
+                ? `${item.completed_days}/${item.target_frequency} ${t(item.period === 'weekly' ? 'this week' : 'today')} · ${t('Streak')}: ${streakLabel(item.streak, t)}${item.rest_today ? ` · ${t('Rest day')}` : ''}`
+                : `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${item.deadline}` : ''}`;
         copy.append(name, meta);
         row.append(marker, copy);
         container.append(row);
@@ -46,7 +52,7 @@ function rows(container, items, empty, type = 'task') {
         link.className = 'section-link';
         link.href =
             type === 'habit' ? '/habits' : type === 'milestone' ? '/goals' : '/tasks?view=all';
-        link.textContent = `View all ${items.length} ${type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks'} →`;
+        link.textContent = `${t('View all')} ${items.length} ${t(type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks')} →`;
         container.append(link);
     }
 }
@@ -66,97 +72,199 @@ export function activityLevel(total) {
     return 4;
 }
 
-export function calendarDays(month, activityDays) {
-    const first = new Date(`${month}-01T00:00:00Z`);
-    const end = new Date(first);
-    end.setUTCMonth(end.getUTCMonth() + 1);
+/**
+ * A whole year as one block per month. Each block holds Monday-first week
+ * columns (rows Mon…Sun) with null cells outside that month, so every
+ * square sits under its own month label. `column` is the block's first
+ * week column counted across the whole year.
+ */
+export function yearCalendar(year, activityDays) {
     const active = new Map(activityDays.map((day) => [day.date, day]));
-    const days = Array.from({ length: first.getUTCDay() }, () => null);
-
-    for (const cursor = new Date(first); cursor < end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-        const date = cursor.toISOString().slice(0, 10);
-        days.push(active.get(date) || { date, active: false, total: 0, counts: {} });
+    const pad = (value) => String(value).padStart(2, '0');
+    const months = [];
+    let column = 0;
+    for (let month = 0; month < 12; month += 1) {
+        const length = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+        const cells = Array.from(
+            { length: (new Date(Date.UTC(year, month, 1)).getUTCDay() + 6) % 7 },
+            () => null,
+        );
+        for (let day = 1; day <= length; day += 1) {
+            const date = `${year}-${pad(month + 1)}-${pad(day)}`;
+            cells.push(active.get(date) || { date, total: 0, counts: {} });
+        }
+        while (cells.length % 7 !== 0) cells.push(null);
+        months.push({ month, column, weeks: cells.length / 7, cells });
+        column += cells.length / 7;
     }
-    while (days.length % 7 !== 0) days.push(null);
-
-    return days;
+    return { months, columns: column };
 }
 
-function shiftMonth(month, change) {
-    const date = new Date(`${month}-01T00:00:00Z`);
-    date.setUTCMonth(date.getUTCMonth() + change);
-    return date.toISOString().slice(0, 7);
+const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function renderYearActivity(root, data, direction = 0) {
+    const grid = root.querySelector('[data-activity-grid]');
+    const label = String(data.year);
+    root.querySelector('[data-activity-summary]').textContent =
+        `${data.total} ${data.total === 1 ? t('contribution') : t('contributions')} · ${label}`;
+    root.querySelector('[data-activity-total]').textContent = data.total;
+    root.querySelector('[data-activity-unit]').textContent =
+        data.total === 1 ? t('contribution') : t('contributions');
+    root.querySelector('[data-activity-days]').textContent =
+        `${t('Across')} ${data.active_days} ${data.active_days === 1 ? t('active day') : t('active days')}`;
+    root.querySelector('[data-activity-tooltip]').classList.add('is-hidden');
+    const calendar = yearCalendar(data.year, data.days);
+    const monthName = new Intl.DateTimeFormat(
+        window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
+        { month: 'short', timeZone: 'UTC' },
+    );
+    // Column 1 holds weekday names; a narrow gutter column separates months.
+    grid.style.gridTemplateColumns = `var(--activity-label-width) ${calendar.months
+        .map(({ weeks }) => `repeat(${weeks}, var(--activity-cell))`)
+        .join(' var(--activity-month-gap) ')}`;
+    grid.replaceChildren();
+    weekdayNames.forEach((name, row) => {
+        const weekday = document.createElement('span');
+        weekday.className = 'activity-weekday';
+        weekday.setAttribute('aria-hidden', 'true');
+        weekday.style.gridArea = `${row + 2} / 1`;
+        weekday.textContent = row % 2 === 0 ? t(name) : '';
+        grid.append(weekday);
+    });
+    calendar.months.forEach(({ month, column, weeks, cells }, index) => {
+        const first = 2 + column + index;
+        const heading = document.createElement('span');
+        heading.className = 'activity-month';
+        heading.setAttribute('aria-hidden', 'true');
+        heading.style.gridArea = `1 / ${first} / 2 / span ${weeks}`;
+        heading.textContent = monthName.format(new Date(Date.UTC(data.year, month, 1)));
+        grid.append(heading);
+        cells.forEach((day, position) => {
+            if (!day) return;
+            const area = `${(position % 7) + 2} / ${first + Math.floor(position / 7)}`;
+            if (day.date > data.today) {
+                const blank = document.createElement('span');
+                blank.className = 'activity-day-placeholder';
+                blank.setAttribute('aria-hidden', 'true');
+                blank.style.gridArea = area;
+                grid.append(blank);
+                return;
+            }
+            const level = activityLevel(day.total);
+            const description = dayLabel(day);
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'activity-day';
+            cell.style.gridArea = area;
+            cell.dataset.level = String(level);
+            cell.dataset.tooltip = description;
+            cell.setAttribute('aria-label', `${description}. Activity level ${level} of 4.`);
+            grid.append(cell);
+        });
+    });
+    const years = root.querySelector('[data-activity-years]');
+    years.replaceChildren(
+        ...yearWindow(data.year, data.years[0]).map(({ year, selected, selectable }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `activity-year${selected ? ' is-selected' : ''}`;
+            button.dataset.year = String(year);
+            button.disabled = !selectable;
+            button.setAttribute('aria-pressed', String(selected));
+            button.textContent = String(year);
+            return button;
+        }),
+    );
+    // Slide the three rows in the direction the year moved.
+    years.classList.remove('is-sliding-up', 'is-sliding-down');
+    if (direction) {
+        void years.offsetWidth;
+        years.classList.add(direction > 0 ? 'is-sliding-up' : 'is-sliding-down');
+    }
 }
 
-function monthLabel(month) {
-    return new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'UTC',
-    }).format(new Date(`${month}-01T00:00:00Z`));
+export const oldestActivityYear = 2000;
+
+/**
+ * The year spinner shows the next year, the selected year in the middle,
+ * and the previous year. Rows outside [2000, current year] stay visible but
+ * cannot be chosen.
+ */
+export function yearWindow(year, currentYear) {
+    return [year + 1, year, year - 1].map((value) => ({
+        year: value,
+        selected: value === year,
+        selectable: value >= oldestActivityYear && value <= currentYear,
+    }));
 }
 
 function dayLabel(day) {
-    const date = new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        timeZone: 'UTC',
-    }).format(new Date(`${day.date}T00:00:00Z`));
-    if (!day.total) return `No contributions on ${date}`;
+    const date = new Intl.DateTimeFormat(
+        window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
+        {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC',
+        },
+    ).format(new Date(`${day.date}T00:00:00Z`));
+    if (!day.total) return `${t('No completions on')} ${date}`;
 
     const details = Object.entries(day.counts)
         .filter(([, count]) => count > 0)
         .map(([type, count]) => {
             const labels = activityTypes[type] || [type, `${type}s`];
-            return `${count} ${count === 1 ? labels[0] : labels[1]}`;
+            return `${count} ${t(count === 1 ? labels[0] : labels[1])}`;
         })
         .join(', ');
-    const contribution = day.total === 1 ? 'contribution' : 'contributions';
-    return `${day.total} ${contribution} on ${date}${details ? ` — ${details}` : ''}`;
-}
-
-function renderActivity(root, data) {
-    const grid = root.querySelector('[data-activity-grid]');
-    const total = data.activity_days.reduce((sum, day) => sum + day.total, 0);
-    const label = monthLabel(data.month);
-    root.querySelector('[data-activity-month]').textContent = label;
-    root.querySelector('[data-activity-summary]').textContent =
-        `${total} ${total === 1 ? 'contribution' : 'contributions'} in ${label}`;
-    root.querySelector('[data-activity-total]').textContent = total;
-    root.querySelector('[data-activity-unit]').textContent =
-        total === 1 ? 'contribution' : 'contributions';
-    const activeDays = data.activity_days.filter((day) => day.total > 0).length;
-    root.querySelector('[data-activity-days]').textContent =
-        `Across ${activeDays} active ${activeDays === 1 ? 'day' : 'days'}`;
-    root.querySelector('[data-activity-tooltip]').classList.add('is-hidden');
-    grid.replaceChildren();
-
-    for (const day of calendarDays(data.month, data.activity_days)) {
-        if (!day) {
-            const blank = document.createElement('span');
-            blank.className = 'activity-day-placeholder';
-            blank.setAttribute('aria-hidden', 'true');
-            grid.append(blank);
-            continue;
-        }
-        const level = activityLevel(day.total);
-        const description = dayLabel(day);
-        const cell = document.createElement('button');
-        cell.type = 'button';
-        cell.className = 'activity-day';
-        cell.dataset.level = String(level);
-        cell.dataset.tooltip = description;
-        cell.setAttribute('aria-label', `${description}. Activity level ${level} of 4.`);
-        grid.append(cell);
-    }
+    const contribution = day.total === 1 ? t('contribution') : t('contributions');
+    return `${day.total} ${contribution} · ${date}${details ? ` — ${details}` : ''}`;
 }
 
 export function initDashboardPage(root) {
     let displayedMonth = null;
-    let currentMonth = null;
+    let displayedYear = null;
+    let currentYear = null;
+    let yearLoading = false;
     const previous = root.querySelector('[data-activity-previous]');
     const next = root.querySelector('[data-activity-next]');
+    const loadActivity = async (year) => {
+        yearLoading = true;
+        try {
+            const data = (await get(`/api/v1/dashboard/activity${year ? `?year=${year}` : ''}`))
+                .payload.data;
+            const direction = displayedYear === null ? 0 : Math.sign(data.year - displayedYear);
+            displayedYear = data.year;
+            currentYear = data.years[0];
+            renderYearActivity(root, data, direction);
+            // The arrows step one calendar year at a time.
+            previous.disabled = displayedYear >= currentYear;
+            next.disabled = displayedYear <= oldestActivityYear;
+        } catch (error) {
+            root.querySelector('[data-activity-days]').textContent = error.message;
+        } finally {
+            yearLoading = false;
+        }
+    };
+    const moveYear = (direction) => {
+        if (displayedYear === null || yearLoading) return;
+        const year = displayedYear + direction;
+        if (year >= oldestActivityYear && year <= currentYear) loadActivity(year);
+    };
+    // Scrolling over the spinner turns it like a wheel: scrolling up shows newer years.
+    root.querySelector('.activity-year-list').addEventListener(
+        'wheel',
+        (event) => {
+            if (!event.deltaY) return;
+            event.preventDefault();
+            moveYear(event.deltaY < 0 ? 1 : -1);
+        },
+        { passive: false },
+    );
+    root.querySelector('[data-activity-years]').addEventListener('click', (event) => {
+        const year = event.target.closest('[data-year]')?.dataset.year;
+        if (year) loadActivity(Number(year));
+    });
     const refresh = root.querySelector('[data-planning-retry]');
     const tooltip = root.querySelector('[data-activity-tooltip]');
     const grid = root.querySelector('[data-activity-grid]');
@@ -195,7 +303,7 @@ export function initDashboardPage(root) {
             return;
         }
         loading = true;
-        previous.disabled = next.disabled = refresh.disabled = true;
+        refresh.disabled = true;
         const previousFocus = root.querySelector('[data-focus-complete]');
         if (previousFocus) previousFocus.disabled = true;
         root.setAttribute('aria-busy', 'true');
@@ -205,11 +313,10 @@ export function initDashboardPage(root) {
             const { payload } = await get(`/api/v1/dashboard${query}`);
             const data = payload.data;
             displayedMonth = data.month;
-            currentMonth = data.today.slice(0, 7);
             root.querySelector('[data-dashboard-timezone]').textContent =
-                `Your time zone: ${data.timezone}`;
+                `${t('Your time zone')}: ${data.timezone}`;
             root.querySelector('[data-dashboard-date]').textContent = new Intl.DateTimeFormat(
-                'en-US',
+                window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
                 {
                     weekday: 'long',
                     month: 'long',
@@ -222,7 +329,7 @@ export function initDashboardPage(root) {
             root.querySelector('[data-weekly-task-count]').textContent = data.selected_tasks.length;
             root.querySelector('[data-weekly-milestone-count]').textContent =
                 data.selected_milestones.length;
-            renderActivity(root, data);
+            loadActivity(displayedYear);
             const hour = Number(
                 new Intl.DateTimeFormat('en-US', {
                     hour: 'numeric',
@@ -230,22 +337,23 @@ export function initDashboardPage(root) {
                     timeZone: data.timezone,
                 }).format(new Date()),
             );
-            root.querySelector('[data-dashboard-greeting]').textContent =
-                hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!';
+            root.querySelector('[data-dashboard-greeting]').textContent = t(
+                hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!',
+            );
             root.querySelector('[data-dashboard-greeting]').append(referenceDecoration('greeting'));
             renderRing(
                 root.querySelector('[data-week-ring]'),
                 data.week_summary.percentage,
-                'Selected tasks completed',
+                t('Selected tasks completed'),
             );
             root.querySelector('[data-week-completed]').textContent =
                 `${data.week_summary.completed} / ${data.week_summary.total}`;
             root.querySelector('[data-week-change]').textContent =
                 data.week_summary.change_points == null
                     ? data.week_summary.total
-                        ? 'No previous-week selections'
-                        : 'Select tasks to shape your week'
-                    : `${data.week_summary.change_points > 0 ? '+' : ''}${data.week_summary.change_points} points vs previous week’s selections`;
+                        ? t('No previous-week selections')
+                        : t('Select tasks to shape your week')
+                    : `${data.week_summary.change_points > 0 ? '+' : ''}${data.week_summary.change_points} ${t('points vs previous week’s selections')}`;
             const weekEnd = new Date(`${data.week_start}T00:00:00Z`);
             weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
             renderDayBars(
@@ -275,21 +383,21 @@ export function initDashboardPage(root) {
                 description.textContent =
                     focus.description ||
                     focus.completion_criteria ||
-                    'Open this task and take the next small step.';
+                    t('Open this task and take the next small step.');
                 const actions = document.createElement('div');
                 actions.className = 'focus-actions';
                 const edit = document.createElement('a');
                 edit.className = 'button button-quiet';
                 edit.href = `/tasks/${focus.id}#edit`;
                 edit.textContent = '✎';
-                edit.setAttribute('aria-label', `Edit ${focus.name}`);
-                edit.title = 'Edit task';
+                edit.setAttribute('aria-label', `${t('Edit')} ${focus.name}`);
+                edit.title = t('Edit task');
                 const complete = document.createElement('button');
                 complete.type = 'button';
                 complete.dataset.focusComplete = '';
                 complete.disabled = true;
                 complete.className = 'button button-primary';
-                complete.textContent = '✓ Complete';
+                setCheckedLabel(complete, t('Complete'));
                 complete.addEventListener('click', async () => {
                     complete.disabled = true;
                     try {
@@ -332,7 +440,7 @@ export function initDashboardPage(root) {
                     }
                     root.querySelector('[data-dashboard-roadmap-link]').href = `/goals/${goal.id}`;
                     root.querySelector('[data-dashboard-roadmap-link]').textContent =
-                        'View full roadmap →';
+                        t('View full roadmap →');
                     for (const milestone of (roadmap.milestones || []).slice(0, 6)) {
                         const link = document.createElement('a');
                         link.href = `/goals/${goal.id}#milestone=${milestone.id}`;
@@ -346,12 +454,13 @@ export function initDashboardPage(root) {
                         link.textContent = goal.name;
                         preview.append(link);
                     }
-                } else preview.textContent = 'Create a goal to give your next steps a direction.';
+                } else
+                    preview.textContent = t('Create a goal to give your next steps a direction.');
             } catch {
-                root.querySelector('[data-dashboard-roadmap]').textContent =
-                    'Roadmap unavailable. Open Goals or refresh to try again.';
+                root.querySelector('[data-dashboard-roadmap]').textContent = t(
+                    'Roadmap unavailable. Open Goals or refresh to try again.',
+                );
             }
-            next.disabled = displayedMonth >= currentMonth;
             rows(root.querySelector('[data-today-tasks]'), data.today_tasks, {
                 title: 'A little room to focus.',
                 description:
@@ -387,7 +496,7 @@ export function initDashboardPage(root) {
                 data.habits,
                 {
                     title: 'Build a steady rhythm.',
-                    description: 'Habits linked to your goals will appear here.',
+                    description: 'Create a habit and it will appear here with its own streak.',
                     icon: 'habits',
                     href: '/habits',
                     action: 'Explore habits',
@@ -398,17 +507,16 @@ export function initDashboardPage(root) {
             message(root, error);
             if (!displayedMonth) {
                 root.querySelectorAll('.loading-copy').forEach((node) => {
-                    node.textContent = 'Unable to load. Use Refresh to try again.';
+                    node.textContent = t('Unable to load. Use Refresh to try again.');
                 });
                 root.querySelector('[data-activity-days]').textContent = 'Activity unavailable';
-                root.querySelector('[data-activity-summary]').textContent =
-                    'Activity unavailable. Use Refresh to try again.';
+                root.querySelector('[data-activity-summary]').textContent = t(
+                    'Activity unavailable. Use Refresh to try again.',
+                );
             }
         } finally {
             loading = false;
             root.setAttribute('aria-busy', 'false');
-            previous.disabled = !displayedMonth;
-            next.disabled = !displayedMonth || displayedMonth >= currentMonth;
             refresh.disabled = false;
             const complete = root.querySelector('[data-focus-complete]');
             if (complete) complete.disabled = false;
@@ -419,8 +527,8 @@ export function initDashboardPage(root) {
             }
         }
     };
-    previous.addEventListener('click', () => load(shiftMonth(displayedMonth, -1)));
-    next.addEventListener('click', () => load(shiftMonth(displayedMonth, 1)));
+    previous.addEventListener('click', () => moveYear(1));
+    next.addEventListener('click', () => moveYear(-1));
     refresh.addEventListener('click', () => load());
     load(null);
 }

@@ -9,7 +9,9 @@ use InvalidArgumentException;
 final readonly class RouteUrls
 {
     /** @param array<string, string> $paths */
-    public function __construct(private array $paths) {}
+    public function __construct(private array $paths)
+    {
+    }
 
     /** @param array<string, string|int> $parameters */
     public function path(string $name, array $parameters = []): string

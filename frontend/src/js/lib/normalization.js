@@ -1,5 +1,10 @@
 export const COLORS = ['neutral', 'lemon', 'mint', 'sky', 'rose'];
 
+/** A preset name or any lowercase #rrggbb color, matching the server rule. */
+export function isNoteColor(color) {
+    return COLORS.includes(color) || /^#[0-9a-f]{6}$/.test(color || '');
+}
+
 export function nfc(value) {
     return String(value ?? '').normalize('NFC');
 }
@@ -62,7 +67,7 @@ export function validateSnapshot(snapshot) {
     ) {
         errors.content = 'Content must contain text and cannot exceed 50,000 characters.';
     }
-    if (!COLORS.includes(value.color)) errors.color = 'The note color is invalid.';
+    if (!isNoteColor(value.color)) errors.color = 'The note color is invalid.';
     if (value.label_ids.length > 20) errors.label_ids = 'A note can have at most 20 tags.';
     return { valid: Object.keys(errors).length === 0, errors, value };
 }

@@ -24,7 +24,8 @@ final readonly class Request
         public array $files = [],
         public array $server = [],
         public string $rawBody = '',
-    ) {}
+    ) {
+    }
 
     public static function fromGlobals(): self
     {

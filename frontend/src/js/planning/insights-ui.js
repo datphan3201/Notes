@@ -1,4 +1,7 @@
 import { referenceDecoration } from '../settings/reference-decoration.js';
+import { t } from '../lib/i18n.js';
+import { checkMark, crossMark } from '../lib/check-mark.js';
+import { habitDayDescriptions, habitDayState } from '../lib/habit-days.js';
 export function renderRing(container, percentage, label) {
     container.replaceChildren();
     const ring = document.createElement('div');
@@ -8,7 +11,7 @@ export function renderRing(container, percentage, label) {
     ring.setAttribute('role', 'img');
     ring.setAttribute(
         'aria-label',
-        value == null ? `${label}: no denominator available` : `${label}: ${value}%`,
+        value == null ? `${label}: ${t('no denominator available')}` : `${label}: ${value}%`,
     );
     const copy = document.createElement('strong');
     copy.textContent = value == null ? '—' : `${Math.round(value)}%`;
@@ -33,7 +36,7 @@ export function renderDayBars(container, from, to, counts) {
         const bar = document.createElement('div');
         bar.className = 'day-bar';
         bar.tabIndex = 0;
-        bar.title = `${day.date}: ${day.count} completions`;
+        bar.title = `${day.date}: ${day.count} ${t('completions')}`;
         bar.setAttribute('aria-label', bar.title);
         const fill = document.createElement('i');
         fill.style.setProperty('--bar-height', `${(day.count / maximum) * 100}%`);
@@ -41,10 +44,13 @@ export function renderDayBars(container, from, to, counts) {
         label.textContent =
             values.length > 7
                 ? day.date.slice(-2)
-                : new Date(`${day.date}T00:00:00Z`).toLocaleDateString('en-US', {
-                      weekday: 'narrow',
-                      timeZone: 'UTC',
-                  });
+                : new Date(`${day.date}T00:00:00Z`).toLocaleDateString(
+                      document.documentElement.lang === 'vi' ? 'vi-VN' : 'en-US',
+                      {
+                          weekday: 'narrow',
+                          timeZone: 'UTC',
+                      },
+                  );
         bar.append(fill, label);
         container.append(bar);
     }
@@ -56,28 +62,36 @@ export function renderStreak(container, streak, today) {
     value.className = 'streak-value';
     const flame = referenceDecoration('flame');
     flame.classList.add('streak-flame');
-    value.textContent = `${streak.days} ${streak.days === 1 ? 'day' : 'days'}`;
+    value.textContent = `${streak.days} ${t(streak.days === 1 ? 'day' : 'days')}`;
     value.prepend(flame);
     const description = document.createElement('p');
     description.className = 'subtle-copy';
     description.textContent =
         streak.through_date && streak.through_date !== today
-            ? `Through ${streak.through_date} · check in today`
-            : 'At least one Habit check-in per day';
+            ? `${t('Through')} ${streak.through_date} · ${t('finish every daily habit today')}`
+            : t('A day counts only when every daily habit is done or on a rest day.');
     const days = document.createElement('div');
     days.className = 'streak-days';
     for (const day of streak.recent_days) {
+        // The server judges each day across all daily Habits.
+        const state =
+            day.state ?? habitDayState(day.date, day.checked, today, streak.tracking_since);
         const dot = document.createElement('span');
-        dot.className = day.checked ? 'is-checked' : '';
+        dot.className = `is-${state}`;
         dot.tabIndex = 0;
-        dot.title = `${day.date}: ${day.checked ? 'checked in' : 'no check-in'}`;
+        dot.title = `${day.date}: ${t(habitDayDescriptions[state])}${day.total ? ` · ${day.done}/${day.total} ${t('daily habits done')}` : ''}`;
         dot.setAttribute('aria-label', dot.title);
-        dot.textContent = day.checked ? '✓' : '○';
+        if (state === 'checked') dot.append(checkMark());
+        if (state === 'missed') dot.append(crossMark());
+        if (state === 'rest') dot.textContent = 'R';
         const label = document.createElement('small');
-        label.textContent = new Date(`${day.date}T00:00:00Z`).toLocaleDateString('en-US', {
-            weekday: 'narrow',
-            timeZone: 'UTC',
-        });
+        label.textContent = new Date(`${day.date}T00:00:00Z`).toLocaleDateString(
+            document.documentElement.lang === 'vi' ? 'vi-VN' : 'en-US',
+            {
+                weekday: 'narrow',
+                timeZone: 'UTC',
+            },
+        );
         const cell = document.createElement('div');
         cell.append(dot, label);
         days.append(cell);

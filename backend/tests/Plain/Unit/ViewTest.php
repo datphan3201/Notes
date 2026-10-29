@@ -100,4 +100,16 @@ PHP);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
         self::assertStringContainsString('\\u003C\\/meta\\u003E\\u003Cscript\\u003E', html_entity_decode($html));
     }
+    public function test_locale_translates_ui_but_keeps_user_text_and_escaping(): void
+    {
+        file_put_contents($this->root.'/views/page.php', '<h1><?= $view->e($view->t("Settings")) ?></h1><p><?= $view->e($name) ?></p>');
+        $renderer = new ViewRenderer($this->root.'/views', new ViewContext(new AssetManifest($this->root.'/public', null, 'testing')));
+        $html = $renderer->render('page', ['preferences' => ['locale' => 'vi'], 'name' => '<script>Settings</script>']);
+        self::assertStringContainsString('<h1>Cài đặt</h1>', $html);
+        self::assertStringContainsString('&lt;script&gt;Settings&lt;/script&gt;', $html);
+        self::assertStringNotContainsString('<script>', $html);
+        $english = $renderer->render('page', ['preferences' => ['locale' => 'en'], 'name' => 'Công việc của tôi']);
+        self::assertStringContainsString('<h1>Settings</h1>', $english);
+        self::assertStringContainsString('Công việc của tôi', $english);
+    }
 }

@@ -35,7 +35,7 @@ final readonly class LocalPrivateStorage
             throw new RuntimeException('Private storage must be outside the public document root.');
         }
 
-        foreach (['attachments', 'avatars'] as $directory) {
+        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
             $path = $root.DIRECTORY_SEPARATOR.$directory;
 
             if (is_link($path)) {
@@ -142,7 +142,7 @@ final readonly class LocalPrivateStorage
     {
         $files = [];
 
-        foreach (['attachments', 'avatars'] as $directory) {
+        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
             $absoluteDirectory = $this->root.DIRECTORY_SEPARATOR.$directory;
             $iterator = new \FilesystemIterator($absoluteDirectory, \FilesystemIterator::SKIP_DOTS);
 
@@ -170,7 +170,7 @@ final readonly class LocalPrivateStorage
 
     private function generatedPath(string $directory, string $extension): string
     {
-        if (! in_array($directory, ['attachments', 'avatars'], true)
+        if (! in_array($directory, ['attachments', 'avatars', 'backgrounds'], true)
             || preg_match('/^[a-z0-9]+$/D', $extension) !== 1) {
             throw new RuntimeException('Invalid managed storage target.');
         }
@@ -236,7 +236,7 @@ final readonly class LocalPrivateStorage
 
         $segments = explode('/', $relative);
 
-        if (count($segments) !== 2 || ! in_array($segments[0], ['attachments', 'avatars'], true)
+        if (count($segments) !== 2 || ! in_array($segments[0], ['attachments', 'avatars', 'backgrounds'], true)
             || $segments[1] === '' || in_array('.', $segments, true) || in_array('..', $segments, true)) {
             throw new RuntimeException('Unsafe private storage path.');
         }

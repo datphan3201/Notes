@@ -17,7 +17,8 @@ final readonly class ProcessFileDeletion
         private LocalPrivateStorage $storage,
         private LoggerInterface $logger,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @param list<string> $paths @return array{completed:int,failed:int} */
     public function handle(array $paths = []): array

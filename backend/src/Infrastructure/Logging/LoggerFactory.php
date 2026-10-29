@@ -11,7 +11,9 @@ use Planner\Config\Config;
 
 final readonly class LoggerFactory
 {
-    public function __construct(private Config $config) {}
+    public function __construct(private Config $config)
+    {
+    }
 
     public function create(): Logger
     {

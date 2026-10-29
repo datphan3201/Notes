@@ -25,7 +25,8 @@ final class PdoSessionHandler implements SessionHandlerInterface, SessionIdInter
         private readonly SessionCipher $cipher,
         private readonly LoggerInterface $logger,
         private readonly int $lifetimeSeconds,
-    ) {}
+    ) {
+    }
 
     public function setRequestMetadata(string $ipAddress, string $userAgent): void
     {

@@ -54,3 +54,26 @@ File GET/HEAD requires current owner and active Note/attachment. Downloads use s
 ## Security headers/secrets
 
 All private responses: `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`; HTML also `X-Frame-Options: DENY` and an explicit CSP compatible with built assets/bootstrap. AI/session/database keys are environment-only and never Vite-prefixed.
+
+## Approved password recovery — 2026-10-19
+
+GET/POST /forgot-password and GET/POST /reset-password use same-origin CSRF.
+Requests return the same generic response for known and unknown valid emails.
+Throttle by IP and normalized email. Store only SHA-256 token hashes, one active
+reset per user, expiration after 30 minutes; a new request replaces the old token.
+Reset locks owner before token row, checks expiry/hash, updates bcrypt password,
+increments auth_version, deletes all sessions and consumes token atomically.
+No automatic login. Invalid/expired/replayed tokens return the same field error.
+Local delivery is a private, restrictive outbox file; production delivery requires
+a configured mail transport. Never expose reset links in HTTP responses or logs.
+
+## Approved background and locale extension — 2026-10-19
+
+Background uploads require auth/CSRF, one allowed multipart field, a real
+JPEG/PNG/WebP signature, size <= 2 MiB and dimensions <= 4096 × 4096. Re-encode
+as JPEG no larger than 1920 pixels per side, store privately under backgrounds/,
+and serve only via the current owner. Replacement queues old files for deletion;
+orphan pruning must include referenced backgrounds. No submitted URL/path is used.
+Locale is allowlisted to en/vi; biography is escaped plain text. Translation is
+only for UI literals and must not process arbitrary rendered user content.
+The user explicitly postponed two-factor authentication.

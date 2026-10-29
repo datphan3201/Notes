@@ -19,7 +19,8 @@ final readonly class PruneFiles
         private LocalPrivateStorage $storage,
         private Clock $clock,
         private LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     /** @return array{pending_completed:int,pending_failed:int,orphans_deleted:int,orphans_failed:int} */
     public function run(): array
@@ -28,6 +29,7 @@ final readonly class PruneFiles
         $referenced = array_fill_keys([
             ...$this->attachments->referencedPaths(),
             ...$this->accounts->avatarPaths(),
+            ...$this->accounts->backgroundPaths(),
         ], true);
         $cutoff = $this->clock->now()->getTimestamp() - 3600;
         $deleted = 0;

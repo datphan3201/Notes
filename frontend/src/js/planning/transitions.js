@@ -1,4 +1,5 @@
 import { post } from '../lib/http.js';
+import { t } from '../lib/i18n.js';
 
 // Only explicit server requests for acknowledgement can trigger another
 // submission. Network failures and version conflicts are never retried here.
@@ -19,19 +20,23 @@ export async function transitionEntity(
             if (error.code === 'ANCESTOR_REOPEN_REQUIRED' && Array.isArray(ancestors)) {
                 if (
                     !confirm(
-                        `Reopen “${entity.name}” and these completed goals?\n${ancestors.map((goal) => `• ${goal.name}`).join('\n')}`,
+                        `${t('Reopen')} “${entity.name}” ${t('and these completed goals?')}\n${ancestors.map((goal) => `• ${goal.name}`).join('\n')}`,
                     )
                 )
                     return null;
                 body.acknowledge_ancestor_reopen = true;
             } else if (error.payload?.errors?.acknowledge_unchecked_items) {
-                if (!confirm(`Complete “${entity.name}” with unfinished checklist items?`))
+                if (
+                    !confirm(
+                        `${t('Complete')} “${entity.name}” ${t('with unfinished checklist items?')}`,
+                    )
+                )
                     return null;
                 body.acknowledge_unchecked_items = true;
             } else if (error.payload?.errors?.acknowledge_open_tasks) {
                 if (
                     !confirm(
-                        `Complete “${entity.name}” with unfinished tasks? Their status will stay unchanged.`,
+                        `${t('Complete')} “${entity.name}” ${t('with unfinished tasks? Their status will stay unchanged.')}`,
                     )
                 )
                     return null;
@@ -41,5 +46,5 @@ export async function transitionEntity(
             }
         }
     }
-    throw new Error('The operation needs another confirmation. Refresh and try again.');
+    throw new Error(t('The operation needs another confirmation. Refresh and try again.'));
 }

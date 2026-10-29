@@ -6,7 +6,29 @@ namespace Planner\Http\View;
 
 final readonly class ViewContext
 {
-    public function __construct(private AssetManifest $assets) {}
+    private array $translations;
+
+    public function __construct(private AssetManifest $assets, private string $locale = 'en')
+    {
+        $this->translations = $locale === 'vi'
+            ? json_decode((string) file_get_contents(dirname(__DIR__, 4).'/frontend/src/i18n/vi.json'), true, flags: JSON_THROW_ON_ERROR)
+            : [];
+    }
+
+    public function withLocale(string $locale): self
+    {
+        return new self($this->assets, in_array($locale, ['en', 'vi'], true) ? $locale : 'en');
+    }
+
+    public function locale(): string
+    {
+        return $this->locale;
+    }
+
+    public function t(string $message): string
+    {
+        return $this->translations[$message] ?? $message;
+    }
 
     public function e(mixed $value): string
     {

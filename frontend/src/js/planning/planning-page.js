@@ -1,12 +1,23 @@
+import { t, statusLabel } from '../lib/i18n.js';
+import { taskCaptureValues, createCapturedTask, seriesPayload } from './task-capture.js';
+import { openScheduleMenu } from './schedule-picker.js';
+import { renderSeriesList } from './series-list.js';
+import { addDays, localDateTime } from '../lib/calendar.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
-import { get, patch, post } from '../lib/http.js';
+import { get, patch, post, remove } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { NoteContentEditor } from '../notes/note-content-editor.js';
 import { collectionPage, renderPagination } from './collection-page.js';
-import { localDate, taskMatchesView, resourceLinks } from './task-views.js';
+import {
+    localDate,
+    taskIsOverdue,
+    taskMatchesView,
+    taskViewStatus,
+    resourceLinks,
+} from './task-views.js';
 import {
     creationState,
     createWithForm,
@@ -14,6 +25,10 @@ import {
     guardWorkspaceLeave,
     reportWorkspaceError,
 } from '../lib/workspace-ui.js';
+import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
+import { lineIcon } from '../lib/line-icons.js';
+import { renderContributions } from './contributions-ui.js';
+import { createTagPicker, loadTags, sameTagIds, tagChips } from './tag-picker.js';
 export { initGoalDetail } from './goal-roadmap.js';
 
 export function buildGoalForest(goals) {
@@ -80,7 +95,7 @@ function renderGoalTree(container, areas, goals) {
             : 0;
         const count = document.createElement('span');
         count.className = 'subtle-copy';
-        count.textContent = `${rootsForArea.length} goals · ${progress}% average goal progress`;
+        count.textContent = `${rootsForArea.length} ${t(rootsForArea.length === 1 ? 'goal' : 'goals')} · ${progress}% ${t('average goal progress')}`;
         const track = document.createElement('span');
         track.className = 'progress-track';
         const fill = document.createElement('i');
@@ -95,7 +110,7 @@ function renderGoalTree(container, areas, goals) {
         if (!roots.length) {
             const empty = document.createElement('li');
             empty.className = 'goal-area-empty';
-            empty.textContent = 'Room for a new goal.';
+            empty.textContent = t('Room for a new goal.');
             list.append(empty);
         }
         const stack = roots
@@ -154,12 +169,29 @@ export function initGoalsPage(root) {
                     else areaDrafts.set(area.id, input.value);
                 });
                 input.maxLength = 80;
-                input.setAttribute('aria-label', `Rename ${area.name}`);
+                input.setAttribute('aria-label', `${t('Rename')} ${area.name}`);
                 const button = document.createElement('button');
                 button.type = 'submit';
                 button.className = 'button button-quiet';
-                button.textContent = 'Save name';
-                row.append(input, button);
+                button.textContent = t('Save name');
+                // An Area can be removed once its Goals have moved or been removed.
+                const archive = document.createElement('button');
+                archive.type = 'button';
+                archive.className = 'button button-quiet';
+                archive.textContent = t('Remove');
+                archive.setAttribute('aria-label', `${t('Remove')} ${area.name}`);
+                archive.addEventListener('click', async () => {
+                    if (!window.confirm(`${t('Remove this area?')} “${area.name}”`)) return;
+                    archive.disabled = true;
+                    try {
+                        await remove(`/api/v1/areas/${area.id}`, { base_version: area.version });
+                        await load();
+                    } catch (error) {
+                        showError(root, error);
+                        archive.disabled = false;
+                    }
+                });
+                row.append(input, button, archive);
                 row.addEventListener('submit', async (event) => {
                     event.preventDefault();
                     if (renamingArea) return;
@@ -204,16 +236,21 @@ export function initGoalsPage(root) {
                 card.append(referenceDecoration('summit'));
                 const label = document.createElement('span');
                 label.className = 'context-chip';
-                label.textContent = '★ Main goal';
+                label.textContent = `★ ${t('Main goal')}`;
                 const name = document.createElement('h2');
                 name.textContent = primary.name;
                 const description = document.createElement('p');
+                // Only the Goal's own words are shown; an empty Goal gets a prompt.
                 description.textContent =
                     primary.expected_result ||
                     primary.description ||
-                    'Turn knowledge into real-world impact.';
+                    t('Open this goal to describe the outcome you want.');
+                description.classList.toggle(
+                    'subtle-copy',
+                    !primary.expected_result && !primary.description,
+                );
                 const progress = document.createElement('strong');
-                progress.textContent = `${primary.status} · ${primary.progress}%`;
+                progress.textContent = `${statusLabel(primary.status)} · ${primary.progress}%`;
                 const track = document.createElement('span');
                 track.className = 'progress-track';
                 const fill = document.createElement('i');
@@ -230,19 +267,19 @@ export function initGoalsPage(root) {
                 const row = document.createElement('div');
                 row.className = 'goal-timeline-item';
                 const date = document.createElement('time');
-                date.textContent = goal.deadline || 'Unplanned';
+                date.textContent = goal.deadline || t('No deadline');
                 if (goal.deadline) date.dateTime = goal.deadline;
                 row.append(date, linkForGoal(goal));
                 timeline.append(row);
             }
             if (!goals.length)
-                timeline.textContent = 'Goals with and without deadlines appear here.';
+                timeline.textContent = t('Goals with and without deadlines appear here.');
             const errorOutput = root.querySelector('[data-planning-error]');
             errorOutput.textContent = '';
             errorOutput.classList.add('is-hidden');
         } catch (error) {
             showError(root, error);
-            tree.textContent = 'Unable to load the Goal hierarchy.';
+            tree.textContent = t('Unable to load your goals.');
         }
     };
 
@@ -299,7 +336,7 @@ export function initGoalsPage(root) {
         details.forEach((item) => {
             item.open = expand;
         });
-        event.currentTarget.textContent = expand ? 'Collapse all' : 'Expand all';
+        event.currentTarget.textContent = expand ? t('Collapse all') : t('Expand all');
     });
     root.querySelector('[data-planning-retry]')?.addEventListener('click', load);
     load();
@@ -310,7 +347,7 @@ export function initTasksPage(root) {
     const form = root.querySelector('[data-task-create-form]');
     let tasks = [];
     const requestedView = new URLSearchParams(location.search).get('view');
-    let taskView = ['today', 'next', 'week', 'backlog', 'all'].includes(requestedView)
+    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'repeating'].includes(requestedView)
         ? requestedView
         : 'today';
     let today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
@@ -324,25 +361,223 @@ export function initTasksPage(root) {
     const status = root.querySelector('[data-task-status]');
     const narrow = window.matchMedia('(max-width: 600px)');
     let size = narrow.matches ? 4 : 8;
+    let series = [];
+    const completedList = root.querySelector('[data-task-completed-list]');
+    const tagFilter = root.querySelector('[data-task-tag]');
+    let tags = [];
+    const visibleTasks = () =>
+        tagFilter.value
+            ? tasks.filter((task) => (task.tag_ids || []).map(String).includes(tagFilter.value))
+            : tasks;
+    const completedSection = root.querySelector('[data-task-completed]');
+    const iconButton = (label, symbol, onClick) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'icon-button task-row-icon';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        if (typeof symbol === 'string') button.textContent = symbol;
+        else button.append(symbol);
+        button.addEventListener('click', onClick);
+        return button;
+    };
+    const mutate = async (button, operation) => {
+        button.disabled = true;
+        try {
+            await operation();
+            await load();
+        } catch (error) {
+            showError(root, error);
+        } finally {
+            button.disabled = false;
+        }
+    };
+    // Row order follows the approved reference: tick, name, schedule icons,
+    // week, Edit, Remove, then the Important star at the end.
+    const taskRow = (task) => {
+        const article = document.createElement('article');
+        const overdue = taskIsOverdue(task, today);
+        const done = task.status === 'Done';
+        article.className = `planning-list-item task-row${overdue ? ' is-overdue' : ''}${done ? ' is-done' : ''}`;
+        const copy = document.createElement('div');
+        const name = document.createElement('a');
+        name.href = `/tasks/${encodeURIComponent(task.id)}`;
+        name.textContent = task.name;
+        const facts = document.createElement('small');
+        facts.textContent = `${statusLabel(task.status)}${overdue ? ` · ${t('Overdue')}` : ''}${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}${task.reminder_at ? ` · ${t('Reminder')} ${new Date(task.reminder_at).toLocaleString()}` : ''}${task.series_id ? ` · ${t('Repeats')}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} ${t('min')}` : ''}`;
+        const context =
+            parentOptions.get(`milestone:${task.milestone_id}`) ||
+            parentOptions.get(`goal:${task.goal_id}`);
+        if (context) {
+            const chip = document.createElement('span');
+            chip.className = 'context-chip';
+            chip.textContent = context.name;
+            copy.append(chip);
+        }
+        copy.append(name, facts, ...tagChips(task.tag_ids, tags));
+        const action = document.createElement('button');
+        action.className = 'task-completion-button';
+        action.setAttribute('aria-label', `${done ? t('Reopen') : t('Complete')} ${task.name}`);
+        action.setAttribute('aria-pressed', String(done));
+        action.type = 'button';
+        if (done) action.append(checkMark());
+        action.addEventListener('click', () =>
+            mutate(action, () => transitionEntity('task', task, done ? 'reopen' : 'complete')),
+        );
+        const actions = document.createElement('div');
+        actions.className = 'action-row task-row-actions';
+        if (!done) {
+            const dateButton = iconButton(t('Due date'), lineIcon('calendar'), (event) =>
+                openScheduleMenu(event.currentTarget, 'date', {
+                    today,
+                    value: task.deadline,
+                    onSelect: (deadline) =>
+                        mutate(dateButton, () =>
+                            patch(`/api/v1/tasks/${task.id}`, {
+                                base_version: task.version,
+                                deadline,
+                            }),
+                        ),
+                }),
+            );
+            dateButton.dataset.scheduleOpen = 'date';
+            const reminderButton = iconButton(t('Remind me'), lineIcon('clock'), (event) =>
+                openScheduleMenu(event.currentTarget, 'reminder', {
+                    today,
+                    value: task.reminder_at ? localDateTime(new Date(task.reminder_at)) : null,
+                    onSelect: (reminder) =>
+                        mutate(reminderButton, () =>
+                            patch(`/api/v1/tasks/${task.id}`, {
+                                base_version: task.version,
+                                reminder_at: reminder ? new Date(reminder).toISOString() : null,
+                            }),
+                        ),
+                }),
+            );
+            reminderButton.dataset.scheduleOpen = 'reminder';
+            const repeatButton = iconButton(t('Repeat'), lineIcon('repeat'), (event) =>
+                openScheduleMenu(event.currentTarget, 'repeat', {
+                    today,
+                    onSelect: (choice) => {
+                        if (!choice) return;
+                        // The existing Task stays as it is; the series starts the day after it.
+                        const start = addDays(
+                            task.deadline && task.deadline > today ? task.deadline : today,
+                            1,
+                        );
+                        mutate(repeatButton, () =>
+                            post(
+                                '/api/v1/task-series',
+                                seriesPayload(
+                                    { ...task, deadline: task.deadline ? start : null },
+                                    choice,
+                                    start,
+                                ),
+                            ),
+                        );
+                    },
+                }),
+            );
+            repeatButton.dataset.scheduleOpen = 'repeat';
+            const week = iconButton(
+                selectedIds.has(task.id) ? t('Remove from this week') : t('Select for week'),
+                lineIcon('pin', { filled: selectedIds.has(task.id) }),
+                () =>
+                    mutate(week, () =>
+                        selectedIds.has(task.id)
+                            ? remove(`/api/v1/weekly-selections/task/${task.id}`)
+                            : post('/api/v1/weekly-selections/task', { id: task.id, position: 0 }),
+                    ),
+            );
+            week.setAttribute('aria-pressed', String(selectedIds.has(task.id)));
+            actions.append(dateButton, reminderButton, repeatButton, week);
+        }
+        const edit = document.createElement('a');
+        edit.className = 'button button-quiet';
+        edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
+        edit.textContent = t('Edit');
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'button button-quiet';
+        removeButton.textContent = t('Remove');
+        removeButton.addEventListener('click', () => {
+            if (
+                !window.confirm(
+                    `${t('Remove')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
+                )
+            )
+                return;
+            mutate(removeButton, () =>
+                remove(`/api/v1/tasks/${task.id}`, { base_version: task.version }),
+            );
+        });
+        const important = iconButton(
+            `${t('Mark important')}: ${task.name}`,
+            task.importance === 5 ? '★' : '☆',
+            () =>
+                mutate(important, () =>
+                    patch(`/api/v1/tasks/${task.id}`, {
+                        base_version: task.version,
+                        importance: task.importance === 5 ? 3 : 5,
+                    }),
+                ),
+        );
+        important.classList.toggle('is-important', task.importance === 5);
+        important.setAttribute('aria-pressed', String(task.importance === 5));
+        actions.append(edit, removeButton, important);
+        article.append(action, copy, actions);
+        return article;
+    };
     const render = () => {
         root.querySelector('.task-filter-details summary').textContent =
-            `Filter and search · ${status.selectedOptions[0].textContent}${search.value.trim() ? ' · Search active' : ''}`;
+            `${t('Filter and search')} · ${status.selectedOptions[0].textContent}${tagFilter.value ? ` · #${tagFilter.selectedOptions[0].textContent}` : ''}${search.value.trim() ? ` · ${t('Search active')}` : ''}`;
         const timezone = window.notesBootstrap.preferences.timezone;
         for (const button of root.querySelectorAll('[data-task-view]')) {
             button.setAttribute('aria-pressed', String(button.dataset.taskView === taskView));
+            if (button.dataset.taskView === 'repeating') {
+                button.querySelector('[data-task-view-count]').textContent = series.filter(
+                    (item) => item.state !== 'Ended',
+                ).length;
+                continue;
+            }
             const count = collectionPage(
-                tasks.filter((task) =>
+                visibleTasks().filter((task) =>
                     taskMatchesView(task, button.dataset.taskView, today, timezone, selectedIds),
                 ),
-                { query: search.value, status: status.value },
+                {
+                    query: search.value,
+                    status: taskViewStatus(button.dataset.taskView, status.value),
+                },
             ).total;
             button.querySelector('[data-task-view-count]').textContent = count;
         }
+        if (taskView === 'repeating') {
+            completedSection.hidden = true;
+            root.querySelector('[data-task-pagination]').replaceChildren();
+            renderSeriesList(list, series, {
+                today,
+                reload: load,
+                onError: (error) => showError(root, error),
+            });
+            return;
+        }
+        // Completed (not yet in history) Tasks sit under the active list; unticking moves them back.
+        const completed = collectionPage(
+            visibleTasks().filter((task) =>
+                taskMatchesView(task, 'completed', today, timezone, selectedIds),
+            ),
+            { query: search.value, status: 'all', page: 0, size: 100 },
+        );
+        completedSection.hidden = !completed.total || status.value !== 'open';
+        completedSection.querySelector('[data-task-completed-count]').textContent = completed.total;
+        completedList.replaceChildren(...completed.items.map(taskRow));
         const result = collectionPage(
-            tasks.filter((task) => taskMatchesView(task, taskView, today, timezone, selectedIds)),
+            visibleTasks().filter((task) =>
+                taskMatchesView(task, taskView, today, timezone, selectedIds),
+            ),
             {
                 query: search.value,
-                status: status.value,
+                status: taskViewStatus(taskView, status.value),
                 page,
                 size,
             },
@@ -361,88 +596,27 @@ export function initTasksPage(root) {
                     : 'Capture a task now and add details when you need them.',
                 ...(tasks.length ? {} : { href: '#task-name', action: 'Add your first task' }),
             });
-        for (const task of result.items) {
-            const article = document.createElement('article');
-            article.className = 'planning-list-item';
-            const copy = document.createElement('div');
-            const name = document.createElement('a');
-            name.href = `/tasks/${encodeURIComponent(task.id)}`;
-            name.textContent = task.name;
-            const status = document.createElement('small');
-            status.textContent = `${task.status.replace(/([a-z])([A-Z])/g, '$1 $2')}${task.deadline ? ` · Due ${task.deadline}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} min` : ''}`;
-            const context =
-                parentOptions.get(`milestone:${task.milestone_id}`) ||
-                parentOptions.get(`goal:${task.goal_id}`);
-            if (context) {
-                const chip = document.createElement('span');
-                chip.className = 'context-chip';
-                chip.textContent = context.name;
-                copy.append(chip);
-            }
-            copy.append(name, status);
-            const action = document.createElement('button');
-            action.className = 'button button-quiet';
-            action.type = 'button';
-            action.textContent = task.status === 'Done' ? 'Reopen' : 'Complete';
-            action.addEventListener('click', async () => {
-                action.disabled = true;
-                try {
-                    if (
-                        await transitionEntity(
-                            'task',
-                            task,
-                            task.status === 'Done' ? 'reopen' : 'complete',
-                        )
-                    ) {
-                        await load();
-                    }
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    action.disabled = false;
-                }
-            });
-            const week = document.createElement('button');
-            week.className = 'button button-quiet';
-            week.type = 'button';
-            week.textContent = selectedIds.has(task.id) ? 'Selected this week' : 'Select for week';
-            week.disabled = selectedIds.has(task.id);
-            week.addEventListener('click', async () => {
-                week.disabled = true;
-                try {
-                    await post('/api/v1/weekly-selections/task', { id: task.id, position: 0 });
-                    selectedIds.add(task.id);
-                    render();
-                } catch (error) {
-                    showError(root, error);
-                } finally {
-                    week.disabled = false;
-                }
-            });
-            const actions = document.createElement('div');
-            actions.className = 'action-row';
-            actions.append(week, action);
-            article.append(copy, actions);
-            list.append(article);
-        }
+        list.append(...result.items.map(taskRow));
     };
     const load = async () => {
         const ticket = reads.begin();
         try {
-            const [response, dashboard, goals, milestones] = await Promise.all([
+            const [response, dashboard, goals, milestones, seriesResponse] = await Promise.all([
                 get('/api/v1/tasks', { signal: ticket.signal }),
                 get('/api/v1/dashboard', { signal: ticket.signal }),
                 get('/api/v1/goals', { signal: ticket.signal }),
                 get('/api/v1/milestones', { signal: ticket.signal }),
+                get('/api/v1/task-series', { signal: ticket.signal }),
             ]);
             if (!reads.isCurrent(ticket)) return;
             tasks = response.payload.data;
+            series = seriesResponse.payload.data;
             today = dashboard.payload.data.today;
             selectedIds = new Set(dashboard.payload.data.selected_tasks.map((task) => task.id));
             const parentValue = parent.value;
             const previousParent = parentOptions.get(parentValue);
             parentOptions = new Map();
-            parent.replaceChildren(new Option('Inbox · organize later', ''));
+            parent.replaceChildren(new Option(t('Inbox · organize later'), ''));
             for (const [type, items] of [
                 ['goal', goals.payload.data],
                 ['milestone', milestones.payload.data],
@@ -453,7 +627,7 @@ export function initTasksPage(root) {
                     parentOptions.set(key, item);
                     parent.add(
                         new Option(
-                            `${item.status === 'Completed' ? 'Completed · ' : ''}${type === 'goal' ? 'Goal' : 'Milestone'} · ${item.name}`,
+                            `${item.status === 'Completed' ? `${t('Completed')} · ` : ''}${t(type === 'goal' ? 'Goal' : 'Milestone')} · ${item.name}`,
                             key,
                         ),
                     );
@@ -462,7 +636,10 @@ export function initTasksPage(root) {
             if (previousParent && !parentOptions.has(parentValue)) {
                 parentOptions.set(parentValue, { ...previousParent, unavailable: true });
                 parent.add(
-                    new Option(`Selected parent unavailable · ${previousParent.name}`, parentValue),
+                    new Option(
+                        `${t('Selected parent unavailable')} · ${previousParent.name}`,
+                        parentValue,
+                    ),
                 );
             }
             parent.value = parentOptions.has(parentValue) ? parentValue : '';
@@ -480,7 +657,7 @@ export function initTasksPage(root) {
         } catch (error) {
             if (reads.shouldIgnore(ticket, error)) return;
             showError(root, error);
-            list.textContent = 'Unable to load Tasks.';
+            list.textContent = t('Unable to load tasks.');
         }
     };
     narrow.addEventListener('change', () => {
@@ -499,18 +676,18 @@ export function initTasksPage(root) {
         const selected = parentOptions.get(parent.value);
         const output = root.querySelector('[data-task-parent-context]');
         if (selected?.unavailable) {
-            output.textContent = `${selected.name} is unavailable. Choose another parent to create this task.`;
+            output.textContent = `${selected.name} · ${t('unavailable. Choose another parent to create this task.')}`;
             return;
         }
         if (!selected) {
-            output.textContent = 'Capture now; choose a home later.';
+            output.textContent = t('Capture now; choose a home later.');
             return;
         }
         if (parent.value.startsWith('goal:'))
-            output.textContent = `${selected.name} · ${selected.progress}% goal progress`;
+            output.textContent = `${selected.name} · ${selected.progress}% ${t('goal progress')}`;
         else {
             const goal = parentOptions.get(`goal:${selected.goal_id}`);
-            output.textContent = `${goal ? `${goal.name} › ` : ''}${selected.name} · ${selected.progress.completed}/${selected.progress.total} finite tasks completed`;
+            output.textContent = `${goal ? `${goal.name} › ` : ''}${selected.name} · ${selected.progress.completed}/${selected.progress.total} ${t('finite tasks completed')}`;
         }
     });
     root.querySelectorAll('[data-capture-suggestions] button').forEach((button) =>
@@ -527,6 +704,18 @@ export function initTasksPage(root) {
         page = 0;
         render();
     });
+    tagFilter.addEventListener('change', () => {
+        page = 0;
+        render();
+    });
+    loadTags()
+        .then((loaded) => {
+            tags = loaded;
+            for (const tag of tags) tagFilter.add(new Option(tag.name, String(tag.id)));
+            tagFilter.closest('.field').hidden = !tags.length;
+            render();
+        })
+        .catch(() => {});
     status.addEventListener('change', () => {
         page = 0;
         render();
@@ -536,7 +725,7 @@ export function initTasksPage(root) {
         const data = new FormData(form);
         createWithForm(form, async () => {
             try {
-                const response = await post('/api/v1/tasks', {
+                const response = await createCapturedTask(data, {
                     goal_id: String(data.get('parent')).startsWith('goal:')
                         ? String(data.get('parent')).slice(5)
                         : null,
@@ -545,6 +734,7 @@ export function initTasksPage(root) {
                         : null,
                     name: data.get('name'),
                     completion_criteria: data.get('completion_criteria'),
+                    ...taskCaptureValues(data),
                 });
                 revealTaskId = response.payload.data.id;
                 form.reset();
@@ -573,6 +763,7 @@ export function initTaskDetail(root) {
     const editDraft = new DraftBuffer();
     let editConflict = null;
     let editDeepLinkPending = location.hash === '#edit';
+    let selectedForWeek = false;
     const noteCard = root.querySelector('[data-task-note-card]');
     const noteHome = root.querySelector('[data-note-overview-host]');
     const notePanel = root.querySelector('#task-panel-notes');
@@ -580,8 +771,8 @@ export function initTaskDetail(root) {
         const placeNote = () => {
             (notePanel.hidden ? noteHome : notePanel).append(noteCard);
             noteCard.querySelector('[data-task-note-heading]').textContent = notePanel.hidden
-                ? 'Notes'
-                : 'Working notes';
+                ? t('Notes')
+                : t('Working notes');
             noteCard.querySelector('textarea').rows = notePanel.hidden ? 4 : 8;
         };
         placeNote();
@@ -599,6 +790,7 @@ export function initTaskDetail(root) {
         'expected_result',
         'importance',
         'estimated_minutes',
+        'reminder_at',
         'status',
         'start_date',
         'deadline',
@@ -609,8 +801,11 @@ export function initTaskDetail(root) {
         Object.fromEntries(
             editFields.map((field) => [
                 field,
-                ['scheduled_start', 'scheduled_end'].includes(field)
-                    ? (value[field] || '').slice(0, 16)
+                // Times are edited in the browser's local time, like the schedule picker.
+                ['scheduled_start', 'scheduled_end', 'reminder_at'].includes(field)
+                    ? value[field]
+                        ? localDateTime(new Date(value[field]))
+                        : ''
                     : String(value[field] ?? ''),
             ]),
         );
@@ -624,6 +819,26 @@ export function initTaskDetail(root) {
         );
     });
     guardWorkspaceLeave(() => editDraft.dirty);
+    // Tags save as soon as they are toggled, like Note tags.
+    const tagPicker = createTagPicker({
+        onChange: async (ids) => {
+            if (!task || sameTagIds(ids, task.tag_ids)) return;
+            tagPicker.disabled = true;
+            try {
+                task = (
+                    await patch(`/api/v1/tasks/${id}`, { base_version: task.version, tag_ids: ids })
+                ).payload.data;
+                await load();
+            } catch (reason) {
+                error(reason);
+                tagPicker.value = task.tag_ids;
+            } finally {
+                tagPicker.disabled = false;
+            }
+        },
+    });
+    tagPicker.disabled = true;
+    root.querySelector('[data-task-tags]').append(tagPicker.element);
     const renderResources = () => {
         const list = root.querySelector('[data-task-resources]');
         list.replaceChildren();
@@ -635,7 +850,8 @@ export function initTaskDetail(root) {
             link.rel = 'noopener noreferrer';
             list.append(link);
         }
-        if (!list.childNodes.length) list.textContent = 'Links in your working note appear here.';
+        if (!list.childNodes.length)
+            list.textContent = t('Links in your working note appear here.');
     };
     let savingNote = false;
     let noteConflict = null;
@@ -648,12 +864,12 @@ export function initTaskDetail(root) {
     const noteState = root.querySelector('[data-task-note-state]');
     const updateNoteState = () => {
         noteState.textContent = savingNote
-            ? 'Saving…'
+            ? t('Saving…')
             : draft.dirty
-              ? 'Unsaved changes'
+              ? t('Unsaved changes')
               : draft.version
-                ? 'Saved'
-                : 'No note yet';
+                ? t('Saved')
+                : t('No note yet');
     };
     body.addEventListener('input', () => {
         draft.values = { body: body.value };
@@ -684,9 +900,11 @@ export function initTaskDetail(root) {
             editForm.querySelector('[type="submit"]').disabled =
                 !!editConflict || creationState(editForm).pending;
             root.querySelector('[data-task-edit-open]').disabled = false;
+            tagPicker.value = task.tag_ids;
+            tagPicker.disabled = false;
             root.querySelector('[data-task-estimate]').textContent = task.estimated_minutes
-                ? `${task.estimated_minutes} minutes`
-                : 'Not estimated';
+                ? `${task.estimated_minutes} ${t('minutes')}`
+                : t('Not estimated');
             if (editDeepLinkPending) {
                 editDeepLinkPending = false;
                 if (!editForm.closest('dialog').open)
@@ -695,19 +913,21 @@ export function initTaskDetail(root) {
             note = noteResponse.payload.data;
             root.querySelector('[data-task-name]').textContent = task.name;
             root.querySelector('[data-task-meta]').textContent =
-                `${task.status.replace(/([a-z])([A-Z])/g, '$1 $2')} · Importance ${task.importance}/5${task.deadline ? ` · Due ${task.deadline}` : ''}`;
+                `${statusLabel(task.status)} · ${t('Importance')} ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}`;
             root.querySelector('[data-task-description]').textContent = task.description || '—';
             root.querySelector('[data-task-result]').textContent = task.expected_result || '—';
             root.querySelector('[data-task-criteria]').textContent =
                 task.completion_criteria || '—';
             const transition = root.querySelector('[data-task-transition]');
             transition.disabled = false;
-            const selected = selectionsResponse.payload.data.some((item) => item.id === id);
-            root.querySelector('[data-task-week]').disabled = selected;
-            root.querySelector('[data-task-week]').textContent = selected
-                ? '✓ Selected this week'
-                : 'Select for this week';
-            transition.textContent = task.status === 'Done' ? 'Reopen' : 'Complete';
+            selectedForWeek = selectionsResponse.payload.data.some((item) => item.id === id);
+            const weekButton = root.querySelector('[data-task-week]');
+            weekButton.disabled = false;
+            weekButton.setAttribute('aria-pressed', String(selectedForWeek));
+            weekButton.title = selectedForWeek ? t('Remove from this week') : '';
+            if (selectedForWeek) setCheckedLabel(weekButton, t('Selected this week'));
+            else weekButton.textContent = t('Select for this week');
+            transition.textContent = task.status === 'Done' ? t('Reopen') : t('Complete');
             const list = root.querySelector('[data-task-checklist]');
             root.querySelector('[data-task-checklist-count]').textContent =
                 `${checklist.filter((item) => item.checked).length} / ${checklist.length}`;
@@ -736,9 +956,51 @@ export function initTaskDetail(root) {
                 const title = document.createElement('span');
                 title.textContent = item.title;
                 label.append(checkbox, title);
-                list.append(label);
+                const row = document.createElement('div');
+                row.className = 'checklist-item';
+                const rename = document.createElement('button');
+                rename.type = 'button';
+                rename.className = 'text-button';
+                rename.textContent = t('Rename');
+                rename.setAttribute('aria-label', `${t('Rename')} ${item.title}`);
+                rename.addEventListener('click', async () => {
+                    const next = window.prompt(t('Rename checklist item'), item.title)?.trim();
+                    if (!next || next === item.title) return;
+                    rename.disabled = true;
+                    try {
+                        await patch(`/api/v1/tasks/${id}/checklist/${item.id}`, {
+                            base_version: item.version,
+                            title: next,
+                        });
+                        await load();
+                    } catch (reason) {
+                        error(reason);
+                        rename.disabled = false;
+                    }
+                });
+                const discard = document.createElement('button');
+                discard.type = 'button';
+                discard.className = 'icon-button';
+                discard.textContent = '×';
+                discard.title = t('Remove');
+                discard.setAttribute('aria-label', `${t('Remove')} ${item.title}`);
+                discard.addEventListener('click', async () => {
+                    if (!window.confirm(`${t('Remove')} “${item.title}”?`)) return;
+                    discard.disabled = true;
+                    try {
+                        await remove(`/api/v1/tasks/${id}/checklist/${item.id}`, {
+                            base_version: item.version,
+                        });
+                        await load();
+                    } catch (reason) {
+                        error(reason);
+                        discard.disabled = false;
+                    }
+                });
+                row.append(label, rename, discard);
+                list.append(row);
             }
-            if (!checklist.length) list.textContent = 'No checklist items yet.';
+            if (!checklist.length) list.textContent = t('No checklist items yet.');
             if (draft.receive({ body: note?.body || '' }, note?.version || null))
                 contentEditor.setValue(draft.values.body);
             body.disabled = false;
@@ -759,9 +1021,9 @@ export function initTaskDetail(root) {
                         link.href = `/goals/${goalId}${milestone ? `#milestone=${milestone.id}` : ''}`;
                         link.textContent = `${goal.name}${milestone ? ` / ${milestone.name}` : ''}`;
                         context.append(link);
-                    } else context.textContent = 'Inbox task';
+                    } else context.textContent = t('Inbox task');
                 } catch {
-                    context.textContent = 'Task context unavailable';
+                    context.textContent = t('Task context unavailable');
                 }
             }
         } catch (reason) {
@@ -789,9 +1051,9 @@ export function initTaskDetail(root) {
                 : null;
         for (const field of ['start_date', 'deadline'])
             if (field in input) input[field] = input[field] || null;
-        for (const field of ['scheduled_start', 'scheduled_end'])
+        for (const field of ['scheduled_start', 'scheduled_end', 'reminder_at'])
             if (field in input)
-                input[field] = input[field] ? new Date(`${input[field]}Z`).toISOString() : null;
+                input[field] = input[field] ? new Date(input[field]).toISOString() : null;
         if (input.status === 'Done') delete input.status;
         createWithForm(editForm, async () => {
             try {
@@ -829,25 +1091,14 @@ export function initTaskDetail(root) {
             editForm.querySelector('[type="submit"]').disabled = false;
             load();
         });
-    root.querySelector('[data-workspace-tab="related"]').addEventListener('click', async () => {
+    root.querySelector('[data-workspace-tab="related"]').addEventListener('click', () => {
         renderResources();
-        const container = root.querySelector('[data-task-related]');
-        try {
-            const related = (await get(`/api/v1/tasks/${id}/contributions`)).payload.data;
-            container.replaceChildren();
-            for (const goal of related) {
-                const link = document.createElement('a');
-                link.className = 'planning-item-link';
-                link.href = `/goals/${goal.goal_id || goal.target_goal_id || goal.id}`;
-                link.textContent = goal.name || goal.goal_name || 'Contributing goal';
-                container.append(link);
-            }
-            if (!related.length)
-                container.textContent =
-                    'No additional goal contributions. Your task’s primary context is shown above.';
-        } catch (reason) {
-            error(reason);
-        }
+        renderContributions(root.querySelector('[data-task-related]'), {
+            type: 'task',
+            id,
+            excludeGoalId: task?.goal_id ?? null,
+            onError: error,
+        });
     });
     root.querySelector('[data-checklist-form]').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -921,12 +1172,14 @@ export function initTaskDetail(root) {
             button.disabled = false;
         }
     });
+    // The same button selects the Task for this week or removes it again.
     root.querySelector('[data-task-week]').addEventListener('click', async (event) => {
         const button = event.currentTarget;
         button.disabled = true;
         try {
-            await post('/api/v1/weekly-selections/task', { id, position: 0 });
-            button.textContent = 'Selected for this week';
+            if (selectedForWeek) await remove(`/api/v1/weekly-selections/task/${id}`);
+            else await post('/api/v1/weekly-selections/task', { id, position: 0 });
+            await load();
         } catch (reason) {
             error(reason);
         } finally {

@@ -8,7 +8,9 @@ use PDO;
 
 final readonly class PdoReviewRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(int $userId): array
@@ -36,11 +38,18 @@ final readonly class PdoReviewRepository
         return $this->find($userId, $id) ?? throw new \RuntimeException('Review could not be reloaded.');
     }
 
+    public function delete(int $userId, string $id): void
+    {
+        $statement = $this->pdo->prepare('DELETE FROM reviews WHERE user_id = :user_id AND id = :id');
+        $statement->execute(['user_id' => $userId, 'id' => $id]);
+    }
+
     /** @param array<string, mixed> $changes @return array<string, mixed> */
     public function update(int $userId, string $id, array $changes, string $timestamp): array
     {
         $assignments = array_map(static fn (string $column): string => "$column = :$column", array_keys($changes));
-        $assignments[] = 'version = version + 1'; $assignments[] = 'updated_at = :updated_at';
+        $assignments[] = 'version = version + 1';
+        $assignments[] = 'updated_at = :updated_at';
         $statement = $this->pdo->prepare('UPDATE reviews SET '.implode(', ', $assignments).' WHERE user_id = :user_id AND id = :id');
         $statement->execute([...$changes, 'updated_at' => $timestamp, 'user_id' => $userId, 'id' => $id]);
         return $this->find($userId, $id) ?? throw new \RuntimeException('Review could not be reloaded.');
@@ -117,6 +126,8 @@ SQL, ['user_id' => $userId, 'from_date' => $previousStart->format('Y-m-d'), 'to_
     /** @return list<array<string, mixed>> */
     private function query(string $sql, array $bindings): array
     {
-        $statement = $this->pdo->prepare($sql); $statement->execute($bindings); return $statement->fetchAll();
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute($bindings);
+        return $statement->fetchAll();
     }
 }

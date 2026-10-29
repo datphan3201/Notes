@@ -34,7 +34,9 @@ final readonly class UploadValidator
         'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip'],
     ];
 
-    public function __construct(private InputValidator $input) {}
+    public function __construct(private InputValidator $input)
+    {
+    }
 
     /**
      * @param  array<string, mixed>  $form

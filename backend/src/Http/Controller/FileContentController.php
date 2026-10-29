@@ -16,7 +16,8 @@ final readonly class FileContentController
         private AuthService $auth,
         private FileService $files,
         private FileStreamer $streamer,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, string> $parameters */
     public function preview(Request $request, array $parameters): Response

@@ -6,16 +6,27 @@ namespace Planner\Http\Controller;
 
 use Planner\Application\Account\AuthService;
 use Planner\Application\Planning\PlanningService;
+use Planner\Application\Recurrence\TaskSeriesService;
 use Planner\Http\Request;
 use Planner\Http\Response;
 
 final readonly class PlanningController
 {
-    public function __construct(private AuthService $auth, private PlanningService $planning) {}
+    public function __construct(
+        private AuthService $auth,
+        private PlanningService $planning,
+        private ?TaskSeriesService $series = null,
+    ) {
+    }
 
     /** @param array<string, string> $parameters */
     public function index(Request $request, array $parameters): Response
     {
+        if ($parameters['resource'] === 'task') {
+            // Repeating work keeps appearing even when no scheduler is running.
+            $this->series?->materializeDue($this->userId());
+        }
+
         return Response::json(['data' => $this->planning->list($parameters['resource'], $this->userId())]);
     }
 

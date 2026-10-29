@@ -18,7 +18,8 @@ final readonly class AttachmentController
         private FileService $files,
         private UploadValidator $validator,
         private AttachmentSerializer $serializer,
-    ) {}
+    ) {
+    }
 
     /** @param array<string, string> $parameters */
     public function index(Request $request, array $parameters): Response

@@ -9,7 +9,9 @@ use Planner\Http\HttpException;
 final class Router
 {
     /** @param list<Route> $routes */
-    public function __construct(private readonly array $routes) {}
+    public function __construct(private readonly array $routes)
+    {
+    }
 
     public function match(string $method, string $rawPath): RouteMatch
     {

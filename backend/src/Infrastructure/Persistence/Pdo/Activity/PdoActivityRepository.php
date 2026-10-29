@@ -8,7 +8,9 @@ use PDO;
 
 final readonly class PdoActivityRepository
 {
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     /** @param array<string, mixed> $metadata */
     public function insert(

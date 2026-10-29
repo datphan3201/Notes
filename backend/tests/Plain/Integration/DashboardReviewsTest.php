@@ -20,7 +20,9 @@ final class DashboardReviewsTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION = []; $_COOKIE = [];
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
         $this->runtime = require dirname(__DIR__, 3).'/bootstrap/http.php';
         $this->pdo = $this->runtime['pdo'];
         self::assertSame('goals_test', $this->pdo->query('SELECT DATABASE()')->fetchColumn());
@@ -29,7 +31,13 @@ final class DashboardReviewsTest extends TestCase
         $this->owner = (new PdoAccountRepository($this->pdo))->insertUser('dashboard@example.test', 'Dashboard Owner', password_hash('correct horse battery staple', PASSWORD_BCRYPT), '2026-09-17 12:00:00.000000')->id;
     }
 
-    protected function tearDown(): void { $this->runtime['session']->close(); session_id(''); $_SESSION = []; $_COOKIE = []; }
+    protected function tearDown(): void
+    {
+        $this->runtime['session']->close();
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
+    }
 
     public function test_activity_grid_uses_unreversed_completion_facts(): void
     {
@@ -83,7 +91,7 @@ final class DashboardReviewsTest extends TestCase
         self::assertSame(0, $this->runtime['goal_snapshot_service']->capture()['created']);
     }
 
-    public function test_dashboard_shows_only_goal_related_habits_with_period_specific_counts(): void
+    public function test_dashboard_shows_every_habit_with_period_specific_counts_and_streaks(): void
     {
         $planning = $this->runtime['planning_service'];
         $area = $planning->create('area', $this->owner, ['name' => 'Health']);
@@ -129,7 +137,12 @@ final class DashboardReviewsTest extends TestCase
         $names = array_keys($byName);
         sort($names);
 
-        self::assertSame(['Strength training', 'Walk'], $names);
+        // Every active Habit is listed, linked to a Goal or not.
+        self::assertSame(['Strength training', 'Unrelated habit', 'Walk'], $names);
+        // Walk was checked in on Monday and today; they are adjacent only on Tuesday.
+        $walkRun = $weekStart === $today ? 1 : ($weekStart === $this->runtime['clock']->now()->modify('-1 day')->format('Y-m-d') ? 2 : 1);
+        self::assertSame(['count' => $walkRun, 'unit' => 'days', 'through_date' => $today], $byName['Walk']['streak']);
+        self::assertTrue($byName['Walk']['done_today']);
         self::assertSame(1, $byName['Walk']['completed_days']);
         self::assertSame(2, $byName['Strength training']['completed_days']);
         self::assertSame(3, $byName['Strength training']['target_frequency']);
@@ -145,19 +158,26 @@ final class DashboardReviewsTest extends TestCase
         $habits->checkIn($this->owner,$second['id'],$today->format('Y-m-d'));
         $dashboard=$this->runtime['dashboard_service'];
         self::assertSame(4,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        $current=$dashboard->dashboard($this->owner,null);
+        // Tracking starts at the earliest back-dated check-in.
+        self::assertSame($today->modify('-3 days')->format('Y-m-d'),$current['habit_streak']['tracking_since']);
         $habits->undoCheckIn($this->owner,$first['id'],$today->modify('-1 day')->format('Y-m-d'));
         self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        // Read is now unfinished today and missed yesterday, so no day is complete.
         $habits->undoCheckIn($this->owner,$first['id'],$today->format('Y-m-d'));
-        self::assertSame(1,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
+        self::assertSame(0,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
         $habits->undoCheckIn($this->owner,$second['id'],$today->format('Y-m-d'));
         self::assertSame(0,$dashboard->dashboard($this->owner,null)['habit_streak']['days']);
         $other=(new PdoAccountRepository($this->pdo))->insertUser('streak-other@example.test','Other',password_hash('password',PASSWORD_BCRYPT),'2026-09-17 12:00:00.000000')->id;
         self::assertSame(0,$dashboard->dashboard($other,null)['habit_streak']['days']);
+        self::assertNull($dashboard->dashboard($other,null)['habit_streak']['tracking_since']);
     }
 
     public function test_week_and_review_completion_use_real_denominators_and_saved_snapshots(): void
     {
-        $planning=$this->runtime['planning_service']; $dashboard=$this->runtime['dashboard_service']; $reviews=$this->runtime['review_service'];
+        $planning=$this->runtime['planning_service'];
+        $dashboard=$this->runtime['dashboard_service'];
+        $reviews=$this->runtime['review_service'];
         $today=$this->runtime['clock']->now()->format('Y-m-d');
         self::assertNull($dashboard->dashboard($this->owner,null)['week_summary']['percentage']);
         $one=$planning->create('task',$this->owner,['name'=>'One','deadline'=>$today]);
@@ -165,7 +185,9 @@ final class DashboardReviewsTest extends TestCase
         foreach([$one,$two] as $task)$dashboard->addSelection('task',$this->owner,['id'=>$task['id']]);
         $one=$planning->transition('task',$this->owner,$one['id'],'complete',['base_version'=>$one['version']]);
         $summary=$dashboard->dashboard($this->owner,null)['week_summary'];
-        self::assertSame(2,$summary['total']);self::assertSame(1,$summary['completed']);self::assertSame(50.0,$summary['percentage']);
+        self::assertSame(2,$summary['total']);
+        self::assertSame(1,$summary['completed']);
+        self::assertSame(50.0,$summary['percentage']);
         $review=$reviews->create($this->owner,['kind'=>'Weekly','date'=>$today]);
         self::assertSame(['total'=>2,'completed'=>1],$review['snapshot']['task_summary']);
         $snapshot=$review['snapshot'];
@@ -184,14 +206,22 @@ final class DashboardReviewsTest extends TestCase
         $span=$planning->create('task',$this->owner,['name'=>'Cross midnight','scheduled_start'=>$yesterday.'T23:00:00.000000Z','scheduled_end'=>$today.'T01:00:00.000000Z']);
         $planning->create('task',$this->owner,['name'=>'Old interval','scheduled_start'=>$yesterday.'T01:00:00.000000Z','scheduled_end'=>$yesterday.'T02:00:00.000000Z']);
         $ids=array_column($this->runtime['dashboard_service']->dashboard($this->owner,null)['today_tasks'],'id');
-        self::assertCount(2,$ids);self::assertContains($start['id'],$ids);self::assertContains($span['id'],$ids);
+        self::assertCount(2,$ids);
+        self::assertContains($start['id'],$ids);
+        self::assertContains($span['id'],$ids);
     }
 
     private function wipeTargetDatabase(): void
     {
         $tables = $this->pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'goals_test' AND table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);
         $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-        try { foreach ($tables as $table) { if (!is_string($table) || preg_match('/^[a-z0-9_]+$/', $table) !== 1) throw new RuntimeException('Unsafe test table name.'); $this->pdo->exec("DROP TABLE `$table`"); } }
-        finally { $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1'); }
+        try {
+            foreach ($tables as $table) {
+                if (!is_string($table) || preg_match('/^[a-z0-9_]+$/', $table) !== 1) throw new RuntimeException('Unsafe test table name.');
+                $this->pdo->exec("DROP TABLE `$table`");
+            }
+        } finally {
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+        }
     }
 }

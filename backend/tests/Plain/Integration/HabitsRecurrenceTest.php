@@ -7,6 +7,7 @@ namespace Tests\Plain\Integration;
 use DateTimeZone;
 use PDO;
 use PHPUnit\Framework\TestCase;
+use Planner\Http\ValidationException;
 use Planner\Infrastructure\Database\MigrationRunner;
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
 use RuntimeException;
@@ -20,7 +21,9 @@ final class HabitsRecurrenceTest extends TestCase
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-        session_id(''); $_SESSION = []; $_COOKIE = [];
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
         $this->runtime = require dirname(__DIR__, 3).'/bootstrap/http.php';
         $this->pdo = $this->runtime['pdo'];
         self::assertSame('goals_test', $this->pdo->query('SELECT DATABASE()')->fetchColumn());
@@ -33,7 +36,20 @@ final class HabitsRecurrenceTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->runtime['session']->close(); session_id(''); $_SESSION = []; $_COOKIE = [];
+        $this->runtime['session']->close();
+        session_id('');
+        $_SESSION = [];
+        $_COOKIE = [];
+    }
+
+    public function test_habit_accepts_browser_time_zone_alias_as_canonical_identifier(): void
+    {
+        $habit = $this->runtime['habit_service']->create($this->owner, [
+            'name' => 'Read', 'period' => 'daily', 'target_frequency' => 1,
+            'timezone' => 'Asia/Saigon',
+        ]);
+
+        self::assertSame('Asia/Ho_Chi_Minh', $habit['timezone']);
     }
 
     public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone(): void
@@ -60,6 +76,44 @@ final class HabitsRecurrenceTest extends TestCase
         $habits->undoCheckIn($this->owner, $habit['id'], '2026-01-05');
         self::assertSame(0, count($habits->history($this->owner, $habit['id'])));
         self::assertSame(1, (int) $this->pdo->query("SELECT COUNT(*) FROM activities WHERE action = 'reversed'")->fetchColumn());
+    }
+
+    public function test_rest_days_use_a_three_day_sliding_window_and_only_protect_the_streak(): void
+    {
+        $habits = $this->runtime['habit_service'];
+        $habit = $habits->create($this->owner, ['name' => 'Run', 'period' => 'daily', 'target_frequency' => 1, 'timezone' => 'UTC']);
+        $now = $this->runtime['clock']->now()->setTimezone(new DateTimeZone('UTC'));
+        $day = static fn (int $offset): string => $now->modify(sprintf('%+d days', $offset))->format('Y-m-d');
+        self::assertSame(['from' => $day(1), 'to' => $day(3)], $habit['rest_window']);
+
+        foreach ([0, -1, 4] as $offset) {
+            try {
+                $habits->rest($this->owner, $habit['id'], $day($offset));
+                self::fail("A rest day $offset days away must be rejected.");
+            } catch (ValidationException) {
+            }
+        }
+        $habits->rest($this->owner, $habit['id'], $day(1));
+        $habit = $habits->rest($this->owner, $habit['id'], $day(3));
+        self::assertSame([$day(1), $day(3)], $habit['rest_days']);
+        $habit = $habits->cancelRest($this->owner, $habit['id'], $day(1));
+        self::assertSame([$day(3)], $habit['rest_days']);
+        $this->expectException(ValidationException::class);
+        $habits->cancelRest($this->owner, $habit['id'], $day(0));
+    }
+
+    public function test_back_dated_rest_day_bridges_but_does_not_extend_the_habit_streak(): void
+    {
+        $habits = $this->runtime['habit_service'];
+        $habit = $habits->create($this->owner, ['name' => 'Stretch', 'period' => 'daily', 'target_frequency' => 1, 'timezone' => 'UTC']);
+        $now = $this->runtime['clock']->now()->setTimezone(new DateTimeZone('UTC'));
+        $day = static fn (int $offset): string => $now->modify(sprintf('%+d days', $offset))->format('Y-m-d');
+        $habits->checkIn($this->owner, $habit['id'], $day(-2));
+        $habits->checkIn($this->owner, $habit['id'], $day(0));
+        self::assertSame(1, $habits->show($this->owner, $habit['id'])['streak']['count']);
+        // A rest day planned earlier for yesterday: written directly, as the window has passed.
+        $this->runtime['habit_repository']->insertRestDay('00000000-0000-4000-8000-000000000001', $this->owner, $habit['id'], $day(-1), '2026-01-01 00:00:00.000000');
+        self::assertSame(2, $habits->show($this->owner, $habit['id'])['streak']['count']);
     }
 
     public function test_materializer_copies_templates_and_is_retry_safe(): void

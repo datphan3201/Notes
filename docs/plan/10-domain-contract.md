@@ -120,3 +120,13 @@ Every different successful aggregate mutation increments version exactly once, e
 ## Ownership
 
 Repositories never offer unscoped object lookup to controllers. Services load every referenced endpoint with the authenticated owner. Missing and foreign identifiers are indistinguishable outside validation field placement. Composite ownership foreign keys are defense in depth.
+
+## Approved Task history — 2026-10-19
+
+History is a derived browser view, not a status, archive operation, or deletion.
+Done Tasks enter after 24 elapsed hours from completed_at. Unfinished Tasks enter
+when deadline <= account-local today minus three calendar days. Current Task
+views exclude history; the history view supports search/status filters and detail
+navigation. Reopening uses the existing versioned transition and returns the Task
+to current work unless its deadline still independently qualifies it as overdue
+history. No Task is erased and Dashboard overdue facts remain unchanged.

@@ -1,4 +1,9 @@
 import Alpine from 'alpinejs';
+import { initDeliveryPreferences, initNotePreferences } from './settings/delivery-preferences.js';
+import { initTaskCapturePresets } from './planning/task-capture.js';
+import { initNotifications } from './lib/notifications.js';
+import { initAssistant } from './planning/assistant.js';
+import { initPasswordVisibility } from './lib/password-visibility.js';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/500.css';
 import '@fontsource/be-vietnam-pro/600.css';
@@ -17,11 +22,17 @@ import {
 } from './planning/planning-page';
 import { initHabitsPage } from './planning/habits-page';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
-import { initAIPage } from './planning/ai-page';
+import { initTeamworkPage } from './planning/teamwork-page.js';
+import { initAdminPage } from './admin/admin-page.js';
+import { initTwoFactor } from './settings/two-factor.js';
+import { initTaskHistory } from './settings/task-history.js';
 import { initNavigation } from './lib/navigation';
 import { initWorkspaceUI } from './lib/workspace-ui';
+import { initDialogBackdropClose } from './lib/dialog-backdrop.js';
 import { initWalkthrough } from './help/walkthrough';
 import { applyAppearance } from './settings/theme-catalog';
+import { patch } from './lib/http.js';
+import { t } from './lib/i18n.js';
 import { decorateReference } from './settings/reference-decoration';
 
 window.Alpine = Alpine;
@@ -63,11 +74,39 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    initPasswordVisibility();
+    const delivery = document.querySelector('[data-notification-settings]');
+    if (delivery) initDeliveryPreferences(delivery);
+    const notePreferences = document.querySelector('[data-note-preferences]');
+    if (notePreferences) initNotePreferences(notePreferences);
+    initNotifications();
+    initAssistant();
+    initTaskCapturePresets();
+    document.querySelector('[data-toggle-theme]')?.addEventListener('click', async (event) => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        const preference = document.querySelector(`[data-pref="theme"][data-value="${theme}"]`);
+        if (preference) {
+            preference.click();
+            return;
+        }
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            const response = await patch('/api/v1/preferences', { theme });
+            Object.assign(window.notesBootstrap.preferences, response.payload.data);
+            applyAppearance(response.payload.data);
+        } catch (error) {
+            window.alert(error.message || t('Unable to change appearance.'));
+        } finally {
+            button.disabled = false;
+        }
+    });
     decorateReference();
     initNavigation();
+    initDialogBackdropClose();
     document
         .querySelectorAll(
-            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings]',
+            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings], [data-teamwork-page]',
         )
         .forEach(initWorkspaceUI);
     const notes = document.querySelector('[data-notes-workspace]');
@@ -92,15 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboard) initDashboardPage(dashboard);
     const reviews = document.querySelector('[data-reviews-page]');
     if (reviews) initReviewsPage(reviews);
-    const ai = document.querySelector('[data-ai-page]');
-    if (ai) initAIPage(ai);
+    const teamwork = document.querySelector('[data-teamwork-page]');
+    if (teamwork) initTeamworkPage(teamwork);
+    const admin = document.querySelector('[data-admin-page]');
+    if (admin) initAdminPage(admin);
+    const twoFactor = document.querySelector('[data-two-factor-settings]');
+    if (twoFactor) initTwoFactor(twoFactor);
+    const history = document.querySelector('[data-history-settings]');
+    if (history) initTaskHistory(history);
     initWalkthrough({ ready: notesReady });
 
     document.querySelectorAll('[data-avatar-fallback]').forEach((avatar) => {
         const url = window.notesBootstrap?.user?.avatar_url;
         if (!url) return;
         const image = document.createElement('img');
-        image.alt = 'Profile picture';
+        image.alt = t('Profile picture');
         image.src = url;
         avatar.replaceChildren(image);
     });

@@ -71,7 +71,7 @@ final class AccountHttpTest extends TestCase
             'password_confirmation' => 'correct horse battery staple',
         ], $cookie);
         self::assertSame(302, $registered->status);
-        self::assertSame('/', $registered->headers['Location']);
+        self::assertSame('/dashboard', $registered->headers['Location']);
         $authenticatedCookie = $this->session->id();
         self::assertNotSame($cookie, $authenticatedCookie);
 
@@ -216,7 +216,7 @@ final class AccountHttpTest extends TestCase
     public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal(): void
     {
         [$cookie, $csrf] = $this->registerAccount('guide-shell@example.test');
-        foreach (['/', '/dashboard', '/goals', '/tasks', '/habits', '/reviews', '/ai', '/settings/profile', '/settings/preferences', '/settings/password'] as $path) {
+        foreach (['/', '/dashboard', '/goals', '/tasks', '/habits', '/reviews', '/settings/profile', '/settings/preferences', '/settings/password'] as $path) {
             $page = $this->request('GET', $path, cookie: $cookie);
             self::assertSame(200, $page->status);
             self::assertStringContainsString('data-open-walkthrough', $page->body);

@@ -33,7 +33,8 @@ final readonly class PlanningService
         private Clock $clock,
         private PdoActivityRepository $activities,
         private PdoTaskSeriesRepository $series,
-    ) {}
+    ) {
+    }
 
     /** @return list<array<string, mixed>> */
     public function list(string $type, int $userId): array
@@ -226,10 +227,15 @@ final readonly class PlanningService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public function archive(string $type, int $userId, string $id, array $input): array
     {
-        $this->keys($input, ['base_version']);
+        $this->keys($input, in_array($type, ['goal', 'milestone'], true) ? ['base_version', 'include_contents'] : ['base_version']);
         $baseVersion = $this->baseVersion($input);
+        if (array_key_exists('include_contents', $input) && !is_bool($input['include_contents'])) {
+            throw new ValidationException(['include_contents' => ['The value must be boolean.']]);
+        }
+        // Explicit opt-in: archive everything beneath the Goal or Milestone in one step.
+        $cascade = ($input['include_contents'] ?? false) === true;
 
-        return $this->transactions->run(function () use ($type, $userId, $id, $baseVersion): array {
+        return $this->transactions->run(function () use ($type, $userId, $id, $baseVersion, $cascade): array {
             $this->repository->lockOwner($userId);
             $current = $this->owned($type, $userId, $id, true);
             $this->assertVersion($current, $baseVersion);
@@ -240,10 +246,14 @@ final readonly class PlanningService
                 }
 
                 $this->requireEmpty('goal', $userId, 'area_id', $id, 'The Area still contains active Goals.');
+            } elseif ($type === 'goal' && $cascade) {
+                $this->archiveGoalContents($userId, $id);
             } elseif ($type === 'goal') {
                 $this->requireEmpty('goal', $userId, 'parent_goal_id', $id, 'The Goal still has child Goals.');
                 $this->requireEmpty('milestone', $userId, 'goal_id', $id, 'The Goal still has Milestones.');
                 $this->requireEmpty('task', $userId, 'goal_id', $id, 'The Goal still has Tasks.');
+            } elseif ($type === 'milestone' && $cascade) {
+                $this->archiveMilestoneContents($userId, $id);
             } elseif ($type === 'milestone') {
                 $this->requireEmpty('task', $userId, 'milestone_id', $id, 'The Milestone still has Tasks.');
 
@@ -254,6 +264,47 @@ final readonly class PlanningService
 
             return $this->serialize($this->repository->archive($type, $userId, $id, $this->now()));
         });
+    }
+
+    /** Archives child Goals, Milestones, Tasks and repeating series beneath a Goal (not the Goal itself). */
+    private function archiveGoalContents(int $userId, string $goalId): void
+    {
+        $children = [];
+        foreach ($this->repository->list('goal', $userId) as $goal) {
+            if ($goal['parent_goal_id'] !== null) {
+                $children[(string) $goal['parent_goal_id']][] = (string) $goal['id'];
+            }
+        }
+        $goals = [$goalId];
+        for ($index = 0; $index < count($goals); $index++) {
+            foreach ($children[$goals[$index]] ?? [] as $child) {
+                $goals[] = $child;
+            }
+        }
+        $milestones = $this->repository->list('milestone', $userId);
+        $now = $this->now();
+        foreach ($goals as $current) {
+            foreach ($milestones as $milestone) {
+                if ((string) $milestone['goal_id'] === $current) {
+                    $this->archiveMilestoneContents($userId, (string) $milestone['id']);
+                    $this->repository->archive('milestone', $userId, (string) $milestone['id'], $now);
+                }
+            }
+            $this->repository->archiveWhere('task', $userId, 'goal_id', $current, $now);
+            $this->series->archiveForParent($userId, 'goal_id', $current, $now);
+            if ($current !== $goalId) {
+                $this->repository->archive('goal', $userId, $current, $now);
+            }
+        }
+    }
+
+    /** Archives a Milestone's Tasks and repeating series and drops its prerequisite links. */
+    private function archiveMilestoneContents(int $userId, string $milestoneId): void
+    {
+        $now = $this->now();
+        $this->repository->removeMilestoneDependencies($userId, $milestoneId);
+        $this->repository->archiveWhere('task', $userId, 'milestone_id', $milestoneId, $now);
+        $this->series->archiveForParent($userId, 'milestone_id', $milestoneId, $now);
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
@@ -659,7 +710,8 @@ final readonly class PlanningService
         foreach ($rows['milestones'] as $row) {
             $milestones[(string) $row['id']] = [...$this->serialize($row), 'tasks' => [], 'recurring_tasks' => [], 'prerequisites' => [], 'completion_locked' => false];
         }
-        $direct = []; $recurring = [];
+        $direct = [];
+        $recurring = [];
         foreach ($rows['tasks'] as $row) {
             $task = $this->serialize($row);
             if ($row['milestone_id'] !== null) {
@@ -672,7 +724,8 @@ final readonly class PlanningService
             }
         }
         foreach ($rows['prerequisites'] as $row) {
-            $dependent = (string) $row['dependent_id']; unset($row['dependent_id']);
+            $dependent = (string) $row['dependent_id'];
+            unset($row['dependent_id']);
             $milestones[$dependent]['prerequisites'][] = $this->serialize($row);
             if ($row['status'] !== MilestoneStatus::Completed->value) {
                 $milestones[$dependent]['completion_locked'] = true;
@@ -806,7 +859,7 @@ final readonly class PlanningService
             'area' => ['name', 'description', 'position'],
             'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -843,6 +896,7 @@ final readonly class PlanningService
                 'start_date' => $this->date($input, 'start_date'),
                 'scheduled_start' => $this->dateTime($input, 'scheduled_start'),
                 'scheduled_end' => $this->dateTime($input, 'scheduled_end'),
+                'reminder_at' => $this->dateTime($input, 'reminder_at'),
                 'estimated_minutes' => !isset($input['estimated_minutes']) ? null : $this->integer($input, 'estimated_minutes', 1, 1440),
                 'completed_at' => null,
             ];
@@ -859,7 +913,7 @@ final readonly class PlanningService
             'area' => ['name', 'description', 'position'],
             'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
             'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids'],
-            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'position', 'tag_ids'],
+            'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
         $this->keys($input, $allowed);
@@ -874,7 +928,7 @@ final readonly class PlanningService
                 'position' => $this->integer($input, $field, 0, PHP_INT_MAX),
                 'estimated_minutes' => $value === null ? null : $this->integer($input, $field, 1, 1440),
                 'deadline', 'start_date' => $this->date($input, $field),
-                'scheduled_start', 'scheduled_end' => $this->dateTime($input, $field),
+                'scheduled_start', 'scheduled_end', 'reminder_at' => $this->dateTime($input, $field),
                 'goal_id', 'milestone_id' => $this->nullableUuid($input, $field),
                 'tag_ids' => $this->tagIds($value),
                 'status' => $this->nonTerminalStatus($type, $value),
@@ -883,6 +937,10 @@ final readonly class PlanningService
         }
 
         if ($type === 'task') {
+            if (array_key_exists('reminder_at', $changes)) {
+                $changes['reminder_sent_at'] = null;
+                $changes['reminder_read_at'] = null;
+            }
             $this->validateDates($changes);
         }
 
@@ -1077,7 +1135,7 @@ final readonly class PlanningService
             $row['checked'] = (bool) $row['checked'];
         }
 
-        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end'] as $field) {
+        foreach (['created_at', 'updated_at', 'completed_at', 'archived_at', 'checked_at', 'deleted_at', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'reminder_read_at'] as $field) {
             if (array_key_exists($field, $row)) {
                 $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
             }

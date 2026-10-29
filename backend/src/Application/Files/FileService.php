@@ -32,7 +32,8 @@ final readonly class FileService
         private ProcessFileDeletion $cleanup,
         private AvatarProcessor $avatars,
         private Clock $clock,
-    ) {}
+    ) {
+    }
 
     /** @return list<AttachmentRecord> */
     public function listAttachments(int $userId, string $noteId): array

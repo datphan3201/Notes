@@ -36,4 +36,14 @@ final class RecurrenceCalculatorTest extends TestCase
         self::assertSame('2026-03-08T07:30:00+00:00', $calculator->localDateTimeToUtc('2026-03-08', '02:30:00', 'America/New_York')?->format(DATE_ATOM));
         self::assertSame('2026-11-01T05:30:00+00:00', $calculator->localDateTimeToUtc('2026-11-01', '01:30:00', 'America/New_York')?->format(DATE_ATOM));
     }
+    public function test_monthly_and_yearly_recurrence_clamp_without_drifting(): void
+    {
+        $calculator = new RecurrenceCalculator;
+        self::assertSame(['2024-01-31', '2024-02-29', '2024-03-31', '2024-04-30'], $calculator->dates([
+            'frequency' => 'monthly', 'interval_count' => 1, 'weekdays' => [], 'start_date' => '2024-01-31', 'end_date' => null, 'timezone' => 'UTC',
+        ], '2024-01-30', '2024-04-30'));
+        self::assertSame(['2025-02-28', '2026-02-28', '2027-02-28', '2028-02-29'], $calculator->dates([
+            'frequency' => 'yearly', 'interval_count' => 1, 'weekdays' => [], 'start_date' => '2024-02-29', 'end_date' => null, 'timezone' => 'America/New_York',
+        ], '2024-03-01', '2028-03-01'));
+    }
 }

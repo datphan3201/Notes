@@ -11,13 +11,37 @@ use Planner\Http\Response;
 
 final readonly class TaskSeriesController
 {
-    public function __construct(private AuthService $auth, private TaskSeriesService $series) {}
+    public function __construct(private AuthService $auth, private TaskSeriesService $series)
+    {
+    }
 
-    public function index(Request $request, array $parameters = []): Response { return Response::json(['data' => $this->series->list($this->userId())]); }
-    public function store(Request $request, array $parameters = []): Response { return Response::json(['data' => $this->series->create($this->userId(), $request->input())], 201); }
-    public function show(Request $request, array $parameters): Response { return Response::json(['data' => $this->series->show($this->userId(), $parameters['id'])]); }
-    public function update(Request $request, array $parameters): Response { return Response::json(['data' => $this->series->update($this->userId(), $parameters['id'], $request->input())]); }
-    public function transition(Request $request, array $parameters): Response { return Response::json(['data' => $this->series->transition($this->userId(), $parameters['id'], $parameters['action'], $request->input())]); }
-    public function preview(Request $request, array $parameters = []): Response { return Response::json(['data' => $this->series->preview($request->input())]); }
-    private function userId(): int { return $this->auth->requireUser()->id; }
+    public function index(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->series->list($this->userId())]);
+    }
+    public function store(Request $request, array $parameters = []): Response
+    {
+        $created = $this->series->createAndMaterialize($this->userId(), $request->input());
+        return Response::json(['data' => $created], 201);
+    }
+    public function show(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->series->show($this->userId(), $parameters['id'])]);
+    }
+    public function update(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->series->update($this->userId(), $parameters['id'], $request->input())]);
+    }
+    public function transition(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->series->transition($this->userId(), $parameters['id'], $parameters['action'], $request->input())]);
+    }
+    public function preview(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->series->preview($request->input())]);
+    }
+    private function userId(): int
+    {
+        return $this->auth->requireUser()->id;
+    }
 }

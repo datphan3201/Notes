@@ -26,7 +26,8 @@ final readonly class TagService
         private LabelSerializer $serializer,
         private Clock $clock,
         private GraphGuard $graphs,
-    ) {}
+    ) {
+    }
 
     /** @return list<TagRecord> */
     public function list(int $userId): array

@@ -34,10 +34,11 @@ final readonly class AuthService
         $this->dummyHash = password_hash('dummy password used only to equalize login timing', PASSWORD_BCRYPT);
     }
 
-    public function register(string $email, string $displayName, string $password): UserRecord
+    public function register(string $email, string $displayName, string $password, string $locale = 'en'): UserRecord
     {
+        $locale = in_array($locale, ['en', 'vi'], true) ? $locale : 'en';
         try {
-            $user = $this->transactions->run(function () use ($email, $displayName, $password): UserRecord {
+            $user = $this->transactions->run(function () use ($email, $displayName, $password, $locale): UserRecord {
                 $timestamp = $this->timestamp();
                 $user = $this->accounts->insertUser(
                     $email,
@@ -45,11 +46,16 @@ final readonly class AuthService
                     password_hash($password, PASSWORD_BCRYPT),
                     $timestamp,
                 );
+                // Placeholder Areas follow the language chosen before sign-up and stay editable.
+                $areaName = $locale === 'vi' ? 'Lĩnh vực' : 'Area';
                 $this->planning->insertDefaultAreas($user->id, [
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 1', 'position' => 0],
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 2', 'position' => 1],
-                    ['id' => $this->uuid->generate(), 'name' => 'Area 3', 'position' => 2],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 1", 'position' => 0],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 2", 'position' => 1],
+                    ['id' => $this->uuid->generate(), 'name' => "$areaName 3", 'position' => 2],
                 ], $timestamp);
+                if ($locale !== 'en') {
+                    $this->accounts->updatePreferences($user->id, ['locale' => $locale], $timestamp);
+                }
 
                 return $user;
             });
@@ -66,7 +72,8 @@ final readonly class AuthService
         return $user;
     }
 
-    public function attempt(string $email, string $password, string $ipAddress): bool
+    /** @return 'failed'|'authenticated'|'two_factor' */
+    public function attempt(string $email, string $password, string $ipAddress): string
     {
         $identity = strtolower($email).'|'.$ipAddress;
         $this->rateLimiter->assertAvailable('login-account', $identity, 5);
@@ -79,10 +86,14 @@ final readonly class AuthService
             $this->rateLimiter->hit('login-account', $identity, 60);
             $this->rateLimiter->hit('login-ip', $ipAddress, 60);
 
-            return false;
+            return 'failed';
         }
 
         $this->rateLimiter->clear('login-account', $identity);
+
+        if ($user->lockedAt !== null) {
+            throw new ValidationException(['email' => ['This account has been locked by an administrator.']]);
+        }
 
         if (password_needs_rehash($user->passwordHash, PASSWORD_BCRYPT)) {
             $this->transactions->run(function () use ($user, $password): void {
@@ -96,9 +107,35 @@ final readonly class AuthService
             });
         }
 
+        if ($user->twoFactorMethod !== null) {
+            $this->session->beginTwoFactor($user->id, $user->authVersion);
+
+            return 'two_factor';
+        }
+
         $this->session->login($user->id, $user->authVersion);
 
-        return true;
+        return 'authenticated';
+    }
+
+    /** The password-verified account awaiting its second factor, if still valid. */
+    public function pendingTwoFactorUser(): ?UserRecord
+    {
+        $pending = $this->session->pendingTwoFactor();
+        if ($pending === null) {
+            return null;
+        }
+        $user = $this->accounts->findById($pending['user_id']);
+
+        return $user !== null && $user->lockedAt === null && $user->authVersion === $pending['auth_version'] && $user->twoFactorMethod !== null
+            ? $user
+            : null;
+    }
+
+    public function completeTwoFactor(UserRecord $user): void
+    {
+        $this->session->clearTwoFactor();
+        $this->session->login($user->id, $user->authVersion);
     }
 
     public function currentUser(): ?UserRecord
@@ -111,7 +148,7 @@ final readonly class AuthService
 
         $user = $this->accounts->findById($userId);
 
-        if ($user === null || $this->session->authVersion() !== $user->authVersion) {
+        if ($user === null || $user->lockedAt !== null || $this->session->authVersion() !== $user->authVersion) {
             $this->session->invalidate();
 
             return null;
@@ -124,6 +161,17 @@ final readonly class AuthService
     {
         return $this->currentUser()
             ?? throw new HttpException(401, 'AUTH_REQUIRED', 'You must sign in to continue.');
+    }
+
+    /** Non-admins receive 404 so the admin surface is not disclosed. */
+    public function requireAdmin(): UserRecord
+    {
+        $user = $this->requireUser();
+        if (! $user->isAdmin()) {
+            throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+        }
+
+        return $user;
     }
 
     public function logout(): void

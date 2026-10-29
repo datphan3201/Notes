@@ -11,7 +11,9 @@ final readonly class SessionPruner
 {
     private const BATCH_SIZE = 1_000;
 
-    public function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
     public function pruneExpired(): int
     {
