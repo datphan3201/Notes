@@ -88,7 +88,7 @@
 .workspace-dialog::backdrop {
     background: rgb(15 30 40 / 45%);
 }
-body:has(.workspace-dialog[open]) {
+body:has(.workspace-dialog:modal) {
     overflow: hidden;
 }
 .workspace-dialog > .section-heading {

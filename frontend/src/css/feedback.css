@@ -154,13 +154,21 @@
     outline: 3px solid var(--focus);
     outline-offset: 3px;
 }
-.assistant-dialog {
-    width: min(520px, calc(100vw - 32px));
+/* Non-modal floating panel above the launcher; the page behind stays usable. */
+.workspace-dialog.assistant-dialog {
+    position: fixed;
+    inset: auto 20px calc(88px + env(safe-area-inset-bottom, 0px)) auto;
+    z-index: 30;
+    width: min(420px, calc(100vw - 40px));
+    max-height: calc(100dvh - 120px);
+    margin: 0;
+    padding: 20px;
+    box-shadow: var(--shadow);
 }
 .assistant-log {
     display: grid;
     gap: 8px;
-    max-height: 50vh;
+    max-height: min(50vh, 420px);
     margin-block: 12px;
     overflow: auto;
 }
@@ -184,8 +192,38 @@
     background: var(--danger-soft);
 }
 .assistant-form {
+    position: relative;
     display: grid;
-    gap: 8px;
+}
+.assistant-form textarea {
+    padding-right: 56px;
+    resize: none;
+}
+/* Round send button pinned to the bottom-right corner of the question box. */
+.assistant-send {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.assistant-send:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+.assistant-send:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+.assistant-send:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 /* Due date / reminder / repeat pickers. */
@@ -822,6 +860,15 @@
     .assistant-launcher {
         right: 16px;
         bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .workspace-dialog.assistant-dialog {
+        inset: auto 8px calc(80px + env(safe-area-inset-bottom, 0px)) 8px;
+        width: auto;
+        height: auto;
+        max-height: calc(100dvh - 100px);
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
     }
 }
 

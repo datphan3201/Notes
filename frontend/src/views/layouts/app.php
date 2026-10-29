@@ -134,9 +134,9 @@ $accountNavigation = [
             <form class="assistant-form" data-assistant-form>
                 <label class="sr-only" for="assistant-question"><?= $view->e($view->t('Your question')) ?></label>
                 <textarea id="assistant-question" name="question" rows="2" maxlength="2000" required placeholder="<?= $view->e($view->t('What should I focus on this week?')) ?>"></textarea>
-                <div class="action-row">
-                    <button class="button button-primary" type="submit"><?= $view->e($view->t('Ask')) ?></button>
-                </div>
+                <button class="assistant-send" type="submit" aria-label="<?= $view->e($view->t('Ask')) ?>" title="<?= $view->e($view->t('Ask')) ?>">
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg>
+                </button>
             </form>
         </dialog>
         <div class="toast-region" data-toast-region aria-live="polite"></div>
