@@ -26,7 +26,7 @@ final readonly class DisabledAIProvider implements AIProviderInterface
     {
         throw new HttpException(503, 'AI_DISABLED', 'The AI assistant is not enabled.');
     }
-    public function answer(string $question, array $context): string
+    public function chat(string $system, array $contents, array $tools): array
     {
         throw new HttpException(503, 'AI_DISABLED', 'The AI assistant is not enabled.');
     }

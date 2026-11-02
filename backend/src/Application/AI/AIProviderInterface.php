@@ -13,10 +13,14 @@ interface AIProviderInterface
     public function generate(GenerationRequest $request): GenerationResult;
 
     /**
-     * Answers a free-form question as plain text using only the supplied,
-     * bounded read-only summary of the user's Planner.
+     * One model step of the chat agent. $contents are Gemini-style turns
+     * ({role: user|model, parts: [...]}) including earlier function calls and
+     * responses; $tools are function declarations. The returned content is
+     * the model turn to append verbatim before sending function responses.
      *
-     * @param array<string, mixed> $context
+     * @param list<array<string, mixed>> $contents
+     * @param list<array<string, mixed>> $tools
+     * @return array{content:array<string,mixed>,text:string,calls:list<array{name:string,args:array<string,mixed>,id?:string}>}
      */
-    public function answer(string $question, array $context): string;
+    public function chat(string $system, array $contents, array $tools): array;
 }

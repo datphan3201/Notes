@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Planner\Application\AI;
 
 use DateInterval;
+use Planner\Application\Files\ProcessFileDeletion;
+use Planner\Application\Habits\HabitService;
+use Planner\Application\Notes\NoteService;
+use Planner\Application\Notes\NoteValidator;
 use Planner\Application\Planning\PlanningService;
+use Planner\Domain\Notes\NoteSnapshot;
 use Planner\Application\Reviews\ReviewService;
 use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
@@ -30,6 +35,10 @@ final readonly class AIActionService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
+        private NoteService $notes,
+        private NoteValidator $noteValidator,
+        private ProcessFileDeletion $fileCleanup,
+        private HabitService $habits,
     ) {
     }
 
@@ -53,7 +62,28 @@ final readonly class AIActionService
         }
         // The external request is deliberately outside a database transaction.
         $generated = $this->provider->generate(new GenerationRequest($capability, $instruction, $contexts['objects']));
-        $validated = $this->validator->validate($generated->proposalJson);
+        return $this->store($userId, $capability, $generated->proposalJson, $contexts['versions']);
+    }
+
+    /**
+     * Stores a proposal the server built itself (e.g. from chat). $versions
+     * lists the existing objects it may change, as loaded when proposing;
+     * Apply rejects the proposal if any of them changed since.
+     *
+     * @param list<array{type:string,id:string,version:int}> $versions
+     * @return array<string,mixed>
+     */
+    public function propose(int $userId, string $capability, string $proposalJson, array $versions = []): array
+    {
+        if (!in_array($capability, self::CAPABILITIES, true)) throw new ValidationException(['capability' => ['The AI capability is invalid.']]);
+        return $this->store($userId, $capability, $proposalJson, $versions);
+    }
+
+    /** @param list<array{type:string,id:string,version:int}> $versions @return array<string,mixed> */
+    private function store(int $userId, string $capability, string $proposalJson, array $versions): array
+    {
+        $validated = $this->validator->validate($proposalJson);
+        $contexts = ['versions' => $versions];
         return $this->transactions->run(function () use ($userId, $capability, $contexts, $validated): array {
             $this->planningRepository->lockOwner($userId);
             $now = $this->now();
@@ -81,7 +111,8 @@ final readonly class AIActionService
         $version = $input['base_version'] ?? null;
         $hash = $input['proposal_hash'] ?? null;
         if (!is_int($version) || $version < 1 || !is_string($hash) || preg_match('/^[0-9a-f]{64}$/D', $hash) !== 1) throw new ValidationException(['approval' => ['The approval details are invalid.']]);
-        return $this->transactions->run(function () use ($userId, $id, $version, $hash): array {
+        $deletedFiles = [];
+        $result = $this->transactions->run(function () use ($userId, $id, $version, $hash, &$deletedFiles): array {
             $this->planningRepository->lockOwner($userId);
             $action = $this->owned($userId, $id, true);
             if (!hash_equals((string) $action['proposal_hash'], $hash)) throw new HttpException(409, 'AI_PROPOSAL_CHANGED', 'The proposal does not match the version you reviewed.');
@@ -97,10 +128,14 @@ final readonly class AIActionService
                 $this->assertReferenceVersion($userId, $reference);
                 $allowedReferences[$this->referenceKey((string) $reference['type'], (string) $reference['id'])] = $reference;
             }
-            $created = $this->execute($userId, $validated['proposal']['operations'], $allowedReferences);
+            $created = $this->execute($userId, $validated['proposal']['operations'], $allowedReferences, $deletedFiles);
             $updated = $this->actions->update($userId, $id, ['status' => 'Applied', 'created_ids' => json_encode($created, JSON_THROW_ON_ERROR)], $this->now());
             return $this->serialize($updated);
         });
+        // Private files of deleted Notes are removed only after the commit, as in NoteController.
+        $this->fileCleanup->handle($deletedFiles);
+
+        return $result;
     }
 
     public function reject(int $userId, string $id, array $input): array
@@ -130,6 +165,8 @@ final readonly class AIActionService
             $id = $item['id'];
             if (in_array($type, ['area','goal','milestone','task'], true)) $data = $this->planning->show($type, $userId, $id);
             elseif ($type === 'review') $data = $this->reviews->show($userId, $id);
+            elseif ($type === 'note') $data = $this->noteData($userId, $id);
+            elseif ($type === 'habit') $data = $this->habits->show($userId, $id);
             else throw new ValidationException(['context' => ['This context type is not allowed.']]);
             $allowed = array_intersect_key($data, array_flip(['id','name','description','expected_result','completion_criteria','strategy_notes','importance','status','deadline','progress','kind','period_start','period_end','snapshot','version']));
             $objects[] = ['type' => $type, 'data' => $allowed];
@@ -143,7 +180,7 @@ final readonly class AIActionService
      * @param array<string, array{type:string,id:string,version:int}> $allowedReferences
      * @return array<string, string>
      */
-    private function execute(int $userId, array $operations, array $allowedReferences): array
+    private function execute(int $userId, array $operations, array $allowedReferences, array &$deletedFiles = []): array
     {
         $locals = [];
         $existing = $allowedReferences;
@@ -155,11 +192,35 @@ final readonly class AIActionService
                 $this->assertParentType($op, $parent);
                 $fields = $operation['fields'];
                 $created = match ($op) {
+                    'create_note' => $this->createNote($userId, $fields),
+                    'create_habit' => $this->habits->create($userId, [...$fields, 'primary_goal_id' => $parent['id'] ?? null]),
                     'create_goal' => $this->planning->create('goal', $userId, [...$fields, 'area_id' => $parent['type'] === 'area' ? $parent['id'] : null, 'parent_goal_id' => $parent['type'] === 'goal' ? $parent['id'] : null]),
                     'create_milestone' => $this->planning->create('milestone', $userId, [...$fields, 'goal_id' => $parent['id']]),
                     'create_task' => $this->planning->create('task', $userId, [...$fields, 'goal_id' => $parent !== null && $parent['type'] === 'goal' ? $parent['id'] : null, 'milestone_id' => $parent !== null && $parent['type'] === 'milestone' ? $parent['id'] : null]),
                 };
                 $locals[$operation['local_id']] = ['type' => substr($op, 7), 'id' => (string) $created['id'], 'version' => (int) $created['version']];
+            } elseif (!array_key_exists('source', $operation)) {
+                // update/complete/reopen/archive Task, update/delete Note: always
+                // against the version loaded when the proposal was made.
+                $target = $this->resolve($operation['target'], $locals, $existing, $allowedReferences);
+                $fields = $operation['fields'] ?? [];
+                $base = ['base_version' => $target['version']];
+                $updated = match ($op) {
+                    'update_task' => $this->planning->update('task', $userId, $target['id'], [...$fields, ...$base]),
+                    'complete_task' => $this->planning->transition('task', $userId, $target['id'], 'complete', [...$base, 'acknowledge_unchecked_items' => true]),
+                    'reopen_task' => $this->planning->transition('task', $userId, $target['id'], 'reopen', [...$fields, ...$base]),
+                    'archive_task' => $this->planning->archive('task', $userId, $target['id'], $base),
+                    'update_goal' => $this->planning->update('goal', $userId, $target['id'], [...$fields, ...$base]),
+                    'complete_goal' => $this->planning->transition('goal', $userId, $target['id'], 'complete', $base),
+                    'reopen_goal' => $this->planning->transition('goal', $userId, $target['id'], 'reopen', $base),
+                    'archive_goal' => $this->planning->archive('goal', $userId, $target['id'], $base),
+                    'update_habit' => $this->habits->update($userId, $target['id'], [...$fields, ...$base]),
+                    'archive_habit' => $this->habits->archive($userId, $target['id'], $base),
+                    'check_in_habit' => $this->checkInHabit($userId, $target['id'], (string) $fields['date']),
+                    'update_note' => $this->updateNote($userId, $target['id'], $target['version'], $fields),
+                    'delete_note' => $this->deleteNote($userId, $target['id'], $target['version'], $deletedFiles),
+                };
+                if (isset($updated['version'])) $this->refreshReference($locals, $existing, $target['type'], $target['id'], (int) $updated['version']);
             } elseif ($op === 'add_contribution') {
                 $source = $this->resolve($operation['source'], $locals, $existing, $allowedReferences);
                 $target = $this->resolve($operation['target'], $locals, $existing, $allowedReferences);
@@ -218,6 +279,8 @@ final readonly class AIActionService
             'create_goal' => $parent !== null && in_array($parent['type'], ['area', 'goal'], true),
             'create_milestone' => $parent !== null && $parent['type'] === 'goal',
             'create_task' => $parent === null || in_array($parent['type'], ['goal', 'milestone'], true),
+            'create_note' => $parent === null,
+            'create_habit' => $parent === null || $parent['type'] === 'goal',
             default => false,
         };
         if (!$valid) {
@@ -228,7 +291,13 @@ final readonly class AIActionService
     {
         $type=$reference['type'];
         $id=$reference['id'];
-        $current = in_array($type,['area','goal','milestone','task'],true) ? $this->planning->show($type,$userId,$id) : ($type==='review' ? $this->reviews->show($userId,$id) : null);
+        $current = match (true) {
+            in_array($type, ['area','goal','milestone','task'], true) => $this->planning->show($type, $userId, $id),
+            $type === 'review' => $this->reviews->show($userId, $id),
+            $type === 'note' => $this->noteData($userId, $id),
+            $type === 'habit' => $this->habits->show($userId, $id),
+            default => null,
+        };
         if ($current===null || (int)$current['version'] !== (int)$reference['version']) throw new HttpException(409,'AI_CONTEXT_STALE','The selected AI context has changed; generate a new proposal.');
     }
     /**
@@ -248,6 +317,48 @@ final readonly class AIActionService
         if (isset($existing[$key])) {
             $existing[$key]['version'] = $version;
         }
+    }
+
+    /** @return array{id:string,title:string,content:string,version:int} */
+    public function noteData(int $userId, string $id): array
+    {
+        $note = $this->notes->show($userId, $id);
+        return ['id' => $note->id, 'title' => $note->title, 'content' => $note->content, 'version' => $note->version];
+    }
+
+    /**
+     * A check-in returns the check-in, not the Habit; the first one also bumps
+     * the Habit version, so re-read it for later operations on the same Habit.
+     *
+     * @return array{version:int}
+     */
+    private function checkInHabit(int $userId, string $id, string $date): array
+    {
+        $this->habits->checkIn($userId, $id, $date);
+        return ['version' => (int) $this->habits->show($userId, $id)['version']];
+    }
+
+    /** @param array<string,mixed> $fields @return array{id:string,version:int} */
+    private function createNote(int $userId, array $fields): array
+    {
+        $input = $this->noteValidator->create(['id' => $this->uuid->generate(), 'title' => $fields['title'], 'content' => $fields['content'] ?? '']);
+        $note = $this->notes->create($userId, $input)['note'];
+        return ['id' => $note->id, 'version' => $note->version];
+    }
+
+    /** Notes save a full snapshot: keep color, pin and tags, change only title/content. @return array{version:int} */
+    private function updateNote(int $userId, string $id, int $version, array $fields): array
+    {
+        $snapshot = NoteSnapshot::fromRecord($this->notes->show($userId, $id));
+        $note = $this->notes->update($userId, $id, $this->noteValidator->update([...$snapshot, ...$fields, 'base_version' => $version]));
+        return ['version' => $note->version];
+    }
+
+    /** @param list<string> $deletedFiles @return array<string,mixed> */
+    private function deleteNote(int $userId, string $id, int $version, array &$deletedFiles): array
+    {
+        $deletedFiles = [...$deletedFiles, ...$this->notes->delete($userId, $id, $version)];
+        return [];
     }
 
     private function referenceKey(string $type, string $id): string

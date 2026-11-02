@@ -26,8 +26,8 @@ final readonly class AIChatController
     public function ask(Request $request): Response
     {
         $input = $request->input();
-        $this->input->rejectUnknown($input, ['question']);
+        $this->input->rejectUnknown($input, ['question', 'history']);
 
-        return Response::json(['data' => ['answer' => $this->chat->ask($this->auth->requireUser()->id, $input['question'] ?? null)]]);
+        return Response::json(['data' => $this->chat->ask($this->auth->requireUser()->id, $input['question'] ?? null, $input['history'] ?? [])]);
     }
 }

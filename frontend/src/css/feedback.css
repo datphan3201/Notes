@@ -187,6 +187,31 @@
 .assistant-message.is-assistant {
     background: var(--surface-soft);
 }
+.assistant-proposal {
+    white-space: normal;
+}
+.assistant-proposal p,
+.assistant-proposal ul {
+    margin: 0 0 8px;
+}
+.assistant-proposal ul {
+    padding-left: 20px;
+}
+.assistant-proposal li + li {
+    margin-top: 4px;
+}
+.assistant-proposal ul ul {
+    margin: 2px 0 0;
+    color: var(--muted, inherit);
+    font-size: 0.9em;
+}
+.assistant-proposal li.is-destructive > strong {
+    color: var(--danger);
+}
+.assistant-proposal-actions {
+    display: flex;
+    gap: 8px;
+}
 .assistant-message.is-error {
     color: var(--danger);
     background: var(--danger-soft);

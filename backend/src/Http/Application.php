@@ -72,7 +72,9 @@ final readonly class Application
             'uploads' => [30, 60],
             'password-change' => [5, 60],
             'two-factor' => [10, 60],
-            'ai-chat' => [30, 3600],
+            // One chat message may use several model rounds, but the agent chat
+            // is conversational, so it allows more messages than generation.
+            'ai-chat' => [120, 3600],
             'ai-generation' => [10, 3600],
             'ai-apply' => [30, 3600],
             default => throw new \LogicException("Unknown rate limit bucket [$bucket]."),

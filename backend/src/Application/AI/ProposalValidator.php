@@ -8,6 +8,18 @@ use Planner\Http\ValidationException;
 
 final readonly class ProposalValidator
 {
+    private const CREATE = ['create_goal', 'create_milestone', 'create_task', 'create_note', 'create_habit'];
+    /** Every change is applied only after the user confirms it. */
+    private const CHANGE = [
+        'update_task', 'complete_task', 'reopen_task', 'archive_task',
+        'update_goal', 'complete_goal', 'reopen_goal', 'archive_goal',
+        'update_habit', 'archive_habit', 'check_in_habit',
+        'update_note', 'delete_note',
+    ];
+    private const TASK_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline'];
+    private const GOAL_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline'];
+    private const HABIT_FIELDS = ['name', 'description', 'importance', 'period', 'target_frequency'];
+
     /** @return array{proposal:array<string,mixed>,canonical:string,hash:string} */
     public function validate(string $json): array
     {
@@ -24,15 +36,25 @@ final readonly class ProposalValidator
         foreach ($proposal['operations'] as $index => $operation) {
             if (!is_array($operation)) throw new ValidationException(['operations' => ["Operation $index is invalid."]]);
             $op = $operation['op'] ?? null;
-            if (!in_array($op, ['create_goal','create_milestone','create_task','add_contribution','add_milestone_dependency'], true)) throw new ValidationException(['operations' => ["Operation $index is not supported."]]);
-            $allowed = str_starts_with($op, 'create_') ? ['op','local_id','parent','fields'] : ['op','source','target'];
+            if (!in_array($op, [...self::CREATE, ...self::CHANGE, 'add_contribution', 'add_milestone_dependency'], true)) throw new ValidationException(['operations' => ["Operation $index is not supported."]]);
+            $allowed = match (true) {
+                in_array($op, self::CREATE, true) => ['op','local_id','parent','fields'],
+                in_array($op, self::CHANGE, true) => ['op','target','fields'],
+                default => ['op','source','target'],
+            };
             if (array_diff(array_keys($operation), $allowed) !== []) throw new ValidationException(['operations' => ["Operation $index contains an unsupported field."]]);
-            if (str_starts_with($op, 'create_')) {
+            if (in_array($op, self::CREATE, true)) {
                 $local = $operation['local_id'] ?? null;
                 if (!is_string($local) || preg_match('/^[a-z][a-z0-9_-]{0,31}$/D', $local) !== 1 || isset($locals[$local])) throw new ValidationException(['operations' => ["The local_id in operation $index is invalid."]]);
-                $this->reference($operation['parent'] ?? null, $locals, $op === 'create_task');
+                $this->reference($operation['parent'] ?? null, $locals, in_array($op, ['create_task', 'create_note', 'create_habit'], true));
                 $this->fields($op, $operation['fields'] ?? null);
                 $locals[$local] = $op;
+            } elseif (in_array($op, self::CHANGE, true)) {
+                // Changes target only existing objects the server loaded for this proposal.
+                $target = $operation['target'] ?? null;
+                $this->reference($target, [], false);
+                if ($target['type'] !== substr($op, strrpos($op, '_') + 1)) throw new ValidationException(['operations' => ["Operation $index targets the wrong object type."]]);
+                $this->changeFields($op, $operation['fields'] ?? []);
             } else {
                 $this->reference($operation['source'] ?? null, $locals, false);
                 $this->reference($operation['target'] ?? null, $locals, false);
@@ -52,7 +74,7 @@ final readonly class ProposalValidator
             if (count($reference) !== 1 || !is_string($reference['local_id']) || !isset($locals[$reference['local_id']])) throw new ValidationException(['reference' => ['A local reference must point to an earlier operation.']]);
             return;
         }
-        if (array_diff(array_keys($reference), ['type','existing_id','version']) !== [] || !isset($reference['type'], $reference['existing_id'], $reference['version']) || !in_array($reference['type'], ['area','goal','milestone','task'], true) || !is_string($reference['existing_id']) || preg_match('/^[0-9a-f-]{36}$/D', $reference['existing_id']) !== 1 || !is_int($reference['version']) || $reference['version'] < 1) throw new ValidationException(['reference' => ['The existing-object reference is invalid.']]);
+        if (array_diff(array_keys($reference), ['type','existing_id','version']) !== [] || !isset($reference['type'], $reference['existing_id'], $reference['version']) || !in_array($reference['type'], ['area','goal','milestone','task','note','habit'], true) || !is_string($reference['existing_id']) || preg_match('/^[0-9a-f-]{36}$/D', $reference['existing_id']) !== 1 || !is_int($reference['version']) || $reference['version'] < 1) throw new ValidationException(['reference' => ['The existing-object reference is invalid.']]);
     }
 
     private function fields(string $op, mixed $fields): void
@@ -62,8 +84,32 @@ final readonly class ProposalValidator
             'create_goal' => ['name','description','expected_result','completion_criteria','strategy_notes','importance','deadline'],
             'create_milestone' => ['name','description','completion_criteria','importance','deadline'],
             'create_task' => ['name','description','expected_result','completion_criteria','importance','start_date','deadline','scheduled_start','scheduled_end'],
+            'create_note' => ['title','content'],
+            'create_habit' => [...self::HABIT_FIELDS, 'timezone'],
         };
-        if (array_diff(array_keys($fields), $allowed) !== [] || !isset($fields['name']) || !is_string($fields['name'])) throw new ValidationException(['fields' => ['The create fields are invalid.']]);
+        $required = $op === 'create_note' ? 'title' : 'name';
+        if (array_diff(array_keys($fields), $allowed) !== [] || !isset($fields[$required]) || !is_string($fields[$required])) throw new ValidationException(['fields' => ['The create fields are invalid.']]);
+        if ($op === 'create_note' && !is_string($fields['content'] ?? '')) throw new ValidationException(['fields' => ['The create fields are invalid.']]);
+    }
+
+    private function changeFields(string $op, mixed $fields): void
+    {
+        $allowed = match ($op) {
+            'update_task' => self::TASK_UPDATE_FIELDS,
+            'reopen_task' => ['deadline'],
+            'update_goal' => self::GOAL_UPDATE_FIELDS,
+            'update_habit' => self::HABIT_FIELDS,
+            'check_in_habit' => ['date'],
+            'update_note' => ['title', 'content'],
+            default => [],
+        };
+        $valid = is_array($fields) && ($fields === [] || !array_is_list($fields)) && array_diff(array_keys($fields), $allowed) === [];
+        if ($valid && in_array($op, ['update_task', 'update_goal', 'update_habit', 'update_note'], true) && $fields === []) $valid = false;
+        if ($valid && $op === 'check_in_habit') $valid = is_string($fields['date'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $fields['date']) === 1;
+        if ($valid && $op === 'update_note') {
+            foreach ($fields as $value) $valid = $valid && is_string($value);
+        }
+        if (!$valid) throw new ValidationException(['fields' => ['The change fields are invalid.']]);
     }
 
     private function sortObjects(mixed $value): mixed

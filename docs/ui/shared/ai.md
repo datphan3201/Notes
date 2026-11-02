@@ -2,9 +2,9 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-The floating chat is the current browser entry; there is no `/ai` HTML page. Provider availability is server-configured. Chat reads owned Planner context; the separate structured proposal APIs can create only after explicit Apply.
+The floating chat is the current browser entry; there is no `/ai` HTML page. Provider availability is server-configured. The chat is a tool-calling agent (AIChatService, up to 6 model rounds per message) over the owner's Areas, Goals, Tasks, Habits and Notes, with the recent conversation (`history`, last 12 messages) as real turns. Read tools (`list_areas`, `search_goals`/`get_goal`, `search_tasks`/`get_task`, `search_habits`/`get_habit`, `search_notes`/`get_note`) run immediately. Write tools (create/update/complete/reopen/delete Goal — a new Goal needs exactly one Area or parent Goal; create Tasks optionally inside a Goal and update/complete/reopen/delete Task; create/update/delete/check-in Habit, new Habits use the user's time zone; create/update/delete Note) only queue operations; `POST /api/v1/ai/chat` returns `{answer, proposal, preview}` and the chat shows the preview as a before → after confirmation card. Nothing changes until the user clicks Apply; Cancel calls Reject. Apply rechecks every targeted object's version and fails with 409 if any changed. Goal, Task and Habit delete archive the object; Note delete removes it with its attachments.
 
-Do not document the proposal API as a currently visible approval editor: this repo has no such browser page.
+There is no separate approval page; the chat card is the only browser entry to the proposal APIs.
 
 <!-- BEGIN GENERATED TRACE -->
 

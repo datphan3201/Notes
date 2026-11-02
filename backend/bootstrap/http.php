@@ -252,8 +252,6 @@ $aiProvider = $config->bool('ai.enabled') && $config->nullableString('ai.key') !
     ? new GoogleAIProvider($config->string('ai.key'), $config->string('ai.model'))
     : new DisabledAIProvider($config->string('ai.model'));
 $aiRepository = new PdoAIActionRepository($services['pdo']);
-$aiService = new AIActionService($aiProvider, new ProposalValidator, $aiRepository, $planningRepository, $planningService, $reviewService, $services['transactions'], $services['uuid'], $services['clock']);
-$aiController = new AIActionController($auth, $aiService);
 $reminderService = new \Planner\Application\Planning\TaskReminderService(
     new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoReminderRepository($services['pdo']),
     $accountRepository, $services['transactions'],
@@ -306,7 +304,10 @@ $teamService = new \Planner\Application\Teamwork\TeamService(
     $accountRepository, $noteShareRepository, $notificationService, $services['transactions'], $services['uuid'], $services['clock'],
 );
 $teamController = new \Planner\Http\Controller\TeamController($auth, $teamService, $inputValidator);
-$aiChatController = new \Planner\Http\Controller\AIChatController($auth, new \Planner\Application\AI\AIChatService($aiProvider, $aiRepository), $inputValidator);
+// The AI services come after NoteService: confirmed chat proposals can change Notes.
+$aiService = new AIActionService($aiProvider, new ProposalValidator, $aiRepository, $planningRepository, $planningService, $reviewService, $services['transactions'], $services['uuid'], $services['clock'], $noteService, new NoteValidator($inputValidator), $cleanup, $habitService);
+$aiController = new AIActionController($auth, $aiService);
+$aiChatController = new \Planner\Http\Controller\AIChatController($auth, new \Planner\Application\AI\AIChatService($aiProvider, $aiRepository, $aiService, $planningService, $habitService, $services['clock']), $inputValidator);
 $taskHistoryService = new \Planner\Application\Planning\TaskHistoryService(
     new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository($services['pdo']),
     $systemSettings, $services['transactions'], $services['clock'],

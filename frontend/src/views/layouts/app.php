@@ -129,7 +129,7 @@ $accountNavigation = [
                 <h2 id="assistant-title"><?= $view->e($view->t('AI assistant')) ?></h2>
                 <button class="icon-button" type="button" data-assistant-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
             </header>
-            <p class="subtle-copy" data-assistant-status><?= $view->e($view->t('Ask anything about your goals, tasks and habits. The assistant only reads a summary and never changes your data.')) ?></p>
+            <p class="subtle-copy" data-assistant-status><?= $view->e($view->t('Ask about your plans, or ask the assistant to add, edit, complete or delete Goals, Tasks, Habits and Notes. Nothing changes until you confirm.')) ?></p>
             <div class="assistant-log" data-assistant-log aria-live="polite"></div>
             <form class="assistant-form" data-assistant-form>
                 <label class="sr-only" for="assistant-question"><?= $view->e($view->t('Your question')) ?></label>

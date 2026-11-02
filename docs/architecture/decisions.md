@@ -26,7 +26,7 @@
 | Reviews / Activity | Persisted snapshot/reflection versus append-only completion/reversal facts; never fabricated scoring |
 | Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration |
 | Accounts | User/admin roles, locking, email verification/change, recovery, optional email/TOTP 2FA |
-| AI | Read-only chat plus separate validated proposal APIs; creation requires explicit Apply through ordinary services |
+| AI | Chat agent with owner-scoped read tools (Areas, Goals, Tasks, Habits, Notes). Its Goal/Task create, edit, complete, reopen and archive, Habit create, edit, archive and check-in, and Note create, edit and delete are only queued into one validated proposal; nothing changes until the user confirms the chat card, and Apply runs ordinary services against the versions read (any change since → 409, nothing applied) |
 
 See each [UI route](../README.md#find-the-page-you-see) for current implementation and exceptions. Estimates are not time tracking. History retention archives rather than hard-deletes Tasks. Bulk Goal/Milestone archival requires explicit include_contents confirmation.
 
@@ -38,7 +38,7 @@ The named fishbone head is the Goal and opens Goal information with Edit, Strate
 
 ## Deferred / excluded
 
-No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, mobile app, per-Note passwords, PWA/offline sync, time-entry/timer subsystem, gamification, AI Modify/Delete or autonomous mutation. Existing retry/recovery handling is not offline synchronization. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
+No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, mobile app, per-Note passwords, PWA/offline sync, time-entry/timer subsystem, gamification, or autonomous AI mutation (every AI change needs the user's confirmation; AI changes beyond Goals, Tasks, Habits and Notes are not yet supported). Existing retry/recovery handling is not offline synchronization. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
 
 ## Updating decisions
 
