@@ -79,6 +79,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `notifications.preferences` | [Notifications, invitation emails and Task reminders](../ui/settings/notifications.md#notifications-invitation-emails-and-task-reminders) | /settings/notifications — Delivery preferences |
 | `history.rules` | [Completed-hours, overdue-days and retention settings](../ui/settings/history.md#completed-hours-overdue-days-and-retention-settings) | /settings/history — Task history and retention |
 | `history.list` | [Search, detail navigation and Reopen](../ui/settings/history.md#search-detail-navigation-and-reopen) | /settings/history — Task history and retention |
+| `user-reports.form` | [Report form with image evidence](../ui/settings/reports.md#report-form-with-image-evidence) | /settings/reports — Report a user |
+| `user-reports.mine` | [The reporter's own reports and replies](../ui/settings/reports.md#the-reporters-own-reports-and-replies) | /settings/reports — Report a user |
 | `auth.login` | [/login — Sign in](../ui/auth/README.md#login--sign-in) | Authentication routes |
 | `auth.register` | [/register — Create account](../ui/auth/README.md#register--create-account) | Authentication routes |
 | `auth.logout` | [Logout and account/session changes](../ui/auth/README.md#logout-and-accountsession-changes) | Authentication routes |
@@ -94,5 +96,6 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |
 | `ai.proposal` | [Chat proposal preview, Apply and Cancel](../ui/shared/ai.md#chat-proposal-preview-apply-and-cancel) | Shared — Floating AI assistant and proposal APIs |
 | `admin.reports` | [Open/resolved reports and resolution](../ui/admin/README.md#openresolved-reports-and-resolution) | /admin — System reports, users and settings |
+| `admin.user-reports` | [User reports with image evidence](../ui/admin/README.md#user-reports-with-image-evidence) | /admin — System reports, users and settings |
 | `admin.users` | [Search users, lock/unlock](../ui/admin/README.md#search-users-lockunlock) | /admin — System reports, users and settings |
 | `admin.history` | [System Task history limit](../ui/admin/README.md#system-task-history-limit) | /admin — System reports, users and settings |

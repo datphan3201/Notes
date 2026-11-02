@@ -32,7 +32,7 @@ Only allowed media types preview. Safe filenames and a single byte Range are sup
 | UI / DOM | [index.php · data-editor-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L115) |
 | Browser logic | [note-editor.js · attachmentRow(attachment) {](../../../frontend/src/js/notes/note-editor.js#L709) |
 | Controller / service / domain | [FileService.php · public function authorizedAttachment(](../../../backend/src/Application/Files/FileService.php#L171)<br>[FileStreamer.php · public function attachment(](../../../backend/src/Application/Files/FileStreamer.php#L14) |
-| Persistence | [LocalPrivateStorage.php · public function resolve(](../../../backend/src/Infrastructure/Storage/LocalPrivateStorage.php#L111) |
+| Persistence | [LocalPrivateStorage.php · public function resolve(](../../../backend/src/Infrastructure/Storage/LocalPrivateStorage.php#L114) |
 | Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_attachment_replay_stream_ranges_owner_scope_and_tombstone(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L77) |
 | HTTP | `GET/HEAD /files/attachments/{attachment}/preview` (`files.attachment.preview`) → [FileContentController::preview](../../../backend/src/Http/Controller/FileContentController.php#L23)<br>`GET/HEAD /files/attachments/{attachment}/download` (`files.attachment.download`) → [FileContentController::download](../../../backend/src/Http/Controller/FileContentController.php#L29) |
 
