@@ -42,6 +42,8 @@ CLAUDE.local.md
 agent.local.md
 /.ai/local/
 /.agents/local/
+/.mcp.json
+/feedback.docx
 
 _ide_helper.php
 Homestead.json
