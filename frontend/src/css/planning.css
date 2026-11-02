@@ -1082,3 +1082,110 @@
         padding: 10px 12px;
     }
 }
+.goal-tree-meta {
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 10px;
+    align-items: center;
+}
+.goal-tree-deadline {
+    padding: 2px 8px;
+    color: var(--muted);
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: var(--font-size-caption);
+}
+.goal-mini-track {
+    display: inline-block;
+    width: 48px;
+    height: 6px;
+    overflow: hidden;
+    background: var(--surface-soft);
+    border-radius: 999px;
+}
+.goal-mini-track > i {
+    display: block;
+    width: var(--progress, 0%);
+    height: 100%;
+    background: var(--accent);
+    border-radius: inherit;
+}
+.goal-tree-progress {
+    min-width: 3.2ch;
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+[data-goal-timeline] {
+    display: grid;
+    gap: 12px;
+    position: relative;
+}
+.goal-timeline-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 14px 120px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+}
+.goal-timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 24px;
+    bottom: -20px;
+    width: 2px;
+    background: var(--border);
+}
+.goal-timeline-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--surface);
+    border: 2px solid var(--muted);
+    border-radius: 50%;
+    z-index: 1;
+}
+.goal-timeline-item.has-deadline .goal-timeline-dot {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.goal-timeline-item.is-completed .goal-timeline-dot {
+    border-color: var(--success);
+    background: var(--success);
+}
+.roadmap-goal-cta {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 10px;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+}
+.roadmap-center:hover .roadmap-goal-cta {
+    border-color: var(--accent);
+}
+@media (min-width: 901px) {
+    [data-review-edit-form] > .workspace-section-menu {
+        display: none;
+    }
+    .review-reflection-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+    .review-reflection-grid > .review-reflection-panel[hidden] {
+        display: block !important;
+    }
+}
+@media (max-width: 600px) {
+    .goal-timeline-item {
+        grid-template-columns: 14px minmax(0, 1fr);
+    }
+    .goal-timeline-item > .goal-tree-link {
+        grid-column: 2;
+    }
+}

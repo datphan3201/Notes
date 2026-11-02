@@ -17,7 +17,7 @@ A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed f
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L119) |
-| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L797) |
+| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L819) |
 | Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L982) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L354) |
@@ -63,7 +63,7 @@ Name comes first, then parent and Plan for. Today/Week views default Plan for to
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-plan&gt;](../../../frontend/src/views/planning/tasks.php#L126) |
 | CSS | [tasks.css · &#91;data-tasks-page&#93; .task-capture-footer {](../../../frontend/src/css/tasks.css#L42) |
-| Browser logic | [planning-page.js · const plan = form.elements.plan;](../../../frontend/src/js/planning/planning-page.js#L369)<br>[task-capture.js · export async function createCapturedTask](../../../frontend/src/js/planning/task-capture.js#L80) |
+| Browser logic | [planning-page.js · const plan = form.elements.plan;](../../../frontend/src/js/planning/planning-page.js#L391)<br>[task-capture.js · export async function createCapturedTask](../../../frontend/src/js/planning/task-capture.js#L80) |
 | Controller / service / domain | [PlanningService.php · public function create(](../../../backend/src/Application/Planning/PlanningService.php#L96)<br>[DashboardService.php · public function addDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L273) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoDashboardRepository.php · public function addDailySelection(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L172) |
 | Coverage limit | Browser smoke on an isolated local account checked Today/Week capture and simulated a failed selection after a real create. No new backend transaction or cross-request atomicity is claimed. |

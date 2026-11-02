@@ -5,18 +5,18 @@
             <p><?= $view->e($view->t('Give your ambitions a direction.')) ?></p>
         </div>
         <div class="action-row">
+            <button class="button button-quiet" type="button" data-planning-retry>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
+                <?= $view->e($view->t('Refresh')) ?>
+            </button>
+            <button class="button button-quiet" type="button" data-open-dialog="areas-dialog"><?= $view->e($view->t('Manage areas')) ?></button>
             <button class="button button-primary" type="button" data-open-dialog="new-goal-dialog">
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <?= $view->e($view->t('New goal')) ?>
             </button>
-            <button class="button button-quiet" type="button" data-open-dialog="areas-dialog"><?= $view->e($view->t('Manage areas')) ?></button>
         </div>
     </header>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
-    <button class="button button-quiet" type="button" data-planning-retry>
-        <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
-        <?= $view->e($view->t('Retry loading goals')) ?>
-    </button>
     <div data-main-goal></div>
     <div class="task-view-menu" role="group" aria-label="<?= $view->e($view->t('Goal views')) ?>">
         <button type="button" data-goals-view="areas" aria-pressed="true"><?= $view->e($view->t('Areas')) ?></button>

@@ -14,7 +14,7 @@ The bell polls every 60s while visible, displays the latest 50 and routes invita
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-notifications&gt;](../../../frontend/src/views/layouts/app.php#L100) |
+| UI / DOM | [app.php · data-notifications&gt;](../../../frontend/src/views/layouts/app.php#L103) |
 | CSS | [feedback.css · Bell panel anchor](../../../frontend/src/css/feedback.css#L83) |
 | Browser logic | [notifications.js · export function initNotifications](../../../frontend/src/js/lib/notifications.js#L12) |
 | Controller / service / domain | [NotificationService.php · public function inbox(](../../../backend/src/Application/Notifications/NotificationService.php#L65)<br>[NotificationService.php · public function markRead(](../../../backend/src/Application/Notifications/NotificationService.php#L77) |
@@ -30,7 +30,7 @@ Due reminders are derived from Tasks and merged into the bell. Dismissal uses re
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-notifications-list](../../../frontend/src/views/layouts/app.php#L110) |
+| UI / DOM | [app.php · data-notifications-list](../../../frontend/src/views/layouts/app.php#L113) |
 | CSS | [feedback.css · Bell panel anchor](../../../frontend/src/css/feedback.css#L83) |
 | Browser logic | [notifications.js · const load = async () =&gt;](../../../frontend/src/js/lib/notifications.js#L43) |
 | Controller / service / domain | [TaskReminderService.php · public function due(](../../../backend/src/Application/Planning/TaskReminderService.php#L20)<br>[TaskReminderService.php · public function markRead(](../../../backend/src/Application/Planning/TaskReminderService.php#L33) |

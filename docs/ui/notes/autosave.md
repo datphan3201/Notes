@@ -45,7 +45,7 @@ Creates use stable client-generated UUIDs. Exact replay is a no-op; stale differ
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L222) |
-| Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L618) |
+| Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L638) |
 | Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
 | Relevant tests (not a pass claim) | [NotesHttpTest.php · public function test_create_replay_update_conflict_noop_search_and_tombstone_contract(](../../../backend/tests/Plain/Http/NotesHttpTest.php#L55) |

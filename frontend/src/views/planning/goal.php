@@ -9,6 +9,7 @@
             <p data-goal-meta aria-live="polite"></p>
         </div>
         <div class="action-row">
+            <button class="button button-quiet" type="button" data-open-dialog="goal-information-dialog"><?= $view->e($view->t('Goal information')) ?></button>
             <button class="button button-quiet" type="button" data-goal-refresh><?= $view->e($view->t('Refresh')) ?></button>
             <button class="button button-quiet" type="button" data-goal-transition disabled><?= $view->e($view->t('Complete goal')) ?></button>
         </div>

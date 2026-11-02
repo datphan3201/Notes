@@ -59,7 +59,10 @@ $accountNavigation = [
                 </nav>
                 <nav class="sidebar-nav account-nav" aria-label="<?= $view->e($view->t('Account')) ?>">
                     <details class="settings-navigation"<?= str_starts_with($current_route, 'settings.') ? ' open' : '' ?>>
-                        <summary class="nav-link"><?= $view->e($view->t('Settings')) ?></summary>
+                        <summary class="nav-link">
+                            <svg class="ui-icon nav-icon" aria-hidden="true"><use href="#icon-settings"/></svg>
+                            <span><?= $view->e($view->t('Settings')) ?></span>
+                        </summary>
                     <?php foreach ($accountNavigation as [$label, $href, $icon, $routes]): ?>
                         <?php $active = in_array($current_route, $routes, true); ?>
                     <a class="nav-link<?= $active ? ' is-active' : '' ?>" href="<?= $view->e($href) ?>"<?= $active ? ' aria-current="page"' : '' ?> data-leave-guard>

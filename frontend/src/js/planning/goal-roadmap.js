@@ -350,7 +350,8 @@ export function initGoalDetail(root) {
             'roadmap-goal-state',
         );
         headState.dataset.roadmapGoalState = '';
-        center.append(headName, headState);
+        const headCta = element('span', `${t('Goal information')} →`, 'roadmap-goal-cta');
+        center.append(headName, headState, headCta);
         map.append(svg, center);
         map.append(
             referenceDecoration('sky'),

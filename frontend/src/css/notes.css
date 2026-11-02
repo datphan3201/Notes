@@ -104,10 +104,16 @@
     gap: 8px;
     padding: 0 7px 0 13px;
 }
-.search-field > span {
+.search-field > span,
+.search-field > .ui-icon {
     color: var(--muted);
     font-size: 1.375rem;
     line-height: 1;
+}
+.search-field > .ui-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 .search-field input {
     flex: 1;
@@ -205,10 +211,30 @@
 .notes-feedback.is-error {
     color: var(--danger);
 }
+[data-note-preferences]:not([open]) {
+    padding: 0;
+    margin-bottom: 14px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
 .notes-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
+}
+.notes-group-heading {
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    padding: 0 2px;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.notes-group-heading:first-child {
+    margin-top: 0;
 }
 .note-card {
     position: relative;

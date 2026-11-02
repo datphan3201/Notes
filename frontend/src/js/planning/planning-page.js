@@ -54,12 +54,28 @@ function showError(root, error) {
 function linkForGoal(goal) {
     const link = document.createElement('a');
     link.href = `/goals/${encodeURIComponent(goal.id)}`;
-    link.className = 'planning-item-link';
+    link.className = 'planning-item-link goal-tree-link';
     const name = document.createElement('strong');
     name.textContent = goal.name;
+    const meta = document.createElement('span');
+    meta.className = 'goal-tree-meta';
+    if (goal.deadline) {
+        const due = document.createElement('small');
+        due.className = 'goal-tree-deadline';
+        due.textContent = goal.deadline;
+        meta.append(due);
+    }
+    const miniTrack = document.createElement('span');
+    miniTrack.className = 'goal-mini-track';
+    miniTrack.setAttribute('aria-hidden', 'true');
+    const miniFill = document.createElement('i');
+    miniFill.style.setProperty('--progress', `${goal.progress ?? 0}%`);
+    miniTrack.append(miniFill);
     const progress = document.createElement('span');
+    progress.className = 'goal-tree-progress';
     progress.textContent = `${goal.progress ?? 0}%`;
-    link.append(name, progress);
+    meta.append(miniTrack, progress);
+    link.append(name, meta);
     return link;
 }
 
@@ -266,11 +282,17 @@ export function initGoalsPage(root) {
                 .slice()
                 .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'))) {
                 const row = document.createElement('div');
-                row.className = 'goal-timeline-item';
+                row.className =
+                    'goal-timeline-item' +
+                    (goal.status === 'Completed' ? ' is-completed' : '') +
+                    (goal.deadline ? ' has-deadline' : '');
+                const dot = document.createElement('span');
+                dot.className = 'goal-timeline-dot';
+                dot.setAttribute('aria-hidden', 'true');
                 const date = document.createElement('time');
                 date.textContent = goal.deadline || t('No deadline');
                 if (goal.deadline) date.dateTime = goal.deadline;
-                row.append(date, linkForGoal(goal));
+                row.append(dot, date, linkForGoal(goal));
                 timeline.append(row);
             }
             if (!goals.length)

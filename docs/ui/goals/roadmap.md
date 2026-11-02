@@ -16,7 +16,7 @@ The owned roadmap projection separates finite and recurring Tasks, direct Tasks,
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [goal.php · data-roadmap-map](../../../frontend/src/views/planning/goal.php#L26) |
+| UI / DOM | [goal.php · data-roadmap-map](../../../frontend/src/views/planning/goal.php#L27) |
 | CSS | [illustrated.css · Illustrated roadmap base](../../../frontend/src/css/illustrated.css#L87) |
 | Browser logic | [goal-roadmap.js · export function initGoalDetail](../../../frontend/src/js/planning/goal-roadmap.js#L29) |
 | Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L725)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L733) |
@@ -33,7 +33,7 @@ Goal details and strategy have separate drafts within one dialog. Strategy is pl
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [goal.php · data-goal-strategy-form](../../../frontend/src/views/planning/goal.php#L139) |
+| UI / DOM | [goal.php · data-goal-strategy-form](../../../frontend/src/views/planning/goal.php#L140) |
 | Browser logic | [goal-roadmap.js · data-goal-strategy-form](../../../frontend/src/js/planning/goal-roadmap.js#L36)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1) |
 | Controller / service / domain | [PlanningService.php · public function update(](../../../backend/src/Application/Planning/PlanningService.php#L163) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
@@ -48,7 +48,7 @@ Progress is the mean of immediate active child Goal percentages, completed Miles
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [goal.php · data-goal-transition](../../../frontend/src/views/planning/goal.php#L13) |
+| UI / DOM | [goal.php · data-goal-transition](../../../frontend/src/views/planning/goal.php#L14) |
 | Browser logic | [transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7) |
 | Controller / service / domain | [GoalProgressCalculator.php · public function calculate(](../../../backend/src/Domain/Planning/GoalProgressCalculator.php#L17)<br>[PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L345) |
 | Persistence | [PdoPlanningRepository.php · public function progressRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L388) |
@@ -63,8 +63,8 @@ Empty-container archive and include_contents=true are different operations. The 
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [goal.php · data-goal-details-form](../../../frontend/src/views/planning/goal.php#L94) |
-| Browser logic | [goal-roadmap.js · await remove(`/api/v1/goals/](../../../frontend/src/js/planning/goal-roadmap.js#L778) |
+| UI / DOM | [goal.php · data-goal-details-form](../../../frontend/src/views/planning/goal.php#L95) |
+| Browser logic | [goal-roadmap.js · await remove(`/api/v1/goals/](../../../frontend/src/js/planning/goal-roadmap.js#L779) |
 | Controller / service / domain | [PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L228)<br>[PlanningService.php · private function archiveGoalContents(](../../../backend/src/Application/Planning/PlanningService.php#L270) |
 | Persistence | [PdoPlanningRepository.php · public function archiveWhere(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L130)<br>[PdoPlanningRepository.php · public function removeMilestoneDependencies(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L146) |
 | Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_goal_and_milestone_can_be_archived_with_everything_inside(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L123) |

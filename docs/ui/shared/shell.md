@@ -16,7 +16,7 @@ AccountController renders page shell/bootstrap; page modules load their own data
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-app-body](../../../frontend/src/views/layouts/app.php#L89)<br>[guest.php · $view-&gt;assets()](../../../frontend/src/views/layouts/guest.php#L8)<br>[icons.php · &lt;svg](../../../frontend/src/views/layouts/icons.php#L2) |
+| UI / DOM | [app.php · data-app-body](../../../frontend/src/views/layouts/app.php#L92)<br>[guest.php · $view-&gt;assets()](../../../frontend/src/views/layouts/guest.php#L8)<br>[icons.php · &lt;svg](../../../frontend/src/views/layouts/icons.php#L2) |
 | Browser logic | [app.js · DOMContentLoaded](../../../frontend/src/js/app.js#L76)<br>[navigation.js · export function initNavigation](../../../frontend/src/js/lib/navigation.js#L3) |
 | Controller / service / domain | [AccountController.php · private function renderApplicationPage(](../../../backend/src/Http/Controller/AccountController.php#L230) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_php_templates_preserve_dom_contract_and_escape_bootstrap_data(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L143) |
@@ -44,7 +44,7 @@ workspace-ui and dialog-backdrop manage common interactions. Dirty/save/conflict
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-leave-guard-form&gt;](../../../frontend/src/views/layouts/app.php#L80) |
+| UI / DOM | [app.php · data-leave-guard-form&gt;](../../../frontend/src/views/layouts/app.php#L83) |
 | Browser logic | [workspace-ui.js · export function initWorkspaceUI](../../../frontend/src/js/lib/workspace-ui.js#L134)<br>[dialog-backdrop.js · export function initDialogBackdropClose](../../../frontend/src/js/lib/dialog-backdrop.js#L18) |
 | Relevant tests (not a pass claim) | [workspace-ui.test.js · creation drafts](../../../frontend/tests/js/workspace-ui.test.js#L15)<br>[workspace-ui.test.js · creation serializes](../../../frontend/tests/js/workspace-ui.test.js#L27)<br>[dialog-backdrop.test.js · only clicks beyond](../../../frontend/tests/js/dialog-backdrop.test.js#L5) |
 

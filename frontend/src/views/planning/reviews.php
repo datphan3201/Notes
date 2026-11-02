@@ -78,30 +78,32 @@
                 <button type="button" role="tab" id="reflection-tab-went_wrong" aria-controls="reflection-panel-went_wrong" aria-selected="false" tabindex="-1" data-workspace-tab="went_wrong"><?= $view->e($view->t('What went wrong')) ?></button>
                 <button type="button" role="tab" id="reflection-tab-change_next" aria-controls="reflection-panel-change_next" aria-selected="false" tabindex="-1" data-workspace-tab="change_next"><?= $view->e($view->t('What to change next')) ?></button>
             </nav>
-            <section id="reflection-panel-reflection" class="" role="tabpanel" aria-labelledby="reflection-tab-reflection" data-workspace-panel="reflection">
-                <div class="field">
-                    <label for="review-reflection"><?= $view->e($view->t('Reflection')) ?></label>
-                    <textarea id="review-reflection" name="reflection" maxlength="20000" rows="7"></textarea>
-                </div>
-            </section>
-            <section id="reflection-panel-went_well" class="" role="tabpanel" aria-labelledby="reflection-tab-went_well" data-workspace-panel="went_well" hidden>
-                <div class="field">
-                    <label for="review-went_well"><?= $view->e($view->t('What went well')) ?></label>
-                    <textarea id="review-went_well" name="went_well" maxlength="20000" rows="7"></textarea>
-                </div>
-            </section>
-            <section id="reflection-panel-went_wrong" class="" role="tabpanel" aria-labelledby="reflection-tab-went_wrong" data-workspace-panel="went_wrong" hidden>
-                <div class="field">
-                    <label for="review-went_wrong"><?= $view->e($view->t('What went wrong')) ?></label>
-                    <textarea id="review-went_wrong" name="went_wrong" maxlength="20000" rows="7"></textarea>
-                </div>
-            </section>
-            <section id="reflection-panel-change_next" class="" role="tabpanel" aria-labelledby="reflection-tab-change_next" data-workspace-panel="change_next" hidden>
-                <div class="field">
-                    <label for="review-change_next"><?= $view->e($view->t('What to change next')) ?></label>
-                    <textarea id="review-change_next" name="change_next" maxlength="20000" rows="7"></textarea>
-                </div>
-            </section>
+            <div class="review-reflection-grid">
+                <section id="reflection-panel-reflection" class="review-reflection-panel" role="tabpanel" aria-labelledby="reflection-tab-reflection" data-workspace-panel="reflection">
+                    <div class="field">
+                        <label for="review-reflection"><?= $view->e($view->t('Reflection')) ?></label>
+                        <textarea id="review-reflection" name="reflection" maxlength="20000" rows="7"></textarea>
+                    </div>
+                </section>
+                <section id="reflection-panel-went_well" class="review-reflection-panel" role="tabpanel" aria-labelledby="reflection-tab-went_well" data-workspace-panel="went_well" hidden>
+                    <div class="field">
+                        <label for="review-went_well"><?= $view->e($view->t('What went well')) ?></label>
+                        <textarea id="review-went_well" name="went_well" maxlength="20000" rows="7"></textarea>
+                    </div>
+                </section>
+                <section id="reflection-panel-went_wrong" class="review-reflection-panel" role="tabpanel" aria-labelledby="reflection-tab-went_wrong" data-workspace-panel="went_wrong" hidden>
+                    <div class="field">
+                        <label for="review-went_wrong"><?= $view->e($view->t('What went wrong')) ?></label>
+                        <textarea id="review-went_wrong" name="went_wrong" maxlength="20000" rows="7"></textarea>
+                    </div>
+                </section>
+                <section id="reflection-panel-change_next" class="review-reflection-panel" role="tabpanel" aria-labelledby="reflection-tab-change_next" data-workspace-panel="change_next" hidden>
+                    <div class="field">
+                        <label for="review-change_next"><?= $view->e($view->t('What to change next')) ?></label>
+                        <textarea id="review-change_next" name="change_next" maxlength="20000" rows="7"></textarea>
+                    </div>
+                </section>
+            </div>
             <div class="action-row">
                 <button class="button button-primary" type="submit"><?= $view->e($view->t('Save reflections')) ?></button>
                 <span data-review-state aria-live="polite"></span>

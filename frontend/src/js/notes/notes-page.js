@@ -274,7 +274,20 @@ export class NotesPage {
     renderNotes() {
         this.grid.replaceChildren();
         this.list.replaceChildren();
+        const hasPinned = this.notes.some((note) => note.is_pinned);
+        const hasUnpinned = this.notes.some((note) => !note.is_pinned);
+        const showGroups = hasPinned && hasUnpinned && Boolean(this.notes[0]?.is_pinned);
+        let unpinnedHeaderAdded = false;
+        if (showGroups) {
+            this.grid.append(this.createGroupLabel(t('Pinned')));
+            this.list.append(this.createGroupLabel(t('Pinned')));
+        }
         this.notes.forEach((note) => {
+            if (showGroups && !note.is_pinned && !unpinnedHeaderAdded) {
+                unpinnedHeaderAdded = true;
+                this.grid.append(this.createGroupLabel(t('Other notes')));
+                this.list.append(this.createGroupLabel(t('Other notes')));
+            }
             this.grid.append(this.createCard(note));
             this.list.append(this.createCard(note));
         });
@@ -283,6 +296,13 @@ export class NotesPage {
             this.list.append(this.createEmptyState());
         }
         this.renderPagination();
+    }
+
+    createGroupLabel(text) {
+        const heading = document.createElement('div');
+        heading.className = 'notes-group-heading';
+        heading.textContent = text;
+        return heading;
     }
 
     createEmptyState() {

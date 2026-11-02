@@ -21,11 +21,11 @@
     </section>
     <section class="team-carousel" aria-labelledby="team-goals-title">
         <h2 id="team-goals-title" class="sr-only"><?= $view->e($view->t('My team goals')) ?></h2>
-        <button class="team-carousel-arrow" type="button" data-team-page="-1" aria-label="<?= $view->e($view->t('Previous team goals')) ?>">&#8592;</button>
+        <button class="team-carousel-arrow" type="button" data-team-page="-1" aria-label="<?= $view->e($view->t('Previous team goals')) ?>"><svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow-left"/></svg></button>
         <div class="team-carousel-viewport">
             <div class="team-carousel-track" data-team-goal-grid aria-live="polite"></div>
         </div>
-        <button class="team-carousel-arrow" type="button" data-team-page="1" aria-label="<?= $view->e($view->t('Next team goals')) ?>">&#8594;</button>
+        <button class="team-carousel-arrow" type="button" data-team-page="1" aria-label="<?= $view->e($view->t('Next team goals')) ?>"><svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button>
     </section>
     <section class="team-detail" data-team-detail hidden aria-labelledby="team-detail-title">
         <header class="section-heading">

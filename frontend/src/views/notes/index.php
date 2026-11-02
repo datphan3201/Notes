@@ -10,7 +10,7 @@
             <span class="save-status" data-global-status role="status"></span>
             <button class="button button-quiet mobile-tags-button" type="button" data-open-label-manager><?= $view->e($view->t('Manage tags')) ?></button>
             <button class="button button-primary" type="button" data-new-note disabled>
-                <span aria-hidden="true">＋</span>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <span><?= $view->e($view->t('New note')) ?></span>
             </button>
         </div>
@@ -56,12 +56,12 @@
     <div class="workspace-layout">
         <aside class="notes-filter-panel" aria-label="<?= $view->e($view->t('Note filters')) ?>">
             <button class="filter-all is-active" type="button" data-filter-all>
-                <span class="filter-icon" aria-hidden="true">▦</span>
+                <svg class="ui-icon filter-icon" aria-hidden="true"><use href="#icon-notes"/></svg>
                 <span><?= $view->e($view->t('All notes')) ?></span>
                 <span class="filter-count" data-note-total>0</span>
             </button>
             <button class="filter-all" type="button" data-filter-shared aria-pressed="false">
-                <span class="filter-icon" aria-hidden="true">⇄</span>
+                <svg class="ui-icon filter-icon" aria-hidden="true"><use href="#icon-share"/></svg>
                 <span><?= $view->e($view->t('Shared with me')) ?></span>
                 <span class="filter-count" data-shared-total>0</span>
             </button>
@@ -74,14 +74,14 @@
                 <p class="subtle-copy"><?= $view->e($view->t('Loading tags…')) ?></p>
             </div>
             <button class="label-add-link" type="button" data-open-label-manager>
-                <span aria-hidden="true">＋</span>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <?= $view->e($view->t('Add tag')) ?>
             </button>
         </aside>
         <section class="notes-column" aria-labelledby="notes-heading">
             <div class="notes-toolbar">
                 <div class="search-field">
-                    <span aria-hidden="true">⌕</span>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-search"/></svg>
                     <label class="sr-only" for="notes-search"><?= $view->e($view->t('Search notes')) ?></label>
                     <input id="notes-search" type="search" placeholder="<?= $view->e($view->t('Search titles and content…')) ?>" autocomplete="off" data-notes-search>
                     <button class="search-clear icon-button is-hidden" type="button" data-clear-search aria-label="<?= $view->e($view->t('Clear search')) ?>">×</button>
@@ -168,11 +168,11 @@
                     <span data-pin-label><?= $view->e($view->t('Pin')) ?></span>
                 </button>
                 <button class="button button-quiet" type="button" data-editor-labels>
-                    <span aria-hidden="true">⌑</span>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-tag"/></svg>
                     <?= $view->e($view->t('Tags')) ?>
                 </button>
                 <button class="button button-quiet is-hidden" type="button" data-editor-share>
-                    <span aria-hidden="true">⇄</span>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-share"/></svg>
                     <?= $view->e($view->t('Share')) ?>
                 </button>
                 <button class="button button-danger-quiet is-hidden" type="button" data-editor-delete><?= $view->e($view->t('Delete')) ?></button>

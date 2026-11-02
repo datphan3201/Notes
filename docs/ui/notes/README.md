@@ -39,7 +39,7 @@ NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L133) |
-| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L420) |
+| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L446) |
 | Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L15)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15) |
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
