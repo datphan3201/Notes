@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
+    "sha256": "1262ff2e51319d0f6496662afe6eb3baf619d4c7834ad6331184ea49b60c21af",
+    "bytes": 5261
+  },
+  "artifact": {
+    "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
+    "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
+    "bytes": 840652
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize.json",
+    "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize-summary.json",
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2433,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

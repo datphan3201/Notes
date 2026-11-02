@@ -1,0 +1,4665 @@
+{
+  "schema_version": 1,
+  "pages": [
+    {
+      "document": "docs/ui/tasks/README.md",
+      "title": "/tasks \u2014 Tasks",
+      "components": [
+        {
+          "id": "tasks.collection",
+          "label": "Collection, refresh, search and pagination",
+          "behavior": "The browser fetches Tasks, Dashboard selections, Goals, Milestones and series; a latest-request guard prevents old responses replacing newer reads. Page size is 8, or 4 below 600px. Tags currently have a hidden filter control.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-tasks-page"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "export function initTasksPage"
+            },
+            {
+              "path": "frontend/src/js/planning/collection-page.js",
+              "symbol": "export function collectionPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/collection-page.test.js",
+              "symbol": "test('task filtering treats search text literally and preserves server order'",
+              "label": "task filtering"
+            },
+            {
+              "path": "frontend/tests/js/collection-page.test.js",
+              "symbol": "test('a page shrinks safely after filtering or its final row is removed'",
+              "label": "page shrinks"
+            }
+          ],
+          "routes": [
+            "planning.tasks",
+            "api.tasks.index"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".task-row-icon {",
+              "label": "Task row action icons"
+            }
+          ]
+        },
+        {
+          "id": "tasks.row",
+          "label": "Task row: tick, dates, week, Edit, Remove, Important",
+          "behavior": "Rows are built in JavaScript. Complete/Reopen uses shared acknowledgement handling; the week button changes selection, Important changes importance, and Remove archives. Inspect the row builder before changing icons or interaction order.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const taskRow = (task) =>"
+            },
+            {
+              "path": "frontend/src/js/planning/transitions.js",
+              "symbol": "export async function transitionEntity"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement("
+            }
+          ],
+          "routes": [
+            "api.tasks.complete",
+            "api.tasks.reopen",
+            "api.tasks.update",
+            "api.tasks.archive"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".task-row-icon {",
+              "label": "Task row action icons"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/tasks/filters.md",
+      "title": "/tasks \u2014 Time filters, statuses and counts",
+      "components": [
+        {
+          "id": "tasks.filter.today",
+          "label": "Today",
+          "behavior": "Includes a local deadline/start/occurrence date equal to today, a scheduled interval covering today, or unfinished overdue work. History-qualified work is excluded before membership is evaluated.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"today\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "if (view === 'today')"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const render = () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('scheduled tasks cross UTC midnight into the account date, independently of deadline and week selection'",
+              "label": "scheduled tasks cross UTC"
+            },
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('unfinished tasks overdue for fewer than three dates stay in Today until History takes them'",
+              "label": "unfinished tasks overdue"
+            },
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('today includes an interval crossing midnight, a planned start date, and a recurring occurrence'",
+              "label": "today includes an interval"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.next",
+          "label": "Next",
+          "behavior": "Includes any future deadline/start/occurrence/scheduled date, including scheduled end. A Task can appear in both Today and Next.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"next\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "if (view === 'next')"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const render = () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('scheduled tasks cross UTC midnight into the account date, independently of deadline and week selection'",
+              "label": "scheduled tasks cross UTC"
+            },
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('today includes an interval crossing midnight, a planned start date, and a recurring occurrence'",
+              "label": "today includes an interval"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.week",
+          "label": "This week",
+          "behavior": "Membership is the current Monday-week Task selection set, not a due-date query. Completion does not automatically remove a selection.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"week\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "if (view === 'week')"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const render = () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function dashboard("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function selections("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('scheduled tasks cross UTC midnight into the account date, independently of deadline and week selection'",
+              "label": "scheduled tasks cross UTC"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.backlog",
+          "label": "Backlog",
+          "behavior": "No deadline, start, occurrence or schedule date and not selected this week. Inbox is a parent/location concept and is independent of Backlog.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"backlog\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "if (view === 'backlog')"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const render = () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('backlog preserves inbox tasks but excludes selected and overdue tasks without inventing status'",
+              "label": "backlog preserves inbox"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.all",
+          "label": "All",
+          "behavior": "All fetched Tasks that do not qualify for History, then the independent search/status/tag filters. The default Open tasks status still hides Done Tasks.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"all\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function taskMatchesView"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const render = () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('backlog preserves inbox tasks but excludes selected and overdue tasks without inventing status'",
+              "label": "backlog preserves inbox"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.status",
+          "label": "Status and count badges",
+          "behavior": "Stored Task statuses are NotStarted, InProgress, Blocked and Done. Open tasks excludes Done. Count badges apply the same view membership plus active search/status/tag filters; Repeating counts non-Ended series instead.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-status"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/collection-page.js",
+              "symbol": "export function collectionPage"
+            },
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function taskViewStatus"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Domain/Planning/TaskStatus.php",
+              "symbol": "enum TaskStatus"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/collection-page.test.js",
+              "symbol": "test('task filtering treats search text literally and preserves server order'",
+              "label": "task filtering"
+            },
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('each view count applies its own status rule so open filtering cannot zero Completed'",
+              "label": "each view count"
+            }
+          ],
+          "routes": [],
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".task-view-menu {",
+              "label": "Time-view controls"
+            }
+          ]
+        },
+        {
+          "id": "tasks.filter.completed",
+          "label": "Completed section and History boundary",
+          "behavior": "Under the default Open tasks filter, recently Done Tasks appear in a separate section. History uses configurable elapsed completed-hours and local overdue-days thresholds. This is a projection; pruning is a separate server job.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-completed hidden"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function taskInHistory"
+            },
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function historyThresholds"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/TaskHistoryService.php",
+              "symbol": "public function prune("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php",
+              "symbol": "public function historyTasks("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('each view count applies its own status rule so open filtering cannot zero Completed'",
+              "label": "each view count"
+            },
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('history uses elapsed completion time and local calendar overdue dates'",
+              "label": "history uses elapsed"
+            }
+          ],
+          "routes": [
+            "settings.history"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".task-completed-section {",
+              "label": "Completed section"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/tasks/capture.md",
+      "title": "/tasks \u2014 New task and schedule capture",
+      "components": [
+        {
+          "id": "tasks.capture.parent",
+          "label": "Inbox, Goal or Milestone parent",
+          "behavior": "A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed finite Goal ancestors reject new finite work. The server validates owned destinations even if the select was edited in the browser.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-parent>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "parent.addEventListener"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function validateParents("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits("
+            }
+          ],
+          "routes": [
+            "api.tasks.store"
+          ]
+        },
+        {
+          "id": "tasks.capture.fields",
+          "label": "Task fields and estimates",
+          "behavior": "The shared PHP partial renders schedule-related fields. Browser input is normalized by taskCaptureValues; server create/update validators enforce field bounds, unknown-key rejection and date ordering. Estimates represent planned minutes, not tracked time.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task-capture-fields.php",
+              "symbol": "estimated_minutes"
+            },
+            {
+              "path": "frontend/src/views/planning/importance-options.php",
+              "symbol": "<?php foreach ([1 =>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/task-capture.js",
+              "symbol": "export function taskCaptureValues"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function validateCreate("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function validateDates("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_estimates_are_optional_versioned_and_do_not_change_completion_facts("
+            }
+          ],
+          "routes": [
+            "api.tasks.store",
+            "api.tasks.update"
+          ]
+        },
+        {
+          "id": "tasks.capture.schedule",
+          "label": "Due date, reminder and repeat picker",
+          "behavior": "The schedule toolbar supplies presets and a draggable date picker. One-off capture POSTs a Task; repeat capture POSTs a TaskSeries. seriesPayload is the exact mapping boundary: do not assume every one-off field is copied into a series.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task-capture-fields.php",
+              "symbol": "data-schedule-toolbar"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/schedule-picker.js",
+              "symbol": "export function initScheduleToolbar"
+            },
+            {
+              "path": "frontend/src/js/planning/task-capture.js",
+              "symbol": "export async function createCapturedTask"
+            },
+            {
+              "path": "frontend/src/js/planning/task-capture.js",
+              "symbol": "export function seriesPayload"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "public function createAndMaterialize("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php",
+              "symbol": "public function insert("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/calendar.test.js",
+              "symbol": "test('repeat choices become task-series rules, including custom intervals'",
+              "label": "repeat choices"
+            },
+            {
+              "path": "frontend/tests/js/calendar.test.js",
+              "symbol": "test('reminder presets use 7 PM later today and 9 AM for tomorrow and next week'",
+              "label": "reminder presets"
+            }
+          ],
+          "routes": [
+            "api.tasks.store",
+            "api.task-series.store"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/tasks/repeating.md",
+      "title": "/tasks \u2014 Repeating TaskSeries",
+      "components": [
+        {
+          "id": "tasks.repeating.list",
+          "label": "Repeating list: Pause, Resume, End",
+          "behavior": "Rows show series state, frequency, start/end and optional reminder time. Pause retains existing Tasks. Resume skips missed paused dates; End asks to archive future NotStarted occurrences, preserving started/Done work. Ended is terminal: API Pause/Resume returns 422 after ownership/version checks; repeated End with the current version is a no-op. Start a new series for future repeating work.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-view=\"repeating\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/series-list.js",
+              "symbol": "export function renderSeriesList"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php",
+              "symbol": "public function archiveFutureNotStarted("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_series_pause_resume_and_end_archives_acknowledged_future_occurrences("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_ended_series_cannot_pause_or_resume_and_replayed_end_preserves_occurrences("
+            },
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_ended_series_http_transitions_preserve_auth_csrf_ownership_versions_and_replay("
+            }
+          ],
+          "routes": [
+            "api.task-series.index",
+            "api.task-series.transition"
+          ]
+        },
+        {
+          "id": "tasks.repeating.rule",
+          "label": "Daily, weekly, monthly and yearly rules",
+          "behavior": "Date calculation uses local calendar dates. Monthly/yearly dates clamp from the original anchor. Weekly carries weekdays. Local-time conversion resolves DST; the series/date unique key prevents duplicate occurrences. Preview calculates dates without querying or writing series/occurrence rows. Supported browser timezone aliases are canonicalized even when PHP accepts the alias directly; previously accepted fixed-offset forms keep their existing fallback behavior.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task-capture-fields.php",
+              "symbol": "data-schedule-open=\"repeat\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/calendar.js",
+              "symbol": "export function repeatRule"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "public function preview("
+            },
+            {
+              "path": "backend/src/Domain/Recurrence/RecurrenceCalculator.php",
+              "symbol": "public function dates("
+            },
+            {
+              "path": "backend/src/Domain/Recurrence/RecurrenceCalculator.php",
+              "symbol": "public function localDateTimeToUtc("
+            },
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "private function timezone("
+            },
+            {
+              "path": "backend/src/Support/TimeZoneNames.php",
+              "symbol": "public static function canonical("
+            }
+          ],
+          "storage": [],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Unit/RecurrenceCalculatorTest.php",
+              "symbol": "public function test_monthly_and_yearly_recurrence_clamp_without_drifting("
+            },
+            {
+              "path": "backend/tests/Plain/Unit/RecurrenceCalculatorTest.php",
+              "symbol": "public function test_dst_gap_advances_and_overlap_chooses_earlier_instant("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_habit_and_series_timezones_normalize_aliases_and_preserve_existing_offset_inputs("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_invalid_timezones_do_not_create_habits_or_series("
+            }
+          ],
+          "routes": [
+            "api.task-series.preview"
+          ]
+        },
+        {
+          "id": "tasks.repeating.materialize",
+          "label": "Initial and catch-up materialization",
+          "behavior": "HTTP creation materializes immediately. The scheduler materializes hourly; Task listing and Dashboard reads also call materializeDue when the generated horizon is below 28 days. This read-path side effect is current code behavior. Generated work is excluded from finite Goal progress.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "get('/api/v1/task-series'"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/PlanningController.php",
+              "symbol": "public function index("
+            },
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "public function materializeDue("
+            },
+            {
+              "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+              "symbol": "public function materialize("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php",
+              "symbol": "public function occurrence("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function linkOccurrence("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/ProductCompletionTest.php",
+              "symbol": "public function test_repeating_tasks_carry_a_local_reminder_and_extend_without_a_scheduler("
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.dashboard.show"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/tasks/detail.md",
+      "title": "/tasks/{id} \u2014 Task details",
+      "components": [
+        {
+          "id": "task.detail.edit",
+          "label": "Overview and Edit dialog",
+          "behavior": "Edits use a separate DraftBuffer. A save acknowledges only the submitted snapshot, retains newer typing and handles 409 through explicit saved/draft choices. Initial controls remain disabled until data loads.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-edit-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "export function initTaskDetail"
+            },
+            {
+              "path": "frontend/src/js/planning/draft-buffer.js",
+              "symbol": "export class DraftBuffer"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/goal-roadmap.test.js",
+              "symbol": "test('a late save acknowledgement preserves typing after the submitted snapshot'",
+              "label": "late save acknowledgement"
+            },
+            {
+              "path": "frontend/tests/js/goal-roadmap.test.js",
+              "symbol": "test('refresh cannot erase or silently rebase a dirty goal draft'",
+              "label": "refresh cannot erase"
+            }
+          ],
+          "routes": [
+            "api.tasks.show",
+            "api.tasks.update"
+          ],
+          "test_scope": "The linked JavaScript cases exercise shared DraftBuffer semantics, not this page\u2019s DOM/editor wiring. Verify the page flow separately in a browser."
+        },
+        {
+          "id": "task.detail.transition",
+          "label": "Complete and Reopen",
+          "behavior": "Unchecked Checklist items require explicit acknowledgement. Completing a Task never checks items automatically. Reopening finite work beneath completed Goal ancestors asks to reopen those ancestors atomically. A locked Milestone does not block its Tasks.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-transition"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/transitions.js",
+              "symbol": "export async function transitionEntity"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_finite_reopen_requires_confirmation_and_reopens_ancestors_atomically("
+            }
+          ],
+          "routes": [
+            "api.tasks.complete",
+            "api.tasks.reopen"
+          ]
+        },
+        {
+          "id": "task.detail.checklist",
+          "label": "Completion Checklist",
+          "behavior": "Checklist records are separate owned/versioned rows. Check/uncheck writes Activity; order is a complete-ID-set mutation. This is distinct from inline checkable text in a working note.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-checklist aria-live"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "data-checklist-form"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function createChecklist("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function updateChecklist("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement("
+            }
+          ],
+          "routes": [
+            "api.tasks.checklist.index",
+            "api.tasks.checklist.store",
+            "api.tasks.checklist.update",
+            "api.tasks.checklist.reorder",
+            "api.tasks.checklist.archive"
+          ]
+        },
+        {
+          "id": "task.detail.note",
+          "label": "Working note, Check box and Resources",
+          "behavior": "The Task note uses explicit Save. Linking/creating the owned Note is handled by saveTaskNote; text persists through the Note API. Resource URLs are derived from plain note text. There is no promise of browser-crash recovery for this explicit-save editor.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-note-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const noteForm ="
+            },
+            {
+              "path": "frontend/src/js/notes/note-content-editor.js",
+              "symbol": "export class NoteContentEditor"
+            },
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function resourceLinks"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function saveTaskNote("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function updateSnapshot("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/note-checkbox-text.test.js",
+              "symbol": "test('projection preserves literal markup, Unicode, whitespace, and malformed markers exactly'",
+              "label": "projection preserves"
+            },
+            {
+              "path": "frontend/tests/js/note-checkbox-text.test.js",
+              "symbol": "test('toggling duplicate titles targets only its line and never changes literal note text'",
+              "label": "toggling duplicate titles"
+            },
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts("
+            }
+          ],
+          "routes": [
+            "api.tasks.note.show",
+            "api.tasks.note.store",
+            "api.notes.update"
+          ]
+        },
+        {
+          "id": "task.detail.related",
+          "label": "Tags, week selection and Related work",
+          "behavior": "Tags and contributions classify or relate work without changing its primary location. Week selection controls This week; contributions do not affect progress.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-related"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/contributions-ui.js",
+              "symbol": "export async function renderContributions"
+            },
+            {
+              "path": "frontend/src/js/planning/tag-picker.js",
+              "symbol": "export function createTagPicker"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function addContribution("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function addEdge("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function removeEdge("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function syncTags("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_contributions_are_multi_target_and_separate_from_primary_hierarchy("
+            }
+          ],
+          "routes": [
+            "api.tasks.contributions.index",
+            "api.tasks.contributions.store",
+            "api.tasks.contributions.destroy"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/goals/README.md",
+      "title": "/goals \u2014 Areas and Goal collections",
+      "components": [
+        {
+          "id": "goals.areas",
+          "label": "Manage Areas",
+          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goals.php",
+              "symbol": "data-area-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "export function initGoalsPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function reorder("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_default_area_backfill_is_idempotent_and_preserves_existing_accounts("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_empty_planning_objects_and_checklist_can_be_archived_with_native_prepares("
+            }
+          ],
+          "routes": [
+            "api.areas.index",
+            "api.areas.store",
+            "api.areas.update",
+            "api.areas.reorder",
+            "api.areas.archive"
+          ]
+        },
+        {
+          "id": "goals.collection",
+          "label": "Goal tree, timeline and main Goal",
+          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goals.php",
+              "symbol": "data-goal-tree"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "export function initGoalsPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function moveGoal("
+            },
+            {
+              "path": "backend/src/Domain/Planning/GraphGuard.php",
+              "symbol": "public function wouldCycle("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function goalHierarchyEdges("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Unit/PlanningDomainTest.php",
+              "symbol": "public function test_graph_guard_handles_deep_graphs_without_recursion("
+            }
+          ],
+          "routes": [
+            "api.goals.index",
+            "api.goals.store",
+            "api.goals.move",
+            "planning.goal"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/goals/roadmap.md",
+      "title": "/goals/{id} \u2014 Fishbone roadmap",
+      "components": [
+        {
+          "id": "goal.roadmap",
+          "label": "Fishbone, paging and Milestone focus",
+          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-roadmap-map"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "export function initGoalDetail"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function roadmap("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function roadmapSnapshot("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function roadmapRows("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/goal-roadmap.test.js",
+              "symbol": "test('refresh cannot erase or silently rebase a dirty goal draft'",
+              "label": "refresh cannot erase"
+            },
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_roadmap_groups_only_owned_active_work_and_excludes_occurrences_from_finite_progress(",
+              "label": "public function test_roadmap_groups_only_owned_active_work_and_excludes_occurrences_from_finite_p..."
+            }
+          ],
+          "routes": [
+            "api.goals.roadmap"
+          ],
+          "test_scope": "Projection and shared draft behavior are covered here; fishbone SVG layout, paging and responsive interaction require a browser check.",
+          "styles": [
+            {
+              "path": "frontend/src/css/illustrated.css",
+              "symbol": ".goal-roadmap {",
+              "label": "Illustrated roadmap base"
+            }
+          ]
+        },
+        {
+          "id": "goal.information",
+          "label": "Goal information: Edit, Strategy and Related work",
+          "behavior": "Goal details and strategy have separate drafts within one dialog. Strategy is plain text up to 20,000 code points; it does not emit Activity or change progress. Saved-version/draft choices preserve concurrent edits.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-goal-strategy-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "data-goal-strategy-form"
+            },
+            {
+              "path": "frontend/src/js/planning/draft-buffer.js",
+              "symbol": "export class DraftBuffer"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_strategy_notes_are_versioned_without_affecting_progress_or_activity("
+            }
+          ],
+          "routes": [
+            "api.goals.show",
+            "api.goals.update",
+            "api.goals.contributions.index"
+          ]
+        },
+        {
+          "id": "goal.progress",
+          "label": "Goal progress, completion and ancestor reopen",
+          "behavior": "Progress is the mean of immediate active child Goal percentages, completed Milestones and Done direct one-off Tasks. Exclude Habits, contributions, occurrences and Tasks inside Milestones. Calculated 100% does not auto-complete the Goal.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-goal-transition"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/transitions.js",
+              "symbol": "export async function transitionEntity"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Domain/Planning/GoalProgressCalculator.php",
+              "symbol": "public function calculate("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function progressRows("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Unit/PlanningDomainTest.php",
+              "symbol": "public function test_progress_uses_immediate_finite_components_and_detects_cycles("
+            }
+          ],
+          "routes": [
+            "api.goals.complete",
+            "api.goals.reopen"
+          ]
+        },
+        {
+          "id": "goal.archive",
+          "label": "Archive Goal and contents",
+          "behavior": "Empty-container archive and include_contents=true are different operations. The latter explicitly archives descendant Goals, Milestones, Tasks and series and removes relevant prerequisite links in one transaction. It is not a hard delete or automatic default cascade.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-goal-details-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "await remove(`/api/v1/goals/"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function archive("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function archiveGoalContents("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function archiveWhere("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function removeMilestoneDependencies("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/ProductCompletionTest.php",
+              "symbol": "public function test_goal_and_milestone_can_be_archived_with_everything_inside("
+            }
+          ],
+          "routes": [
+            "api.goals.archive"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/goals/milestones.md",
+      "title": "/goals/{id} \u2014 Milestone panel",
+      "components": [
+        {
+          "id": "milestone.dependencies",
+          "label": "Prerequisites and completion lock",
+          "behavior": "Prerequisite edges form a separate acyclic graph and may cross owned Goals. All active prerequisites must be Completed to complete this Milestone. Reopening a prerequisite with a completed dependent is rejected; reopen dependents first.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-milestone-prerequisites"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "data-milestone-prerequisites"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function addDependency("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function prerequisites("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function dependencyEdges("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function completedDependents("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_milestone_dependency_blocks_milestone_but_not_its_task("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_failed_milestone_reopen_does_not_partially_reopen_completed_goals("
+            }
+          ],
+          "routes": [
+            "api.milestones.prerequisites.index",
+            "api.milestones.prerequisites.store",
+            "api.milestones.prerequisites.destroy"
+          ]
+        },
+        {
+          "id": "milestone.tasks",
+          "label": "Finite/recurring Tasks, weekly selection and Complete",
+          "behavior": "Tasks under a locked Milestone are usable and completable. Completing a Milestone with unfinished Tasks requires acknowledge_open_tasks=true. Recurring occurrences do not enter finite completion denominators.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-milestone-tasks"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "data-milestone-tasks"
+            },
+            {
+              "path": "frontend/src/js/planning/task-capture.js",
+              "symbol": "export async function createCapturedTask"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function milestoneTaskProgress("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function find("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_milestone_dependency_blocks_milestone_but_not_its_task("
+            }
+          ],
+          "routes": [
+            "api.milestones.complete",
+            "api.milestones.reopen",
+            "api.tasks.store"
+          ]
+        },
+        {
+          "id": "milestone.edit",
+          "label": "Edit, contributions and archive",
+          "behavior": "Milestone edits and contribution changes use aggregate versions. Archiving with include_contents is an explicit bulk action. Contributions never act as prerequisites or progress weights.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-milestone-edit data-open-dialog"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/goal-roadmap.js",
+              "symbol": "find('[data-milestone-edit]').addEventListener"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "private function archiveMilestoneContents("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function addContribution("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function archiveWhere("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function addEdge("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_contributions_are_multi_target_and_separate_from_primary_hierarchy("
+            }
+          ],
+          "routes": [
+            "api.milestones.update",
+            "api.milestones.archive",
+            "api.milestones.contributions.store"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/dashboard/README.md",
+      "title": "/dashboard \u2014 Today, This week and Activity",
+      "components": [
+        {
+          "id": "dashboard.today",
+          "label": "Today, Needs attention and current focus",
+          "behavior": "The account timezone defines today. Deadline/start/occurrence and overlapping UTC schedules are considered; overdue is unfinished with deadline before today. Focus prefers eligible weekly work, then Today, then overdue; Blocked is not recommended.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-current-focus"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "export function initDashboardPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function dashboard("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function todayTasks("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function overdueTasks("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_today_projection_includes_planned_starts_and_overlapping_schedules("
+            }
+          ],
+          "routes": [
+            "api.dashboard.show"
+          ]
+        },
+        {
+          "id": "dashboard.week",
+          "label": "This week and weekly summary",
+          "behavior": "Explicit Task/Milestone selections are scoped to the current Monday week. Duplicate selection is idempotent, reorder requires the exact active set, completion does not deselect. Percentages use active selected Tasks as denominator and only compare when a previous denominator exists.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-weekly-tasks"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "data-weekly-tasks"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function addSelection("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function selections("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function addSelection("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function reorderSelections("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_weekly_selection_reorder_requires_exact_active_set("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_week_and_review_completion_use_real_denominators_and_saved_snapshots("
+            }
+          ],
+          "routes": [
+            "api.weekly-selections.index",
+            "api.weekly-selections.store",
+            "api.weekly-selections.destroy",
+            "api.weekly-selections.reorder"
+          ]
+        },
+        {
+          "id": "dashboard.activity",
+          "label": "Year Activity heatmap and factual tooltip",
+          "behavior": "The current browser renders a year grid with a year picker. Activity API facts count unreversed task/checklist/habit/milestone completions. Levels 0, 1, 2\u20133, 4\u20136, 7+ are presentation; note edits do not count.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-activity-grid"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "export function yearCalendar"
+            },
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "export function activityLevel"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function yearActivity("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function activity("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/planning.test.js",
+              "symbol": "test('activity levels use the documented GitHub-style display thresholds'",
+              "label": "activity levels"
+            },
+            {
+              "path": "frontend/tests/js/planning.test.js",
+              "symbol": "test('yearly activity calendar gives every month its own Monday-first week block'",
+              "label": "yearly activity calendar"
+            },
+            {
+              "path": "frontend/tests/js/planning.test.js",
+              "symbol": "test('year spinner keeps the selected year in the middle and blocks out-of-range neighbours'",
+              "label": "year spinner"
+            },
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_activity_grid_uses_unreversed_completion_facts("
+            }
+          ],
+          "routes": [
+            "api.dashboard.activity"
+          ]
+        },
+        {
+          "id": "dashboard.habits",
+          "label": "Habit streak and quick check-in",
+          "behavior": "Habit streaks and daily state derive from check-ins/rest days. Habit-local dates may differ from the account timezone; do not sum weekly targets into a daily denominator.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-dashboard-habits"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "data-dashboard-habits"
+            },
+            {
+              "path": "frontend/src/js/planning/insights-ui.js",
+              "symbol": "export function renderStreak"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Habits/HabitProgress.php",
+              "symbol": "public function describe("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function history("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function days("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_dashboard_shows_every_habit_with_period_specific_counts_and_streaks("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_dashboard_streak_deduplicates_habits_respects_owner_and_recalculates_after_undo(",
+              "label": "public function test_dashboard_streak_deduplicates_habits_respects_owner_and_recalculates_after_u..."
+            }
+          ],
+          "routes": [
+            "api.habits.check-ins.store",
+            "api.habits.check-ins.destroy"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/habits/README.md",
+      "title": "/habits \u2014 Habits, streaks and Rest Days",
+      "components": [
+        {
+          "id": "habits.collection",
+          "label": "Habit cards and New/Edit dialog",
+          "behavior": "Daily target is one completion day; weekly target is 1\u20137 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/habits.php",
+              "symbol": "data-habit-create-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "export function initHabitsPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "private function timezone("
+            },
+            {
+              "path": "backend/src/Support/TimeZoneNames.php",
+              "symbol": "public static function canonical("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_habit_and_series_timezones_normalize_aliases_and_preserve_existing_offset_inputs("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_legacy_checked_in_habit_accepts_equivalent_timezone_without_rewriting_history("
+            },
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_timezone_aliases_are_canonicalized_for_habit_and_series_http_creation("
+            }
+          ],
+          "routes": [
+            "api.habits.index",
+            "api.habits.store",
+            "api.habits.update",
+            "api.habits.archive"
+          ]
+        },
+        {
+          "id": "habits.checkins",
+          "label": "Check-in, undo and streak",
+          "behavior": "At most one check-in per Habit/local date. No future check-in; repeated PUT is idempotent. Undo reverses Activity. Streaks derive from check-ins and rest history, not a stored score.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/habits.php",
+              "symbol": "data-habit-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "const checkIn = (habit, date, done) =>"
+            },
+            {
+              "path": "frontend/src/js/lib/habit-days.js",
+              "symbol": "export function habitDayState("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function checkIn("
+            },
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function undoCheckIn("
+            },
+            {
+              "path": "backend/src/Domain/Habits/HabitStreak.php",
+              "symbol": "public function daily("
+            },
+            {
+              "path": "backend/src/Domain/Habits/HabitStreak.php",
+              "symbol": "public function weekly("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function insertCheckIn("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function deleteCheckIn("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function history("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/habit-days.test.js",
+              "symbol": "test('checked days are checked whenever they happened'",
+              "label": "checked days are checked"
+            },
+            {
+              "path": "frontend/tests/js/habit-days.test.js",
+              "symbol": "test('past unchecked days since tracking began are missed'",
+              "label": "past unchecked days"
+            },
+            {
+              "path": "frontend/tests/js/habit-days.test.js",
+              "symbol": "test('rest days are protected, never done, and future days are upcoming'",
+              "label": "rest days are protected"
+            },
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone("
+            }
+          ],
+          "routes": [
+            "api.habits.check-ins.store",
+            "api.habits.check-ins.destroy",
+            "api.habits.history"
+          ]
+        },
+        {
+          "id": "habits.rest",
+          "label": "Missed days and Rest Day menu",
+          "behavior": "A Rest Day can be planned only for tomorrow through local today+3. Today, past and later dates are rejected. A rest cannot hide an existing check-in or create completion Activity. The backend returns the available window.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/habits.php",
+              "symbol": "data-habit-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "const toggleRest = (habit, date, rested) =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function rest("
+            },
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function cancelRest("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function insertRestDay("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function deleteRestDay("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_rest_days_use_a_three_day_sliding_window_and_only_protect_the_streak("
+            }
+          ],
+          "routes": [
+            "api.habits.rest-days.store",
+            "api.habits.rest-days.destroy"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/reviews/README.md",
+      "title": "/reviews \u2014 Collection and Review editor",
+      "components": [
+        {
+          "id": "reviews.collection",
+          "label": "New review, type filter and pagination",
+          "behavior": "Identity is owner/kind/period start, with timezone captured on creation. Period navigation does not redefine an existing Review when account timezone later changes.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/reviews.php",
+              "symbol": "data-review-filter"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/reviews-page.js",
+              "symbol": "export function initReviewsPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Reviews/ReviewService.php",
+              "symbol": "public function create("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function find("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts("
+            }
+          ],
+          "routes": [
+            "api.reviews.index",
+            "api.reviews.store",
+            "api.reviews.show"
+          ]
+        },
+        {
+          "id": "reviews.editor",
+          "label": "Reflections, Save and conflict choices",
+          "behavior": "Reflection edits are explicit-save and versioned; newer typing stays dirty after an older save. Finalized Reviews must be reopened before editing. There is no Notes autosave state machine here.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/reviews.php",
+              "symbol": "data-review-editor"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/reviews-page.js",
+              "symbol": "data-review-editor"
+            },
+            {
+              "path": "frontend/src/js/planning/draft-buffer.js",
+              "symbol": "export class DraftBuffer"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Reviews/ReviewService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/goal-roadmap.test.js",
+              "symbol": "test('a late save acknowledgement preserves typing after the submitted snapshot'",
+              "label": "late save acknowledgement"
+            },
+            {
+              "path": "frontend/tests/js/goal-roadmap.test.js",
+              "symbol": "test('refresh cannot erase or silently rebase a dirty goal draft'",
+              "label": "refresh cannot erase"
+            }
+          ],
+          "routes": [
+            "api.reviews.update"
+          ],
+          "test_scope": "The linked JavaScript cases exercise shared DraftBuffer semantics, not this page\u2019s DOM/editor wiring. Verify the page flow separately in a browser.",
+          "styles": [
+            {
+              "path": "frontend/src/css/workspace.css",
+              "symbol": ".review-editor-heading {",
+              "label": "Editor heading layout"
+            }
+          ]
+        },
+        {
+          "id": "reviews.facts",
+          "label": "Refresh facts, Finalize, Reopen and Delete",
+          "behavior": "Refresh rebuilds Draft facts while preserving reflections. Finalize freezes the snapshot; Reopen does not refresh it automatically. Missing historical Goal snapshots remain unavailable. Delete is permanent and versioned.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/reviews.php",
+              "symbol": "data-review-refresh"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/reviews-page.js",
+              "symbol": "for (const action of ['refresh', 'finalize', 'reopen'])"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Reviews/ReviewService.php",
+              "symbol": "public function transition("
+            },
+            {
+              "path": "backend/src/Application/Reviews/GoalSnapshotService.php",
+              "symbol": "public function capture("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function facts("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function update("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Reviews/PdoReviewRepository.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_finalized_review_snapshot_is_stable_until_reopened_and_refreshed("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_goal_snapshot_capture_is_idempotent("
+            }
+          ],
+          "routes": [
+            "api.reviews.transition",
+            "api.reviews.destroy"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/README.md",
+      "title": "/ \u2014 Notes",
+      "components": [
+        {
+          "id": "notes.collection",
+          "label": "All notes, search, sort, grid/list and paging",
+          "behavior": "NotesPage owns loading, selection and read coordination. Browser layout preferences and server search/paging have separate state. Search/filter changes must not let stale responses replace the selected Note.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-notes-workspace"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/notes-page.js",
+              "symbol": "export class NotesPage"
+            },
+            {
+              "path": "frontend/src/js/lib/read-coordinator.js",
+              "symbol": "export class LatestRequest"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteListQuery.php",
+              "symbol": "public function paginate("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function paginate("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/read-coordinator.test.js",
+              "symbol": "test('Q01 only the latest read ticket may update the page'",
+              "label": "Q01"
+            },
+            {
+              "path": "frontend/tests/js/read-coordinator.test.js",
+              "symbol": "test('Q02 a label or page action can cancel a pending search debounce'",
+              "label": "Q02"
+            },
+            {
+              "path": "frontend/tests/js/read-coordinator.test.js",
+              "symbol": "test('Q03 a current read failure remains visible while aborted failures are ignored'",
+              "label": "Q03"
+            }
+          ],
+          "routes": [
+            "api.notes.index"
+          ]
+        },
+        {
+          "id": "notes.editor",
+          "label": "New note, title/content, color, pin and Save",
+          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; explicit Save flushes the normal save path.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "export class NoteEditor"
+            },
+            {
+              "path": "frontend/src/js/notes/note-content-editor.js",
+              "symbol": "export class NoteContentEditor"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function create("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function updateSnapshot("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('debounces valid edits and reaches saved only after a matching acknowledgement'",
+              "label": "debounces valid edits"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('J14 IME suppresses dispatch until composition ends'",
+              "label": "J14 IME"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('J01 a new note waits for both valid fields and reuses one stable UUID'",
+              "label": "J01 a new note"
+            },
+            {
+              "path": "frontend/tests/js/note-checkbox-text.test.js",
+              "symbol": "test('projection preserves literal markup, Unicode, whitespace, and malformed markers exactly'",
+              "label": "projection preserves"
+            }
+          ],
+          "routes": [
+            "api.notes.store",
+            "api.notes.update"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/notes.css",
+              "symbol": ".editor-modal {",
+              "label": "Note editor dialog"
+            }
+          ]
+        },
+        {
+          "id": "notes.delete",
+          "label": "Delete and tombstones",
+          "behavior": "Deleting an owned Note also unlinks its Task. A retried create with a tombstoned UUID returns 410 instead of resurrecting data. Pending file deletion is handled after the metadata transaction.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-delete"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "async deleteNote()"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function tombstone("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NotesHttpTest.php",
+              "symbol": "public function test_create_replay_update_conflict_noop_search_and_tombstone_contract("
+            }
+          ],
+          "routes": [
+            "api.notes.destroy"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/autosave.md",
+      "title": "/ \u2014 Notes autosave, recovery and conflicts",
+      "components": [
+        {
+          "id": "notes.autosave",
+          "label": "Dirty, saving, saved and retry state",
+          "behavior": "Valid edits debounce at 500ms and dispatch within 2s of continuous typing. One logical request is frozen/in-flight at a time. Only exact acknowledged content is Saved. IME composition never sends partial text.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-status"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/autosave-machine.js",
+              "symbol": "export class AutosaveMachine"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function updateSnapshot("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('debounces valid edits and reaches saved only after a matching acknowledgement'",
+              "label": "debounces valid edits"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('keeps typing during a save and sends the latest draft after the first acknowledgement'",
+              "label": "keeps typing"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('J02 continuous typing dispatches by two seconds'",
+              "label": "J02 continuous"
+            }
+          ],
+          "routes": [
+            "api.notes.store",
+            "api.notes.update"
+          ]
+        },
+        {
+          "id": "notes.recovery",
+          "label": "Recover draft, offline retry and session changes",
+          "behavior": "One account-scoped sessionStorage record preserves acknowledged/draft/frozen request state. Validate schema, user, age and size before recovery. Retry exact requests after 1/2/4s, respect Retry-After, pause offline; validation/conflicts require intervention. Clear owned recovery records on logout/account change.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-session-recovery"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/recovery-store.js",
+              "symbol": "export class RecoveryStore"
+            },
+            {
+              "path": "frontend/src/js/notes/autosave-machine.js",
+              "symbol": "export class AutosaveMachine"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function create("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function findOwned("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function insert("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/recovery-store.test.js",
+              "symbol": "test('recovery is isolated by user and survives a reload in the same tab'",
+              "label": "isolated by user"
+            },
+            {
+              "path": "frontend/tests/js/recovery-store.test.js",
+              "symbol": "test('corrupt and expired records are removed defensively'",
+              "label": "corrupt and expired"
+            },
+            {
+              "path": "frontend/tests/js/recovery-store.test.js",
+              "symbol": "test('clearAll removes application recovery keys without touching unrelated storage'",
+              "label": "clearAll"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('J12 recovery of an older revision requires explicit conflict resolution'",
+              "label": "J12 recovery"
+            },
+            {
+              "path": "frontend/tests/js/autosave-machine.test.js",
+              "symbol": "test('J13 expired session pauses timers and acknowledges a committed pending write on recheck'",
+              "label": "J13 expired session"
+            }
+          ],
+          "routes": [
+            "api.session"
+          ]
+        },
+        {
+          "id": "notes.conflict",
+          "label": "Saved-version/draft conflict decisions",
+          "behavior": "Creates use stable client-generated UUIDs. Exact replay is a no-op; stale different updates return current owned content with 409. The editor keeps the local draft until the user chooses how to reconcile.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-conflict-dialog role=\"dialog\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/notes-page.js",
+              "symbol": "openConflict(machine) {"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function update("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function findOwned("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function updateSnapshot("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NotesHttpTest.php",
+              "symbol": "public function test_create_replay_update_conflict_noop_search_and_tombstone_contract("
+            }
+          ],
+          "routes": [
+            "api.notes.update"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/sharing.md",
+      "title": "/ \u2014 Share and Shared with me",
+      "components": [
+        {
+          "id": "notes.sharing.owner",
+          "label": "Share dialog: invite, permission and remove",
+          "behavior": "Unknown emails return the same success shape but create no invitation. Owner can change view/edit or revoke access. A deleted Note ends shares.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-share"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-sharing.js",
+              "symbol": "export class NoteSharing"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteShareService.php",
+              "symbol": "public function share("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteShareService.php",
+              "symbol": "public function changePermission("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function forNote("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            }
+          ],
+          "routes": [
+            "api.notes.shares.index",
+            "api.notes.shares.store",
+            "api.notes.shares.update",
+            "api.notes.shares.destroy"
+          ]
+        },
+        {
+          "id": "notes.sharing.recipient",
+          "label": "Shared with me, accept/decline, edit and leave",
+          "behavior": "Acceptance is required before access. Edit uses the Note version and explicit Save; 409 preserves conflict handling. Shared changes notify other accepted participants, never the actor. Missing/revoked memberships return 404.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-filter-shared"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-sharing.js",
+              "symbol": "export class NoteSharing"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteShareService.php",
+              "symbol": "public function updateShared("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteShareService.php",
+              "symbol": "public function respond("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function findReceived("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function received("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            }
+          ],
+          "routes": [
+            "api.shared-notes.index",
+            "api.shared-notes.respond",
+            "api.shared-notes.show",
+            "api.shared-notes.update",
+            "api.shared-notes.leave"
+          ]
+        },
+        {
+          "id": "notes.sharing.report",
+          "label": "Report shared Note",
+          "behavior": "A recipient reports a reason; the report stores a title/content snapshot. Admin review does not grant access to the live private Note.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-filter-shared"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-sharing.js",
+              "symbol": "async report()"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/ReportService.php",
+              "symbol": "public function report("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php",
+              "symbol": "public function hasOpenReport("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            }
+          ],
+          "routes": [
+            "api.shared-notes.report"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/files.md",
+      "title": "/ \u2014 Attachments and private Note backgrounds",
+      "components": [
+        {
+          "id": "notes.files.upload",
+          "label": "Upload, select Note background and remove attachment",
+          "behavior": "Server MIME/signature and size validation is authoritative; attachment limit is 20MiB. Metadata transactions compensate failed writes; deferred deletion avoids mixing file I/O with SQL commits.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "<select data-note-background>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "async uploadFiles("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Files/FileService.php",
+              "symbol": "public function uploadAttachment("
+            },
+            {
+              "path": "backend/src/Application/Files/FileService.php",
+              "symbol": "public function deleteAttachment("
+            },
+            {
+              "path": "backend/src/Application/Files/UploadValidator.php",
+              "symbol": "public function attachment("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function setBackground("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php",
+              "symbol": "public function tombstone("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php",
+              "symbol": "public function findOwnedForNote("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function setBackground("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_invalid_files_quota_and_unknown_fields_leave_no_orphan_bytes("
+            }
+          ],
+          "routes": [
+            "api.attachments.index",
+            "api.attachments.store",
+            "api.attachments.destroy",
+            "api.notes.background"
+          ]
+        },
+        {
+          "id": "notes.files.stream",
+          "label": "Preview, download, HEAD and Range",
+          "behavior": "Only allowed media types preview. Safe filenames and a single byte Range are supported; 206/416 and HEAD preserve streaming semantics. Path traversal, foreign IDs and symlinks are rejected.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-dialog role=\"dialog\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "attachmentRow(attachment) {"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Files/FileService.php",
+              "symbol": "public function authorizedAttachment("
+            },
+            {
+              "path": "backend/src/Application/Files/FileStreamer.php",
+              "symbol": "public function attachment("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Storage/LocalPrivateStorage.php",
+              "symbol": "public function resolve("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_attachment_replay_stream_ranges_owner_scope_and_tombstone("
+            }
+          ],
+          "routes": [
+            "files.attachment.preview",
+            "files.attachment.download"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/shared/tags.md",
+      "title": "Shared \u2014 Tags and legacy labels",
+      "components": [
+        {
+          "id": "shared.tags",
+          "label": "Tag picker, hierarchy and Notes labels",
+          "behavior": "Names are normalized and owner-unique. Tag moves reject cycles; complete tag_ids snapshots belong to their aggregate mutation. `/api/v1/labels` remains a compatibility API over the same rows.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "<button class=\"label-add-link\" type=\"button\" data-open-label-manager>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/tag-picker.js",
+              "symbol": "export function createTagPicker"
+            },
+            {
+              "path": "frontend/src/js/notes/notes-page.js",
+              "symbol": "export class NotesPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Tags/TagService.php",
+              "symbol": "public function createTag("
+            },
+            {
+              "path": "backend/src/Application/Tags/TagService.php",
+              "symbol": "public function updateTag("
+            },
+            {
+              "path": "backend/src/Application/Tags/TagService.php",
+              "symbol": "public function archiveTag("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php",
+              "symbol": "public function listForOwner("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php",
+              "symbol": "public function updateTag("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php",
+              "symbol": "public function hierarchyEdges("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_hierarchical_tags_reject_cycles_and_snapshots_are_owner_scoped("
+            }
+          ],
+          "routes": [
+            "api.labels.index",
+            "api.labels.store",
+            "api.tags.index",
+            "api.tags.move"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/teamwork/README.md",
+      "title": "/teamwork \u2014 Team Goals, members, Tasks and chat",
+      "components": [
+        {
+          "id": "teamwork.goals",
+          "label": "Team Goal cards, search and carousel",
+          "behavior": "The browser filters names/descriptions and pages up to four cards (two below 900px, one below 560px). Selecting a card loads one team Goal; responsive layout does not change access rights.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/teamwork.php",
+              "symbol": "data-teamwork-page"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/teamwork-page.js",
+              "symbol": "export function initTeamworkPage"
+            },
+            {
+              "path": "frontend/src/js/planning/teamwork-page.js",
+              "symbol": "export function filterTeamGoals"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function show("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function goalsFor("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function goal("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function updateGoal("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/teamwork.test.js",
+              "symbol": "test('team goal search matches every word in the name or description'",
+              "label": "team goal search"
+            },
+            {
+              "path": "frontend/tests/js/teamwork.test.js",
+              "symbol": "test('the carousel shows at most four goals and pages through them four at a time'",
+              "label": "carousel shows"
+            }
+          ],
+          "routes": [
+            "api.team-goals.index",
+            "api.team-goals.store",
+            "api.team-goals.show",
+            "api.team-goals.update",
+            "api.team-goals.archive"
+          ]
+        },
+        {
+          "id": "teamwork.members",
+          "label": "Invite, accept/decline, role, remove and completion",
+          "behavior": "Members have admin/member/viewer roles. Team admins manage membership; the creator cannot be removed/demoted by the normal flow. Member biography and factual done/assigned counts are shown.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/teamwork.php",
+              "symbol": "data-team-invite>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/teamwork-page.js",
+              "symbol": "root.querySelector('[data-team-invite]')"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function invite("
+            },
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function changeRole("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function members("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function insertMember("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function updateMember("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function deleteMember("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_teamwork_roles_tasks_chat_and_member_isolation("
+            }
+          ],
+          "routes": [
+            "api.team-goals.members.store",
+            "api.team-goals.members.update",
+            "api.team-goals.members.destroy",
+            "api.team-goals.respond"
+          ]
+        },
+        {
+          "id": "teamwork.tasks",
+          "label": "Assigned Task capture, status, due/reminder and repeat",
+          "behavior": "Team members/admins may create Tasks; assignment is team-scoped. An assignee, including a viewer, may change only their own status through the allowed status-only path. Personal TaskSeries logic does not run here.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/teamwork.php",
+              "symbol": "data-teamwork-page"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/teamwork-page.js",
+              "symbol": "export function teamTaskPayload"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function updateTask("
+            },
+            {
+              "path": "backend/src/Domain/Teamwork/TeamTaskRepeat.php",
+              "symbol": "public static function next("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function tasks("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function insertTask("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function updateTask("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/teamwork.test.js",
+              "symbol": "test('team task payload reuses the Tasks capture fields and adds the assignee'",
+              "label": "team task payload"
+            },
+            {
+              "path": "backend/tests/Plain/Unit/TeamTaskRepeatTest.php",
+              "symbol": "public function test_next_dates_follow_each_frequency_and_stop_after_the_end_date("
+            }
+          ],
+          "routes": [
+            "api.team-goals.tasks.store",
+            "api.team-goals.tasks.update",
+            "api.team-goals.tasks.archive"
+          ]
+        },
+        {
+          "id": "teamwork.chat",
+          "label": "Team chat and polling",
+          "behavior": "Messages are plain text, 1\u20132000 characters. The open chat polls every 5 seconds; this is not WebSocket collaboration. Chat/reminder notifications are user-scoped.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/teamwork.php",
+              "symbol": "data-teamwork-page"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/teamwork-page.js",
+              "symbol": "5000"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function postMessage("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function insertMessage("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function messages("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_teamwork_roles_tasks_chat_and_member_isolation("
+            }
+          ],
+          "routes": [
+            "api.team-goals.messages.index",
+            "api.team-goals.messages.store"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/settings/profile.md",
+      "title": "/settings/profile \u2014 Profile, avatar and email",
+      "components": [
+        {
+          "id": "profile.details",
+          "label": "Display name and biography",
+          "behavior": "Profile PATCH accepts display_name and optional biography (up to 2,000 code points); omission preserves biography. Save feedback belongs to this form.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/profile.php",
+              "symbol": "data-profile-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/profile.js",
+              "symbol": "export function initProfile"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountService.php",
+              "symbol": "public function updateProfile("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updateDisplayName("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updateBiography("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_registration_session_profile_preferences_and_password_flow("
+            }
+          ],
+          "routes": [
+            "api.profile.show",
+            "api.profile.update"
+          ]
+        },
+        {
+          "id": "profile.avatar",
+          "label": "Replace and remove avatar",
+          "behavior": "Avatar upload validates and re-encodes the image, stores it privately and serves the current account through /files/avatar. Queue removal after metadata changes.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/profile.php",
+              "symbol": "data-avatar-input"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/profile.js",
+              "symbol": "data-avatar-input"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Files/FileService.php",
+              "symbol": "public function replaceAvatar("
+            },
+            {
+              "path": "backend/src/Application/Files/FileService.php",
+              "symbol": "public function removeAvatar("
+            },
+            {
+              "path": "backend/src/Application/Files/AvatarProcessor.php",
+              "symbol": "public function makeJpeg("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updateAvatarPath("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_avatar_is_reencoded_replaced_safely_streamed_and_removed("
+            }
+          ],
+          "routes": [
+            "api.profile.avatar",
+            "api.profile.avatar.remove",
+            "files.avatar"
+          ]
+        },
+        {
+          "id": "profile.email",
+          "label": "Verification status, resend and change email",
+          "behavior": "Changing email requires current_password, emails a confirmation link to the new address and notifies the old address after confirmation. Never expose tokens in docs or public screenshots.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/profile.php",
+              "symbol": "data-email-change-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/profile.js",
+              "symbol": "data-email-change-form"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/EmailVerificationService.php",
+              "symbol": "public function requestChange("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php",
+              "symbol": "public function replace("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php",
+              "symbol": "public function findByHash("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/ProductCompletionTest.php",
+              "symbol": "public function test_email_verification_and_change_follow_their_own_links("
+            }
+          ],
+          "routes": [
+            "api.email.show",
+            "api.email.verification",
+            "api.email.change"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/settings/preferences.md",
+      "title": "/settings/preferences \u2014 Appearance and preferences",
+      "components": [
+        {
+          "id": "appearance.theme",
+          "label": "Theme, light/dark, scenery and illustration toggles",
+          "behavior": "Appearance is account-persisted. applyAppearance consumes acknowledged preferences; decoration is not authoritative product data. Keep CSS selectors and preference serialization in sync.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/preferences.php",
+              "symbol": "data-theme-picker"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/preferences.js",
+              "symbol": "export function initPreferences"
+            },
+            {
+              "path": "frontend/src/js/settings/theme-catalog.js",
+              "symbol": "export function applyAppearance"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountValidator.php",
+              "symbol": "public function preferences("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function preferences("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updatePreferences("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_illustrated_preferences_are_private_strict_and_survive_reload("
+            }
+          ],
+          "routes": [
+            "api.preferences.show",
+            "api.preferences.update"
+          ]
+        },
+        {
+          "id": "appearance.background",
+          "label": "Private backgrounds, Add tile, RGB and reset",
+          "behavior": "Up to 12 owned backgrounds are retained. Upload validates JPEG/PNG/WebP, <=2MiB and <=4096x4096, re-encodes privately and serves only the owner. RGB is #RRGGBB; a submitted external URL/path is not accepted.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/preferences.php",
+              "symbol": "data-background-upload"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/preferences.js",
+              "symbol": "data-background-upload"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Files/BackgroundService.php",
+              "symbol": "public function add("
+            },
+            {
+              "path": "backend/src/Application/Files/BackgroundService.php",
+              "symbol": "public function delete("
+            },
+            {
+              "path": "backend/src/Application/Files/BackgroundService.php",
+              "symbol": "public function authorized("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function insertBackground("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function selectBackground("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function deleteBackground("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_uploaded_backgrounds_form_an_owned_list_that_can_be_selected_and_removed("
+            }
+          ],
+          "routes": [
+            "api.background.store",
+            "api.backgrounds.index",
+            "api.backgrounds.destroy",
+            "backgrounds.show",
+            "api.preferences.update"
+          ]
+        },
+        {
+          "id": "appearance.quote",
+          "label": "Personal quote, preset restore and locale",
+          "behavior": "Quote text requires explicit Save; theme/toggles save independently. Preserve newer quote drafts while a save is pending. Locale changes UI literals, not stored user content.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/preferences.php",
+              "symbol": "data-quote-form"
+            },
+            {
+              "path": "frontend/src/views/settings/preferences.php",
+              "symbol": "data-interface-locale"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/preferences.js",
+              "symbol": "data-quote-form"
+            },
+            {
+              "path": "frontend/src/js/lib/i18n.js",
+              "symbol": "export function t("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountService.php",
+              "symbol": "public function updatePreferences("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updatePreferences("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/translations.test.js",
+              "symbol": "test('every literal interface string has a Vietnamese translation'",
+              "label": "every literal interface string"
+            }
+          ],
+          "routes": [
+            "api.preferences.update"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/settings/password.md",
+      "title": "/settings/password \u2014 Security",
+      "components": [
+        {
+          "id": "security.password",
+          "label": "Change password and visibility toggle",
+          "behavior": "Require current password and exact confirmation, at least 10 code points, at most 72 bytes, no NUL. A successful change bumps auth_version and deletes sessions atomically; redirect to sign in.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/password.php",
+              "symbol": "data-password-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/password.js",
+              "symbol": "export function initPassword"
+            },
+            {
+              "path": "frontend/src/js/lib/password-visibility.js",
+              "symbol": "export function initPasswordVisibility"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AuthService.php",
+              "symbol": "public function changePassword("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updatePasswordAndVersion("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function deleteSessions("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_registration_session_profile_preferences_and_password_flow("
+            }
+          ],
+          "routes": [
+            "api.password.update"
+          ]
+        },
+        {
+          "id": "security.twofactor",
+          "label": "Set up email codes or TOTP, confirm and disable",
+          "behavior": "TOTP secret is encrypted and setup becomes active only after a valid code. Email codes are hashed, single-use and attempt/expiry limited. Disabling requires the current password. Pending login is separate from an authenticated session.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/password.php",
+              "symbol": "data-two-factor-settings"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/two-factor.js",
+              "symbol": "export function initTwoFactor"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/TwoFactorService.php",
+              "symbol": "public function beginTotpSetup("
+            },
+            {
+              "path": "backend/src/Application/Account/TwoFactorService.php",
+              "symbol": "public function confirmTotp("
+            },
+            {
+              "path": "backend/src/Application/Account/TwoFactorService.php",
+              "symbol": "public function disable("
+            },
+            {
+              "path": "backend/src/Domain/Account/Totp.php",
+              "symbol": "public static function verify("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function store("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function failedAttempt("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_totp_two_factor_login_requires_a_valid_code("
+            }
+          ],
+          "routes": [
+            "api.two-factor.show",
+            "api.two-factor.totp.begin",
+            "api.two-factor.totp.confirm",
+            "api.two-factor.email.send",
+            "api.two-factor.email.confirm",
+            "api.two-factor.disable"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/settings/notifications.md",
+      "title": "/settings/notifications \u2014 Delivery preferences",
+      "components": [
+        {
+          "id": "notifications.preferences",
+          "label": "Notifications, invitation emails and Task reminders",
+          "behavior": "Preferences control new in-app rows and opted-in email delivery. Admin report notifications are always created. Personal Task reminder emails require the scheduler and configured transport; team Task reminders are in-app only.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/notifications.php",
+              "symbol": "data-notification-settings"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/delivery-preferences.js",
+              "symbol": "export function initDeliveryPreferences"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountService.php",
+              "symbol": "public function updatePreferences("
+            },
+            {
+              "path": "backend/src/Application/Notifications/NotificationService.php",
+              "symbol": "public function notify("
+            },
+            {
+              "path": "backend/src/Application/Planning/TaskReminderService.php",
+              "symbol": "public function send("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function updatePreferences("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/FeedbackMaintenanceTest.php",
+              "symbol": "public function test_recurring_capture_and_reminders_are_owned_and_settings_stay_isolated("
+            }
+          ],
+          "routes": [
+            "api.preferences.update"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/settings/history.md",
+      "title": "/settings/history \u2014 Task history and retention",
+      "components": [
+        {
+          "id": "history.rules",
+          "label": "Completed-hours, overdue-days and retention settings",
+          "behavior": "Defaults are 24 elapsed completed-hours and 3 local overdue-days. Retention is optional; the admin history cap still applies. Changing thresholds changes membership without rewriting Task completion facts.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/history.php",
+              "symbol": "data-history-rules"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/task-history.js",
+              "symbol": "export function initTaskHistory"
+            },
+            {
+              "path": "frontend/src/js/planning/task-views.js",
+              "symbol": "export function taskInHistory"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/TaskHistoryService.php",
+              "symbol": "public function prune("
+            },
+            {
+              "path": "backend/src/Application/Account/AccountValidator.php",
+              "symbol": "public function preferences("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php",
+              "symbol": "public function preferences("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php",
+              "symbol": "public function historyTasks("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('history uses elapsed completion time and local calendar overdue dates'",
+              "label": "history uses elapsed"
+            }
+          ],
+          "routes": [
+            "api.preferences.update"
+          ]
+        },
+        {
+          "id": "history.list",
+          "label": "Search, detail navigation and Reopen",
+          "behavior": "The client derives the history set and filters names/descriptions. Reopen uses the existing Task transition; an old deadline may still independently qualify an unfinished Task for history.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/history.php",
+              "symbol": "data-history-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/task-history.js",
+              "symbol": "export function historyMatches"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function transition("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/task-views.test.js",
+              "symbol": "test('history uses elapsed completion time and local calendar overdue dates'",
+              "label": "history uses elapsed"
+            }
+          ],
+          "routes": [
+            "api.tasks.index",
+            "api.tasks.reopen"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/auth/README.md",
+      "title": "Authentication routes",
+      "components": [
+        {
+          "id": "auth.login",
+          "label": "/login \u2014 Sign in",
+          "behavior": "Generic failures do not reveal whether an email exists. Password visibility is a shared client helper. Rate limits apply by email/IP and IP; locked accounts cannot authenticate.",
+          "ui": [
+            {
+              "path": "frontend/src/views/auth/login.php",
+              "symbol": "name=\"email\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/password-visibility.js",
+              "symbol": "export function initPasswordVisibility"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/AccountController.php",
+              "symbol": "public function login("
+            },
+            {
+              "path": "backend/src/Application/Account/AuthService.php",
+              "symbol": "public function attempt("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function findByEmail("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_login_errors_are_generic_and_account_bucket_throttles_after_five_failures("
+            }
+          ],
+          "routes": [
+            "login",
+            "login.store"
+          ]
+        },
+        {
+          "id": "auth.register",
+          "label": "/register \u2014 Create account",
+          "behavior": "Registration creates owned preferences/default Areas transactionally, stores guest language, sends a verification link and establishes the normal session. Public registration does not grant system-admin role.",
+          "ui": [
+            {
+              "path": "frontend/src/views/auth/register.php",
+              "symbol": "name=\"email\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/password-visibility.js",
+              "symbol": "export function initPasswordVisibility"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/AccountController.php",
+              "symbol": "public function register("
+            },
+            {
+              "path": "backend/src/Application/Account/AuthService.php",
+              "symbol": "public function register("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function insertUser("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_registration_session_profile_preferences_and_password_flow("
+            }
+          ],
+          "routes": [
+            "register",
+            "register.store"
+          ]
+        },
+        {
+          "id": "auth.logout",
+          "label": "Logout and account/session changes",
+          "behavior": "Logout is POST with CSRF. Clear this account/tab recovery state and notify other tabs; do not erase unrelated browser storage.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-leave-guard-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/app.js",
+              "symbol": "new BroadcastChannel("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/AccountController.php",
+              "symbol": "public function logout("
+            },
+            {
+              "path": "backend/src/Application/Account/AuthService.php",
+              "symbol": "public function logout("
+            },
+            {
+              "path": "backend/src/Infrastructure/Session/SessionManager.php",
+              "symbol": "public function invalidate("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Session/PdoSessionHandler.php",
+              "symbol": "public function destroy("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_registration_session_profile_preferences_and_password_flow("
+            }
+          ],
+          "routes": [
+            "logout"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/auth/recovery.md",
+      "title": "/forgot-password and /reset-password \u2014 Account recovery",
+      "components": [
+        {
+          "id": "auth.recovery",
+          "label": "Forgot password and reset form",
+          "behavior": "Known/unknown valid emails receive the same response. A reset has a hashed token, 30-minute expiry and single-use semantics. Reset changes password, auth_version and sessions atomically; it does not automatically log in.",
+          "ui": [
+            {
+              "path": "frontend/src/views/auth/recovery.php",
+              "symbol": "<form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/password-visibility.js",
+              "symbol": "export function initPasswordVisibility"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/PasswordResetService.php",
+              "symbol": "public function request("
+            },
+            {
+              "path": "backend/src/Application/Account/PasswordResetService.php",
+              "symbol": "public function reset("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoPasswordResetRepository.php",
+              "symbol": "public function replace("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoPasswordResetRepository.php",
+              "symbol": "public function lock("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoPasswordResetRepository.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/FeedbackMaintenanceTest.php",
+              "symbol": "public function test_reset_replaces_token_expires_and_invalidates_sessions("
+            }
+          ],
+          "routes": [
+            "password.forgot",
+            "password.forgot.store",
+            "password.reset",
+            "password.reset.store"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/auth/email.md",
+      "title": "/verify-email and /confirm-email \u2014 Email link results",
+      "components": [
+        {
+          "id": "auth.email",
+          "label": "Email verification and address-change confirmation",
+          "behavior": "Verification links expire after 24h; address-change links after 1h. The service validates ownership/purpose/expiry before applying changes. Invalid/expired links render 422. Never copy live tokens into examples.",
+          "ui": [
+            {
+              "path": "frontend/src/views/auth/email-result.php",
+              "symbol": "<section"
+            }
+          ],
+          "client": [],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/EmailVerificationService.php",
+              "symbol": "public function verify("
+            },
+            {
+              "path": "backend/src/Application/Account/EmailVerificationService.php",
+              "symbol": "public function confirmChange("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php",
+              "symbol": "public function findByHash("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/ProductCompletionTest.php",
+              "symbol": "public function test_email_verification_and_change_follow_their_own_links("
+            }
+          ],
+          "routes": [
+            "email.verify",
+            "email.change.confirm"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/auth/two-factor.md",
+      "title": "/two-factor \u2014 Pending login challenge",
+      "components": [
+        {
+          "id": "auth.twofactor",
+          "label": "Verify TOTP/email code or request fallback",
+          "behavior": "TOTP permits the configured time-step window. Email fallback uses a hashed, expiring, limited-attempt code. The challenge cannot be bypassed by loading a protected page directly.",
+          "ui": [
+            {
+              "path": "frontend/src/views/auth/two-factor.php",
+              "symbol": "<form class=\"stack-form\" method=\"post\" action=\"/two-factor\">"
+            }
+          ],
+          "client": [],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/TwoFactorController.php",
+              "symbol": "public function verify("
+            },
+            {
+              "path": "backend/src/Application/Account/TwoFactorService.php",
+              "symbol": "public function verify("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function failedAttempt("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_totp_two_factor_login_requires_a_valid_code("
+            }
+          ],
+          "routes": [
+            "two-factor",
+            "two-factor.verify",
+            "two-factor.email"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/shared/shell.md",
+      "title": "Shared \u2014 Layout, CSS, navigation and Help",
+      "components": [
+        {
+          "id": "shell.layout",
+          "label": "Sidebar, topbar, mobile navigation and page bootstrap",
+          "behavior": "AccountController renders page shell/bootstrap; page modules load their own data. Keep root-relative navigation, owned session state and existing data hooks stable.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-app-body"
+            },
+            {
+              "path": "frontend/src/views/layouts/guest.php",
+              "symbol": "$view->assets()"
+            },
+            {
+              "path": "frontend/src/views/layouts/icons.php",
+              "symbol": "<svg"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/app.js",
+              "symbol": "DOMContentLoaded"
+            },
+            {
+              "path": "frontend/src/js/lib/navigation.js",
+              "symbol": "export function initNavigation"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/AccountController.php",
+              "symbol": "private function renderApplicationPage("
+            }
+          ],
+          "storage": [],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_php_templates_preserve_dom_contract_and_escape_bootstrap_data("
+            }
+          ],
+          "routes": [
+            "api.session"
+          ]
+        },
+        {
+          "id": "shell.styles",
+          "label": "Typography, themes and component CSS",
+          "behavior": "CSS entry imports tokens/base/layout/components/feature styles. Change shared tokens for cross-app values; edit feature sheets for scoped presentation. Vite serves source in local mode and hashed /build assets for production.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "$view->assets"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/app.js",
+              "symbol": "import '@fontsource/be-vietnam-pro/400.css'"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/View/AssetManifest.php",
+              "symbol": "public function tags("
+            },
+            {
+              "path": "backend/src/Http/View/AssetManifest.php",
+              "symbol": "private function developmentTags("
+            },
+            {
+              "path": "backend/src/Http/View/AssetManifest.php",
+              "symbol": "private function productionTags("
+            },
+            {
+              "path": "backend/src/Http/Security/ContentSecurityPolicy.php",
+              "symbol": "public function value("
+            }
+          ],
+          "storage": [],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Unit/ViewTest.php",
+              "symbol": "public function test_manifest_emits_each_asset_once_and_rejects_unsafe_paths("
+            },
+            {
+              "path": "backend/tests/Plain/Unit/ViewTest.php",
+              "symbol": "public function test_manifest_rejects_missing_invalid_and_nonlocal_development_configuration("
+            }
+          ],
+          "routes": [],
+          "test_scope": "Manifest/CSP checks do not certify visual rendering or typography; inspect browser loading and appearance separately."
+        },
+        {
+          "id": "shell.dialogs",
+          "label": "Dialogs, sections, Escape, backdrop and leave guards",
+          "behavior": "workspace-ui and dialog-backdrop manage common interactions. Dirty/save/conflict flows are owned by each editor; preserve focus and drafts when moving components.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-leave-guard-form>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/workspace-ui.js",
+              "symbol": "export function initWorkspaceUI"
+            },
+            {
+              "path": "frontend/src/js/lib/dialog-backdrop.js",
+              "symbol": "export function initDialogBackdropClose"
+            }
+          ],
+          "server": [],
+          "storage": [],
+          "tests": [
+            {
+              "path": "frontend/tests/js/workspace-ui.test.js",
+              "symbol": "test('creation drafts include selection and checkbox changes without depending on disabled state'",
+              "label": "creation drafts"
+            },
+            {
+              "path": "frontend/tests/js/workspace-ui.test.js",
+              "symbol": "test('creation serializes a pending write and restores the original controls after failure'",
+              "label": "creation serializes"
+            },
+            {
+              "path": "frontend/tests/js/dialog-backdrop.test.js",
+              "symbol": "test('only clicks beyond the dialog box count as backdrop clicks'",
+              "label": "only clicks beyond"
+            }
+          ],
+          "routes": []
+        },
+        {
+          "id": "shell.help",
+          "label": "Help walkthrough and first-visit dismissal",
+          "behavior": "Help opens the illustrated walkthrough beside Appearance. Topics/steps live in walkthrough-content; other dialogs/recovery take priority. Skip/Close/Escape/Finish persist account-wide dismissal once.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/walkthrough.php",
+              "symbol": "data-walkthrough aria-labelledby"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/help/walkthrough.js",
+              "symbol": "export function initWalkthrough"
+            },
+            {
+              "path": "frontend/src/js/help/walkthrough-content.js",
+              "symbol": "export"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountService.php",
+              "symbol": "public function dismissWalkthrough("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function walkthroughDismissed("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function dismissWalkthrough("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_walkthrough_dismissal_is_owned_idempotent_and_survives_a_new_login("
+            },
+            {
+              "path": "backend/tests/Plain/Http/AccountHttpTest.php",
+              "symbol": "public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal("
+            }
+          ],
+          "routes": [
+            "api.walkthrough.dismiss"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/shared/notifications.md",
+      "title": "Shared \u2014 Notification bell and reminders",
+      "components": [
+        {
+          "id": "bell.list",
+          "label": "Unread count, list, mark read and invitations",
+          "behavior": "The bell polls every 60s while visible, displays the latest 50 and routes invitation actions through sharing/team APIs. Notifications are user-owned; admin report notifications bypass ordinary opt-out.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-notifications>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/notifications.js",
+              "symbol": "export function initNotifications"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notifications/NotificationService.php",
+              "symbol": "public function inbox("
+            },
+            {
+              "path": "backend/src/Application/Notifications/NotificationService.php",
+              "symbol": "public function markRead("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php",
+              "symbol": "public function latest("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php",
+              "symbol": "public function unreadCount("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php",
+              "symbol": "public function markRead("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            }
+          ],
+          "routes": [
+            "api.notifications.index",
+            "api.notifications.read-all",
+            "api.notifications.read"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".notification-menu {",
+              "label": "Bell panel anchor"
+            }
+          ]
+        },
+        {
+          "id": "bell.reminders",
+          "label": "Due personal/assigned team reminders and dismissal",
+          "behavior": "Due reminders are derived from Tasks and merged into the bell. Dismissal uses reminder_read_at independently from email reminder_sent_at. Changing time or assignee makes a new reminder visible. Team reminders are in-app only.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-notifications-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/notifications.js",
+              "symbol": "const load = async () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/TaskReminderService.php",
+              "symbol": "public function due("
+            },
+            {
+              "path": "backend/src/Application/Planning/TaskReminderService.php",
+              "symbol": "public function markRead("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoReminderRepository.php",
+              "symbol": "public function due("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoReminderRepository.php",
+              "symbol": "public function teamDue("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoReminderRepository.php",
+              "symbol": "public function markRead("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/ProductCompletionTest.php",
+              "symbol": "public function test_due_reminders_can_be_dismissed_and_return_when_rescheduled("
+            }
+          ],
+          "routes": [
+            "api.reminders.index",
+            "api.reminders.read"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".notification-menu {",
+              "label": "Bell panel anchor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/shared/ai.md",
+      "title": "Shared \u2014 Floating AI assistant and proposal APIs",
+      "components": [
+        {
+          "id": "ai.chat",
+          "label": "Open assistant, status and question/answer",
+          "behavior": "The chat dialog queries availability and submits a question. Server-owned context selection and provider calls must not leak secrets or bypass normal ownership rules. Disabled mode reports unavailable honestly.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-assistant-dialog"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/assistant.js",
+              "symbol": "export function initAssistant"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/AI/AIChatService.php",
+              "symbol": "public function ask("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php",
+              "symbol": "public function assistantSummary("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts("
+            }
+          ],
+          "routes": [
+            "api.ai.chat.status",
+            "api.ai.chat"
+          ]
+        },
+        {
+          "id": "ai.proposal",
+          "label": "API-only proposal generation, Apply and Reject",
+          "behavior": "AIActionService freezes proposal/hash/context versions; Apply revalidates owner, versions, hash and expiry and calls ordinary services atomically. Replaying an applied proposal returns the stored ID mapping. Modify/Delete are not allowed proposal operations.",
+          "ui": [],
+          "client": [],
+          "server": [
+            {
+              "path": "backend/src/Application/AI/AIActionService.php",
+              "symbol": "public function apply("
+            },
+            {
+              "path": "backend/src/Application/AI/ProposalValidator.php",
+              "symbol": "public function validate("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php",
+              "symbol": "public function find("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_generation_writes_no_domain_data_and_apply_uses_normal_task_validation_idempotently(",
+              "label": "public function test_generation_writes_no_domain_data_and_apply_uses_normal_task_validation_idemp..."
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_apply_rejects_context_changed_after_generation("
+            }
+          ],
+          "routes": [
+            "api.ai.actions.store",
+            "api.ai.actions.show",
+            "api.ai.actions.apply",
+            "api.ai.actions.reject"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/admin/README.md",
+      "title": "/admin \u2014 System reports, users and settings",
+      "components": [
+        {
+          "id": "admin.reports",
+          "label": "Open/resolved reports and resolution",
+          "behavior": "List report snapshots, reason, reporter/owner and date. Resolve/dismiss with response; notification recipients follow report service rules.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-reports"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "export function initAdminPage"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/ReportService.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Application/Admin/ReportService.php",
+              "symbol": "public function resolve("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php",
+              "symbol": "public function resolve("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            }
+          ],
+          "routes": [
+            "api.admin.reports",
+            "api.admin.reports.resolve"
+          ]
+        },
+        {
+          "id": "admin.users",
+          "label": "Search users, lock/unlock",
+          "behavior": "Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. Self-lock is rejected. Team roles do not grant these endpoints.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-users"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "data-admin-user-search"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/ReportService.php",
+              "symbol": "public function setLocked("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function adminUserList("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function setLocked("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php",
+              "symbol": "public function deleteSessions("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            }
+          ],
+          "routes": [
+            "api.admin.users",
+            "api.admin.users.lock"
+          ]
+        },
+        {
+          "id": "admin.history",
+          "label": "System Task history limit",
+          "behavior": "The admin can set the history cap (100\u201310000, default 1000). The history maintenance job applies it in addition to per-user retention. It archives Tasks, not hard-deletes them.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-settings"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "data-admin-settings"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/TaskHistoryService.php",
+              "symbol": "public function prune("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php",
+              "symbol": "public function historyLimit("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php",
+              "symbol": "public function setHistoryLimit("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            }
+          ],
+          "routes": [
+            "api.admin.settings",
+            "api.admin.settings.update"
+          ]
+        }
+      ]
+    }
+  ],
+  "route_documents": {
+    "email.verify": "docs/ui/auth/email.md",
+    "email.change.confirm": "docs/ui/auth/email.md",
+    "api.email.show": "docs/ui/auth/email.md",
+    "api.email.verification": "docs/ui/auth/email.md",
+    "api.email.change": "docs/ui/auth/email.md",
+    "api.reminders.read": "docs/ui/shared/notifications.md",
+    "api.reviews.destroy": "docs/ui/reviews/README.md",
+    "two-factor": "docs/ui/auth/two-factor.md",
+    "two-factor.verify": "docs/ui/auth/two-factor.md",
+    "two-factor.email": "docs/ui/auth/two-factor.md",
+    "api.two-factor.show": "docs/ui/auth/two-factor.md",
+    "api.two-factor.totp.begin": "docs/ui/auth/two-factor.md",
+    "api.two-factor.totp.confirm": "docs/ui/auth/two-factor.md",
+    "api.two-factor.email.send": "docs/ui/auth/two-factor.md",
+    "api.two-factor.email.confirm": "docs/ui/auth/two-factor.md",
+    "api.two-factor.disable": "docs/ui/auth/two-factor.md",
+    "api.notifications.index": "docs/ui/shared/notifications.md",
+    "api.notifications.read-all": "docs/ui/shared/notifications.md",
+    "api.notifications.read": "docs/ui/shared/notifications.md",
+    "api.notes.background": "docs/ui/notes/files.md",
+    "api.notes.shares.index": "docs/ui/notes/sharing.md",
+    "api.notes.shares.store": "docs/ui/notes/sharing.md",
+    "api.notes.shares.update": "docs/ui/notes/sharing.md",
+    "api.notes.shares.destroy": "docs/ui/notes/sharing.md",
+    "api.shared-notes.index": "docs/ui/notes/sharing.md",
+    "api.shared-notes.respond": "docs/ui/notes/sharing.md",
+    "api.shared-notes.leave": "docs/ui/notes/sharing.md",
+    "api.shared-notes.show": "docs/ui/notes/sharing.md",
+    "api.shared-notes.update": "docs/ui/notes/sharing.md",
+    "api.shared-notes.report": "docs/ui/notes/sharing.md",
+    "api.contacts": "docs/ui/teamwork/README.md",
+    "admin.index": "docs/ui/admin/README.md",
+    "api.admin.reports": "docs/ui/admin/README.md",
+    "api.admin.reports.resolve": "docs/ui/admin/README.md",
+    "api.admin.users": "docs/ui/admin/README.md",
+    "api.admin.users.lock": "docs/ui/admin/README.md",
+    "api.admin.settings": "docs/ui/admin/README.md",
+    "api.admin.settings.update": "docs/ui/admin/README.md",
+    "planning.teamwork": "docs/ui/teamwork/README.md",
+    "api.team-goals.index": "docs/ui/teamwork/README.md",
+    "api.team-goals.store": "docs/ui/teamwork/README.md",
+    "api.team-goals.show": "docs/ui/teamwork/README.md",
+    "api.team-goals.update": "docs/ui/teamwork/README.md",
+    "api.team-goals.archive": "docs/ui/teamwork/README.md",
+    "api.team-goals.members.store": "docs/ui/teamwork/README.md",
+    "api.team-goals.members.update": "docs/ui/teamwork/README.md",
+    "api.team-goals.members.destroy": "docs/ui/teamwork/README.md",
+    "api.team-goals.respond": "docs/ui/teamwork/README.md",
+    "api.team-goals.tasks.store": "docs/ui/teamwork/README.md",
+    "api.team-goals.tasks.update": "docs/ui/teamwork/README.md",
+    "api.team-goals.tasks.archive": "docs/ui/teamwork/README.md",
+    "api.team-goals.messages.index": "docs/ui/teamwork/README.md",
+    "api.team-goals.messages.store": "docs/ui/teamwork/README.md",
+    "api.ai.chat.status": "docs/ui/shared/ai.md",
+    "api.ai.chat": "docs/ui/shared/ai.md",
+    "api.dashboard.activity": "docs/ui/dashboard/README.md",
+    "settings.history": "docs/ui/settings/history.md",
+    "api.reminders.index": "docs/ui/shared/notifications.md",
+    "up": "docs/operations/local-development.md",
+    "password.forgot": "docs/ui/auth/recovery.md",
+    "password.forgot.store": "docs/ui/auth/recovery.md",
+    "password.reset": "docs/ui/auth/recovery.md",
+    "password.reset.store": "docs/ui/auth/recovery.md",
+    "login": "docs/ui/auth/README.md",
+    "login.store": "docs/ui/auth/README.md",
+    "register": "docs/ui/auth/README.md",
+    "register.store": "docs/ui/auth/README.md",
+    "notes.index": "docs/ui/notes/README.md",
+    "logout": "docs/ui/auth/README.md",
+    "api.background.store": "docs/ui/settings/preferences.md",
+    "api.background.destroy": "docs/ui/settings/preferences.md",
+    "background.show": "docs/ui/settings/preferences.md",
+    "api.backgrounds.index": "docs/ui/settings/preferences.md",
+    "api.backgrounds.destroy": "docs/ui/settings/preferences.md",
+    "backgrounds.show": "docs/ui/settings/preferences.md",
+    "settings.notifications": "docs/ui/settings/notifications.md",
+    "settings.profile": "docs/ui/settings/profile.md",
+    "settings.preferences": "docs/ui/settings/preferences.md",
+    "settings.password": "docs/ui/settings/password.md",
+    "planning.goals": "docs/ui/goals/README.md",
+    "planning.goal": "docs/ui/goals/roadmap.md",
+    "planning.tasks": "docs/ui/tasks/README.md",
+    "planning.task": "docs/ui/tasks/detail.md",
+    "planning.habits": "docs/ui/habits/README.md",
+    "planning.dashboard": "docs/ui/dashboard/README.md",
+    "planning.reviews": "docs/ui/reviews/README.md",
+    "api.session": "docs/ui/auth/README.md",
+    "api.walkthrough.dismiss": "docs/ui/shared/shell.md",
+    "api.profile.show": "docs/ui/settings/profile.md",
+    "api.profile.update": "docs/ui/settings/profile.md",
+    "api.preferences.show": "docs/ui/settings/preferences.md",
+    "api.preferences.update": "docs/ui/settings/preferences.md",
+    "api.password.update": "docs/ui/settings/password.md",
+    "api.notes.index": "docs/ui/notes/README.md",
+    "api.notes.store": "docs/ui/notes/README.md",
+    "api.notes.show": "docs/ui/notes/README.md",
+    "api.notes.update": "docs/ui/notes/README.md",
+    "api.notes.destroy": "docs/ui/notes/README.md",
+    "api.labels.index": "docs/ui/shared/tags.md",
+    "api.labels.store": "docs/ui/shared/tags.md",
+    "api.labels.update": "docs/ui/shared/tags.md",
+    "api.labels.destroy": "docs/ui/shared/tags.md",
+    "api.tags.index": "docs/ui/shared/tags.md",
+    "api.tags.store": "docs/ui/shared/tags.md",
+    "api.tags.show": "docs/ui/shared/tags.md",
+    "api.tags.update": "docs/ui/shared/tags.md",
+    "api.tags.archive": "docs/ui/shared/tags.md",
+    "api.tags.move": "docs/ui/shared/tags.md",
+    "api.attachments.index": "docs/ui/notes/files.md",
+    "api.attachments.store": "docs/ui/notes/files.md",
+    "api.attachments.destroy": "docs/ui/notes/files.md",
+    "api.profile.avatar": "docs/ui/settings/profile.md",
+    "api.profile.avatar.remove": "docs/ui/settings/profile.md",
+    "files.attachment.preview": "docs/ui/notes/files.md",
+    "files.attachment.download": "docs/ui/notes/files.md",
+    "files.avatar": "docs/ui/settings/profile.md",
+    "api.habits.index": "docs/ui/habits/README.md",
+    "api.habits.store": "docs/ui/habits/README.md",
+    "api.habits.show": "docs/ui/habits/README.md",
+    "api.habits.update": "docs/ui/habits/README.md",
+    "api.habits.archive": "docs/ui/habits/README.md",
+    "api.habits.history": "docs/ui/habits/README.md",
+    "api.habits.check-ins.store": "docs/ui/habits/README.md",
+    "api.habits.check-ins.destroy": "docs/ui/habits/README.md",
+    "api.habits.rest-days.store": "docs/ui/habits/README.md",
+    "api.habits.rest-days.destroy": "docs/ui/habits/README.md",
+    "api.habits.contributions.store": "docs/ui/habits/README.md",
+    "api.habits.contributions.destroy": "docs/ui/habits/README.md",
+    "api.task-series.index": "docs/ui/tasks/repeating.md",
+    "api.task-series.store": "docs/ui/tasks/repeating.md",
+    "api.task-series.preview": "docs/ui/tasks/repeating.md",
+    "api.task-series.show": "docs/ui/tasks/repeating.md",
+    "api.task-series.update": "docs/ui/tasks/repeating.md",
+    "api.task-series.transition": "docs/ui/tasks/repeating.md",
+    "api.dashboard.show": "docs/ui/dashboard/README.md",
+    "api.weekly-selections.index": "docs/ui/dashboard/README.md",
+    "api.weekly-selections.store": "docs/ui/dashboard/README.md",
+    "api.weekly-selections.destroy": "docs/ui/dashboard/README.md",
+    "api.weekly-selections.reorder": "docs/ui/dashboard/README.md",
+    "api.reviews.index": "docs/ui/reviews/README.md",
+    "api.reviews.store": "docs/ui/reviews/README.md",
+    "api.reviews.show": "docs/ui/reviews/README.md",
+    "api.reviews.update": "docs/ui/reviews/README.md",
+    "api.reviews.transition": "docs/ui/reviews/README.md",
+    "api.ai.actions.store": "docs/ui/shared/ai.md",
+    "api.ai.actions.show": "docs/ui/shared/ai.md",
+    "api.ai.actions.apply": "docs/ui/shared/ai.md",
+    "api.ai.actions.reject": "docs/ui/shared/ai.md",
+    "api.areas.index": "docs/ui/goals/README.md",
+    "api.areas.store": "docs/ui/goals/README.md",
+    "api.areas.show": "docs/ui/goals/README.md",
+    "api.areas.update": "docs/ui/goals/README.md",
+    "api.areas.archive": "docs/ui/goals/README.md",
+    "api.goals.index": "docs/ui/goals/README.md",
+    "api.goals.store": "docs/ui/goals/README.md",
+    "api.goals.show": "docs/ui/goals/roadmap.md",
+    "api.goals.update": "docs/ui/goals/roadmap.md",
+    "api.goals.archive": "docs/ui/goals/roadmap.md",
+    "api.milestones.index": "docs/ui/goals/milestones.md",
+    "api.milestones.store": "docs/ui/goals/milestones.md",
+    "api.milestones.show": "docs/ui/goals/milestones.md",
+    "api.milestones.update": "docs/ui/goals/milestones.md",
+    "api.milestones.archive": "docs/ui/goals/milestones.md",
+    "api.tasks.index": "docs/ui/tasks/README.md",
+    "api.tasks.store": "docs/ui/tasks/README.md",
+    "api.tasks.show": "docs/ui/tasks/detail.md",
+    "api.tasks.update": "docs/ui/tasks/detail.md",
+    "api.tasks.archive": "docs/ui/tasks/detail.md",
+    "api.goals.move": "docs/ui/goals/roadmap.md",
+    "api.goals.children": "docs/ui/goals/roadmap.md",
+    "api.goals.roadmap": "docs/ui/goals/roadmap.md",
+    "api.areas.reorder": "docs/ui/goals/README.md",
+    "api.goals.complete": "docs/ui/goals/roadmap.md",
+    "api.goals.reopen": "docs/ui/goals/roadmap.md",
+    "api.goals.contributions.store": "docs/ui/goals/roadmap.md",
+    "api.goals.contributions.index": "docs/ui/goals/roadmap.md",
+    "api.goals.contributions.destroy": "docs/ui/goals/roadmap.md",
+    "api.milestones.complete": "docs/ui/goals/milestones.md",
+    "api.milestones.reopen": "docs/ui/goals/milestones.md",
+    "api.milestones.contributions.store": "docs/ui/goals/milestones.md",
+    "api.milestones.contributions.index": "docs/ui/goals/milestones.md",
+    "api.milestones.contributions.destroy": "docs/ui/goals/milestones.md",
+    "api.tasks.complete": "docs/ui/tasks/detail.md",
+    "api.tasks.reopen": "docs/ui/tasks/detail.md",
+    "api.tasks.contributions.store": "docs/ui/tasks/detail.md",
+    "api.tasks.contributions.index": "docs/ui/tasks/detail.md",
+    "api.tasks.contributions.destroy": "docs/ui/tasks/detail.md",
+    "api.milestones.prerequisites.store": "docs/ui/goals/milestones.md",
+    "api.milestones.prerequisites.index": "docs/ui/goals/milestones.md",
+    "api.milestones.prerequisites.destroy": "docs/ui/goals/milestones.md",
+    "api.tasks.checklist.index": "docs/ui/tasks/detail.md",
+    "api.tasks.checklist.store": "docs/ui/tasks/detail.md",
+    "api.tasks.checklist.reorder": "docs/ui/tasks/detail.md",
+    "api.tasks.checklist.update": "docs/ui/tasks/detail.md",
+    "api.tasks.checklist.archive": "docs/ui/tasks/detail.md",
+    "api.tasks.note.show": "docs/ui/tasks/detail.md",
+    "api.tasks.note.store": "docs/ui/tasks/detail.md"
+  }
+}

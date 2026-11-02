@@ -3,10 +3,8 @@ paths:
   - 'backend/src/**'
 ---
 
-# Src
+# Backend source layers
 
-## Keep target backend framework-free
-New backend behavior belongs in the Planner\\ namespace under backend/src and may use focused Composer libraries only. Do not add Laravel, Illuminate, Symfony HTTP/kernel, another PHP framework, an ORM, or a container with hidden autowiring; routing, controllers, use cases, domain rules, PDO persistence, and wiring stay explicit.
+Keep the existing Config, Support, Http, Application, Domain and Infrastructure tree. Controllers parse/serialize, application services own transactions, domain functions own invariants and PDO repositories own SQL. Do not create parallel framework-style source trees or a service locator.
 
-## Use the frozen layer-first target tree
-Use backend/src/{Config,Support,Domain,Application,Infrastructure,Http,Console}. Put module names below Domain/Application and below Infrastructure/Persistence/Pdo. Do not create parallel roots such as src/Notes, src/Files, or src/Auth; controllers own HTTP, application services own transactions, domain owns invariants, and repositories own SQL.
+Use explicit dependencies, strict types, typed contracts, DateTimeImmutable/injected Clock, prepared scoped SQL and endpoint-specific validation. Trace each UI change to its source/test owners through [the route map](../../../docs/README.md).

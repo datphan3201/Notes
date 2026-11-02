@@ -1,0 +1,89 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Approved contract: terminal personal TaskSeries",
+    "output": "docs/diagrams/task-series-lifecycle/index.html",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "mainPath": [
+    "active",
+    "ended"
+  ],
+  "states": [
+    {
+      "id": "active",
+      "type": "start",
+      "label": "Active",
+      "sublabel": "Eligible for materialization"
+    },
+    {
+      "id": "ended",
+      "type": "neutral",
+      "label": "Ended",
+      "sublabel": "Terminal; create new for future work"
+    },
+    {
+      "id": "paused",
+      "type": "waiting",
+      "label": "Paused",
+      "sublabel": "Existing occurrences remain"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "active_end",
+      "from": "active",
+      "to": "ended",
+      "label": "End",
+      "note": "Confirm future NotStarted archival when required."
+    },
+    {
+      "id": "active_pause",
+      "from": "active",
+      "to": "paused",
+      "label": "Pause"
+    },
+    {
+      "id": "paused_resume",
+      "from": "paused",
+      "to": "active",
+      "label": "Resume",
+      "note": "Skip paused dates when advancing cursor."
+    },
+    {
+      "id": "paused_end",
+      "from": "paused",
+      "to": "ended",
+      "label": "End",
+      "note": "Same explicit archival contract."
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Ended is terminal",
+      "items": [
+        "Pause or Resume from Ended returns 422 without changing the series, version or occurrence rows.",
+        "Start a new series for future recurring work. Existing started/Done Tasks are preserved."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "No-op and access rules",
+      "items": [
+        "Resume while Active, Pause while Paused and repeated End with the current version are no-ops.",
+        "Ownership and version checks remain authoritative: foreign IDs return 404; stale versions return 409."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Approved contract, not a committed-source snapshot",
+      "items": [
+        "Approved by the user on 2026-11-02. This diagram describes the required and locally implemented lifecycle.",
+        "Current code/test pointers are in docs/ui/tasks/repeating.md. No uncommitted source is attributed to the earlier pinned Git revision."
+      ]
+    }
+  ]
+}

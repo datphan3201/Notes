@@ -75,6 +75,12 @@ final readonly class HabitService
         return $this->transactions->run(function () use ($userId, $id, $baseVersion, $changes): array {
             $this->planning->lockOwner($userId);
             $current = $this->owned($userId, $id, true);
+            if ($current['first_check_in_at'] !== null && isset($changes['timezone'])
+                && $changes['timezone'] === (TimeZoneNames::canonical((string) $current['timezone']) ?? $current['timezone'])) {
+                // Equivalent aliases must not freeze unrelated edits or rewrite
+                // the timezone recorded by an existing checked-in Habit.
+                $changes['timezone'] = $current['timezone'];
+            }
             if ($current['first_check_in_at'] !== null
                 && ((isset($changes['period']) && $changes['period'] !== $current['period'])
                     || (isset($changes['timezone']) && $changes['timezone'] !== $current['timezone']))) {
@@ -422,7 +428,9 @@ final readonly class HabitService
                 ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
         }
 
-        return $value;
+        // PHP may accept a legacy alias directly; normalize that successful
+        // path too, while retaining previously accepted fixed-offset forms.
+        return TimeZoneNames::canonical($value) ?? $value;
     }
 
     private function uuidValue(mixed $value, string $field): string

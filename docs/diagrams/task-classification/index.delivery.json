@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "17d2a99c-7bd2-417e-a275-693b6e041a87",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-classification/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-classification/index.html",
+  "specification": {
+    "sha256": "a0ba7f231ac5117174552612d365e9440e06818925ecb425d926ac095d0f99d6",
+    "bytes": 5456
+  },
+  "artifact": {
+    "sha256": "afca454dafded6bb6d2a34960dc79c9d30742249e27ac10fb63b447d586fd5da",
+    "bytes": 851612
+  }
+}

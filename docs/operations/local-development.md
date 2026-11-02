@@ -1,0 +1,59 @@
+# Local development and hot reload
+
+[Operations](README.md)
+
+## Normal start
+
+Reuse the existing database/dependencies/environment. From backend:
+
+```bash
+php bin/console migrate:check
+php -d opcache.enable=0 -S 127.0.0.1:8000 -t public dev-router.php
+```
+
+In a second terminal from frontend:
+
+```bash
+npm run dev
+```
+
+Set VITE_DEV_URL=http://127.0.0.1:5173 in the ignored backend environment first; APP_ENV must be local. Open **http://localhost:8000**, matching APP_URL, not the Vite asset server. PHP reads source on each request with opcode caching disabled. Vite updates CSS/JS and emits full reloads for PHP views/backend source/bootstrap/routes. Save unfinished forms before editing files that trigger a reload. Schema changes still need an explicit migration.
+
+[The Vite config](../../frontend/vite.config.js) fixes port 5173 with strictPort and server.origin. [AssetManifest](../../backend/src/Http/View/AssetManifest.php) emits development entries. [The local CSP](../../backend/src/Http/Security/ContentSecurityPolicy.php) allows the validated dev origin; production keeps its same-origin policy. In VS Code Remote, forward both 8000 and 5173 to the same local port numbers.
+
+## Background start
+
+Start only one PHP and one Vite process per port. From the repository root:
+
+```bash
+nohup php -d opcache.enable=0 -S 127.0.0.1:8000 -t backend/public backend/dev-router.php > /tmp/planner-php-dev.log 2>&1 < /dev/null &
+(cd frontend && nohup npm run dev > /tmp/planner-vite-dev.log 2>&1 < /dev/null &)
+```
+
+Use the exact PIDs you started when stopping services. Do not kill every PHP/Node/MySQL process on the machine. The development server has no production supervision or TLS.
+
+## Verify
+
+```bash
+curl -fsS http://localhost:8000/up
+curl -I http://localhost:8000/login
+curl -I http://localhost:8000/register
+```
+
+Health returns data.status=ok; login/register render 200. A protected page redirects a guest to login. Authenticate to verify actual data; shell 200 alone does not prove that a Goal/Task ID is owned or exists.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| CSS/JS absent | Vite is running; VITE_DEV_URL and server.origin match; port 5173 is forwarded; browser CSP/network errors |
+| Font/image 404 on port 8000 | Vite server.origin must be 127.0.0.1:5173 so injected CSS URLs point to Vite |
+| 419 after submitting a form | APP_URL/browser Origin match, valid cookie/CSRF token; do not disable CSRF |
+| Built manifest missing | With dev mode disabled, run frontend npm run build |
+| Connection refused / database error | Correct persistent MySQL instance, TCP port, DB credentials and database name |
+| Migration checksum mismatch | Stop; inspect applied DDL/ledger and make a forward repair or restore; never rewrite history |
+| Generic 500 | Inspect private server logs/request ID, platform extensions and configuration; do not expose secrets |
+| AI unavailable | AI_ENABLED/provider/key/model; do not substitute untested live-provider claims |
+| Email not in inbox | In local/testing without SMTP it is a private .eml outbox file; see jobs/mail |
+
+After a pull, install dependencies only when lockfiles changed, migrate when new migrations exist, and rebuild when using production assets. Existing user data is not automatically reseeded.

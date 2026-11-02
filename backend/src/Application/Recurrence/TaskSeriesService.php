@@ -117,6 +117,9 @@ final readonly class TaskSeriesService
             $this->planningRepository->lockOwner($userId);
             $current = $this->owned($userId, $id, true);
             $this->assertVersion($current, $this->version($input));
+            if ($current['state'] === 'Ended' && in_array($action, ['pause', 'resume'], true)) {
+                throw new ValidationException(['state' => ['An ended series cannot be paused or resumed. Create a new series for future work.']]);
+            }
             $now = $this->now();
             $changes = match ($action) {
                 'pause' => ['state' => 'Paused', 'paused_at' => $now],
@@ -443,7 +446,8 @@ final readonly class TaskSeriesService
             return TimeZoneNames::canonical($value)
                 ?? throw new ValidationException(['timezone' => ['The time zone is invalid.']]);
         }
-        return $value;
+        // Normalize aliases even when this PHP/tzdb accepts them directly.
+        return TimeZoneNames::canonical($value) ?? $value;
     }
     private function requiredDate(mixed $value, string $field): string
     {

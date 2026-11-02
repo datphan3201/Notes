@@ -1,0 +1,173 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Notes save lifecycle: draft, retry and conflict",
+    "output": "docs/diagrams/notes-autosave/index.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "link_mode": "web"
+    }
+  },
+  "mainPath": [
+    "saved",
+    "dirty",
+    "saving"
+  ],
+  "states": [
+    {
+      "id": "saved",
+      "type": "start",
+      "label": "Saved",
+      "sublabel": "Acknowledged snapshot",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 205,
+          "end_line": 227
+        }
+      ]
+    },
+    {
+      "id": "dirty",
+      "type": "active",
+      "label": "Dirty",
+      "sublabel": "Valid local edits",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 70,
+          "end_line": 92
+        }
+      ]
+    },
+    {
+      "id": "saving",
+      "type": "active",
+      "label": "Saving",
+      "sublabel": "Frozen request in flight",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 126,
+          "end_line": 205
+        }
+      ]
+    },
+    {
+      "id": "retry_wait",
+      "type": "waiting",
+      "label": "Retry wait",
+      "sublabel": "Bounded retry; offline pause",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 263,
+          "end_line": 279
+        }
+      ]
+    },
+    {
+      "id": "conflict",
+      "type": "decision",
+      "label": "Conflict",
+      "sublabel": "409 with current owned Note",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 230,
+          "end_line": 240
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "note_transition_1",
+      "from": "saved",
+      "to": "dirty",
+      "label": "Type valid edit"
+    },
+    {
+      "id": "note_transition_2",
+      "from": "dirty",
+      "to": "saving",
+      "label": "Eligible Save"
+    },
+    {
+      "id": "note_transition_3",
+      "from": "saving",
+      "to": "saved",
+      "label": "Acknowledged"
+    },
+    {
+      "id": "note_transition_4",
+      "from": "saving",
+      "to": "dirty",
+      "label": "Newer draft"
+    },
+    {
+      "id": "note_transition_5",
+      "from": "saving",
+      "to": "retry_wait",
+      "label": "Transient error"
+    },
+    {
+      "id": "note_transition_6",
+      "from": "retry_wait",
+      "to": "saving",
+      "label": "Retry frozen"
+    },
+    {
+      "id": "note_transition_7",
+      "from": "saving",
+      "to": "conflict",
+      "label": "409 current"
+    },
+    {
+      "id": "note_transition_8",
+      "from": "conflict",
+      "to": "saved",
+      "label": "Use saved version"
+    },
+    {
+      "id": "note_transition_9",
+      "from": "conflict",
+      "to": "dirty",
+      "label": "Keep draft"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Focused lifecycle",
+      "items": [
+        "Acknowledged Note \u2192 valid draft \u2192 frozen save, with bounded retry and explicit conflict choice.",
+        "Validation, session expiry, missing/deleted Notes and recovery exits are in the companion Notes save outcomes map."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Different editors",
+      "items": [
+        "Main Notes owns this machine and account-scoped sessionStorage recovery.",
+        "Task notes, shared edits and Reviews use explicit Save and their own draft/conflict path."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Transition conditions",
+      "items": [
+        "Dirty \u2192 Saving: 500ms inactivity, max 2s; no dispatch during IME composition.",
+        "Saving \u2192 Saved: Only the current acknowledged draft is Saved.",
+        "Saving \u2192 Retry wait: Network / 429 / 5xx within the retry limit.",
+        "Retry wait \u2192 Saving: Resume when online; preserve request identity.",
+        "Conflict \u2192 Dirty: Adopt the current base, retain local intent; save remains explicit.",
+        "Auth expired \u2192 Conflict: After verifying the authenticated account; compare frozen/current versions."
+      ]
+    }
+  ]
+}

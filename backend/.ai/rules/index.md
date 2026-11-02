@@ -1,10 +1,11 @@
-# Project Rules Index
+# Project rule index
 
-Before planning or editing, find the row whose globs match the file's path and read that rule file.
+Read the matching rule before editing. The root .ai path points to this canonical rule directory; do not maintain another copy.
 
-| Applies to | Rule file |
+| Scope | Rule |
 | --- | --- |
-| {backend/bootstrap/**,backend/database/**,backend/public/**,backend/routes/**,backend/storage/**,backend/tests/**} | backend/.ai/rules/app.md |
-| frontend/** | backend/.ai/rules/frontend-2.md |
-| {frontend/**,backend/**} | backend/.ai/rules/frontend.md |
-| backend/src/** | backend/.ai/rules/src.md |
+| backend runtime, bootstrap, routes, storage, migrations and tests | [Backend](app.md), [source layers](src.md) |
+| frontend views, JavaScript, CSS, Vite and browser tests | [Frontend](frontend.md) |
+| docs, instructions, trace registry and documentation tools | [Documentation](documentation.md) |
+
+[Repository instructions](../../../AGENTS.md) and [UI documentation](../../../docs/README.md) are the common entry points.

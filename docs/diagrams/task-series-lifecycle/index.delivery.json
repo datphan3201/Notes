@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "940cece1-adef-41b5-96ce-b03303e605e1",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
+  "specification": {
+    "sha256": "7cf7f5d8ee750db596178efeaf9a1ef4691d406f50186258cd310a4651b2c43e",
+    "bytes": 2384
+  },
+  "artifact": {
+    "sha256": "cbd0784bca18dc7844982fc54619bf7b0d2ab102b1035467b5bc8e0b35ab32cd",
+    "bytes": 829698
+  }
+}

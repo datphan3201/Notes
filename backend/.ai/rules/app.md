@@ -1,9 +1,10 @@
 ---
 paths:
-  - '{app/**,bootstrap/**,config/**,database/**,public/**,routes/**,storage/**,tests/**}'
-  - '{app/**,bootstrap/**,config/**,database/**,public/**,routes/**,resources/**,tests/**}'
+  - 'backend/**'
 ---
 
-# Framework-free application
+# Framework-free backend
 
-Laravel has been retired. Application behavior lives under `backend/src`, routes under `backend/routes`, migrations under `backend/database/plain-migrations`, and tests under `backend/tests/Plain`. Use the application-owned router, HTTP types, services, PDO repositories, session handler, and migration runner. Do not recreate framework helpers or compatibility shims.
+Use PHP 8.5, explicit bootstrap, PDO and owned application services. No application framework/ORM/container. Read [runtime ownership](../../../docs/architecture/runtime.md), [persistence](../../../docs/architecture/persistence.md) and [HTTP/security](../../../docs/architecture/http-security.md) for cross-cutting rules, then the affected UI component trace.
+
+Keep database migrations forward-only and immutable after application. Verify the actual goals_test name before destructive integration cleanup. Preserve ownership, stable lock order, version/replay rules, safe errors and private file boundaries.

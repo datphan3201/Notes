@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Task completion and reopen with explicit confirmation",
+    "output": "docs/diagrams/task-transition/index.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "link_mode": "web"
+    }
+  },
+  "participants": [
+    {
+      "id": "task_ui",
+      "type": "frontend",
+      "label": "Task UI",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/transitions.js",
+          "line": 6,
+          "end_line": 49
+        }
+      ]
+    },
+    {
+      "id": "task_http",
+      "type": "security",
+      "label": "HTTP",
+      "sublabel": "Guards / controller",
+      "sources": [
+        {
+          "path": "backend/src/Http/Application.php",
+          "line": 26,
+          "end_line": 59
+        },
+        {
+          "path": "backend/src/Http/Controller/PlanningController.php",
+          "line": 98,
+          "end_line": 109
+        }
+      ]
+    },
+    {
+      "id": "task_service",
+      "type": "backend",
+      "label": "Planning",
+      "sublabel": "Owner transaction",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 345,
+          "end_line": 478
+        },
+        {
+          "path": "backend/src/Infrastructure/Database/TransactionManager.php",
+          "line": 20,
+          "end_line": 56
+        }
+      ]
+    },
+    {
+      "id": "task_sql",
+      "type": "backend",
+      "label": "PDO",
+      "sublabel": "Scoped repositories",
+      "sources": [
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+          "line": 31,
+          "end_line": 74
+        },
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+          "line": 97,
+          "end_line": 125
+        },
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Activity/PdoActivityRepository.php",
+          "line": 15,
+          "end_line": 58
+        }
+      ]
+    },
+    {
+      "id": "task_database",
+      "type": "database",
+      "label": "MySQL",
+      "sources": [
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+          "line": 31,
+          "end_line": 74
+        },
+        {
+          "path": "backend/src/Infrastructure/Database/TransactionManager.php",
+          "line": 20,
+          "end_line": 56
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "task_message_1",
+      "from": "task_ui",
+      "to": "task_http",
+      "label": "POST complete / reopen",
+      "y": 160,
+      "variant": "emphasis",
+      "note": "base_version and CSRF; server auth, origin and rate guards apply."
+    },
+    {
+      "id": "task_message_2",
+      "from": "task_http",
+      "to": "task_service",
+      "label": "transition(user, id, action)",
+      "y": 235,
+      "variant": "default",
+      "note": "Load only owned work; no foreign identifier disclosure."
+    },
+    {
+      "id": "task_message_3",
+      "from": "task_service",
+      "to": "task_sql",
+      "label": "Lock owner and Task",
+      "y": 305,
+      "variant": "security",
+      "note": "Exact replay may return no-op; otherwise require current version."
+    },
+    {
+      "id": "task_message_4",
+      "from": "task_sql",
+      "to": "task_database",
+      "label": "SELECT ... FOR UPDATE",
+      "y": 375,
+      "variant": "default"
+    },
+    {
+      "id": "task_message_5",
+      "from": "task_database",
+      "to": "task_sql",
+      "label": "Owned current rows",
+      "y": 410,
+      "variant": "return"
+    },
+    {
+      "id": "task_message_6",
+      "from": "task_sql",
+      "to": "task_service",
+      "label": "Aggregate and related state",
+      "y": 445,
+      "variant": "return",
+      "note": "Unchecked items / completed ancestors can require explicit acknowledgement."
+    },
+    {
+      "id": "task_message_7",
+      "from": "task_service",
+      "to": "task_http",
+      "label": "422 acknowledgement required",
+      "y": 520,
+      "variant": "return",
+      "note": "Conditional failure path: no state change; cancel stops here."
+    },
+    {
+      "id": "task_message_8",
+      "from": "task_http",
+      "to": "task_ui",
+      "label": "Ask for explicit confirmation",
+      "y": 595,
+      "variant": "return"
+    },
+    {
+      "id": "task_message_9",
+      "from": "task_ui",
+      "to": "task_http",
+      "label": "Retry only if confirmed",
+      "y": 635,
+      "variant": "emphasis",
+      "note": "Acknowledgement flag is added; network/409 failures are not auto-retried."
+    },
+    {
+      "id": "task_message_10",
+      "from": "task_http",
+      "to": "task_service",
+      "label": "Validated transition retry",
+      "y": 710,
+      "variant": "default"
+    },
+    {
+      "id": "task_message_11",
+      "from": "task_service",
+      "to": "task_sql",
+      "label": "Update status + Activity",
+      "y": 750,
+      "variant": "emphasis",
+      "note": "Reopen finite Goal ancestors atomically when confirmed. Checklist state stays independent."
+    },
+    {
+      "id": "task_message_12",
+      "from": "task_sql",
+      "to": "task_database",
+      "label": "Owned writes",
+      "y": 830,
+      "variant": "default"
+    },
+    {
+      "id": "task_message_13",
+      "from": "task_service",
+      "to": "task_database",
+      "label": "Commit owner transaction",
+      "y": 875,
+      "variant": "emphasis",
+      "note": "TransactionManager owns commit/rollback on the shared PDO connection."
+    },
+    {
+      "id": "task_message_14",
+      "from": "task_service",
+      "to": "task_http",
+      "label": "Serialized current Task",
+      "y": 950,
+      "variant": "return"
+    },
+    {
+      "id": "task_message_15",
+      "from": "task_http",
+      "to": "task_ui",
+      "label": "200; reload affected UI",
+      "y": 990,
+      "variant": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Conditional branch",
+      "items": [
+        "The 422/confirmation round-trip occurs only when the domain requires it; otherwise proceed directly to the write.",
+        "A declined acknowledgement performs no change. Version conflicts require reconciliation, not blind retry."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Atomic side effects",
+      "items": [
+        "Task status, completed timestamp, Activity and confirmed ancestor reopens share one transaction.",
+        "Milestone prerequisite locks do not prevent completing Tasks inside that Milestone."
+      ]
+    }
+  ]
+}

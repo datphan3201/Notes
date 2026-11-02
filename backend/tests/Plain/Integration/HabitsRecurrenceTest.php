@@ -52,6 +52,87 @@ final class HabitsRecurrenceTest extends TestCase
         self::assertSame('Asia/Ho_Chi_Minh', $habit['timezone']);
     }
 
+    public function test_habit_and_series_timezones_normalize_aliases_and_preserve_existing_offset_inputs(): void
+    {
+        $today = $this->runtime['clock']->now()->format('Y-m-d');
+        foreach ([
+            'Asia/Saigon' => 'Asia/Ho_Chi_Minh',
+            'Asia/Ho_Chi_Minh' => 'Asia/Ho_Chi_Minh',
+            'Asia/Calcutta' => 'Asia/Kolkata',
+            'Asia/Kolkata' => 'Asia/Kolkata',
+            'UTC' => 'UTC',
+            '+07:00' => '+07:00',
+        ] as $input => $expected) {
+            $habit = $this->runtime['habit_service']->create($this->owner, [
+                'name' => 'Habit '.$input, 'timezone' => $input,
+            ]);
+            $series = $this->runtime['task_series_service']->create($this->owner, [
+                'name' => 'Series '.$input, 'frequency' => 'daily',
+                'start_date' => $today, 'timezone' => $input,
+            ]);
+
+            self::assertSame($expected, $habit['timezone'], 'Habit timezone '.$input);
+            self::assertSame($expected, $series['timezone'], 'Series timezone '.$input);
+        }
+    }
+
+    public function test_invalid_timezones_do_not_create_habits_or_series(): void
+    {
+        foreach (['Bogus/Zone', '', 123, []] as $timezone) {
+            foreach (['habit', 'series'] as $kind) {
+                try {
+                    if ($kind === 'habit') {
+                        $this->runtime['habit_service']->create($this->owner, ['name' => 'Invalid', 'timezone' => $timezone]);
+                    } else {
+                        $this->runtime['task_series_service']->create($this->owner, [
+                            'name' => 'Invalid', 'frequency' => 'daily',
+                            'start_date' => $this->runtime['clock']->now()->format('Y-m-d'),
+                            'timezone' => $timezone,
+                        ]);
+                    }
+                    self::fail('An invalid '.$kind.' timezone must be rejected.');
+                } catch (ValidationException $exception) {
+                    self::assertArrayHasKey('timezone', $exception->errors);
+                }
+            }
+        }
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM habits')->fetchColumn());
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM task_series')->fetchColumn());
+    }
+
+    public function test_legacy_checked_in_habit_accepts_equivalent_timezone_without_rewriting_history(): void
+    {
+        $habits = $this->runtime['habit_service'];
+        $habit = $habits->create($this->owner, ['name' => 'Legacy', 'timezone' => 'Asia/Ho_Chi_Minh']);
+        // Reproduce an existing row written before alias normalization was fixed.
+        $statement = $this->pdo->prepare('UPDATE habits SET timezone = :timezone WHERE user_id = :user_id AND id = :id');
+        $statement->execute(['timezone' => 'Asia/Saigon', 'user_id' => $this->owner, 'id' => $habit['id']]);
+        $date = $this->runtime['clock']->now()->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'))->format('Y-m-d');
+        $habits->checkIn($this->owner, $habit['id'], $date);
+        $before = $habits->show($this->owner, $habit['id']);
+        $history = $habits->history($this->owner, $habit['id']);
+        $activity = $this->pdo->query('SELECT * FROM activities ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach (['Asia/Saigon', 'Asia/Ho_Chi_Minh'] as $timezone) {
+            $updated = $habits->update($this->owner, $habit['id'], [
+                'base_version' => $before['version'], 'name' => 'Renamed legacy', 'timezone' => $timezone,
+            ]);
+            self::assertSame('Renamed legacy', $updated['name']);
+            self::assertSame('Asia/Saigon', $updated['timezone']);
+            self::assertSame($history, $habits->history($this->owner, $habit['id']));
+            self::assertSame($activity, $this->pdo->query('SELECT * FROM activities ORDER BY id')->fetchAll(PDO::FETCH_ASSOC));
+            $before = $updated;
+        }
+
+        try {
+            $habits->update($this->owner, $habit['id'], ['base_version' => $before['version'], 'timezone' => 'UTC']);
+            self::fail('A genuinely different timezone must remain frozen.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('period', $exception->errors);
+        }
+        self::assertSame($before, $habits->show($this->owner, $habit['id']));
+    }
+
     public function test_habit_check_in_and_undo_are_idempotent_and_freeze_period_timezone(): void
     {
         $habits = $this->runtime['habit_service'];
@@ -158,10 +239,12 @@ final class HabitsRecurrenceTest extends TestCase
             'base_version' => $series['version'],
         ]);
         self::assertSame('Paused', $paused['state']);
+        self::assertSame($paused, $this->runtime['task_series_service']->transition($this->owner, $series['id'], 'pause', ['base_version' => $paused['version']]));
         $resumed = $this->runtime['task_series_service']->transition($this->owner, $series['id'], 'resume', [
             'base_version' => $paused['version'],
         ]);
         self::assertSame('Active', $resumed['state']);
+        self::assertSame($resumed, $this->runtime['task_series_service']->transition($this->owner, $series['id'], 'resume', ['base_version' => $resumed['version']]));
 
         try {
             $this->runtime['task_series_service']->transition($this->owner, $series['id'], 'end', [
@@ -185,6 +268,48 @@ final class HabitsRecurrenceTest extends TestCase
         );
         $activeFuture->execute(['series_id' => $series['id'], 'today' => $today]);
         self::assertSame(0, (int) $activeFuture->fetchColumn());
+    }
+
+    public function test_ended_series_cannot_pause_or_resume_and_replayed_end_preserves_occurrences(): void
+    {
+        $service = $this->runtime['task_series_service'];
+        $planning = $this->runtime['planning_service'];
+        $today = $this->runtime['clock']->now()->format('Y-m-d');
+        $series = $service->createAndMaterialize($this->owner, [
+            'name' => 'Terminal series', 'frequency' => 'daily', 'timezone' => 'UTC',
+            'start_date' => $today, 'end_date' => (new \DateTimeImmutable($today))->modify('+3 days')->format('Y-m-d'),
+        ]);
+        $tasks = $planning->list('task', $this->owner);
+        usort($tasks, static fn (array $left, array $right): int => strcmp($left['occurrence_date'], $right['occurrence_date']));
+        self::assertCount(4, $tasks);
+        $started = $planning->update('task', $this->owner, $tasks[1]['id'], ['base_version' => $tasks[1]['version'], 'status' => 'InProgress']);
+        $done = $planning->transition('task', $this->owner, $tasks[2]['id'], 'complete', ['base_version' => $tasks[2]['version']]);
+        $ended = $service->transition($this->owner, $series['id'], 'end', [
+            'base_version' => $series['version'], 'end_date' => $today, 'archive_future' => true,
+        ]);
+        self::assertSame('InProgress', $planning->show('task', $this->owner, $started['id'])['status']);
+        self::assertSame('Done', $planning->show('task', $this->owner, $done['id'])['status']);
+        $taskRows = $this->pdo->query('SELECT * FROM tasks ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+        self::assertSame(1, count(array_filter($taskRows, static fn (array $row): bool => $row['archived_at'] !== null)));
+        $seriesRow = $this->pdo->query('SELECT * FROM task_series')->fetch(PDO::FETCH_ASSOC);
+        $activity = $this->pdo->query('SELECT * FROM activities ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach (['pause', 'resume'] as $action) {
+            try {
+                $service->transition($this->owner, $series['id'], $action, ['base_version' => $ended['version']]);
+                self::fail('Ended must reject '.$action.'.');
+            } catch (ValidationException $exception) {
+                self::assertArrayHasKey('state', $exception->errors);
+            }
+            self::assertSame($seriesRow, $this->pdo->query('SELECT * FROM task_series')->fetch(PDO::FETCH_ASSOC));
+        }
+        self::assertSame($ended, $service->transition($this->owner, $series['id'], 'end', [
+            'base_version' => $ended['version'], 'end_date' => $today, 'archive_future' => true,
+        ]));
+        self::assertSame(['created' => 0, 'failed' => []], $service->materialize());
+        self::assertSame($seriesRow, $this->pdo->query('SELECT * FROM task_series')->fetch(PDO::FETCH_ASSOC));
+        self::assertSame($taskRows, $this->pdo->query('SELECT * FROM tasks ORDER BY id')->fetchAll(PDO::FETCH_ASSOC));
+        self::assertSame($activity, $this->pdo->query('SELECT * FROM activities ORDER BY id')->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function test_active_series_materializes_beneath_completed_goal_without_reopening_it(): void

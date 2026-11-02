@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Notes save failures and recovery ownership",
+    "output": "docs/diagrams/notes-save-outcomes/index.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "link_mode": "web"
+    }
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "save_outcomes",
+      "label": "Non-success save outcomes",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 230,
+          "end_line": 279
+        }
+      ]
+    },
+    {
+      "id": "invalid_input",
+      "parent": "save_outcomes",
+      "label": "422 validation / retry exhausted",
+      "sublabel": "phase = error",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 241,
+          "end_line": 279
+        }
+      ]
+    },
+    {
+      "id": "correct_retry",
+      "parent": "invalid_input",
+      "label": "Correct input / explicit Retry",
+      "sublabel": "Retry frozen request when present",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 282,
+          "end_line": 297
+        }
+      ]
+    },
+    {
+      "id": "session_lost",
+      "parent": "save_outcomes",
+      "label": "401 / 419",
+      "sublabel": "phase = auth_expired",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 249,
+          "end_line": 253
+        }
+      ]
+    },
+    {
+      "id": "session_reconcile",
+      "parent": "session_lost",
+      "label": "Verify account, then reconcile",
+      "sublabel": "Compare current and frozen intent",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 335,
+          "end_line": 394
+        }
+      ]
+    },
+    {
+      "id": "note_missing",
+      "parent": "save_outcomes",
+      "label": "404 / 410",
+      "sublabel": "phase = unavailable",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 255,
+          "end_line": 260
+        }
+      ]
+    },
+    {
+      "id": "keep_intent",
+      "parent": "note_missing",
+      "label": "Preserve recovery intent",
+      "sublabel": "Never silently resurrect deleted Note",
+      "sources": [
+        {
+          "path": "frontend/src/js/notes/autosave-machine.js",
+          "line": 255,
+          "end_line": 260
+        }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Outcome grouping, not state-transition arrows",
+      "items": [
+        "Each branch groups an actual failure phase and the code owning its recovery decision.",
+        "Authenticated reconciliation may restore saved state, request conflict choice, resend an exact frozen request or retain a dirty draft."
+      ]
+    }
+  ]
+}

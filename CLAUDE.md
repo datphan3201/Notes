@@ -1,5 +1,3 @@
-# Repository Instructions
+# Repository instructions
 
-Follow [AGENTS.md](AGENTS.md), which is the single active agent instruction set for this repository. Read [PLAN.md](PLAN.md), the matching `.ai/rules`, the relevant contract, and the current phase task before editing.
-
-The canonical backend is framework-free PHP under `backend/src`. Laravel has been retired. Preserve the same-origin frontend/backend boundary and follow the PDO/service/domain rules in `AGENTS.md`.
+Follow [AGENTS.md](AGENTS.md), the single repository instruction set. Start with [the route/component index](docs/README.md), [current decisions](docs/architecture/decisions.md) and [matching rules](.ai/rules/index.md). Use the documentation maintenance workflow when changing visible behavior or source trace references.

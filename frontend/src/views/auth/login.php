@@ -7,14 +7,14 @@
         <div class="field">
             <label for="email"><?= $view->e($view->t('Email')) ?></label>
             <input id="email" name="email" type="email" value="<?= $view->e($view->old($old, 'email')) ?>" autocomplete="email" required autofocus>
-            <?php if ($message = $view->error($errors, 'email')): ?>
-            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
-            <?php endif; ?>
         </div>
         <div class="field">
+            <?php if ($message = $view->error($errors, 'password')): ?>
+            <p class="field-error"><?= $view->e($view->t($message)) ?></p>
+            <?php endif; ?>
             <label for="password"><?= $view->e($view->t('Password')) ?></label>
             <input id="password" name="password" type="password" autocomplete="current-password" required>
-            <?php if ($message = $view->error($errors, 'password')): ?>
+            <?php if ($message = $view->error($errors, 'email')): ?>
             <p class="field-error"><?= $view->e($view->t($message)) ?></p>
             <?php endif; ?>
         </div>

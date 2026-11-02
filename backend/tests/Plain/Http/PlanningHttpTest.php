@@ -101,6 +101,62 @@ final class PlanningHttpTest extends TestCase
         self::assertStringNotContainsString('data-goal-tab', $page->body);
     }
 
+    public function test_timezone_aliases_are_canonicalized_for_habit_and_series_http_creation(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        foreach (['habits', 'task-series'] as $resource) {
+            $input = ['name' => 'Canonical timezone', 'timezone' => 'Asia/Saigon'];
+            if ($resource === 'task-series') {
+                $input += ['frequency' => 'daily', 'start_date' => $this->runtime['clock']->now()->format('Y-m-d')];
+            }
+            $response = $this->request('POST', '/api/v1/'.$resource, $input, $cookie, $csrf, true);
+            self::assertSame(201, $response->status);
+            self::assertSame('Asia/Ho_Chi_Minh', $this->json($response)['data']['timezone']);
+            $input['timezone'] = 'Bogus/Zone';
+            $invalid = $this->request('POST', '/api/v1/'.$resource, $input, $cookie, $csrf, true);
+            self::assertSame(422, $invalid->status);
+            self::assertArrayHasKey('timezone', $this->json($invalid)['errors']);
+        }
+    }
+
+    public function test_ended_series_http_transitions_preserve_auth_csrf_ownership_versions_and_replay(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $today = $this->runtime['clock']->now()->format('Y-m-d');
+        $created = $this->request('POST', '/api/v1/task-series', [
+            'name' => 'End once', 'frequency' => 'daily', 'timezone' => 'UTC',
+            'start_date' => $today, 'end_date' => $today,
+        ], $cookie, $csrf, true);
+        self::assertSame(201, $created->status);
+        $series = $this->json($created)['data'];
+        $path = '/api/v1/task-series/'.$series['id'];
+        $response = $this->request('POST', $path.'/end', ['base_version' => $series['version'], 'end_date' => $today], $cookie, $csrf, true);
+        self::assertSame(200, $response->status);
+        $ended = $this->json($response)['data'];
+        self::assertSame('Ended', $ended['state']);
+        self::assertSame(401, $this->request('POST', $path.'/resume', ['base_version' => $ended['version']], json: true)->status);
+        self::assertSame(419, $this->request('POST', $path.'/resume', ['base_version' => $ended['version']], $cookie, json: true)->status);
+        self::assertSame(409, $this->request('POST', $path.'/resume', ['base_version' => $series['version']], $cookie, $csrf, true)->status);
+        foreach (['pause', 'resume'] as $action) {
+            $rejected = $this->request('POST', $path.'/'.$action, ['base_version' => $ended['version']], $cookie, $csrf, true);
+            self::assertSame(422, $rejected->status);
+            self::assertArrayHasKey('state', $this->json($rejected)['errors']);
+        }
+        $replay = $this->request('POST', $path.'/end', ['base_version' => $ended['version'], 'end_date' => $today], $cookie, $csrf, true);
+        self::assertSame(200, $replay->status);
+        self::assertSame($ended, $this->json($replay)['data']);
+        self::assertSame($ended, $this->json($this->request('GET', $path, cookie: $cookie))['data']);
+
+        $other = $this->runtime['account_repository']->insertUser('foreign-series@example.test', 'Other', password_hash('long test password', PASSWORD_BCRYPT), '2026-11-02 00:00:00.000000');
+        $foreign = $this->runtime['task_series_service']->create($other->id, [
+            'name' => 'Private ended', 'frequency' => 'daily', 'timezone' => 'UTC', 'start_date' => $today,
+        ]);
+        $foreign = $this->runtime['task_series_service']->transition($other->id, $foreign['id'], 'end', ['base_version' => $foreign['version'], 'end_date' => $today]);
+        foreach (['pause', 'resume'] as $action) {
+            self::assertSame(404, $this->request('POST', '/api/v1/task-series/'.$foreign['id'].'/'.$action, ['base_version' => $foreign['version']], $cookie, $csrf, true)->status);
+        }
+    }
+
     private function register(): array
     {
         $page=$this->request('GET','/register');

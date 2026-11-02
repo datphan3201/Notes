@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Plain\Integration;
 
+use DateTimeImmutable;
 use PDO;
 use PHPUnit\Framework\TestCase;
+use Planner\Application\Dashboard\DashboardService;
+use Planner\Application\Habits\HabitProgress;
+use Planner\Application\Habits\HabitService;
 use Planner\Http\ValidationException;
 use Planner\Infrastructure\Database\MigrationRunner;
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
+use Planner\Infrastructure\Persistence\Pdo\Dashboard\PdoDashboardRepository;
+use Planner\Support\Clock;
 use RuntimeException;
 
 final class DashboardReviewsTest extends TestCase
@@ -93,6 +99,24 @@ final class DashboardReviewsTest extends TestCase
 
     public function test_dashboard_shows_every_habit_with_period_specific_counts_and_streaks(): void
     {
+        // Wednesday provides two distinct non-future weekdays regardless of the
+        // host date. Keep both Habit validation and Dashboard projection on it.
+        $clock = new class implements Clock {
+            public function now(): DateTimeImmutable
+            {
+                return new DateTimeImmutable('2026-10-28T12:00:00Z');
+            }
+        };
+        $progress = new HabitProgress($this->runtime['habit_repository'], $clock);
+        $habits = new HabitService(
+            $this->runtime['habit_repository'], $this->runtime['planning_repository'],
+            $this->runtime['activity_repository'], $this->runtime['transactions'],
+            $this->runtime['uuid'], $clock, $progress,
+        );
+        $dashboardService = new DashboardService(
+            new PdoDashboardRepository($this->pdo), $this->runtime['planning_repository'],
+            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'], $progress,
+        );
         $planning = $this->runtime['planning_service'];
         $area = $planning->create('area', $this->owner, ['name' => 'Health']);
         $goal = $planning->create('goal', $this->owner, [
@@ -100,7 +124,6 @@ final class DashboardReviewsTest extends TestCase
             'parent_goal_id' => null,
             'name' => 'Feel healthier',
         ]);
-        $habits = $this->runtime['habit_service'];
         $daily = $habits->create($this->owner, [
             'primary_goal_id' => $goal['id'],
             'name' => 'Walk',
@@ -124,24 +147,23 @@ final class DashboardReviewsTest extends TestCase
             'target_frequency' => 1,
             'timezone' => 'UTC',
         ]);
-        $today = $this->runtime['clock']->now()->format('Y-m-d');
-        $weekStart = $this->runtime['clock']->now()->modify('monday this week')->format('Y-m-d');
-        $secondWeekday = $this->runtime['clock']->now()->modify('tuesday this week')->format('Y-m-d');
+        $today = $clock->now()->format('Y-m-d');
+        $weekStart = $clock->now()->modify('monday this week')->format('Y-m-d');
+        $secondWeekday = $clock->now()->modify('tuesday this week')->format('Y-m-d');
         $habits->checkIn($this->owner, $daily['id'], $weekStart);
         $habits->checkIn($this->owner, $daily['id'], $today);
         $habits->checkIn($this->owner, $weekly['id'], $weekStart);
         $habits->checkIn($this->owner, $weekly['id'], $secondWeekday);
 
-        $dashboard = $this->runtime['dashboard_service']->dashboard($this->owner, null);
+        $dashboard = $dashboardService->dashboard($this->owner, null);
         $byName = array_column($dashboard['habits'], null, 'name');
         $names = array_keys($byName);
         sort($names);
 
         // Every active Habit is listed, linked to a Goal or not.
         self::assertSame(['Strength training', 'Unrelated habit', 'Walk'], $names);
-        // Walk was checked in on Monday and today; they are adjacent only on Tuesday.
-        $walkRun = $weekStart === $today ? 1 : ($weekStart === $this->runtime['clock']->now()->modify('-1 day')->format('Y-m-d') ? 2 : 1);
-        self::assertSame(['count' => $walkRun, 'unit' => 'days', 'through_date' => $today], $byName['Walk']['streak']);
+        // Monday and Wednesday check-ins are separated by an unfinished day.
+        self::assertSame(['count' => 1, 'unit' => 'days', 'through_date' => $today], $byName['Walk']['streak']);
         self::assertTrue($byName['Walk']['done_today']);
         self::assertSame(1, $byName['Walk']['completed_days']);
         self::assertSame(2, $byName['Strength training']['completed_days']);

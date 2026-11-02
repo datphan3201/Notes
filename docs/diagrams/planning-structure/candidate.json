@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Primary planning containment and separate relations",
+    "output": "docs/diagrams/planning-structure/index.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "link_mode": "web"
+    }
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "area",
+      "label": "Area",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 951,
+          "end_line": 996
+        }
+      ]
+    },
+    {
+      "id": "goal",
+      "parent": "area",
+      "label": "Root Goal",
+      "sublabel": "One primary parent",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 951,
+          "end_line": 996
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 694,
+          "end_line": 752
+        }
+      ]
+    },
+    {
+      "id": "child_goal",
+      "parent": "goal",
+      "label": "Child Goal subtree",
+      "sublabel": "Arbitrary depth",
+      "sources": [
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+          "line": 169,
+          "end_line": 175
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 311,
+          "end_line": 343
+        }
+      ]
+    },
+    {
+      "id": "milestone",
+      "parent": "goal",
+      "label": "Milestone",
+      "sublabel": "Goal checkpoint",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 951,
+          "end_line": 996
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 481,
+          "end_line": 493
+        }
+      ]
+    },
+    {
+      "id": "direct_task",
+      "parent": "goal",
+      "label": "Direct one-off Task",
+      "sublabel": "Finite progress child",
+      "sources": [
+        {
+          "path": "backend/src/Domain/Planning/GoalProgressCalculator.php",
+          "line": 1,
+          "end_line": 80
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 494,
+          "end_line": 511
+        }
+      ]
+    },
+    {
+      "id": "habit",
+      "parent": "goal",
+      "label": "Optional primary Habit",
+      "sublabel": "Not a progress child",
+      "sources": [
+        {
+          "path": "backend/src/Application/Habits/HabitService.php",
+          "line": 50,
+          "end_line": 67
+        }
+      ]
+    },
+    {
+      "id": "milestone_task",
+      "parent": "milestone",
+      "label": "Milestone Task",
+      "sublabel": "Usable even when locked",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 454,
+          "end_line": 477
+        }
+      ]
+    },
+    {
+      "id": "task_checks",
+      "parent": "milestone_task",
+      "label": "Checklist items",
+      "sources": [
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 541,
+          "end_line": 560
+        }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Tree meaning",
+      "items": [
+        "Primary containment only. A Goal chooses Area XOR parent Goal; a Task has zero or one Goal/Milestone parent.",
+        "Inbox Tasks have no parent and are outside this tree. Optional Habit placement does not affect Goal progress."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Relations that are not tree edges",
+      "items": [
+        "Goal/Milestone/Task/Habit contributions link to additional Goals without moving work or changing progress.",
+        "Milestone prerequisites are a separate acyclic graph and block Milestone completion, not Task usage."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Progress denominator",
+      "items": [
+        "Mean immediate child Goal percentages, completed Milestones and direct one-off Tasks.",
+        "Exclude Habits, contributions, recurring occurrences and Tasks already represented through Milestones."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "3df2c013-7b8f-4afe-a6b4-0f8e275d6b89",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
+  "specification": {
+    "sha256": "50713968ad2c41ad8bcd2960a6940e65ddba25dd61b18ae1833e9049ec5cc32b",
+    "bytes": 5129
+  },
+  "artifact": {
+    "sha256": "66e55f33a4a512e0f8e2a94e8c60b7e89f99bbb26c3ba19b323563958bda07e7",
+    "bytes": 853273
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "128ed127-6037-47fc-b0a7-6724c0fb92ef",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
+  "specification": {
+    "sha256": "36758c01f71cb092d615a749733d3aedf343dcb4c93710cbed6c8e142ede3ceb",
+    "bytes": 6752
+  },
+  "artifact": {
+    "sha256": "0e7b97b5976f6e1799cb56f7fac4b6e08626688057931642534bc8813f28acc6",
+    "bytes": 842669
+  }
+}

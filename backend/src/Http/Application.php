@@ -7,6 +7,7 @@ namespace Planner\Http;
 use Planner\Application\Account\AuthService;
 use Planner\Http\Routing\Router;
 use Planner\Http\Security\CsrfGuard;
+use Planner\Http\Security\ContentSecurityPolicy;
 use Planner\Http\Security\RateLimiter;
 use Planner\Infrastructure\Session\SessionManager;
 use Throwable;
@@ -20,6 +21,7 @@ final readonly class Application
         private CsrfGuard $csrf,
         private RateLimiter $rateLimiter,
         private ErrorHandler $errors,
+        private ContentSecurityPolicy $contentSecurityPolicy = new ContentSecurityPolicy(),
     ) {
     }
 
@@ -88,7 +90,7 @@ final readonly class Application
 
         if (str_starts_with($response->headers['Content-Type'] ?? '', 'text/html')) {
             $headers['X-Frame-Options'] = 'DENY';
-            $headers['Content-Security-Policy'] = "default-src 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+            $headers['Content-Security-Policy'] = $this->contentSecurityPolicy->value();
         }
 
         return $response->withHeaders($headers);

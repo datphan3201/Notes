@@ -14,6 +14,6 @@
             <label><?= $view->e($view->t('Confirm password')) ?> <input id="reset-password-confirmation" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" required></label>
         <?php endif; ?>
         <button class="button button-primary" type="submit"><?= $view->e($view->t($reset ? 'Reset password' : 'Send reset link')) ?></button>
-    </form>
-    <a href="/login"><?= $view->e($view->t('Back to sign in')) ?></a>
-</section>
+        </form>
+        <a href="/login"><?= $view->e($view->t('Back to sign in')) ?></a>
+    </section>
