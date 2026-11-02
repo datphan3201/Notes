@@ -2,6 +2,13 @@ import { get, patch } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
 
+/** Completed Milestones are 100% even when they have no finite Task denominator. */
+export function milestoneProgress(milestone) {
+    if (milestone.status === 'Completed') return 100;
+    const value = Number(milestone.progress?.percentage);
+    return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+}
+
 /** Independent reads keep a late Dashboard refresh from undoing a newer choice. */
 export function initDashboardRoadmap(root, onError) {
     const select = root.querySelector('[data-dashboard-roadmap-select]');
@@ -60,7 +67,12 @@ export function initDashboardRoadmap(root, onError) {
                 const branch = document.createElement('a');
                 branch.href = `/goals/${encodeURIComponent(goal.id)}#milestone=${encodeURIComponent(milestone.id)}`;
                 branch.textContent = milestone.name;
-                branch.classList.toggle('is-complete', milestone.status === 'Completed');
+                const percent = milestoneProgress(milestone);
+                branch.classList.toggle('is-complete', percent >= 100);
+                branch.classList.toggle('is-active', percent > 0 && percent < 100);
+                // The connector to the next node fills with this Milestone's progress.
+                branch.style.setProperty('--segment-progress', `${percent}%`);
+                branch.title = `${milestone.name} · ${Math.round(percent)}%`;
                 preview.append(branch);
             }
             if (!preview.childNodes.length) {

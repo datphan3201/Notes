@@ -22,7 +22,7 @@
                 </button>
             </div>
             <div class="task-view-menu" role="group" aria-label="<?= $view->e($view->t('Task time filters')) ?>">
-                <button type="button" data-task-view="today" aria-pressed="true">
+                <button type="button" data-task-view="today" aria-pressed="false">
                     <?= $view->e($view->t('Today')) ?>
                     <span class="count-badge" data-task-view-count="today">—</span>
                 </button>
@@ -42,39 +42,56 @@
                     <?= $view->e($view->t('Overdue')) ?>
                     <span class="count-badge" data-task-view-count="overdue">—</span>
                 </button>
-                <button type="button" data-task-view="all" aria-pressed="false">
+                <button type="button" data-task-view="all" aria-pressed="true">
                     <?= $view->e($view->t('All')) ?>
                     <span class="count-badge" data-task-view-count="all">—</span>
                 </button>
                 <button type="button" data-task-view="repeating" aria-pressed="false"><?= $view->e($view->t('Repeating')) ?> <span class="count-badge" data-task-view-count="repeating">—</span></button>
                 <a class="text-button" href="/settings/history"><?= $view->e($view->t('Task history')) ?></a>
             </div>
-            <details class="task-filter-details">
-                <summary><?= $view->e($view->t('Filter and search')) ?></summary>
-                <div class="collection-controls">
-                    <div class="field">
-                        <label for="task-search"><?= $view->e($view->t('Find a task')) ?></label>
-                        <input id="task-search" type="search" placeholder="<?= $view->e($view->t('Search task names')) ?>" data-task-search>
-                    </div>
-                    <div class="field">
-                        <label for="task-status"><?= $view->e($view->t('Status')) ?></label>
-                        <select id="task-status" data-task-status>
-                            <option value="open"><?= $view->e($view->t('Open tasks')) ?></option>
-                            <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
-                            <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
-                            <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                            <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
-                            <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
-                        </select>
-                    </div>
+            <div class="collection-controls">
+                <div class="field">
+                    <label for="task-search"><?= $view->e($view->t('Find a task')) ?></label>
+                    <input id="task-search" type="search" placeholder="<?= $view->e($view->t('Search task names')) ?>" data-task-search>
+                </div>
+                <div class="field">
+                    <label for="task-status"><?= $view->e($view->t('Status')) ?></label>
+                    <select id="task-status" data-task-status>
+                        <option value="open"><?= $view->e($view->t('Open tasks')) ?></option>
+                        <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
+                        <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
+                        <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
+                        <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
+                        <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="task-sort"><?= $view->e($view->t('Sort')) ?></label>
+                    <select id="task-sort" data-task-sort>
+                        <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
+                        <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
+                    </select>
+                </div>
+                <div class="field" data-series-status-field hidden>
+                    <label for="series-status"><?= $view->e($view->t('Series state')) ?></label>
+                    <select id="series-status" data-series-status>
+                        <option value="all"><?= $view->e($view->t('All')) ?></option>
+                        <option value="Active"><?= $view->e($view->t('Active')) ?></option>
+                        <option value="Paused"><?= $view->e($view->t('Paused')) ?></option>
+                        <option value="Ended"><?= $view->e($view->t('Ended')) ?></option>
+                    </select>
+                </div>
+            </div>
+            <details class="task-filter-details" hidden>
+                <summary><?= $view->e($view->t('More filters')) ?></summary>
                     <div class="field" hidden>
                         <label for="task-tag"><?= $view->e($view->t('Tag')) ?></label>
                         <select id="task-tag" data-task-tag>
                             <option value=""><?= $view->e($view->t('All tags')) ?></option>
                         </select>
                     </div>
-                </div>
             </details>
+            <p class="save-status" data-task-create-status role="status"></p>
             <div data-task-list aria-live="polite">
                 <p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p>
             </div>
@@ -83,6 +100,7 @@
                 <h3 id="task-completed-title"><?= $view->e($view->t('Completed')) ?> <span class="count-badge" data-task-completed-count></span></h3>
                 <p class="subtle-copy"><?= $view->e($view->t('Untick a task to move it back. Completed tasks move to Task history after the time you set in Settings.')) ?></p>
                 <div data-task-completed-list></div>
+                <div class="collection-pagination" data-task-completed-pagination></div>
             </section>
         </section>
     </div>
@@ -93,6 +111,10 @@
         </header>
         <form class="stack-form" data-task-create-form>
             <div class="field">
+                <label for="task-name"><?= $view->e($view->t('Task name')) ?></label>
+                <input id="task-name" name="name" autofocus maxlength="200" placeholder="<?= $view->e($view->t('What needs to get done?')) ?>" required>
+            </div>
+            <div class="field">
                 <label for="task-parent"><?= $view->e($view->t('Add to')) ?></label>
                 <select id="task-parent" name="parent" data-task-parent>
                     <option value=""><?= $view->e($view->t('Inbox · organize later')) ?></option>
@@ -100,30 +122,27 @@
                 <small data-task-parent-context></small>
             </div>
             <div class="field">
-                <label for="task-name"><?= $view->e($view->t('Task name')) ?></label>
-                <input id="task-name" name="name" autofocus maxlength="200" placeholder="<?= $view->e($view->t('What needs to get done?')) ?>" required>
+                <label for="task-plan"><?= $view->e($view->t('Plan for')) ?></label>
+                <select id="task-plan" name="plan" data-task-plan>
+                    <option value="none"><?= $view->e($view->t('Decide later')) ?></option>
+                    <option value="today"><?= $view->e($view->t('Today')) ?></option>
+                    <option value="week"><?= $view->e($view->t('This week')) ?></option>
+                </select>
+                <small><?= $view->e($view->t('Planning does not change status or dates. Repeating work is planned per occurrence from the task list.')) ?></small>
             </div>
-            <div class="capture-suggestions" data-capture-suggestions="name">
-                <button type="button"><?= $view->e($view->t('Build a minimal example')) ?></button>
-                <button type="button"><?= $view->e($view->t('Read and summarize')) ?></button>
-                <button type="button"><?= $view->e($view->t('Write an explanation')) ?></button>
-            </div>
-            <div class="field">
-                <label for="task-description"><?= $view->e($view->t('Description')) ?></label>
-                <textarea id="task-description" name="description" rows="2" maxlength="10000" placeholder="<?= $view->e($view->t('Add details, links or context (optional)')) ?>"></textarea>
-            </div>
-            <div class="field">
-                <label for="task-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
-                <textarea id="task-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('What does done look like?')) ?>"></textarea>
-                <div class="capture-suggestions" data-capture-suggestions="completion_criteria">
-                    <button type="button"><?= $view->e($view->t('Works end-to-end')) ?></button>
-                    <button type="button"><?= $view->e($view->t('Tested')) ?></button>
-                    <button type="button"><?= $view->e($view->t('Explain in my own words')) ?></button>
+            <details class="capture-details">
+                <summary><?= $view->e($view->t('Description and completion criteria')) ?></summary>
+                <div class="field">
+                    <label for="task-description"><?= $view->e($view->t('Description')) ?></label>
+                    <textarea id="task-description" name="description" rows="2" maxlength="10000"></textarea>
                 </div>
-                <span class="field-hint"><?= $view->e($view->t('Optional. Describe the result in your own words.')) ?></span>
-            </div>
+                <div class="field">
+                    <label for="task-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
+                    <textarea id="task-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('What does done look like?')) ?>"></textarea>
+                </div>
+            </details>
             <?php $captureDescription = false; require __DIR__.'/task-capture-fields.php'; ?>
-            <div class="dialog-footer">
+            <div class="dialog-footer task-capture-footer">
                 <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
                 <button class="button button-primary" type="submit">
                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>

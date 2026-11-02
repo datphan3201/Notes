@@ -35,6 +35,17 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Open | Full staged diff check reports trailing whitespace and blank lines at EOF; artifact receipts remain valid |
 | [ISSUE-008](#issue-008--today-task-capture-and-membership-are-not-clear-in-the-ui) | Today task capture and membership are not clear in the UI | Low | Resolved | Approved daily/weekly checklist, selection and overdue policies implemented; PHP/Node/browser checks pass |
 | [ISSUE-009](#issue-009--dashboard-roadmap-has-no-explicit-account-level-selection) | Dashboard roadmap has no explicit account-level selection | Low | Resolved | Explicit saved selection and header placement implemented; service/HTTP/browser checks pass |
+| [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | In progress | Implemented; Node/build/lint pass; MySQL and browser verification pending |
+| [ISSUE-011](#issue-011--tasks-completed-section-does-not-follow-the-selected-time-view) | Tasks Completed section does not follow the selected time view | Low | Resolved | View-scoped helper regression and browser scope/paging pass |
+| [ISSUE-012](#issue-012--repeating-exposes-inapplicable-task-filters-and-a-different-count-scope) | Repeating exposes inapplicable Task filters and a different count scope | Low | Resolved | Applicable series filters/count/paging verified with Node and browser fixtures |
+| [ISSUE-013](#issue-013--tasks-planning-and-retrieval-affordances-are-inconsistent-across-screens) | Tasks planning and retrieval affordances are inconsistent across screens | Low | Resolved | Approved layout implemented; local browser, Node, lint/build checks pass |
+| [ISSUE-014](#issue-014--archify-update-receipts-and-docs-checker-use-different-default-paths) | Archify update receipts and docs checker use different default paths | Low | Resolved | Explicit canonical receipt plus fresh browser directory; maintenance command documented |
+| [ISSUE-015](#issue-015--habit-actions-have-unclear-hierarchy-and-inconsistent-check-in-behavior) | Habit actions have unclear hierarchy and inconsistent check-in behavior | Low | Resolved | Direct check-in, secondary Rest day/Archive, responsive and keyboard browser smoke |
+| [ISSUE-016](#issue-016--habit-archive-fails-with-native-pdo-prepares) | Habit archive fails with native PDO prepares | Medium | Resolved | Reproduced HY093; distinct SQL bindings; integration regression and live browser archive pass |
+| [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Needs decision | Screenshot/template review; Save invokes the close workflow |
+| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Open | Browser read fixtures reproduce page 6/12 without an active page; hardcoded Trang labels |
+| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Open | Intercepted preference response reports List/Saved while Grid stays visible |
+| [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -155,6 +166,121 @@ The severity assessments below describe observed impact, not a completed securit
 - **Verification:** Full backend: 141 tests, 1222 assertions; Node: 83 tests. HTTP covers auth/CSRF, owned persistence, invalid fields, foreign/archived 404 and clearing archived preferences. Browser QA covers saved selection after reload, a deliberately delayed stale Dashboard response, 33% progress at 1/3 despite status filtering, day details/year navigation, header placement and responsive layout. [Executed scope](testing/documentation-checks.md) · [Audit entry](audit-history.md).
 - **Operational scope:** Migration 0026 was applied after checking the live goals_dev database and exact pending migration; no existing Goal or Task was rewritten and no roadmap was automatically selected. Test cleanup used goals_test; browser mutations used a separate QA account.
 - **Limits:** Focused browser flows are not full product/deployment acceptance. The live SMTP/AI and broad concurrency boundaries remain outside this evidence.
+
+## ISSUE-010 — Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template
+
+- **Status:** In progress — implemented; browser verification is pending (see Limits).
+- **Severity:** Low; information-architecture and discoverability problems without demonstrated data loss.
+- **Recorded:** 2026-11-02, from the user's report and Dashboard screenshots.
+- **Affected UI:** [Dashboard Today, This week, Habits and Roadmap](ui/dashboard/README.md).
+- **Original behavior:** The Today tab also contained the This week card; its Habit streak card showed only a number and seven dots with no Habit names or check-in, while the actual Habit list sat at the bottom of the This week tab; the This week tab had none of Today's progress ring, bars or Sort/Status controls. The roadmap connectors did not show progress.
+- **Approved behavior:** Daily shows only today's work (Activity with Today's progress ring, actionable Habits check-in card, and Daily tasks with Sort/Status comboboxes). Habits can be checked in or undone from Daily for each Habit's own local date. Weekly reuses the same template: progress card beside Milestones plus weekly Habit targets, then a full-width Weekly tasks checklist with Sort/Status controls. Each roadmap connector fills green in proportion to the preceding Milestone's progress.
+- **Resolution (implemented):** Reorganized the Dashboard view and browser modules, added `dashboard-habits.js`, exposed the Habit-local `today` date on each Dashboard Habit row (additive field), added Daily tasks Sort/Status comboboxes matching Weekly, and added connector fill via a `--segment-progress` CSS variable. No migration, route or write-path change; Habit check-in reuses the existing PUT/DELETE routes.
+- **Verification so far:** Backend integration tests (`DashboardReviewsTest.php` on goals_test): 15 tests, 93 assertions pass; Node: 86 tests pass (including Habit summary/targets, Milestone progress, and Daily/Weekly sort/status filtering); frontend format check and build pass; PHP lint passes.
+- **Limits:** Live browser flows (layout on desktop/mobile, Habit check-in click, connector fill, empty states) have not been run through Playwright for this change. The daily/weekly Archify diagram describes selection/completion contracts and was not regenerated.
+
+## ISSUE-011 — Tasks Completed section does not follow the selected time view
+
+- **Status:** Resolved.
+- **Severity:** Low; ambiguous scope and list/count expectations, without demonstrated data loss or incorrect completion writes.
+- **Recorded:** 2026-11-02 (Asia/Saigon), during the Tasks design review.
+- **Affected UI:** [Task time views](ui/tasks/filters.md), Completed group.
+- **Observed:** The Completed pipeline in [planning-page.js](../frontend/src/js/planning/planning-page.js) calls taskMatchesView with completed, independently of the selected Today/Week/Next view. Its badge/list can therefore include recently completed work outside the current view.
+- **Evidence:** Source inspection and an isolated Node exercise using the actual membership helper reproduced globally completed IDs today/elsewhere, while only today matched the Today view. No browser reproduction or live-data mutation was performed.
+- **Approved decision:** Completed follows the selected time view. Implemented in completedInView, retaining History thresholds and adding independent paging.
+- **Resolution evidence:** Node regression covers Today/Week/Next/All and History exclusion; browser read fixtures verified scope/count and both Completed pages. See [design review](ui/tasks/design-review.md).
+
+## ISSUE-012 — Repeating exposes inapplicable Task filters and a different count scope
+
+- **Status:** Resolved.
+- **Severity:** Low based on inspected impact: misleading controls/counts in a limited view; no mutation failure or data loss established.
+- **Recorded:** 2026-11-02 (Asia/Saigon), during the Tasks design review.
+- **Affected UI:** [Tasks Repeating](ui/tasks/repeating.md), shared search/status controls and view badge.
+- **Observed:** The Repeating branch in [planning-page.js](../frontend/src/js/planning/planning-page.js) passes the raw series array to renderSeriesList without applying the visible Task name/status controls. The badge counts non-Ended rows, while [series-list.js](../frontend/src/js/planning/series-list.js) renders Ended rows too.
+- **Evidence:** Source-inspected control/render mismatch; not a claimed browser reproduction. State transitions and terminal Ended behavior were not changed by this review.
+- **Expected:** Visible controls apply to the displayed entity type, and counts identify their scope. Series states differ from Task statuses.
+- **Resolution evidence:** Applicable All/Active/Paused/Ended and name search now share one seriesPage pipeline with count and paging. Task-only controls are hidden. Node tests and browser read fixtures verified Ended, empty search and matching counts. Lifecycle APIs are unchanged.
+
+## ISSUE-013 — Tasks planning and retrieval affordances are inconsistent across screens
+
+- **Status:** Resolved.
+- **Severity:** Low; layout/discoverability and workflow friction; all inspected core operations remain reachable elsewhere.
+- **Recorded:** 2026-11-02 (Asia/Saigon), from supplied screenshots and source inspection.
+- **Affected UI:** [Tasks design review](ui/tasks/design-review.md), covering collection, capture, details and History.
+- **Observed:** Task rows omit the schedule/membership facts visible in Dashboard and have many competing inline actions; Tasks has hidden search and no sort control. Full capture offers no day/week planning choice and returns to All after creation. Detail offers Week but no Today action, moves the Notes card between views and nests the completion checklist inside the note editor. History places rules before retrieval and renders all matches without dedicated recent-first ordering/paging.
+- **Evidence:** PHP templates and the planning/history browser modules linked in the design review. Screenshot scaling is not treated as a verified font-size defect. No browser walkthrough or application change was performed for this review.
+- **Approved decisions:** All by default; retain capture context with explicit Today/Week planning; dedicated Notes; checklist in Overview. Secondary actions use native disclosure. All proposed layout/retrieval improvements were approved.
+- **Resolution evidence:** Implemented the approved catalogue/capture/detail/History layout and added Tasks-scoped CSS. 90 Node tests pass; real-browser smoke covers isolated owned records and simulated/read fixtures, including partial planning failure, Notes drafts/save and responsive/keyboard controls. Theme and existing invariants remain; no Dashboard module or shared feature stylesheet was edited. See [verification scope](testing/documentation-checks.md).
+
+## ISSUE-014 — Archify update receipts and docs checker use different default paths
+
+- **Status:** Resolved.
+- **Severity:** Low; documentation verification fails despite a valid new diagram. No application behavior or data is affected.
+- **Recorded:** 2026-11-02 (Asia/Saigon), while updating the Tasks classification diagram.
+- **Observed / evidence:** Archify with a fresh --out-dir writes finalize receipts there, while [check.php](../tools/docs/check.php) reads the canonical index.finalize-summary.json beside the artifact. The real checker reported Diagram changed after final receipt after successful Archify gates.
+- **Expected:** Preserve prior browser evidence while supplying a current canonical receipt for the project checker.
+- **Resolution:** Use --out-dir for fresh browser evidence and --receipt for the canonical full receipt; the CLI generates its canonical summary unchanged. Updated [maintenance instructions](maintenance.md#archify). No hand-edited receipt or relaxed checker is used.
+- **Verification:** Archify finalize and the repository docs checker both pass with the canonical receipt. Receipts retain the exact candidate/artifact hashes and their browser evidence paths.
+
+## ISSUE-015 — Habit actions have unclear hierarchy and inconsistent check-in behavior
+
+- **Status:** Resolved.
+- **Severity:** Low; confusing action hierarchy and an extra step for daily use, without established data loss.
+- **Recorded:** 2026-11-02 (Asia/Saigon), from supplied screenshots and Habits source inspection.
+- **Affected UI:** [Habits](ui/habits/README.md), row actions, Refresh and Edit footer.
+- **Observed:** A check-looking button opened a check-in/rest menu while Dashboard checked in directly; Edit/Delete competed with the daily action. Delete actually archived data.
+- **Approved target / resolution:** Direct today check-in before the name; calendar beside/below content; Edit at the end; Rest day and Archive in the existing More options popover. Refresh uses its existing icon; Edit retains Cancel/Save with a sticky footer. Existing visual theme and date/streak contracts remain.
+- **Verification:** Real-browser QA on an isolated account checked direct check-in/undo, calendar rest state, rest cancellation, menu Escape/focus, Edit/save, archive cancellation and refresh. Screenshots inspected; widths 320/390/768/1440 had no page overflow. Eight focused Node cases and the full 90-test frontend runner pass. [Scope](testing/documentation-checks.md).
+
+## ISSUE-016 — Habit archive fails with native PDO prepares
+
+- **Status:** Resolved.
+- **Severity:** Medium; an ordinary owned Habit cannot be archived, blocking one management operation. The failed transaction preserved data; no unauthorized access or history loss was observed.
+- **Recorded:** 2026-11-02 (Asia/Saigon), during real-browser Habits QA.
+- **Affected source:** [PdoHabitRepository::archive](../backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php), existing DELETE /api/v1/habits/{id}.
+- **Observed / evidence:** Archive confirmation led to HTTP 503. A guarded real-MySQL regression reproduced SQLSTATE HY093 Invalid parameter number at the archive UPDATE: the same named timestamp placeholder appeared twice with native prepares.
+- **Expected / resolution:** Use separate archived_at/updated_at placeholder names with identical timestamp values. Owner filtering, service transaction/locking, version check and archive semantics are unchanged.
+- **Verification:** [Regression](../backend/tests/Plain/Integration/HabitsRecurrenceTest.php) first failed against the original query, then the full HabitsRecurrenceTest passed (12 tests / 103 assertions). It checks version/timestamps, active-list exclusion, other-Habit preservation, and unchanged check-in/rest/Activity rows. Browser confirmation then archived the isolated QA Habit without an error and returned focus to Refresh.
+
+## ISSUE-017 — Notes controls have redundant placement and unclear Save wording
+
+- **Status:** Needs decision.
+- **Severity:** Low; hierarchy/discoverability and wording, with no demonstrated lost content.
+- **Recorded:** 2026-11-02 (Asia/Saigon), Notes design review.
+- **Affected UI/source:** [Notes template](../frontend/src/views/notes/index.php), collection toolbar and editor actions; [NoteEditor](../frontend/src/js/notes/note-editor.js).
+- **Observed:** Collapsed Note preferences still occupies a large panel. Grid/List appears in preferences and the main toolbar; Manage/Add tag open the same manager. Color, Pin, Tags, Share, permanent Delete and Save share the editor action area. Save calls requestClose, as do the close button and backdrop.
+- **Proposal:** Keep the current theme and writing area; make preferences a compact header action, retain one Grid/List entry, group editor metadata/attachments separately from its primary footer, and move permanent Delete to secondary actions. Keep autosave/recovery/conflict behavior. Prefer Save and close wording to preserve current behavior.
+- **Pending decision:** Preserve save-and-close with clearer wording, or deliberately change Save to save without closing. Do not remove explicit Save or rename permanent Note deletion to Archive without a separate requirement.
+- **Evidence limits:** Desktop/mobile screenshots of the collection and empty New note editor were inspected; persisted/shared action layouts were inspected in source. No Note content was changed, shared or deleted. This review is not a full save/recovery/sharing acceptance test.
+
+## ISSUE-018 — Notes pagination omits the current middle page and localized labels
+
+- **Status:** Open.
+- **Severity:** Low; navigation/orientation and screen-reader wording; no demonstrated data corruption.
+- **Recorded:** 2026-11-02 (Asia/Saigon).
+- **Affected source:** [NotesPage::renderPagination/pageButton](../frontend/src/js/notes/notes-page.js).
+- **Observed:** Only numbered pages 1–5 and the last page render; intermediate current pages have no active numbered button or gap indicator. Previous/Next and numbered controls use hardcoded Trang plus a page number, including on English UI.
+- **Evidence:** Intercepted GET list responses with last_page=12; navigating 5 to 6 produced no active page button. Returned accessible labels included Trang 1–5/12 and Trang 5/7 for navigation. This fixture tests browser rendering, not SQL pagination.
+- **Expected / next step:** Keep a visible current-page window and clear gaps/position, with localized Previous/Next/Page labels. Verify first/middle/last pages, search/page reset and both locales before resolving.
+
+## ISSUE-019 — Notes layout preferences do not refresh the visible layout
+
+- **Status:** Open.
+- **Severity:** Low; visible layout disagrees with the chosen preference until a later layout refresh; no content loss established.
+- **Recorded:** 2026-11-02 (Asia/Saigon).
+- **Affected source:** [initNotePreferences](../frontend/src/js/settings/delivery-preferences.js), [NotesPage](../frontend/src/js/notes/notes-page.js) and [template](../frontend/src/views/notes/index.php).
+- **Observed:** Preference success updates state and dispatches notes:preferences-changed, but NotesPage only copies preferences. The follow-up selector targets data-view, while the actual toolbar uses data-view-toggle; applyView is not called.
+- **Evidence:** Intercepted PATCH preference response returned notes_view=list; the UI reported Saved while the Grid remained visible. No stored account preference was changed for this review.
+- **Expected / next step:** Consolidate the layout entry or apply the authoritative preference through the same view-rendering path and synchronize controls. Verify immediate switching and reload persistence with saved/draft state intact.
+
+## ISSUE-020 — AI branch generated traces still describe pre-agent capabilities
+
+- **Status:** Resolved.
+- **Severity:** Low; contradictory documentation could send an agent to the wrong behavior boundary. No runtime data failure was established by this finding.
+- **Recorded:** 2026-11-02 (Asia/Saigon), integrating origin/feature/ai-assistant at fd2030c with local UI work based on c21b4ec.
+- **Observed:** The imported AI page introduction described chat confirmation cards and supported updates/deletes, but the existing trace registry regenerated API-only/create-only descriptions. Manual AI cases repeated that old exclusion. Imported assistant.js also failed the existing formatting gate.
+- **Resolution:** Updated AI chat/proposal traces, source/test/DOM/style references and manual cases to the imported confirmation-first implementation; formatted only the assistant module. Existing ownership/version/normal-service boundaries remain explicit.
+- **Verification:** Regenerated documentation/source checks and frontend formatting pass. Integration and browser verification scope is recorded with the branch integration audit.
 
 ## New issue template
 

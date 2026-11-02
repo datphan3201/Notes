@@ -3,7 +3,7 @@ import { get, patch, post, remove } from '../lib/http';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
-import { NoteSharing, applyNoteStyle } from './note-sharing.js';
+import { NoteSharing, appendHighlightedText, applyNoteStyle } from './note-sharing.js';
 
 export class NotesPage {
     constructor(root) {
@@ -279,40 +279,74 @@ export class NotesPage {
             this.list.append(this.createCard(note));
         });
         if (!this.notes.length) {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state';
-            const title = document.createElement('h2');
-            title.textContent =
-                this.query.q || this.query.labelIds.length ? 'No matching notes' : 'No notes yet';
-            const copy = document.createElement('p');
-            copy.textContent =
-                this.query.q || this.query.labelIds.length
-                    ? 'Clear some filters or try another search term.'
-                    : 'Start with something you want to remember.';
-            empty.append(title, copy);
-            this.grid.append(empty.cloneNode(true));
-            this.list.append(empty);
+            this.grid.append(this.createEmptyState());
+            this.list.append(this.createEmptyState());
         }
         this.renderPagination();
     }
 
+    createEmptyState() {
+        const hasFilters = Boolean(this.query.q || this.query.labelIds.length);
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        const icon = document.createElement('span');
+        icon.className = 'empty-state-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = hasFilters ? '⌕' : '✦';
+        const title = document.createElement('h2');
+        title.textContent = t(hasFilters ? 'No matching notes' : 'No notes yet');
+        const copy = document.createElement('p');
+        copy.textContent = t(
+            hasFilters
+                ? 'Clear some filters or try another search term.'
+                : 'Start with something you want to remember.',
+        );
+        const action = document.createElement('button');
+        action.type = 'button';
+        action.className =
+            'button empty-state-action ' + (hasFilters ? 'button-quiet' : 'button-primary');
+        action.textContent = hasFilters ? t('Clear filters') : '＋ ' + t('New note');
+        action.addEventListener('click', () => {
+            if (hasFilters) this.clearFilters();
+            else this.editor?.requestNew();
+        });
+        empty.append(icon, title, copy, action);
+        return empty;
+    }
+
     createCard(note) {
         const card = document.createElement('article');
-        card.className = 'note-card';
+        card.className = 'note-card' + (note.is_pinned ? ' is-pinned' : '');
         card.dataset.noteId = note.id;
         applyNoteStyle(card, note.color, note.background_url);
         const head = document.createElement('div');
         head.className = 'note-card-head';
         const title = document.createElement('h2');
         title.className = 'note-card-title';
-        title.textContent = note.title;
+        appendHighlightedText(title, note.title, this.query.q);
         const actions = document.createElement('div');
         actions.className = 'note-card-actions';
+        if (this.sharing) {
+            const share = document.createElement('button');
+            share.className = 'icon-button note-card-action';
+            share.type = 'button';
+            share.textContent = '⇄';
+            share.title = t('Share');
+            share.setAttribute('aria-label', t('Share'));
+            share.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.sharing.openShareDialog(note.id);
+            });
+            actions.append(share);
+        }
         const pin = document.createElement('button');
-        pin.className = 'icon-button';
+        pin.className = 'icon-button note-card-action' + (note.is_pinned ? ' is-active' : '');
         pin.type = 'button';
         pin.textContent = note.is_pinned ? '◆' : '◇';
-        pin.setAttribute('aria-label', t(note.is_pinned ? 'Unpin note' : 'Pin note'));
+        const pinLabel = t(note.is_pinned ? 'Unpin note' : 'Pin note');
+        pin.title = pinLabel;
+        pin.setAttribute('aria-label', pinLabel);
+        pin.setAttribute('aria-pressed', note.is_pinned ? 'true' : 'false');
         pin.addEventListener('click', (event) => {
             event.stopPropagation();
             this.togglePin(note.id);
@@ -321,7 +355,7 @@ export class NotesPage {
         head.append(title, actions);
         const preview = document.createElement('p');
         preview.className = 'note-card-preview';
-        preview.textContent = note.content_preview;
+        appendHighlightedText(preview, note.content_preview, this.query.q);
         const footer = document.createElement('div');
         footer.className = 'note-card-footer';
         const labels = document.createElement('div');
@@ -338,23 +372,19 @@ export class NotesPage {
             more.textContent = '+' + ((note.labels || []).length - 3);
             labels.append(more);
         }
-        const meta = document.createElement('span');
-        meta.textContent = this.formatDate(note.updated_at);
-        footer.append(labels, meta);
-        if (note.is_pinned) {
-            const pinMark = document.createElement('span');
-            pinMark.className = 'note-card-pin';
-            pinMark.textContent = '◆';
-            pinMark.setAttribute('aria-label', 'Pinned');
-            footer.prepend(pinMark);
-        }
+        const metaGroup = document.createElement('div');
+        metaGroup.className = 'note-card-meta-group';
         if (note.attachment_count) {
             const attachmentMark = document.createElement('span');
             attachmentMark.className = 'note-card-attachment';
             attachmentMark.textContent = '⌑ ' + note.attachment_count;
             attachmentMark.setAttribute('aria-label', note.attachment_count + ' attachments');
-            footer.append(attachmentMark);
+            metaGroup.append(attachmentMark);
         }
+        const meta = document.createElement('span');
+        meta.textContent = this.formatDate(note.updated_at);
+        metaGroup.append(meta);
+        footer.append(labels, metaGroup);
         card.append(head, preview, footer);
         return card;
     }

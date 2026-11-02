@@ -165,6 +165,8 @@ final class DashboardReviewsTest extends TestCase
         // Monday and Wednesday check-ins are separated by an unfinished day.
         self::assertSame(['count' => 1, 'unit' => 'days', 'through_date' => $today], $byName['Walk']['streak']);
         self::assertTrue($byName['Walk']['done_today']);
+        // The Dashboard check-in control targets the Habit-local date it is given.
+        self::assertSame($today, $byName['Walk']['today']);
         self::assertSame(1, $byName['Walk']['completed_days']);
         self::assertSame(2, $byName['Strength training']['completed_days']);
         self::assertSame(3, $byName['Strength training']['target_frequency']);

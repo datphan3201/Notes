@@ -2,6 +2,39 @@
 
 [Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
+## AI branch integration — 2026-11-02
+
+Integrated the local UI/documentation snapshot based on c21b4ec onto origin/feature/ai-assistant at fd2030c in an isolated worktree. The only Git conflict was the duplicate Habit archive fix; retained the remote implementation/comment and the local native-prepares regression. Kept local Dashboard/Tasks/Habits/Notes changes, reconciled the AI trace registry/manual contracts, and formatted assistant.js to the existing gate.
+
+- Full PHPUnit on guarded real goals_test: **146 tests / 1265 assertions passed**, PHP 8.5.0, 4m 37.295s. Reflection verified classes loaded from the integration worktree, not the original checkout. Providers in deterministic tests use fakes; no live model acceptance is claimed.
+- Full frontend Node runner: **91 passed**. Production Vite build, full frontend Prettier check, documentation sync/check and diff whitespace checks passed.
+- Browser smoke used the candidate's built assets on a temporary local server with a separate QA account. Dashboard/Tasks/Habits/Notes rendered, the real disabled-provider state disabled chat submission, and intercepted AI responses exercised preview rendering, safe inline bold, exact version/hash on explicit Apply, and Cancel/Reject. Two fixture questions produced one explicit Apply and one Reject; zero live model calls. Mobile page overflow was absent.
+- Limits: read/AI browser fixtures are not a live-provider end-to-end test or exhaustive regression of every local UI change. The original development checkout and its running server were preserved during preparation; its tracked/untracked snapshot was checked before checkout transition. No new migration was introduced by the AI branch.
+
+## Habits actions and archive — 2026-11-02
+
+Baseline c21b4ec plus the local Habits action layout and narrow archive-query correction. Theme, streak rules, date windows and other page implementations remain unchanged.
+
+- HabitsRecurrenceTest on guarded real goals_test: **12 tests, 103 assertions passed**. The new native-prepares archive regression first reproduced HY093, then verified retained check-ins/rest/Activity, other Habits, version and timestamps after the fix. No full backend-suite claim is made.
+- Focused habit-day/translation Node checks: **8 passed**; full frontend runner: **90 passed**. Touched PHP lint, scoped Prettier, production Vite build, documentation sync/check and diff whitespace checks passed.
+- Real-browser isolated-account smoke: create, direct today check-in/undo and focus, Rest Day add/cancel, secondary Archive/cancel, Edit/save, Refresh, menu Escape and focus restoration. After the SQL fix, confirmation removed the QA Habit without an error and focused Refresh. Existing demo/roadmap data was untouched.
+- Layout checked at 320/390/768/1440 widths, with no horizontal page overflow; compact calendars can scroll internally on very narrow screens. Mobile Edit kept Save visible. Desktop/mobile/Edit screenshots were inspected and remain ignored local artifacts. This is not an exhaustive theme/device/browser matrix.
+- No existing diagram's topology or business-state contract changes for this action placement and SQL binding fix; diagram receipts remain checked by the documentation checker.
+
+## Tasks UI implementation — 2026-11-02
+
+Approved Tasks review implemented alongside the concurrent local Dashboard worktree; final verification uses baseline c21b4ec plus the uncommitted Tasks changes. No Dashboard browser module/template or backend runtime change was made for this Tasks work. A Tasks-only stylesheet is imported by the common CSS entry; existing shared feature styles were preserved.
+
+- Full frontend Node runner: **90 tests passed**, including four new cases for Completed scope, stable account-timezone sorting, series search/state/count/paging, and chronological History/search/page clamping. PHP lint passed for the three touched templates. Scoped Prettier and production Vite build passed.
+- Real-browser smoke on a separate local QA account: Today/Week capture defaults, preserved view/status, manual-selection facts, row/detail Today add/remove, Complete/Reopen, checklist creation, dedicated Notes with draft preservation across tabs and persisted explicit save. A simulated 503 on selection after a real creation verified acknowledgement without duplicate creation and an enabled next capture. Existing roadmap/demo records were untouched.
+- Intercepted read fixtures (not backend acceptance): Completed Today scope and both pages; series All/Ended/search/count with terminal action visibility; History newest-first results, 12-row pagination, description search/page reset and expandable rules.
+- Tasks inspected at 320/390/768/1440 widths without horizontal page overflow; native secondary-action disclosure worked by keyboard. Expanded mobile capture kept Create visible. Task detail and History were checked at mobile width; desktop/mobile screenshots were inspected and remain ignored local artifacts.
+- Documentation sync/check passed: **201 routes / 204 method-path pairs, 30 UI documents, 89 components, 182 source files, 9 diagram receipts**. Task classification Archify finalize passed validation, delivery, strict artifact check and browser check; the passing receipts are in the [canonical receipt](../diagrams/task-planning/index.finalize-summary.json). Automated diagram checks are distinct from application browser smoke.
+
+Limits: no backend test suite was rerun for this frontend-only change. Browser fixtures do not certify SQL/lifecycle transitions. No exhaustive theme/localization/device matrix, lost-create-response retry, series materialization or History pruning acceptance is claimed. Full Task capture uses a create request followed by a separate selection request; only the existing selection endpoint makes day/week membership atomic. Earlier backend evidence below belongs to its recorded scope.
+
+## Earlier planning and Dashboard verification
+
 Checked on 2026-11-02 (Asia/Saigon), against committed baseline 31947eb plus the local daily/weekly planning and Dashboard overview worktree. This is scoped execution evidence, not universal application acceptance.
 
 | Check actually executed | Result |

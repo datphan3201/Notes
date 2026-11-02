@@ -214,6 +214,11 @@ try {
                 : "No SMTP server is configured; the message was saved to the local mail outbox.\n");
             break;
 
+        case 'demo:seed-roadmap':
+            require_once __DIR__.'/seed_roadmap_demo.php';
+            \Planner\Console\seedRoadmapDemo($application['pdo']);
+            break;
+
         case 'help':
             fwrite(STDOUT, "Available commands:\n  schedule:run    run periodic jobs that are due (call from cron every minute)\n  schedule:work   keep running periodic jobs every minute\n  mail:test <email>\n  users:role <email> admin|user\n  ".implode("\n  ", array_keys($jobs))."\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  areas:backfill\n");
             break;

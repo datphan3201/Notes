@@ -12,15 +12,15 @@ Entry: the **Repeating** view, or Repeat in a capture dialog. A series is a temp
 
 **Trace ID:** `tasks.repeating.list`
 
-Rows show series state, frequency, start/end and optional reminder time. Pause retains existing Tasks. Resume skips missed paused dates; End asks to archive future NotStarted occurrences, preserving started/Done work. Ended is terminal: API Pause/Resume returns 422 after ownership/version checks; repeated End with the current version is a no-op. Start a new series for future repeating work.
+Repeating uses name search plus an independent All/Active/Paused/Ended series-state select; Task status/sort/tag controls are hidden. The badge, list and pagination use the same filtered series, including Ended in All. Rows show series state, frequency, start/end and optional reminder time. Pause retains existing Tasks. Resume skips missed paused dates; End asks to archive future NotStarted occurrences, preserving started/Done work. Ended is terminal: API Pause/Resume returns 422 after ownership/version checks; repeated End with the current version is a no-op. Start a new series for future repeating work.
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-view="repeating"](../../../frontend/src/views/planning/tasks.php#L49) |
-| Browser logic | [series-list.js · export function renderSeriesList](../../../frontend/src/js/planning/series-list.js#L6) |
+| UI / DOM | [tasks.php · data-task-view="repeating"](../../../frontend/src/views/planning/tasks.php#L49)<br>[tasks.php · data-series-status&gt;](../../../frontend/src/views/planning/tasks.php#L77) |
+| Browser logic | [tasks-collection.js · export function seriesPage](../../../frontend/src/js/planning/tasks-collection.js#L36)<br>[series-list.js · export function renderSeriesList](../../../frontend/src/js/planning/series-list.js#L6) |
 | Controller / service / domain | [TaskSeriesService.php · public function transition(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L111) |
 | Persistence | [PdoTaskSeriesRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L61)<br>[PdoTaskSeriesRepository.php · public function archiveFutureNotStarted(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L143) |
-| Relevant tests (not a pass claim) | [HabitsRecurrenceTest.php · public function test_series_pause_resume_and_end_archives_acknowledged_future_occurrences(](../../../backend/tests/Plain/Integration/HabitsRecurrenceTest.php#L223)<br>[HabitsRecurrenceTest.php · public function test_ended_series_cannot_pause_or_resume_and_replayed_end_preserves_occurrences(](../../../backend/tests/Plain/Integration/HabitsRecurrenceTest.php#L273)<br>[PlanningHttpTest.php · public function test_ended_series_http_transitions_preserve_auth_csrf_ownership_versions_and_replay(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L122) |
+| Relevant tests (not a pass claim) | [HabitsRecurrenceTest.php · public function test_series_pause_resume_and_end_archives_acknowledged_future_occurrences(](../../../backend/tests/Plain/Integration/HabitsRecurrenceTest.php#L258)<br>[HabitsRecurrenceTest.php · public function test_ended_series_cannot_pause_or_resume_and_replayed_end_preserves_occurrences(](../../../backend/tests/Plain/Integration/HabitsRecurrenceTest.php#L308)<br>[PlanningHttpTest.php · public function test_ended_series_http_transitions_preserve_auth_csrf_ownership_versions_and_replay(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L122)<br>[tasks-collection.test.js · test('Repeating search/state/count/paging use the same series including terminal rows'](../../../frontend/tests/js/tasks-collection.test.js#L45) |
 | HTTP | `GET /api/v1/task-series` (`api.task-series.index`) → [TaskSeriesController::index](../../../backend/src/Http/Controller/TaskSeriesController.php#L18)<br>`POST /api/v1/task-series/{id}/{action}` (`api.task-series.transition`) → [TaskSeriesController::transition](../../../backend/src/Http/Controller/TaskSeriesController.php#L35) |
 
 ### Daily, weekly, monthly and yearly rules
@@ -45,8 +45,8 @@ HTTP creation materializes immediately. The scheduler materializes hourly; Task 
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L78) |
-| Browser logic | [planning-page.js · get('/api/v1/task-series'](../../../frontend/src/js/planning/planning-page.js#L646) |
+| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L95) |
+| Browser logic | [planning-page.js · get('/api/v1/task-series'](../../../frontend/src/js/planning/planning-page.js#L734) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>[TaskSeriesService.php · public function materializeDue(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L185)<br>[TaskSeriesService.php · public function materialize(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L160) |
 | Persistence | [PdoTaskSeriesRepository.php · public function occurrence(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L84)<br>[PdoTaskSeriesRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L49)<br>[PdoPlanningRepository.php · public function linkOccurrence(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L443) |
 | Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_repeating_tasks_carry_a_local_reminder_and_extend_without_a_scheduler(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L177) |

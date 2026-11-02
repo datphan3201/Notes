@@ -38,7 +38,7 @@ There are no current HTML pages at `/task/`, `/notes`, `/ai`, `/milestones/{id}`
 | --- | --- |
 | Sidebar, topbar, theme, fonts/CSS, mobile layout, dialogs, Help | [Shared shell](ui/shared/shell.md) |
 | Bell, unread count, invitations, due reminders | [Notification bell](ui/shared/notifications.md) |
-| Floating AI chat; API-only approved proposals | [AI](ui/shared/ai.md) |
+| Floating AI chat; proposal previews and explicit Apply | [AI](ui/shared/ai.md) |
 | Tags / legacy labels | [Classification](ui/shared/tags.md) |
 | Save, Retry, Recover, saved-version/draft conflict | [Notes autosave](ui/notes/autosave.md) |
 | Share / Shared with me / Report | [Note sharing](ui/notes/sharing.md) |

@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { weeklyTaskList, taskScheduledOn } from '../../src/js/planning/dashboard-tasks.js';
+import {
+    dashboardTaskList,
+    weeklyTaskList,
+    taskScheduledOn,
+} from '../../src/js/planning/dashboard-tasks.js';
 import { taskMatchesView } from '../../src/js/planning/task-views.js';
 import { transitionEntity } from '../../src/js/planning/transitions.js';
 
@@ -14,24 +18,30 @@ const tasks = [
 test('weekly sort and status filter work independently without changing stored order', () => {
     const original = structuredClone(tasks);
     assert.deepEqual(
-        weeklyTaskList(tasks).map((task) => task.id),
+        dashboardTaskList(tasks).map((task) => task.id),
         ['a', 'c', 'd', 'b'],
     );
     assert.deepEqual(
-        weeklyTaskList(tasks, { sort: 'scheduled' }).map((task) => task.id),
+        dashboardTaskList(tasks, { sort: 'scheduled' }).map((task) => task.id),
         ['c', 'b', 'a', 'd'],
+    );
+    assert.deepEqual(
+        dashboardTaskList(tasks, { sort: 'scheduled', status: 'InProgress' }).map(
+            (task) => task.id,
+        ),
+        ['c', 'b'],
+    );
+    assert.deepEqual(
+        dashboardTaskList(tasks, { status: 'InProgress' }).map((task) => task.id),
+        ['c', 'b'],
+    );
+    assert.deepEqual(
+        dashboardTaskList(tasks, { status: 'Done' }).map((task) => task.id),
+        ['d'],
     );
     assert.deepEqual(
         weeklyTaskList(tasks, { sort: 'scheduled', status: 'InProgress' }).map((task) => task.id),
         ['c', 'b'],
-    );
-    assert.deepEqual(
-        weeklyTaskList(tasks, { status: 'InProgress' }).map((task) => task.id),
-        ['c', 'b'],
-    );
-    assert.deepEqual(
-        weeklyTaskList(tasks, { status: 'Done' }).map((task) => task.id),
-        ['d'],
     );
     assert.deepEqual(tasks, original);
 });

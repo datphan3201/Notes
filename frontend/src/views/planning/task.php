@@ -11,6 +11,7 @@
         <div class="action-row">
             <button class="button button-quiet" type="button" data-open-dialog="edit-task-dialog" data-task-edit-open disabled><?= $view->e($view->t('✎ Edit task')) ?></button>
             <button class="button button-quiet" type="button" data-task-week disabled><?= $view->e($view->t('Select for this week')) ?></button>
+            <button class="icon-button task-row-icon" type="button" data-task-today disabled aria-label="<?= $view->e($view->t('Add for today')) ?>">+</button>
             <button class="button button-primary" type="button" data-task-transition disabled></button>
         </div>
     </header>
@@ -53,7 +54,24 @@
                     </dl>
                 </details>
             </article>
-            <div data-note-overview-host></div>
+            <article class="planning-panel">
+                <section class="task-note-checklist" aria-labelledby="task-completion-checklist-title">
+                    <div class="section-heading">
+                        <h3 id="task-completion-checklist-title"><?= $view->e($view->t('Task completion checklist')) ?></h3>
+                        <span class="subtle-copy" data-task-checklist-count></span>
+                    </div>
+                    <p class="subtle-copy"><?= $view->e($view->t('Used when completing this task. Check boxes in Notes are for your own tracking.')) ?></p>
+                    <div data-task-checklist aria-live="polite"></div>
+                    <details class="capture-details">
+                        <summary><?= $view->e($view->t('Add completion check')) ?></summary>
+                        <form class="inline-form" data-checklist-form>
+                            <label class="sr-only" for="checklist-title"><?= $view->e($view->t('New completion check')) ?></label>
+                            <input id="checklist-title" name="title" maxlength="500" placeholder="<?= $view->e($view->t('What needs to be done?')) ?>" required>
+                            <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add')) ?></button>
+                        </form>
+                    </details>
+                </section>
+            </article>
         </div>
     </section>
     <section id="task-panel-notes" role="tabpanel" aria-labelledby="task-tab-notes" data-workspace-panel="notes" hidden>
@@ -82,22 +100,7 @@
                     <textarea id="task-note-body" name="body" maxlength="50000" rows="8" placeholder="<?= $view->e($view->t('Research, links, decisions, and working notes…')) ?>"></textarea>
                     <button class="button button-primary" type="submit"><?= $view->e($view->t('Save note')) ?></button>
                 </form>
-                <section class="task-note-checklist" aria-labelledby="task-completion-checklist-title">
-                    <div class="section-heading">
-                        <h3 id="task-completion-checklist-title"><?= $view->e($view->t('Task completion checklist')) ?></h3>
-                        <span class="subtle-copy" data-task-checklist-count></span>
-                    </div>
-                    <p class="subtle-copy"><?= $view->e($view->t('Used when completing this task. Check boxes in the note above are for your own tracking.')) ?></p>
-                    <div data-task-checklist aria-live="polite"></div>
-                    <details class="capture-details">
-                        <summary><?= $view->e($view->t('Add completion check')) ?></summary>
-                        <form class="inline-form" data-checklist-form>
-                            <label class="sr-only" for="checklist-title"><?= $view->e($view->t('New completion check')) ?></label>
-                            <input id="checklist-title" name="title" maxlength="500" placeholder="<?= $view->e($view->t('What needs to be done?')) ?>" required>
-                            <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add')) ?></button>
-                        </form>
-                    </details>
-                </section>
+
             </section>
             <section id="task-note-panel-resources" role="tabpanel" aria-labelledby="task-note-tab-resources" data-workspace-panel="note-resources" hidden>
                 <div class="resources-list" data-task-resources></div>

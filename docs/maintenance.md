@@ -40,7 +40,15 @@ Read the installed Archify skill, relevant schema and repository-authoring guida
 node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --json
 ```
 
-ARCHIFY_CHROME may point to an installed Chromium executable. Keep receipts from failed runs out of the maintained final result; repairs follow the skill's review/output ownership rules. Do not edit generated HTML or receipts by hand. Report a failed diagram as failed, and distinguish automated browser checks from visual inspection.
+ARCHIFY_CHROME may point to an installed Chromium executable. Keep receipts from failed runs out of the maintained final result; repairs follow the skill's review/output ownership rules. When updating an existing artifact, use a fresh browser evidence directory and explicitly keep the finalize receipt at its canonical path, because the docs checker reads that path:
+
+```bash
+node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --out-dir docs/diagrams/task-planning/review-N --receipt docs/diagrams/task-planning/index.finalize.json --json
+```
+
+Replace `review-N` with a fresh evidence directory. The CLI derives the sibling `index.finalize-summary.json`; existing browser evidence is preserved. See [ISSUE-014](issues.md#issue-014--archify-update-receipts-and-docs-checker-use-different-default-paths).
+
+Do not edit generated HTML or receipts by hand. Report a failed diagram as failed, and distinguish automated browser checks from visual inspection.
 
 ## Keeping docs current
 

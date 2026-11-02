@@ -1113,13 +1113,15 @@
 }
 
 /* Daily/weekly planning reuses Task checklist controls and existing panel styling. */
-.dashboard-week-filters {
+.dashboard-week-filters,
+.dashboard-today-filters {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 8px;
 }
-.dashboard-week-filters .field {
+.dashboard-week-filters .field,
+.dashboard-today-filters .field {
     min-width: 0;
     margin: 0;
 }
@@ -1187,6 +1189,49 @@
     flex: 0 1 340px;
     max-width: 100%;
 }
+/* Model 1: Split layout with independent scrollable columns */
+.dashboard-split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1.15fr);
+    gap: 20px;
+    align-items: start;
+}
+.dashboard-split-main,
+.dashboard-split-side {
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.dashboard-split-main::-webkit-scrollbar,
+.dashboard-split-side::-webkit-scrollbar {
+    width: 6px;
+}
+.dashboard-split-main::-webkit-scrollbar-thumb,
+.dashboard-split-side::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+.dashboard-split-main::-webkit-scrollbar-track,
+.dashboard-split-side::-webkit-scrollbar-track {
+    background: transparent;
+}
+.today-panel-overview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.today-panel-overview .section-heading {
+    margin-bottom: 0;
+}
 .dashboard-summary-grid.dashboard-insights-grid {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 }
@@ -1197,42 +1242,55 @@
 .dashboard-insights-grid > .planning-panel:nth-child(2)::before {
     content: none;
 }
-.dashboard-task-summary {
-    margin: 12px 0 18px;
-}
-.dashboard-task-summary .progress-ring {
-    width: 72px;
-    height: 72px;
-}
-.dashboard-week-panel > .day-bars {
-    height: 44px;
-    margin-bottom: 18px;
-}
-.recent-activity-body {
+.dashboard-insight-body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
     gap: 16px;
+    margin-top: 12px;
 }
-.recent-activity-stats {
-    display: grid;
-    gap: 4px;
+.dashboard-task-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    flex: 0 0 auto;
+}
+.dashboard-task-summary .progress-ring {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+}
+.dashboard-task-summary .progress-ring::before {
+    inset: 9px;
+}
+.dashboard-task-summary .progress-ring strong {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+.dashboard-task-summary-copy strong {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    display: block;
+}
+.dashboard-task-summary-copy small {
+    display: block;
     color: var(--muted);
     font-size: var(--font-size-caption);
+    margin-top: 2px;
 }
-.recent-activity-stats > strong {
-    color: var(--text);
-    font-size: 1.75rem;
-}
-.recent-activity-stats .text-button {
-    justify-self: start;
-    padding: 6px 0 0;
+.recent-activity-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
 }
 .recent-activity-calendar {
     display: flex;
     gap: 8px;
-    --recent-activity-cell: 17px;
+    --recent-activity-cell: 16px;
+    justify-content: flex-end;
 }
 .recent-activity-weekdays,
 [data-recent-activity-grid] {
@@ -1255,13 +1313,81 @@
     min-height: 0;
     min-width: 0;
 }
+.recent-activity-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px 10px;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+    margin-top: 4px;
+}
+.recent-activity-stats-summary {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.recent-activity-stats-summary strong {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.recent-activity-stats .text-button {
+    padding: 0;
+    font-size: var(--font-size-caption);
+}
 .recent-activity-detail {
     font-size: var(--font-size-caption);
-    margin: 12px 0 0;
+    color: var(--muted);
+    margin: 0;
+    text-align: right;
+}
+.dashboard-week-bars-wrapper {
+    flex: 0 0 auto;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.dashboard-week-bars-wrapper .day-bars {
+    display: flex;
+    gap: 8px;
+    height: 54px;
+    width: 100%;
+    align-items: flex-end;
+    margin: 0;
 }
 @media (max-width: 900px) {
+    .dashboard-split-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard-split-main,
+    .dashboard-split-side {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
     .dashboard-summary-grid.dashboard-insights-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard-insight-body {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .recent-activity-section {
+        align-items: flex-start;
+        width: 100%;
+    }
+    .recent-activity-stats {
+        justify-content: flex-start;
+    }
+    .recent-activity-detail {
+        text-align: left;
+    }
+    .dashboard-week-bars-wrapper {
+        width: 100%;
     }
     .dashboard-roadmap > .section-heading {
         align-items: flex-start;
@@ -1274,4 +1400,47 @@
     .dashboard-roadmap-controls select {
         width: 100%;
     }
+}
+
+/* Roadmap connectors fill with the preceding Milestone's progress. */
+.dashboard-roadmap .roadmap-preview a:not(:last-child)::after {
+    top: 10px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+        to right,
+        var(--success) var(--segment-progress, 0%),
+        var(--border) var(--segment-progress, 0%)
+    );
+}
+.dashboard-roadmap .roadmap-preview a.is-active::before {
+    border-color: var(--success);
+}
+
+/* Today and This week share one rhythm: insight cards above one full-width checklist. */
+.dashboard-page .today-panel,
+.dashboard-page .dashboard-week-tasks {
+    margin-top: 14px;
+}
+.dashboard-habit-list {
+    margin-top: 12px;
+}
+.dashboard-habit-targets-heading {
+    margin-top: 18px;
+}
+.dashboard-habit-targets-heading h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1rem;
+}
+.dashboard-week-panel .section-heading small {
+    color: var(--muted);
+}
+.dashboard-week-tasks .dashboard-week-filters {
+    margin-bottom: 8px;
+}
+.today-panel .dashboard-today-filters {
+    margin-bottom: 8px;
 }

@@ -27,14 +27,21 @@ const locale = () => (window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-
 const dayName = (date, style = 'short') =>
     new Date(`${date}T00:00:00Z`).toLocaleDateString(locale(), { weekday: style, timeZone: 'UTC' });
 
-// One popover at a time: "done today" plus the Rest Day window.
+// Secondary actions share the existing Rest Day popover; today check-in is direct.
 let openMenu = null;
-function closeHabitMenu() {
+let menuAnchor = null;
+function closeHabitMenu(restoreFocus = false) {
     openMenu?.remove();
     openMenu = null;
+    menuAnchor?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) menuAnchor?.focus();
+    menuAnchor = null;
 }
 globalThis.document?.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && openMenu) closeHabitMenu();
+    if (event.key === 'Escape' && openMenu) {
+        event.preventDefault();
+        closeHabitMenu(true);
+    }
 });
 globalThis.document?.addEventListener('pointerdown', (event) => {
     if (openMenu && !openMenu.contains(event.target) && !event.target.closest('[data-habit-menu]'))
@@ -73,6 +80,7 @@ export function initHabitsPage(root) {
     };
 
     const act = async (control, operation) => {
+        const focusKey = control.dataset.habitControl;
         control.disabled = true;
         closeHabitMenu();
         try {
@@ -82,6 +90,12 @@ export function initHabitsPage(root) {
             showError(root, error);
         } finally {
             control.disabled = false;
+            if (focusKey) {
+                const nextControl = root.querySelector(
+                    `[data-habit-control="${CSS.escape(focusKey)}"]`,
+                );
+                (nextControl || root.querySelector('[data-planning-retry]'))?.focus();
+            }
         }
     };
     const checkIn = (habit, date, done) =>
@@ -93,19 +107,14 @@ export function initHabitsPage(root) {
             ? remove(`/api/v1/habits/${habit.id}/rest-days/${date}`)
             : put(`/api/v1/habits/${habit.id}/rest-days/${date}`);
 
-    const openMenuFor = (anchor, habit, doneToday, restDays) => {
+    const openMenuFor = (anchor, habit, restDays) => {
         if (openMenu?.dataset.habitId === habit.id) return closeHabitMenu();
         closeHabitMenu();
         const menu = document.createElement('div');
         menu.className = 'schedule-menu habit-action-menu';
         menu.dataset.habitId = habit.id;
         menu.setAttribute('role', 'dialog');
-        menu.setAttribute('aria-label', `${habit.name}: ${t('Check in or plan a rest day')}`);
-        const done = menuButton(
-            doneToday ? t('Undo today’s check-in') : t('Mark today as done'),
-            () => act(anchor, () => checkIn(habit, habit.today, doneToday)),
-            { className: doneToday ? '' : 'is-primary' },
-        );
+        menu.setAttribute('aria-label', `${t('More options')}: ${habit.name}`);
         const heading = document.createElement('strong');
         heading.className = 'habit-menu-heading';
         heading.textContent = t('Rest day');
@@ -127,13 +136,27 @@ export function initHabitsPage(root) {
             if (rested) option.prepend(checkMark());
             days.append(option);
         }
-        menu.append(done, heading, hint, days);
+        const archive = menuButton(t('Archive'), () => {
+            if (
+                !window.confirm(
+                    `${t('Archive')} “${habit.name}”? ${t('This removes it from active lists without deleting its data.')}`,
+                )
+            )
+                return;
+            act(anchor, () =>
+                remove(`/api/v1/habits/${habit.id}`, { base_version: habit.version }),
+            );
+        });
+        archive.setAttribute('aria-label', `${t('Archive')} ${habit.name}`);
+        menu.append(heading, hint, days, archive);
         document.body.append(menu);
         const rect = anchor.getBoundingClientRect();
         menu.style.top = `${Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - menu.offsetHeight - 8))}px`;
         menu.style.left = `${Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8))}px`;
         openMenu = menu;
-        done.focus();
+        menuAnchor = anchor;
+        anchor.setAttribute('aria-expanded', 'true');
+        days.querySelector('button').focus();
     };
 
     const habitRow = (habit, checkedDates) => {
@@ -144,6 +167,7 @@ export function initHabitsPage(root) {
         row.className = 'planning-list-item planning-list-item-wrap habit-row';
 
         const copy = document.createElement('div');
+        copy.className = 'habit-row-copy';
         const name = document.createElement('strong');
         name.textContent = habit.name;
         copy.append(name);
@@ -189,6 +213,7 @@ export function initHabitsPage(root) {
             const future = date > today;
             const button = document.createElement('button');
             button.type = 'button';
+            button.dataset.habitControl = `${habit.id}:${date}`;
             button.classList.add(`is-${state}`);
             button.classList.toggle('is-future', future);
             button.classList.toggle('is-today', date === today);
@@ -228,43 +253,44 @@ export function initHabitsPage(root) {
         const tick = document.createElement('button');
         tick.type = 'button';
         tick.className = 'habit-tick';
-        tick.dataset.habitMenu = '';
+        tick.dataset.habitControl = `${habit.id}:today`;
+        tick.setAttribute('role', 'checkbox');
+        tick.setAttribute('aria-checked', String(doneToday));
         tick.classList.toggle('is-checked', doneToday);
         tick.classList.toggle('is-rest', !doneToday && restDays.has(today));
-        tick.setAttribute('aria-haspopup', 'dialog');
         tick.setAttribute(
             'aria-label',
-            `${habit.name}: ${doneToday ? t('done today') : t('check in or plan a rest day')}`,
+            `${doneToday ? t('Undo today’s check-in') : t('Mark today as done')}: ${habit.name}`,
         );
         tick.title = tick.getAttribute('aria-label');
         const circle = document.createElement('span');
         circle.className = 'habit-tick-circle';
         circle.append(checkMark());
         tick.append(circle);
-        tick.addEventListener('click', () => openMenuFor(tick, habit, doneToday, restDays));
+        tick.addEventListener('click', () => act(tick, () => checkIn(habit, today, doneToday)));
         const edit = document.createElement('button');
         edit.type = 'button';
         edit.className = 'button button-quiet';
         edit.textContent = t('Edit');
         edit.setAttribute('aria-label', `${t('Edit')} ${habit.name}`);
         edit.addEventListener('click', () => openEdit(habit));
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'button button-quiet';
-        removeButton.textContent = t('Delete');
-        removeButton.setAttribute('aria-label', `${t('Delete')} ${habit.name}`);
-        removeButton.addEventListener('click', () => {
-            if (!window.confirm(`${t('Delete habit')} “${habit.name}”?`)) return;
-            act(removeButton, () =>
-                remove(`/api/v1/habits/${habit.id}`, { base_version: habit.version }),
-            );
-        });
-        actions.append(tick, edit, removeButton);
-        row.append(copy, days, actions);
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'text-button';
+        more.dataset.habitMenu = '';
+        more.dataset.habitControl = `${habit.id}:options`;
+        more.textContent = t('More options');
+        more.setAttribute('aria-label', `${t('More options')}: ${habit.name}`);
+        more.setAttribute('aria-haspopup', 'dialog');
+        more.setAttribute('aria-expanded', 'false');
+        more.addEventListener('click', () => openMenuFor(more, habit, restDays));
+        actions.append(edit, more);
+        row.append(tick, copy, days, actions);
         return row;
     };
 
     const load = async () => {
+        closeHabitMenu();
         const ticket = reads.begin();
         root.setAttribute('aria-busy', 'true');
         root.querySelector('[data-planning-error]').classList.add('is-hidden');

@@ -18,6 +18,56 @@ export function applyNoteStyle(node, color, backgroundUrl = null) {
 }
 
 /**
+ * Splits text into literal segments with case-insensitive match flags for safe DOM rendering.
+ * @param {string} text
+ * @param {string} query
+ * @returns {Array<{text: string, match: boolean}>}
+ */
+export function highlightTextSegments(text, query) {
+    const raw = String(text ?? '');
+    const needle = String(query ?? '')
+        .normalize('NFC')
+        .trim();
+    if (!raw) return [];
+    if (!needle) return [{ text: raw, match: false }];
+    const lowerText = raw.toLocaleLowerCase();
+    const lowerNeedle = needle.toLocaleLowerCase();
+    if (!lowerNeedle) return [{ text: raw, match: false }];
+    const segments = [];
+    let cursor = 0;
+    while (cursor < raw.length) {
+        const matchIndex = lowerText.indexOf(lowerNeedle, cursor);
+        if (matchIndex === -1) {
+            segments.push({ text: raw.slice(cursor), match: false });
+            break;
+        }
+        if (matchIndex > cursor) {
+            segments.push({ text: raw.slice(cursor, matchIndex), match: false });
+        }
+        segments.push({
+            text: raw.slice(matchIndex, matchIndex + lowerNeedle.length),
+            match: true,
+        });
+        cursor = matchIndex + lowerNeedle.length;
+    }
+    return segments;
+}
+
+export function appendHighlightedText(container, text, query) {
+    container.replaceChildren();
+    for (const segment of highlightTextSegments(text, query)) {
+        if (segment.match) {
+            const mark = document.createElement('mark');
+            mark.className = 'note-search-highlight';
+            mark.textContent = segment.text;
+            container.append(mark);
+        } else {
+            container.append(document.createTextNode(segment.text));
+        }
+    }
+}
+
+/**
  * Owner sharing controls, the "Shared with me" scope, invitations and the
  * recipient's view/edit dialog for a shared Note.
  */
@@ -119,9 +169,13 @@ export class NoteSharing {
                 card.dataset.sharedNoteId = note.note_id;
                 card.tabIndex = 0;
                 applyNoteStyle(card, note.color);
+                const title = element('h2', 'note-card-title');
+                appendHighlightedText(title, note.title, needle);
+                const preview = element('p', 'note-card-preview');
+                appendHighlightedText(preview, note.excerpt, needle);
                 card.append(
-                    element('h2', 'note-card-title', note.title),
-                    element('p', 'note-card-preview', note.excerpt),
+                    title,
+                    preview,
                     element(
                         'small',
                         'note-card-meta',
@@ -136,7 +190,10 @@ export class NoteSharing {
         }
         if (!notes.length) {
             const empty = element('div', 'empty-state');
+            const icon = element('span', 'empty-state-icon', '⇄');
+            icon.setAttribute('aria-hidden', 'true');
             empty.append(
+                icon,
                 element('h2', '', t('Nothing shared with you yet')),
                 element(
                     'p',

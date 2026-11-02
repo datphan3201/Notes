@@ -10,6 +10,7 @@ import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { NoteContentEditor } from '../notes/note-content-editor.js';
+import { sortTasks, completedInView, seriesPage } from './tasks-collection.js';
 import { collectionPage, renderPagination } from './collection-page.js';
 import {
     localDate,
@@ -351,7 +352,7 @@ export function initTasksPage(root) {
         requestedView,
     )
         ? requestedView
-        : 'today';
+        : 'all';
     let today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
     let selectedIds = new Set();
     let dailyIds = new Set();
@@ -359,10 +360,29 @@ export function initTasksPage(root) {
     let parentOptions = new Map();
     const parent = root.querySelector('[data-task-parent]');
     let page = 0;
-    let revealTaskId = null;
+    let completedPage = 0;
     const reads = new LatestRequest();
     const search = root.querySelector('[data-task-search]');
     const status = root.querySelector('[data-task-status]');
+    const sort = root.querySelector('[data-task-sort]');
+    const seriesStatus = root.querySelector('[data-series-status]');
+    const plan = form.elements.plan;
+    const setPlanDefault = () => {
+        plan.disabled = !!form.elements.repeat_frequency.value;
+        if (!creationState(form).dirty) {
+            plan.value = ['today', 'week'].includes(taskView) ? taskView : 'none';
+            creationState(form).markSaved();
+        }
+    };
+    root.addEventListener('click', (event) => {
+        if (event.target.closest('[data-open-dialog="new-task-dialog"], a[href="#task-name"]')) {
+            setPlanDefault();
+        }
+    });
+    setPlanDefault();
+    form.addEventListener('input', () => {
+        plan.disabled = !!form.elements.repeat_frequency.value;
+    });
     const narrow = window.matchMedia('(max-width: 600px)');
     let size = narrow.matches ? 4 : 8;
     let series = [];
@@ -396,19 +416,44 @@ export function initTasksPage(root) {
             button.disabled = false;
         }
     };
-    // Row order follows the approved reference: tick, name, schedule icons,
-    // week, Edit, Remove, then the Important star at the end.
+    // Primary planning stays inline; less frequent controls use native disclosure.
     const taskRow = (task) => {
         const article = document.createElement('article');
         const overdue = taskIsOverdue(task, today);
         const done = task.status === 'Done';
         article.className = `planning-list-item task-row${overdue ? ' is-overdue' : ''}${done ? ' is-done' : ''}`;
         const copy = document.createElement('div');
+        copy.className = 'task-row-copy';
         const name = document.createElement('a');
         name.href = `/tasks/${encodeURIComponent(task.id)}`;
         name.textContent = task.name;
         const facts = document.createElement('small');
-        facts.textContent = `${statusLabel(task.status)}${overdue ? ` · ${t('Overdue')}` : ''}${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}${task.reminder_at ? ` · ${t('Reminder')} ${new Date(task.reminder_at).toLocaleString()}` : ''}${task.series_id ? ` · ${t('Repeats')}` : ''}${task.estimated_minutes ? ` · ${task.estimated_minutes} ${t('min')}` : ''}`;
+        const timezone = window.notesBootstrap.preferences.timezone;
+        const format = new Intl.DateTimeFormat(undefined, {
+            timeZone: timezone,
+            dateStyle: 'short',
+            timeStyle: 'short',
+        });
+        facts.textContent = [
+            task.status === 'InProgress' ? t('On progress') : statusLabel(task.status),
+            overdue ? t('Overdue') : '',
+            task.deadline === today
+                ? t('Due today')
+                : task.deadline
+                  ? `${t('Due')} ${task.deadline}`
+                  : '',
+            dailyIds.has(task.id) ? t('Added for today') : '',
+            task.scheduled_start
+                ? `${t('Scheduled')} ${format.format(new Date(task.scheduled_start))}${task.scheduled_end ? ` – ${format.format(new Date(task.scheduled_end))}` : ''}`
+                : task.start_date || task.occurrence_date
+                  ? `${t('Scheduled')} ${task.start_date || task.occurrence_date}`
+                  : '',
+            task.reminder_at ? `${t('Reminder')} ${format.format(new Date(task.reminder_at))}` : '',
+            task.series_id ? t('Repeats') : '',
+            task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
+        ]
+            .filter(Boolean)
+            .join(' · ');
         const context =
             parentOptions.get(`milestone:${task.milestone_id}`) ||
             parentOptions.get(`goal:${task.goal_id}`);
@@ -430,6 +475,13 @@ export function initTasksPage(root) {
         );
         const actions = document.createElement('div');
         actions.className = 'action-row task-row-actions';
+        const secondary = document.createElement('details');
+        secondary.className = 'task-row-secondary';
+        const summary = document.createElement('summary');
+        summary.textContent = t('More options');
+        const secondaryActions = document.createElement('div');
+        secondaryActions.className = 'action-row';
+        secondary.append(summary, secondaryActions);
         if (!done) {
             const dateButton = iconButton(t('Due date'), lineIcon('calendar'), (event) =>
                 openScheduleMenu(event.currentTarget, 'date', {
@@ -497,10 +549,14 @@ export function initTasksPage(root) {
             const planToday = document.createElement('button');
             planToday.type = 'button';
             planToday.className = 'icon-button task-row-icon';
-            const planLabel = dailyIds.has(task.id) ? t('Remove from today') : t('Add for today');
-            planToday.textContent = dailyIds.has(task.id) ? '×' : '+';
+            const planLabel = todayIds.has(task.id) ? t('Added for today') : t('Add for today');
+            if (todayIds.has(task.id)) planToday.append(checkMark());
+            else planToday.textContent = '+';
             planToday.title = planLabel;
-            planToday.setAttribute('aria-label', `${planLabel}: ${task.name}`);
+            planToday.setAttribute(
+                'aria-label',
+                `${dailyIds.has(task.id) ? t('Remove from today') : planLabel}: ${task.name}`,
+            );
             planToday.disabled = todayIds.has(task.id) && !dailyIds.has(task.id);
             planToday.setAttribute('aria-pressed', String(todayIds.has(task.id)));
             planToday.addEventListener('click', () =>
@@ -510,7 +566,8 @@ export function initTasksPage(root) {
                         : post('/api/v1/daily-selections/task', { id: task.id }),
                 ),
             );
-            actions.append(dateButton, reminderButton, repeatButton, week, planToday);
+            actions.append(week, planToday);
+            secondaryActions.append(dateButton, reminderButton, repeatButton);
         }
         const edit = document.createElement('a');
         edit.className = 'button button-quiet';
@@ -519,11 +576,11 @@ export function initTasksPage(root) {
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.className = 'button button-quiet';
-        removeButton.textContent = t('Remove');
+        removeButton.textContent = t('Archive');
         removeButton.addEventListener('click', () => {
             if (
                 !window.confirm(
-                    `${t('Remove')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
+                    `${t('Archive')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
                 )
             )
                 return;
@@ -554,20 +611,25 @@ export function initTasksPage(root) {
             );
             actions.append(reopen);
         }
-        actions.append(edit, removeButton, important);
+        actions.append(edit, important, secondary);
+        secondaryActions.append(removeButton);
         article.append(action, copy, actions);
         return article;
     };
     const render = () => {
-        root.querySelector('.task-filter-details summary').textContent =
-            `${t('Filter and search')} · ${status.selectedOptions[0].textContent}${tagFilter.value ? ` · #${tagFilter.selectedOptions[0].textContent}` : ''}${search.value.trim() ? ` · ${t('Search active')}` : ''}`;
+        const repeating = taskView === 'repeating';
+        status.closest('.field').hidden = repeating;
+        sort.closest('.field').hidden = repeating;
+        root.querySelector('[data-series-status-field]').hidden = !repeating;
+        root.querySelector('.task-filter-details').hidden = repeating || !tags.length;
         const timezone = window.notesBootstrap.preferences.timezone;
         for (const button of root.querySelectorAll('[data-task-view]')) {
             button.setAttribute('aria-pressed', String(button.dataset.taskView === taskView));
             if (button.dataset.taskView === 'repeating') {
-                button.querySelector('[data-task-view-count]').textContent = series.filter(
-                    (item) => item.state !== 'Ended',
-                ).length;
+                button.querySelector('[data-task-view-count]').textContent = seriesPage(series, {
+                    query: search.value,
+                    state: seriesStatus.value,
+                }).total;
                 continue;
             }
             const count = collectionPage(
@@ -590,8 +652,19 @@ export function initTasksPage(root) {
         }
         if (taskView === 'repeating') {
             completedSection.hidden = true;
-            root.querySelector('[data-task-pagination]').replaceChildren();
-            renderSeriesList(list, series, {
+            const result = seriesPage(series, {
+                query: search.value,
+                state: seriesStatus.value,
+                page,
+                size,
+            });
+            page = result.page;
+            renderPagination(root.querySelector('[data-task-pagination]'), result, (next) => {
+                page = next;
+                render();
+            });
+            renderSeriesList(list, result.items, {
+                filtered: !!search.value.trim() || seriesStatus.value !== 'all',
                 today,
                 reload: load,
                 onError: (error) => showError(root, error),
@@ -600,17 +673,32 @@ export function initTasksPage(root) {
         }
         // Completed (not yet in history) Tasks sit under the active list; unticking moves them back.
         const completed = collectionPage(
-            visibleTasks().filter((task) =>
-                taskMatchesView(task, 'completed', today, timezone, selectedIds, dailyIds),
+            sortTasks(
+                completedInView(visibleTasks(), taskView, today, timezone, selectedIds, dailyIds),
+                sort.value,
+                timezone,
             ),
-            { query: search.value, status: 'all', page: 0, size: 100 },
+            { query: search.value, status: 'all', page: completedPage, size },
+        );
+        completedPage = completed.page;
+        renderPagination(
+            root.querySelector('[data-task-completed-pagination]'),
+            completed,
+            (next) => {
+                completedPage = next;
+                render();
+            },
         );
         completedSection.hidden = !completed.total || status.value !== 'open';
         completedSection.querySelector('[data-task-completed-count]').textContent = completed.total;
         completedList.replaceChildren(...completed.items.map(taskRow));
         const result = collectionPage(
-            visibleTasks().filter((task) =>
-                taskMatchesView(task, taskView, today, timezone, selectedIds, dailyIds),
+            sortTasks(
+                visibleTasks().filter((task) =>
+                    taskMatchesView(task, taskView, today, timezone, selectedIds, dailyIds),
+                ),
+                sort.value,
+                timezone,
             ),
             {
                 query: search.value,
@@ -683,15 +771,6 @@ export function initTasksPage(root) {
             }
             parent.value = parentOptions.has(parentValue) ? parentValue : '';
             if (!creationState(form).dirty) creationState(form).markSaved();
-            if (revealTaskId) {
-                const index = tasks
-                    .filter((task) => task.status !== 'Done')
-                    .findIndex((task) => task.id === revealTaskId);
-                if (index >= 0) {
-                    page = Math.floor(index / size);
-                    revealTaskId = null;
-                }
-            }
             render();
         } catch (error) {
             if (reads.shouldIgnore(ticket, error)) return;
@@ -708,7 +787,11 @@ export function initTasksPage(root) {
     for (const button of root.querySelectorAll('[data-task-view]'))
         button.addEventListener('click', () => {
             taskView = button.dataset.taskView;
+            const url = new URL(location.href);
+            url.searchParams.set('view', taskView);
+            history.replaceState(null, '', url);
             page = 0;
+            completedPage = 0;
             render();
         });
     parent.addEventListener('change', () => {
@@ -741,10 +824,12 @@ export function initTasksPage(root) {
     );
     search.addEventListener('input', () => {
         page = 0;
+        completedPage = 0;
         render();
     });
     tagFilter.addEventListener('change', () => {
         page = 0;
+        completedPage = 0;
         render();
     });
     loadTags()
@@ -755,8 +840,15 @@ export function initTasksPage(root) {
             render();
         })
         .catch(() => {});
+    for (const control of [sort, seriesStatus])
+        control.addEventListener('change', () => {
+            page = 0;
+            completedPage = 0;
+            render();
+        });
     status.addEventListener('change', () => {
         page = 0;
+        completedPage = 0;
         render();
     });
     form.addEventListener('submit', (event) => {
@@ -775,17 +867,56 @@ export function initTasksPage(root) {
                     completion_criteria: data.get('completion_criteria'),
                     ...taskCaptureValues(data),
                 });
-                revealTaskId = response.payload.data.id;
+                // A successful create must never be repeated if the separate planning write fails.
+                const createdId = response.payload.data.id;
+                let planningError = null;
+                if (createdId && ['today', 'week'].includes(data.get('plan'))) {
+                    try {
+                        await post(
+                            data.get('plan') === 'today'
+                                ? '/api/v1/daily-selections/task'
+                                : '/api/v1/weekly-selections/task',
+                            {
+                                id: createdId,
+                                ...(data.get('plan') === 'week' ? { position: 0 } : {}),
+                            },
+                        );
+                    } catch (error) {
+                        planningError = error;
+                    }
+                }
                 form.reset();
+                plan.disabled = false;
                 finishCreation(form);
-                search.value = '';
-                status.value = 'open';
-                taskView = 'all';
-                page = 0;
-                load();
+                const createdStatus = root.querySelector('[data-task-create-status]');
+                createdStatus.replaceChildren();
+                if (createdId) {
+                    const link = document.createElement('a');
+                    link.href = `/tasks/${encodeURIComponent(createdId)}`;
+                    link.textContent = t('Open task');
+                    createdStatus.append(`${t('Task created.')} `, link);
+                }
+                await load();
+                if (planningError) {
+                    showError(
+                        root,
+                        new Error(
+                            `${t('Task created, but planning failed. Find it in All and try selecting it again.')} ${planningError.message}`,
+                        ),
+                    );
+                } else if (!createdId) {
+                    taskView = 'repeating';
+                    const url = new URL(location.href);
+                    url.searchParams.set('view', taskView);
+                    history.replaceState(null, '', url);
+                    page = 0;
+                    render();
+                }
             } catch (error) {
                 showError(root, error);
             }
+        }).finally(() => {
+            plan.disabled = !!form.elements.repeat_frequency.value;
         });
     });
     root.querySelector('[data-planning-retry]')?.addEventListener('click', load);
@@ -803,23 +934,8 @@ export function initTaskDetail(root) {
     let editConflict = null;
     let editDeepLinkPending = location.hash === '#edit';
     let selectedForWeek = false;
-    const noteCard = root.querySelector('[data-task-note-card]');
-    const noteHome = root.querySelector('[data-note-overview-host]');
-    const notePanel = root.querySelector('#task-panel-notes');
-    if (noteCard && noteHome && notePanel) {
-        const placeNote = () => {
-            (notePanel.hidden ? noteHome : notePanel).append(noteCard);
-            noteCard.querySelector('[data-task-note-heading]').textContent = notePanel.hidden
-                ? t('Notes')
-                : t('Working notes');
-            noteCard.querySelector('textarea').rows = notePanel.hidden ? 4 : 8;
-        };
-        placeNote();
-        new MutationObserver(placeNote).observe(notePanel, {
-            attributes: true,
-            attributeFilter: ['hidden'],
-        });
-    }
+    let selectedForToday = false;
+    let automaticallyToday = false;
     const editForm = root.querySelector('[data-task-edit-form]');
     for (const control of editForm.elements) control.disabled = true;
     const editFields = [
@@ -921,15 +1037,21 @@ export function initTaskDetail(root) {
     const load = async () => {
         const ticket = reads.begin();
         try {
-            const [taskResponse, checklistResponse, noteResponse, selectionsResponse] =
-                await Promise.all([
-                    get(`/api/v1/tasks/${encodeURIComponent(id)}`, { signal: ticket.signal }),
-                    get(`/api/v1/tasks/${encodeURIComponent(id)}/checklist`, {
-                        signal: ticket.signal,
-                    }),
-                    get(`/api/v1/tasks/${encodeURIComponent(id)}/note`, { signal: ticket.signal }),
-                    get('/api/v1/weekly-selections/task', { signal: ticket.signal }),
-                ]);
+            const [
+                taskResponse,
+                checklistResponse,
+                noteResponse,
+                selectionsResponse,
+                dashboardResponse,
+            ] = await Promise.all([
+                get(`/api/v1/tasks/${encodeURIComponent(id)}`, { signal: ticket.signal }),
+                get(`/api/v1/tasks/${encodeURIComponent(id)}/checklist`, {
+                    signal: ticket.signal,
+                }),
+                get(`/api/v1/tasks/${encodeURIComponent(id)}/note`, { signal: ticket.signal }),
+                get('/api/v1/weekly-selections/task', { signal: ticket.signal }),
+                get('/api/v1/dashboard', { signal: ticket.signal }),
+            ]);
             if (!reads.isCurrent(ticket)) return;
             task = taskResponse.payload.data;
             checklist = checklistResponse.payload.data;
@@ -960,6 +1082,26 @@ export function initTaskDetail(root) {
             const transition = root.querySelector('[data-task-transition]');
             transition.disabled = false;
             selectedForWeek = selectionsResponse.payload.data.some((item) => item.id === id);
+            const dashboard = dashboardResponse.payload.data;
+            selectedForToday = dashboard.daily_task_ids.includes(id);
+            automaticallyToday =
+                dashboard.today_tasks.some((item) => item.id === id) && !selectedForToday;
+            const todayButton = root.querySelector('[data-task-today]');
+            const todayLabel =
+                selectedForToday || automaticallyToday ? t('Added for today') : t('Add for today');
+            todayButton.title = todayLabel;
+            todayButton.setAttribute(
+                'aria-label',
+                selectedForToday ? t('Remove from today') : todayLabel,
+            );
+            todayButton.setAttribute(
+                'aria-pressed',
+                String(selectedForToday || automaticallyToday),
+            );
+            todayButton.replaceChildren();
+            if (selectedForToday || automaticallyToday) todayButton.append(checkMark());
+            else todayButton.textContent = '+';
+            todayButton.disabled = automaticallyToday || task.status === 'Done';
             const weekButton = root.querySelector('[data-task-week]');
             weekButton.disabled = false;
             weekButton.setAttribute('aria-pressed', String(selectedForWeek));
@@ -1209,6 +1351,19 @@ export function initTaskDetail(root) {
             error(reason);
         } finally {
             button.disabled = false;
+        }
+    });
+    root.querySelector('[data-task-today]').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            if (selectedForToday) await remove(`/api/v1/daily-selections/task/${id}`);
+            else await post('/api/v1/daily-selections/task', { id });
+            await load();
+        } catch (reason) {
+            error(reason);
+        } finally {
+            button.disabled = automaticallyToday || task.status === 'Done';
         }
     });
     // The same button selects the Task for this week or removes it again.

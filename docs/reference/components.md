@@ -7,7 +7,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | Trace ID | Visible component | Page |
 | --- | --- | --- |
 | `tasks.collection` | [Collection, refresh, search and pagination](../ui/tasks/README.md#collection-refresh-search-and-pagination) | /tasks — Tasks |
-| `tasks.row` | [Task row: tick, dates, week, Edit, Remove, Important](../ui/tasks/README.md#task-row-tick-dates-week-edit-remove-important) | /tasks — Tasks |
+| `tasks.row` | [Task row: completion, Today, week, Edit, Important and More options](../ui/tasks/README.md#task-row-completion-today-week-edit-important-and-more-options) | /tasks — Tasks |
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.week` | [This week](../ui/tasks/filters.md#this-week) | /tasks — Time filters, statuses and counts |
@@ -19,6 +19,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `tasks.capture.parent` | [Inbox, Goal or Milestone parent](../ui/tasks/capture.md#inbox-goal-or-milestone-parent) | /tasks — New task and schedule capture |
 | `tasks.capture.fields` | [Task fields and estimates](../ui/tasks/capture.md#task-fields-and-estimates) | /tasks — New task and schedule capture |
 | `tasks.capture.schedule` | [Due date, reminder and repeat picker](../ui/tasks/capture.md#due-date-reminder-and-repeat-picker) | /tasks — New task and schedule capture |
+| `tasks.capture.plan` | [Name-first capture, Today/Week plan and result](../ui/tasks/capture.md#name-first-capture-todayweek-plan-and-result) | /tasks — New task and schedule capture |
 | `tasks.repeating.list` | [Repeating list: Pause, Resume, End](../ui/tasks/repeating.md#repeating-list-pause-resume-end) | /tasks — Repeating TaskSeries |
 | `tasks.repeating.rule` | [Daily, weekly, monthly and yearly rules](../ui/tasks/repeating.md#daily-weekly-monthly-and-yearly-rules) | /tasks — Repeating TaskSeries |
 | `tasks.repeating.materialize` | [Initial and catch-up materialization](../ui/tasks/repeating.md#initial-and-catch-up-materialization) | /tasks — Repeating TaskSeries |
@@ -27,6 +28,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `task.detail.checklist` | [Completion Checklist](../ui/tasks/detail.md#completion-checklist) | /tasks/{id} — Task details |
 | `task.detail.note` | [Working note, Check box and Resources](../ui/tasks/detail.md#working-note-check-box-and-resources) | /tasks/{id} — Task details |
 | `task.detail.related` | [Tags, week selection and Related work](../ui/tasks/detail.md#tags-week-selection-and-related-work) | /tasks/{id} — Task details |
+| `task.detail.plan` | [Today and week planning actions](../ui/tasks/detail.md#today-and-week-planning-actions) | /tasks/{id} — Task details |
 | `goals.areas` | [Manage Areas](../ui/goals/README.md#manage-areas) | /goals — Areas and Goal collections |
 | `goals.collection` | [Goal tree, timeline and main Goal](../ui/goals/README.md#goal-tree-timeline-and-main-goal) | /goals — Areas and Goal collections |
 | `goal.roadmap` | [Fishbone, paging and Milestone focus](../ui/goals/roadmap.md#fishbone-paging-and-milestone-focus) | /goals/{id} — Fishbone roadmap |
@@ -36,15 +38,17 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `milestone.dependencies` | [Prerequisites and completion lock](../ui/goals/milestones.md#prerequisites-and-completion-lock) | /goals/{id} — Milestone panel |
 | `milestone.tasks` | [Finite/recurring Tasks, weekly selection and Complete](../ui/goals/milestones.md#finiterecurring-tasks-weekly-selection-and-complete) | /goals/{id} — Milestone panel |
 | `milestone.edit` | [Edit, contributions and archive](../ui/goals/milestones.md#edit-contributions-and-archive) | /goals/{id} — Milestone panel |
-| `dashboard.today` | [Today checklist and current focus](../ui/dashboard/README.md#today-checklist-and-current-focus) | /dashboard — Today, This week and Activity |
+| `dashboard.today` | [Today progress and checklist](../ui/dashboard/README.md#today-progress-and-checklist) | /dashboard — Today, This week and Activity |
 | `dashboard.week` | [This week and weekly summary](../ui/dashboard/README.md#this-week-and-weekly-summary) | /dashboard — Today, This week and Activity |
-| `dashboard.activity` | [Year Activity heatmap and factual tooltip](../ui/dashboard/README.md#year-activity-heatmap-and-factual-tooltip) | /dashboard — Today, This week and Activity |
+| `dashboard.activity` | [Recent 30-day Activity and full year heatmap](../ui/dashboard/README.md#recent-30-day-activity-and-full-year-heatmap) | /dashboard — Today, This week and Activity |
 | `dashboard.habits` | [Habit streak and quick check-in](../ui/dashboard/README.md#habit-streak-and-quick-check-in) | /dashboard — Today, This week and Activity |
 | `dashboard.today.capture` | [Add task / Add for today](../ui/dashboard/README.md#add-task--add-for-today) | /dashboard — Today, This week and Activity |
 | `dashboard.overdue.reminder` | [Overdue reminder and encouragement](../ui/dashboard/README.md#overdue-reminder-and-encouragement) | /dashboard — Today, This week and Activity |
+| `dashboard.roadmap` | [Roadmap below the header and account selection](../ui/dashboard/README.md#roadmap-below-the-header-and-account-selection) | /dashboard — Today, This week and Activity |
 | `habits.collection` | [Habit cards and New/Edit dialog](../ui/habits/README.md#habit-cards-and-newedit-dialog) | /habits — Habits, streaks and Rest Days |
 | `habits.checkins` | [Check-in, undo and streak](../ui/habits/README.md#check-in-undo-and-streak) | /habits — Habits, streaks and Rest Days |
-| `habits.rest` | [Missed days and Rest Day menu](../ui/habits/README.md#missed-days-and-rest-day-menu) | /habits — Habits, streaks and Rest Days |
+| `habits.rest` | [More options and Rest Day window](../ui/habits/README.md#more-options-and-rest-day-window) | /habits — Habits, streaks and Rest Days |
+| `habits.archive` | [Archive confirmation and retained history](../ui/habits/README.md#archive-confirmation-and-retained-history) | /habits — Habits, streaks and Rest Days |
 | `reviews.collection` | [New review, type filter and pagination](../ui/reviews/README.md#new-review-type-filter-and-pagination) | /reviews — Collection and Review editor |
 | `reviews.editor` | [Reflections, Save and conflict choices](../ui/reviews/README.md#reflections-save-and-conflict-choices) | /reviews — Collection and Review editor |
 | `reviews.facts` | [Refresh facts, Finalize, Reopen and Delete](../ui/reviews/README.md#refresh-facts-finalize-reopen-and-delete) | /reviews — Collection and Review editor |
@@ -87,8 +91,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `shell.help` | [Help walkthrough and first-visit dismissal](../ui/shared/shell.md#help-walkthrough-and-first-visit-dismissal) | Shared — Layout, CSS, navigation and Help |
 | `bell.list` | [Unread count, list, mark read and invitations](../ui/shared/notifications.md#unread-count-list-mark-read-and-invitations) | Shared — Notification bell and reminders |
 | `bell.reminders` | [Due personal/assigned team reminders and dismissal](../ui/shared/notifications.md#due-personalassigned-team-reminders-and-dismissal) | Shared — Notification bell and reminders |
-| `ai.chat` | [Open assistant, status and question/answer](../ui/shared/ai.md#open-assistant-status-and-questionanswer) | Shared — Floating AI assistant and proposal APIs |
-| `ai.proposal` | [API-only proposal generation, Apply and Reject](../ui/shared/ai.md#api-only-proposal-generation-apply-and-reject) | Shared — Floating AI assistant and proposal APIs |
+| `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |
+| `ai.proposal` | [Chat proposal preview, Apply and Cancel](../ui/shared/ai.md#chat-proposal-preview-apply-and-cancel) | Shared — Floating AI assistant and proposal APIs |
 | `admin.reports` | [Open/resolved reports and resolution](../ui/admin/README.md#openresolved-reports-and-resolution) | /admin — System reports, users and settings |
 | `admin.users` | [Search users, lock/unlock](../ui/admin/README.md#search-users-lockunlock) | /admin — System reports, users and settings |
 | `admin.history` | [System Task history limit](../ui/admin/README.md#system-task-history-limit) | /admin — System reports, users and settings |
