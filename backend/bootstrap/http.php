@@ -272,6 +272,11 @@ $reportService = new \Planner\Application\Admin\ReportService(
     new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoReportRepository($services['pdo']),
     $systemSettings, $accountRepository, $noteShareService, $notificationService, $services['transactions'], $services['uuid'], $services['clock'],
 );
+$userReportService = new \Planner\Application\Admin\UserReportService(
+    new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoUserReportRepository($services['pdo']),
+    $accountRepository, $notificationService, $storage, $services['transactions'], $services['uuid'], $services['clock'],
+);
+$userReportController = new \Planner\Http\Controller\UserReportController($auth, $userReportService, $uploadValidator, $inputValidator);
 $noteService = new NoteService(
     $noteRepository,
     $tagRepository,
@@ -335,6 +340,7 @@ $router = new Router($routeFactory(
     $teamController,
     $aiChatController,
     $emailController,
+    $userReportController,
 ));
 $application = new Application(
     $router,
@@ -356,6 +362,7 @@ return [
     'notification_service' => $notificationService,
     'note_share_service' => $noteShareService,
     'report_service' => $reportService,
+    'user_report_service' => $userReportService,
     'two_factor_service' => $twoFactorService,
     'team_service' => $teamService,
     'task_history_service' => $taskHistoryService,

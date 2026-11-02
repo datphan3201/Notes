@@ -77,6 +77,7 @@ final readonly class Application
             'ai-chat' => [120, 3600],
             'ai-generation' => [10, 3600],
             'ai-apply' => [30, 3600],
+            'user-reports' => [10, 3600],
             default => throw new \LogicException("Unknown rate limit bucket [$bucket]."),
         };
     }

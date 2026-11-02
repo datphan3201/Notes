@@ -4297,6 +4297,101 @@
       ]
     },
     {
+      "document": "docs/ui/settings/reports.md",
+      "title": "/settings/reports — Report a user",
+      "components": [
+        {
+          "id": "user-reports.form",
+          "label": "Report form with image evidence",
+          "behavior": "The reporter names a person by email, describes the problem (10–2000 characters) and may attach up to 3 JPEG/PNG/WebP images (5 MB each, re-encoded to JPEG without metadata). The answer is identical whether or not the email has an account. Self-reports and a second open report about the same email are rejected.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/reports.php",
+              "symbol": "data-user-report-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/user-reports.js",
+              "symbol": "export function initUserReports"
+            },
+            {
+              "path": "frontend/src/js/settings/user-reports.js",
+              "symbol": "export function evidenceProblem"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/UserReportService.php",
+              "symbol": "public function report("
+            },
+            {
+              "path": "backend/src/Application/Files/ImageNormalizer.php",
+              "symbol": "public function jpeg("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php",
+              "symbol": "public function insertEvidence("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_user_reports_with_image_evidence_are_private_to_administrators("
+            }
+          ],
+          "routes": [
+            "settings.reports",
+            "api.user-reports.store"
+          ]
+        },
+        {
+          "id": "user-reports.mine",
+          "label": "The reporter's own reports and replies",
+          "behavior": "Lists the reporter's reports with status and the administrator reply; never shows whether the email matched an account.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/reports.php",
+              "symbol": "data-user-report-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/user-reports.js",
+              "symbol": "const loadReports"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/UserReportService.php",
+              "symbol": "public function mine("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php",
+              "symbol": "public function forReporter("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_user_reports_with_image_evidence_are_private_to_administrators("
+            }
+          ],
+          "routes": [
+            "api.user-reports.index"
+          ]
+        }
+      ]
+    },
+    {
       "document": "docs/ui/auth/README.md",
       "title": "Authentication routes",
       "components": [
@@ -5084,6 +5179,58 @@
           ]
         },
         {
+          "id": "admin.user-reports",
+          "label": "User reports with image evidence",
+          "behavior": "List reports filed from Settings: reported email, matched account (or none), reporter, reason and evidence thumbnails served only to admins. Resolve/dismiss once with an optional reply to the reporter; lock the matched account from the card.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-user-reports"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "const loadUserReports"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/UserReportService.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Application/Admin/UserReportService.php",
+              "symbol": "public function resolve("
+            },
+            {
+              "path": "backend/src/Application/Admin/UserReportService.php",
+              "symbol": "public function evidence("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php",
+              "symbol": "public function list("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php",
+              "symbol": "public function evidencePath("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FilesHttpTest.php",
+              "symbol": "public function test_user_reports_with_image_evidence_are_private_to_administrators("
+            }
+          ],
+          "routes": [
+            "api.admin.user-reports",
+            "api.admin.user-reports.resolve",
+            "admin.user-reports.evidence"
+          ]
+        },
+        {
           "id": "admin.users",
           "label": "Search users, lock/unlock",
           "behavior": "Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. Self-lock is rejected. Team roles do not grant these endpoints.",
@@ -5215,6 +5362,12 @@
     "api.admin.users.lock": "docs/ui/admin/README.md",
     "api.admin.settings": "docs/ui/admin/README.md",
     "api.admin.settings.update": "docs/ui/admin/README.md",
+    "api.admin.user-reports": "docs/ui/admin/README.md",
+    "api.admin.user-reports.resolve": "docs/ui/admin/README.md",
+    "admin.user-reports.evidence": "docs/ui/admin/README.md",
+    "settings.reports": "docs/ui/settings/reports.md",
+    "api.user-reports.index": "docs/ui/settings/reports.md",
+    "api.user-reports.store": "docs/ui/settings/reports.md",
     "planning.teamwork": "docs/ui/teamwork/README.md",
     "api.team-goals.index": "docs/ui/teamwork/README.md",
     "api.team-goals.store": "docs/ui/teamwork/README.md",

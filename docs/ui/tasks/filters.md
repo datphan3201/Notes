@@ -127,7 +127,7 @@ Under Open tasks, recently Done Tasks appear in a separate, independently paged 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-completed hidden](../../../frontend/src/views/planning/tasks.php#L99) |
-| CSS | [feedback.css · Completed section](../../../frontend/src/css/feedback.css#L462) |
+| CSS | [feedback.css · Completed section](../../../frontend/src/css/feedback.css#L536) |
 | Browser logic | [tasks-collection.js · export function completedInView](../../../frontend/src/js/planning/tasks-collection.js#L28)<br>[task-views.js · export function taskInHistory](../../../frontend/src/js/planning/task-views.js#L68)<br>[task-views.js · export function historyThresholds](../../../frontend/src/js/planning/task-views.js#L61) |
 | Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L29) |
 | Persistence | [PdoTaskHistoryRepository.php · public function historyTasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L32)<br>[PdoTaskHistoryRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L47) |

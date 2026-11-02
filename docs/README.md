@@ -23,11 +23,12 @@ Start with the URL or visible label, not a historical implementation phase. Ever
 | `/settings/password` | Password and 2FA setup | [Security](ui/settings/password.md) |
 | `/settings/notifications` | In-app/email delivery preferences | [Notifications settings](ui/settings/notifications.md) |
 | `/settings/history` | History rules, retained Tasks and Reopen | [Task history](ui/settings/history.md) |
+| `/settings/reports` | Report a user with description and image evidence | [Report a user](ui/settings/reports.md) |
 | `/login`, `/register`, POST `/logout` | Authentication/session | [Authentication](ui/auth/README.md) |
 | `/forgot-password`, `/reset-password` | Password recovery | [Recovery](ui/auth/recovery.md) |
 | `/two-factor` | Pending login challenge | [2FA challenge](ui/auth/two-factor.md) |
 | `/verify-email`, `/confirm-email` | Token-driven email results | [Email links](ui/auth/email.md) |
-| `/admin` | Reports, accounts, system history limit | [Administration](ui/admin/README.md) |
+| `/admin` | Note and user reports, accounts, system history limit | [Administration](ui/admin/README.md) |
 
 There are no current HTML pages at `/task/`, `/notes`, `/ai`, `/milestones/{id}` or `/reviews/{id}`. Notes uses `/`; Milestones and Review editors are in-page components. `/files/*` streams private files; `/api/v1/*` returns data, not HTML pages.
 

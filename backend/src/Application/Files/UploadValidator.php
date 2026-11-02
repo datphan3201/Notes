@@ -63,6 +63,28 @@ final readonly class UploadValidator
         return $this->uploaded($files['avatar'] ?? null, 'avatar');
     }
 
+    /**
+     * A user report: email and reason fields plus up to three images sent as
+     * evidence_1..evidence_3.
+     *
+     * @param array<string, mixed> $form
+     * @param array<string, mixed> $files
+     * @return list<UploadedFile>
+     */
+    public function reportEvidence(array $form, array $files): array
+    {
+        $fields = ['evidence_1', 'evidence_2', 'evidence_3'];
+        $this->rejectUnknownMultipart($form, $files, ['email', 'reason'], $fields);
+        $uploaded = [];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $files)) {
+                $uploaded[] = $this->uploaded($files[$field], 'evidence');
+            }
+        }
+
+        return $uploaded;
+    }
+
     /** @param array<string, mixed> $form @param array<string, mixed> $files */
     public function empty(array $form, array $files): void
     {

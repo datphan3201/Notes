@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Planner\Application\Files;
 
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
+use Planner\Infrastructure\Persistence\Pdo\Admin\PdoUserReportRepository;
 use Planner\Infrastructure\Persistence\Pdo\Files\AttachmentRepository;
 use Planner\Infrastructure\Storage\LocalPrivateStorage;
 use Planner\Support\Clock;
@@ -19,6 +20,7 @@ final readonly class PruneFiles
         private LocalPrivateStorage $storage,
         private Clock $clock,
         private LoggerInterface $logger,
+        private PdoUserReportRepository $userReports,
     ) {
     }
 
@@ -30,6 +32,7 @@ final readonly class PruneFiles
             ...$this->attachments->referencedPaths(),
             ...$this->accounts->avatarPaths(),
             ...$this->accounts->backgroundPaths(),
+            ...$this->userReports->evidencePaths(),
         ], true);
         $cutoff = $this->clock->now()->getTimestamp() - 3600;
         $deleted = 0;

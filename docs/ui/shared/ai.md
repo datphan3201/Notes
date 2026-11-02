@@ -16,7 +16,7 @@ The chat sends the recent conversation as real turns. AIChatService runs up to s
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L130) |
+| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L131) |
 | Browser logic | [assistant.js · export function initAssistant](../../../frontend/src/js/planning/assistant.js#L117) |
 | Controller / service / domain | [AIChatService.php · public function ask(](../../../backend/src/Application/AI/AIChatService.php#L52) |
 | Persistence | [PdoAIActionRepository.php · public function assistantSummary(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L87) |
@@ -31,8 +31,8 @@ The chat card previews queued supported create/update/transition/archive operati
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L136) |
-| CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L211) |
+| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L137) |
+| CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L285) |
 | Browser logic | [assistant.js · const renderProposal = (message) =&gt;](../../../frontend/src/js/planning/assistant.js#L138) |
 | Controller / service / domain | [AIActionService.php · public function apply(](../../../backend/src/Application/AI/AIActionService.php#L108)<br>[ProposalValidator.php · public function validate(](../../../backend/src/Application/AI/ProposalValidator.php#L24) |
 | Persistence | [PdoAIActionRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L38)<br>[PdoAIActionRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L52)<br>[PdoAIActionRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L64) |

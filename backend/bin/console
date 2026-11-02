@@ -84,6 +84,7 @@ $jobs = [
             $storage,
             $application['clock'],
             $logger,
+            new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoUserReportRepository($application['pdo']),
         ))->run();
 
         return [sprintf(

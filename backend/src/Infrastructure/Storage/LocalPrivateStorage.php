@@ -9,6 +9,9 @@ use RuntimeException;
 
 final readonly class LocalPrivateStorage
 {
+    /** Managed private directories; files:prune deletes unreferenced files in all of them. */
+    public const DIRECTORIES = ['attachments', 'avatars', 'backgrounds', 'reports'];
+
     private string $root;
 
     public function __construct(string $configuredRoot, string $publicRoot, private UuidGenerator $uuids)
@@ -35,7 +38,7 @@ final readonly class LocalPrivateStorage
             throw new RuntimeException('Private storage must be outside the public document root.');
         }
 
-        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
+        foreach (self::DIRECTORIES as $directory) {
             $path = $root.DIRECTORY_SEPARATOR.$directory;
 
             if (is_link($path)) {
@@ -142,7 +145,7 @@ final readonly class LocalPrivateStorage
     {
         $files = [];
 
-        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
+        foreach (self::DIRECTORIES as $directory) {
             $absoluteDirectory = $this->root.DIRECTORY_SEPARATOR.$directory;
             $iterator = new \FilesystemIterator($absoluteDirectory, \FilesystemIterator::SKIP_DOTS);
 
@@ -170,7 +173,7 @@ final readonly class LocalPrivateStorage
 
     private function generatedPath(string $directory, string $extension): string
     {
-        if (! in_array($directory, ['attachments', 'avatars', 'backgrounds'], true)
+        if (! in_array($directory, self::DIRECTORIES, true)
             || preg_match('/^[a-z0-9]+$/D', $extension) !== 1) {
             throw new RuntimeException('Invalid managed storage target.');
         }
@@ -236,7 +239,7 @@ final readonly class LocalPrivateStorage
 
         $segments = explode('/', $relative);
 
-        if (count($segments) !== 2 || ! in_array($segments[0], ['attachments', 'avatars', 'backgrounds'], true)
+        if (count($segments) !== 2 || ! in_array($segments[0], self::DIRECTORIES, true)
             || $segments[1] === '' || in_array('.', $segments, true) || in_array('..', $segments, true)) {
             throw new RuntimeException('Unsafe private storage path.');
         }

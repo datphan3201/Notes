@@ -95,6 +95,63 @@
         </form>
         <p class="field-error is-hidden" data-dialog-error role="alert"></p>
     </dialog>
+    <dialog id="team-task-detail-dialog" class="workspace-dialog team-task-detail" aria-labelledby="team-task-detail-title" data-workspace-dialog data-team-task-detail>
+        <header class="section-heading">
+            <div>
+                <p class="eyebrow" data-team-task-detail-goal></p>
+                <h2 id="team-task-detail-title" data-team-task-detail-name></h2>
+                <p class="subtle-copy" data-team-task-detail-meta></p>
+            </div>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <div data-team-task-detail-view>
+            <h3><?= $view->e($view->t('About this task')) ?></h3>
+            <p class="task-description" data-team-task-detail-description></p>
+            <dl class="detail-list" data-team-task-detail-list></dl>
+            <div class="action-row">
+                <button class="button button-primary" type="button" data-team-task-detail-transition></button>
+                <button class="button button-quiet" type="button" data-team-task-detail-edit><?= $view->e($view->t('✎ Edit task')) ?></button>
+            </div>
+        </div>
+        <form class="stack-form" data-team-task-edit-form hidden>
+            <div class="field">
+                <label for="team-task-edit-name"><?= $view->e($view->t('Task name')) ?></label>
+                <input id="team-task-edit-name" name="name" maxlength="200" required>
+            </div>
+            <div class="field">
+                <label for="team-task-edit-description"><?= $view->e($view->t('Description')) ?></label>
+                <textarea id="team-task-edit-description" name="description" rows="4" maxlength="10000"></textarea>
+            </div>
+            <div class="field">
+                <label for="team-task-edit-assignee"><?= $view->e($view->t('Assignee')) ?></label>
+                <select id="team-task-edit-assignee" name="assignee_id" data-team-task-edit-assignee></select>
+            </div>
+            <div class="field">
+                <label for="team-task-edit-start"><?= $view->e($view->t('Start date')) ?></label>
+                <input id="team-task-edit-start" type="date" name="start_date">
+            </div>
+            <div class="field">
+                <label for="team-task-edit-due"><?= $view->e($view->t('Due date')) ?></label>
+                <input id="team-task-edit-due" type="date" name="due_date">
+            </div>
+            <div class="field">
+                <label for="team-task-edit-estimate"><?= $view->e($view->t('Estimated minutes')) ?></label>
+                <input id="team-task-edit-estimate" type="number" name="estimated_minutes" min="1" max="1440">
+            </div>
+            <div class="field">
+                <label for="team-task-edit-importance"><?= $view->e($view->t('Importance')) ?></label>
+                <select id="team-task-edit-importance" name="importance">
+                    <?php require __DIR__.'/importance-options.php'; ?>
+                </select>
+            </div>
+            <p class="field-hint"><?= $view->e($view->t('Reminder and repeat settings stay as they are.')) ?></p>
+            <div class="action-row">
+                <button class="button button-primary" type="submit"><?= $view->e($view->t('Save changes')) ?></button>
+                <button class="button button-quiet" type="button" data-team-task-edit-cancel><?= $view->e($view->t('Cancel')) ?></button>
+            </div>
+        </form>
+        <p class="field-error is-hidden" data-dialog-error role="alert"></p>
+    </dialog>
     <dialog id="team-invite-dialog" class="workspace-dialog" aria-labelledby="team-invite-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="team-invite-dialog-title"><?= $view->e($view->t('Invite a member')) ?></h2>

@@ -19,6 +19,20 @@
         </header>
         <div class="planning-list" data-admin-reports aria-live="polite"></div>
     </section>
+    <section class="planning-panel" aria-labelledby="admin-user-reports-title">
+        <header class="section-heading">
+            <h2 id="admin-user-reports-title"><?= $view->e($view->t('User reports')) ?></h2>
+            <label><span class="sr-only"><?= $view->e($view->t('Status')) ?></span>
+                <select data-admin-user-report-status>
+                    <option value="open"><?= $view->e($view->t('Open')) ?></option>
+                    <option value="resolved"><?= $view->e($view->t('Resolved')) ?></option>
+                    <option value="dismissed"><?= $view->e($view->t('Dismissed')) ?></option>
+                    <option value="all"><?= $view->e($view->t('All')) ?></option>
+                </select>
+            </label>
+        </header>
+        <div class="planning-list" data-admin-user-reports aria-live="polite"></div>
+    </section>
     <section class="planning-panel" aria-labelledby="admin-users-title">
         <header class="section-heading">
             <h2 id="admin-users-title"><?= $view->e($view->t('Accounts')) ?></h2>

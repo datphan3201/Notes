@@ -191,6 +191,37 @@ final class FullFeedbackHttpTest extends TestCase
         self::assertSame(404, $this->api('GET', "/api/v1/team-goals/$goalId", [], $viewer)->status);
     }
 
+    public function test_promoted_admins_cannot_change_or_remove_the_team_goal_creator(): void
+    {
+        $creator = $this->registerAccount('creator@example.test', 'Creator');
+        $deputy = $this->registerAccount('deputy@example.test', 'Deputy');
+        $member = $this->registerAccount('member@example.test', 'Member');
+        $goal = $this->data($this->api('POST', '/api/v1/team-goals', [
+            'name' => 'Project Atlas', 'description' => '', 'due_date' => null,
+            'members' => [['email' => 'deputy@example.test', 'role' => 'admin'], ['email' => 'member@example.test', 'role' => 'viewer']],
+        ], $creator));
+        $goalId = $goal['id'];
+        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $deputy);
+        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $member);
+        $creatorId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'creator@example.test'")->fetchColumn();
+        $memberId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'member@example.test'")->fetchColumn();
+
+        $seenByDeputy = $this->data($this->api('GET', "/api/v1/team-goals/$goalId", [], $deputy));
+        self::assertFalse($seenByDeputy['i_am_creator']);
+        self::assertSame([$creatorId], array_column(array_filter($seenByDeputy['members'], static fn (array $m): bool => $m['is_creator']), 'id'));
+        self::assertTrue($this->data($this->api('GET', "/api/v1/team-goals/$goalId", [], $creator))['i_am_creator']);
+
+        // Another admin cannot demote or remove the creator, but still manages everyone else.
+        self::assertSame(403, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$creatorId", ['role' => 'viewer'], $deputy)->status);
+        self::assertSame(403, $this->api('DELETE', "/api/v1/team-goals/$goalId/members/$creatorId", [], $deputy)->status);
+        self::assertSame('admin', $this->pdo->query("SELECT role FROM team_members WHERE team_goal_id = '$goalId' AND user_id = $creatorId")->fetchColumn());
+        self::assertSame(200, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$memberId", ['role' => 'editor'], $deputy)->status);
+        self::assertSame(204, $this->api('DELETE', "/api/v1/team-goals/$goalId/members/$memberId", [], $deputy)->status);
+
+        // The creator can still step down while another admin remains.
+        self::assertSame(200, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$creatorId", ['role' => 'editor'], $creator)->status);
+    }
+
     public function test_team_tasks_capture_planning_fields_repeat_and_remind_the_assignee(): void
     {
         $lead = $this->registerAccount('planner-lead@example.test', 'Lead');

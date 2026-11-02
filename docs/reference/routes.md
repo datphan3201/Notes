@@ -41,6 +41,11 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | POST | `/api/v1/admin/reports/{id}/resolve` | `api.admin.reports.resolve` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/api/v1/admin/users` | `api.admin.users` | yes | no | — | [README.md](../ui/admin/README.md) |
 | POST | `/api/v1/admin/users/{id}/{action}` | `api.admin.users.lock` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
+| GET | `/api/v1/user-reports` | `api.user-reports.index` | yes | no | — | [reports.md](../ui/settings/reports.md) |
+| POST | `/api/v1/user-reports` | `api.user-reports.store` | yes | yes | user-reports | [reports.md](../ui/settings/reports.md) |
+| GET | `/api/v1/admin/user-reports` | `api.admin.user-reports` | yes | no | — | [README.md](../ui/admin/README.md) |
+| POST | `/api/v1/admin/user-reports/{id}/resolve` | `api.admin.user-reports.resolve` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
+| GET | `/admin/user-reports/{id}/evidence/{position}` | `admin.user-reports.evidence` | yes | no | — | [README.md](../ui/admin/README.md) |
 | GET | `/api/v1/admin/settings` | `api.admin.settings` | yes | no | — | [README.md](../ui/admin/README.md) |
 | PATCH | `/api/v1/admin/settings` | `api.admin.settings.update` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/teamwork` | `planning.teamwork` | yes | no | — | [README.md](../ui/teamwork/README.md) |
@@ -84,6 +89,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/settings/profile` | `settings.profile` | yes | no | — | [profile.md](../ui/settings/profile.md) |
 | GET | `/settings/preferences` | `settings.preferences` | yes | no | — | [preferences.md](../ui/settings/preferences.md) |
 | GET | `/settings/password` | `settings.password` | yes | no | — | [password.md](../ui/settings/password.md) |
+| GET | `/settings/reports` | `settings.reports` | yes | no | — | [reports.md](../ui/settings/reports.md) |
 | GET | `/goals` | `planning.goals` | yes | no | — | [README.md](../ui/goals/README.md) |
 | GET | `/goals/{id}` | `planning.goal` | yes | no | — | [roadmap.md](../ui/goals/roadmap.md) |
 | GET | `/tasks` | `planning.tasks` | yes | no | — | [README.md](../ui/tasks/README.md) |
