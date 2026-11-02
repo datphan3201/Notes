@@ -8,6 +8,21 @@ use PDO;
 use DateTimeImmutable;
 use DateTimeZone;
 use Ramsey\Uuid\Uuid;
+use Planner\Infrastructure\Persistence\Pdo\Reviews\PdoReviewRepository;
+use Planner\Support\Timestamp;
+
+/** Build demo Review facts with the same schema consumed by ReviewService and the UI. */
+function roadmapDemoReviewSnapshot(PDO $pdo, int $userId, string $kind, string $from, string $to, string $generatedAt, string $timezone = 'UTC'): string
+{
+    return json_encode([
+        'schema_version' => 1,
+        'generated_at' => Timestamp::api($generatedAt),
+        'timezone' => $timezone,
+        'period_start' => $from,
+        'period_end' => $to,
+        ...(new PdoReviewRepository($pdo))->facts($userId, $from, $to, $kind),
+    ], JSON_THROW_ON_ERROR);
+}
 
 /**
  * Seeder script for roadmap-demo@example.test (user_id = 2).
@@ -797,7 +812,7 @@ SQL);
             'kind' => 'Weekly',
             'period_start' => '2026-10-26',
             'period_end' => '2026-11-01',
-            'snapshot' => json_encode(['completed_tasks' => 6, 'habit_streak' => 14], JSON_THROW_ON_ERROR),
+            'snapshot' => roadmapDemoReviewSnapshot($pdo, $userId, 'Weekly', '2026-10-26', '2026-11-01', $now->format('Y-m-d H:i:s.u')),
             'reflection' => 'Solid progress on PyTorch distributed training and attention mechanics. Maintained 14-day daily habit streak.',
             'went_well' => 'DDP cluster scaled cleanly to 4 GPUs; completed all planned LeetCode problem sets.',
             'went_wrong' => 'WebSocket order book drift issue occurred during late Friday session.',
@@ -814,7 +829,7 @@ SQL);
             'kind' => 'Monthly',
             'period_start' => '2026-09-01',
             'period_end' => '2026-09-30',
-            'snapshot' => json_encode(['completed_milestones' => 1, 'completed_tasks' => 12], JSON_THROW_ON_ERROR),
+            'snapshot' => roadmapDemoReviewSnapshot($pdo, $userId, 'Monthly', '2026-09-01', '2026-09-30', $now->format('Y-m-d H:i:s.u')),
             'reflection' => 'Month 1 completed! Solidified Python typing, FastAPI and Foundations milestone.',
             'went_well' => 'Completed Milestone 1 Foundations ahead of schedule.',
             'went_wrong' => 'Initial Docker multi-stage build caching was slow.',

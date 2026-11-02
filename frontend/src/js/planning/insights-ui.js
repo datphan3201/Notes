@@ -19,7 +19,13 @@ export function renderRing(container, percentage, label) {
     container.append(ring);
 }
 
-export function renderDayBars(container, from, to, counts) {
+export function renderDayBars(
+    container,
+    from,
+    to,
+    counts,
+    { showCounts = false, today = null } = {},
+) {
     container.replaceChildren();
     const values = [];
     const end = new Date(`${to}T00:00:00Z`);
@@ -47,11 +53,25 @@ export function renderDayBars(container, from, to, counts) {
                 : new Date(`${day.date}T00:00:00Z`).toLocaleDateString(
                       document.documentElement.lang === 'vi' ? 'vi-VN' : 'en-US',
                       {
-                          weekday: 'narrow',
+                          weekday: showCounts ? 'short' : 'narrow',
                           timeZone: 'UTC',
                       },
                   );
-        bar.append(fill, label);
+        if (showCounts) {
+            bar.setAttribute('role', 'img');
+            if (day.date === today) bar.setAttribute('aria-current', 'date');
+            const count = document.createElement('span');
+            count.className = 'day-bar-count';
+            count.textContent = day.count.toLocaleString();
+            count.setAttribute('aria-hidden', 'true');
+            const track = document.createElement('span');
+            track.className = 'day-bar-track';
+            track.setAttribute('aria-hidden', 'true');
+            track.append(fill);
+            bar.append(count, track, label);
+        } else {
+            bar.append(fill, label);
+        }
         container.append(bar);
     }
 }

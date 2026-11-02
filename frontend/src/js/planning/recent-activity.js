@@ -37,7 +37,10 @@ export function renderRecentActivity(root, activity, { levelFor, describe }) {
         const label = describe(day);
         cell.title = label;
         cell.setAttribute('aria-label', label);
+        cell.setAttribute('aria-pressed', 'false');
         cell.addEventListener('click', () => {
+            for (const item of grid.querySelectorAll('button'))
+                item.setAttribute('aria-pressed', String(item === cell));
             root.querySelector('[data-recent-activity-detail]').textContent = label;
         });
         grid.append(cell);

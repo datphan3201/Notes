@@ -136,23 +136,29 @@
     margin: 0;
     white-space: pre-wrap;
 }
-.activity-panel {
+.activity-panel,
+.dashboard-recent-panel {
     --activity-empty: #ebedf0;
     --activity-level-1: #9be9a8;
     --activity-level-2: #40c463;
     --activity-level-3: #30a14e;
     --activity-level-4: #216e39;
+}
+.activity-panel {
     margin-bottom: 0;
     border-color: var(--border);
     border-radius: 10px;
     box-shadow: none;
 }
-[data-theme='dark'] .activity-panel {
+[data-theme='dark'] .activity-panel,
+[data-theme='dark'] .dashboard-recent-panel {
     --activity-empty: #161b22;
     --activity-level-1: #0e4429;
     --activity-level-2: #006d32;
     --activity-level-3: #26a641;
     --activity-level-4: #39d353;
+}
+[data-theme='dark'] .activity-panel {
     border-color: #30363d;
 }
 .activity-header,

@@ -107,19 +107,28 @@
                         <small><?= $view->e($view->t('Last 30 days')) ?></small>
                     </div>
                     <div class="recent-activity-section">
-                        <div class="recent-activity-calendar">
-                            <div class="recent-activity-weekdays" aria-hidden="true">
-                                <?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday): ?>
-                                    <span><?= $view->e($view->t($weekday)) ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                            <div data-recent-activity-grid role="group" aria-label="<?= $view->e($view->t('Activity for the last 30 days')) ?>"></div>
-                        </div>
-                        <div class="recent-activity-stats">
+                        <div class="recent-activity-overview">
                             <div class="recent-activity-stats-summary">
                                 <strong data-recent-activity-total>—</strong>
                                 <span data-recent-activity-unit><?= $view->e($view->t('contributions')) ?></span>
                                 <small data-recent-activity-days></small>
+                            </div>
+                            <div class="recent-activity-calendar">
+                                <div class="recent-activity-weekdays" aria-hidden="true">
+                                    <?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday): ?>
+                                        <span><?= $view->e($view->t($weekday)) ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div data-recent-activity-grid role="group" aria-label="<?= $view->e($view->t('Activity for the last 30 days')) ?>"></div>
+                            </div>
+                        </div>
+                        <div class="recent-activity-footer">
+                            <div class="activity-legend" aria-hidden="true">
+                                <span><?= $view->e($view->t('Less')) ?></span>
+                                <?php foreach (range(0, 4) as $level): ?>
+                                    <i data-level="<?= $level ?>"></i>
+                                <?php endforeach; ?>
+                                <span><?= $view->e($view->t('More')) ?></span>
                             </div>
                             <button class="text-button" type="button" data-dashboard-open-activity><?= $view->e($view->t('View activity →')) ?></button>
                         </div>
@@ -205,8 +214,12 @@
                         <h2 id="dashboard-week-title"><?= $view->e($view->t('Weekly')) ?></h2>
                         <small data-week-range></small>
                     </div>
-                    <div class="dashboard-week-bars-wrapper" style="width: 100%;">
-                        <div class="day-bars" data-week-bars></div>
+                    <p class="dashboard-week-activity-summary">
+                        <strong data-week-activity-total>—</strong>
+                        <span data-week-activity-unit><?= $view->e($view->t('contributions')) ?></span>
+                    </p>
+                    <div class="dashboard-week-bars-wrapper">
+                        <div class="day-bars" data-week-bars role="group" aria-labelledby="dashboard-week-title"></div>
                     </div>
                 </article>
             </div>

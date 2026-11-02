@@ -70,6 +70,40 @@ final class DashboardReviewsTest extends TestCase
         $dashboard->reorder('task', $this->owner, ['ids' => [$one['id']]]);
     }
 
+    public function test_demo_seed_reviews_use_the_runtime_snapshot_contract(): void
+    {
+        $demo = (new PdoAccountRepository($this->pdo))->insertUser(
+            'roadmap-demo@example.test', 'Roadmap Demo', password_hash('demo testing password', PASSWORD_BCRYPT), '2026-09-01 00:00:00.000000',
+        );
+        self::assertSame(2, $demo->id, 'The isolated demo fixture requires user 2.');
+        require_once dirname(__DIR__, 3).'/bin/seed_roadmap_demo.php';
+        ob_start();
+        try {
+            \Planner\Console\seedRoadmapDemo($this->pdo);
+        } finally {
+            ob_end_clean();
+        }
+
+        $reviews = $this->runtime['review_service']->list($demo->id);
+        self::assertCount(2, $reviews);
+        foreach ($reviews as $review) {
+            self::assertSame('Finalized', $review['status']);
+            self::assertNotEmpty($review['reflection']);
+            $snapshot = $review['snapshot'];
+            self::assertSame(1, $snapshot['schema_version']);
+            self::assertSame($review['period_start'], $snapshot['period_start']);
+            self::assertSame($review['period_end'], $snapshot['period_end']);
+            self::assertSame($review['timezone'], $snapshot['timezone']);
+            self::assertNotEmpty($snapshot['generated_at']);
+            foreach (['activities', 'overdue_tasks', 'goal_snapshots', 'task_summary'] as $field) {
+                self::assertIsArray($snapshot[$field]);
+            }
+            self::assertIsInt($snapshot['task_summary']['total']);
+            self::assertIsInt($snapshot['task_summary']['completed']);
+            self::assertIsInt($snapshot['previous_activity_count']);
+        }
+    }
+
     public function test_finalized_review_snapshot_is_stable_until_reopened_and_refreshed(): void
     {
         $reviews = $this->runtime['review_service'];

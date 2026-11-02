@@ -46,6 +46,8 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Open | Browser read fixtures reproduce page 6/12 without an active page; hardcoded Trang labels |
 | [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Open | Intercepted preference response reports List/Saved while Grid stays visible |
 | [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
+| [ISSUE-021](#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) | Demo Review snapshots do not match the runtime schema | Medium | Resolved | Reproduced serializer failure; corrected demo builder, guarded data repair and regression/UI checks pass |
+| [ISSUE-022](#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) | Dashboard Activity and Weekly charts are hard to read | Low | Resolved | Shared heatmap palette, balanced card layout and readable weekly columns; responsive browser checks |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -281,6 +283,27 @@ The severity assessments below describe observed impact, not a completed securit
 - **Observed:** The imported AI page introduction described chat confirmation cards and supported updates/deletes, but the existing trace registry regenerated API-only/create-only descriptions. Manual AI cases repeated that old exclusion. Imported assistant.js also failed the existing formatting gate.
 - **Resolution:** Updated AI chat/proposal traces, source/test/DOM/style references and manual cases to the imported confirmation-first implementation; formatted only the assistant module. Existing ownership/version/normal-service boundaries remain explicit.
 - **Verification:** Regenerated documentation/source checks and frontend formatting pass. Integration and browser verification scope is recorded with the branch integration audit.
+
+## ISSUE-021 — Demo Review snapshots do not match the runtime schema
+
+- **Status:** Resolved.
+- **Severity:** Medium; malformed demo snapshots make ReviewService reject the owner's entire Review list, blocking Reviews for that account. No loss of reflection text was established.
+- **Recorded:** 2026-11-02 (Asia/Saigon), following the Reviews error report on roadmap-demo@example.test.
+- **Affected source:** [Demo seeder](../backend/bin/seed_roadmap_demo.php), [ReviewService::serialize](../backend/src/Application/Reviews/ReviewService.php) and [Reviews UI](ui/reviews/README.md).
+- **Observed / evidence:** Two seeded Finalized Weekly/Monthly rows had snapshot_schema_version=1 in SQL but their JSON contained only ad hoc completed-task/streak counters, without schema_version or required UI facts. Reading the account's list threw Unsupported Review snapshot schema. A guarded goals_test test of the original seeder reproduced that exception.
+- **Resolution:** The demo builder now emits the schema-one period/timezone/generated_at envelope and actual PdoReviewRepository facts. Strict runtime validation was not weakened. The existing development database was not reseeded.
+- **Bounded data repair:** Locked the demo owner and Review rows in stable ID order. Repaired only the two known malformed seed payloads after matching their exact legacy summaries; retained a private backup outside Git. Reflection fields, identities/periods, Finalized status and original finalization/creation timestamps were preserved. Version/updated_at advanced. Repair metadata retains the legacy summary and explicitly identifies the new capture time; reconstructed facts use currently retained records rather than pretending to recover the original historical snapshot. No other user's Reviews or newly added roadmap work was rewritten.
+- **Verification:** Runtime service lists both repaired Reviews; the English Goal still has 6 Milestones and 24 Tasks. Full DashboardReviewsTest passed: 16 tests / 124 assertions, including the seed-schema regression that failed before the fix. Browser intercepted-read fixtures using the actual repaired payloads rendered Weekly/Monthly as read-only Finalized Reviews without JavaScript errors. PHP lint and docs checks pass. Browser fixtures are not a logged-in end-to-end test of the demo account; no broad Finalized-history migration was performed.
+
+## ISSUE-022 — Dashboard Activity and Weekly charts are hard to read
+
+- **Status:** Resolved.
+- **Severity:** Low; misleading visual emphasis and poor readability, without demonstrated incorrect stored counts.
+- **Recorded:** 2026-11-02; user screenshots and source/browser inspection of [Dashboard](ui/dashboard/README.md).
+- **Affected traces:** dashboard.activity and dashboard.week; [chart styles](../frontend/src/css/feedback.css), [activity palette](../frontend/src/css/planning.css), [recent calendar](../frontend/src/js/planning/recent-activity.js) and [day bars](../frontend/src/js/planning/insights-ui.js).
+- **Observed:** Recent Activity did not inherit the year calendar's heat-level variables, leaving its cells effectively uncoloured; right-aligned content wasted the card's left side. Weekly columns were only 9px wide inside a short chart, and minimum fill height made zero-count dates look active.
+- **Resolution:** Shared existing light/dark palette variables; balanced total/calendar layout, legend and selected-date outline; larger weekly columns with per-day counts, distinct weekday labels, current-date emphasis and a factual total. Zero values have zero fill. The shared Reviews renderer retains its default markup; Dashboard opts into counts/tracks.
+- **Verification:** 91 Node tests and Vite build passed. Authenticated browser read fixtures using the demo projection (71 recent contributions, five on Monday) verified 30 coloured date buttons, selected-day details, seven columns, totals, zero fills, and no JavaScript errors. Light/dark screenshots and widths 320/390/768/1440 were inspected/checked. Empty activity was checked separately. These are chart presentation checks with intercepted reads and theme attributes, not a new backend, theme-preference persistence or all-feature acceptance test; existing demo records were not changed.
 
 ## New issue template
 

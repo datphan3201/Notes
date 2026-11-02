@@ -1882,7 +1882,7 @@
         {
           "id": "dashboard.week",
           "label": "This week and weekly summary",
-          "behavior": "The This week tab mirrors the Today layout: a progress card (percentage, Done/total, previous-week comparison and weekly bars) beside a Milestones card that also lists weekly Habit targets, then one full-width Weekly tasks checklist. Today no longer contains any week content. Task rows support completion and Add for today without moving/removing weekly membership or changing Task dates/status. Two independent native selects sort by Importance (descending) or Scheduled time (earliest first, unscheduled last), and filter All/Not started/On progress/Blocked/Completed. Sorting/filtering does not rewrite stored order, membership or weekly percentage denominators; the count badge shows filtered/total while a status filter is active. The tab lists the whole selection (Today previews stay at four rows). The row action is a compact + icon with Add for today as its native hover tooltip and accessible name; already-present Tasks show a check mark. Filtering never changes the full selected denominator.",
+          "behavior": "The This week tab places its progress summary and Weekly tasks checklist in the main column, with Milestones/Habit targets and a Weekly activity chart in the side column. The chart shows the sum of daily contribution facts, seven readable weekday labels and per-day counts; zero dates have no green fill, and the account-local current date is highlighted. Column heights are relative to the largest count in that week, independently of checklist completion percentages. Today no longer contains any week content. Task rows support completion and Add for today without moving/removing weekly membership or changing Task dates/status. Two independent native selects sort by Importance (descending) or Scheduled time (earliest first, unscheduled last), and filter All/Not started/On progress/Blocked/Completed. Sorting/filtering does not rewrite stored order, membership or weekly percentage denominators; the count badge shows filtered/total while a status filter is active. The tab lists the whole selection (Today previews stay at four rows). The row action is a compact + icon with Add for today as its native hover tooltip and accessible name; already-present Tasks show a check mark. Filtering never changes the full selected denominator.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -1903,6 +1903,10 @@
             {
               "path": "frontend/src/views/planning/dashboard.php",
               "symbol": "data-week-ring"
+            },
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-week-activity-total"
             }
           ],
           "client": [
@@ -1917,6 +1921,10 @@
             {
               "path": "frontend/src/js/planning/dashboard-tasks.js",
               "symbol": "export function renderTaskChecklist("
+            },
+            {
+              "path": "frontend/src/js/planning/insights-ui.js",
+              "symbol": "export function renderDayBars("
             }
           ],
           "server": [
@@ -1967,13 +1975,17 @@
             {
               "path": "frontend/src/css/feedback.css",
               "symbol": ".dashboard-week-tasks .dashboard-week-filters {"
+            },
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".dashboard-week-bars-wrapper .day-bars {"
             }
           ]
         },
         {
           "id": "dashboard.activity",
           "label": "Recent 30-day Activity and full year heatmap",
-          "behavior": "A compact 30-day calendar replaces Current focus in the Today workspace. Its inclusive range ends on the account-local today, spans month/year boundaries and includes zero days. Counts are unreversed Task/Checklist/Habit/Milestone completion facts; Note edits do not count. Clicking a day shows its factual details; View activity switches to the existing full-year tab. The year grid/picker remains independent of the recent window. Existing activity colours/levels 0, 1, 2–3, 4–6, 7+ remain presentation, not a productivity score.",
+          "behavior": "A compact 30-day calendar replaces Current focus in the Today workspace. Its inclusive range ends on the account-local today, spans month/year boundaries and includes zero days. Counts are unreversed Task/Checklist/Habit/Milestone completion facts; Note edits do not count. Clicking a day shows its factual details; View activity switches to the existing full-year tab. The year grid/picker remains independent of the recent window. Existing activity colours/levels 0, 1, 2–3, 4–6, 7+ remain presentation, not a productivity score. The card balances the contribution total and active-day count with a Monday-first calendar, a Less/More legend and a separate details line. Recent and full-year calendars share light/dark colour variables; the selected recent date has an outline and aria-pressed state.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -2062,6 +2074,10 @@
             {
               "path": "frontend/src/css/feedback.css",
               "symbol": ".recent-activity-calendar {"
+            },
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".recent-activity-overview {"
             }
           ]
         },
@@ -2620,7 +2636,7 @@
         {
           "id": "reviews.collection",
           "label": "New review, type filter and pagination",
-          "behavior": "Identity is owner/kind/period start, with timezone captured on creation. Period navigation does not redefine an existing Review when account timezone later changes.",
+          "behavior": "Identity is owner/kind/period start, with timezone captured on creation. Period navigation does not redefine an existing Review when account timezone later changes. Demo seeding uses the same schema-one snapshot envelope and repository facts consumed by ReviewService/UI; ad hoc summary-only JSON is not a valid Review snapshot.",
           "ui": [
             {
               "path": "frontend/src/views/planning/reviews.php",
@@ -2637,6 +2653,10 @@
             {
               "path": "backend/src/Application/Reviews/ReviewService.php",
               "symbol": "public function create("
+            },
+            {
+              "path": "backend/bin/seed_roadmap_demo.php",
+              "symbol": "function roadmapDemoReviewSnapshot("
             }
           ],
           "storage": [
@@ -2657,6 +2677,10 @@
             {
               "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
               "symbol": "public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
+              "symbol": "public function test_demo_seed_reviews_use_the_runtime_snapshot_contract("
             }
           ],
           "routes": [

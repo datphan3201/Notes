@@ -555,6 +555,16 @@ export function initDashboardPage(root) {
                 data.week_start,
                 weekEnd.toISOString().slice(0, 10),
                 data.week_summary.daily_activity,
+                { showCounts: true, today: data.today },
+            );
+            const weekContributions = Object.values(data.week_summary.daily_activity).reduce(
+                (total, count) => total + count,
+                0,
+            );
+            root.querySelector('[data-week-activity-total]').textContent =
+                weekContributions.toLocaleString();
+            root.querySelector('[data-week-activity-unit]').textContent = t(
+                weekContributions === 1 ? 'contribution' : 'contributions',
             );
             renderStreak(root.querySelector('[data-habit-streak]'), data.habit_streak, data.today);
             renderTaskPanels();
