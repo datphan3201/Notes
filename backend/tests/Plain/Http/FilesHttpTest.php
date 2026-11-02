@@ -301,6 +301,68 @@ SQL);
         self::assertSame(404, $this->request('GET', '/files/avatar', cookie: $cookie)->status);
     }
 
+    public function test_user_reports_with_image_evidence_are_private_to_administrators(): void
+    {
+        [$cookie, $csrf] = $this->registerAccount('reporter@example.test');
+        [, , $targetId] = $this->registerAccount('target@example.test');
+        [$adminCookie, $adminCsrf] = $this->registerAccount('report-admin@example.test');
+        $this->pdo->exec("UPDATE users SET role = 'admin' WHERE email = 'report-admin@example.test'");
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', true);
+        self::assertIsString($png);
+        $reason = 'Sent abusive messages in a shared note yesterday.';
+
+        $known = $this->multipart('POST', '/api/v1/user-reports', ['email' => ' Target@Example.test ', 'reason' => $reason], [
+            'evidence_1' => $this->upload('one.png', $png),
+            'evidence_2' => $this->upload('two.png', $png),
+        ], $cookie, $csrf);
+        $unknown = $this->multipart('POST', '/api/v1/user-reports', ['email' => 'nobody@example.test', 'reason' => $reason], [], $cookie, $csrf);
+        // The same answer whether or not the email has an account.
+        self::assertSame([202, 202], [$known->status, $unknown->status]);
+        self::assertSame($known->body, $unknown->body);
+        self::assertSame([(string) $targetId, null], array_map(
+            static fn ($value) => $value === null ? null : (string) $value,
+            $this->pdo->query("SELECT target_user_id FROM user_reports ORDER BY target_email = 'nobody@example.test'")->fetchAll(\PDO::FETCH_COLUMN),
+        ));
+
+        $rows = (int) $this->pdo->query('SELECT COUNT(*) FROM user_report_evidence')->fetchColumn();
+        foreach ([
+            [['email' => 'target@example.test', 'reason' => $reason], []],
+            [['email' => 'reporter@example.test', 'reason' => $reason], []],
+            [['email' => 'not-an-email', 'reason' => $reason], []],
+            [['email' => 'other@example.test', 'reason' => 'short'], []],
+            [['email' => 'other@example.test', 'reason' => $reason], ['evidence_1' => $this->upload('fake.png', 'GIF89a not a png')]],
+            [['email' => 'other@example.test', 'reason' => $reason], ['evidence_4' => $this->upload('four.png', $png)]],
+        ] as [$form, $files]) {
+            self::assertSame(422, $this->multipart('POST', '/api/v1/user-reports', $form, $files, $cookie, $csrf)->status);
+        }
+        self::assertSame($rows, (int) $this->pdo->query('SELECT COUNT(*) FROM user_report_evidence')->fetchColumn());
+        self::assertCount(2, glob($this->storage->root().'/reports/*.jpg') ?: []);
+
+        // The reporter sees their own reports, never whether the email matched.
+        $mine = $this->json($this->request('GET', '/api/v1/user-reports', cookie: $cookie))['data'];
+        self::assertCount(2, $mine);
+        self::assertArrayNotHasKey('target', $mine[0]);
+
+        $listed = $this->json($this->request('GET', '/api/v1/admin/user-reports', cookie: $adminCookie))['data'];
+        $report = array_values(array_filter($listed, static fn (array $item): bool => $item['target'] !== null))[0];
+        self::assertSame('target@example.test', $report['target']['email']);
+        self::assertCount(2, $report['evidence']);
+        $image = $this->request('GET', $report['evidence'][0], cookie: $adminCookie);
+        self::assertSame(200, $image->status);
+        self::assertSame('image/jpeg', $image->headers['Content-Type']);
+        self::assertSame(404, $this->request('GET', $report['evidence'][0], cookie: $cookie)->status);
+        self::assertSame(404, $this->request('GET', '/api/v1/admin/user-reports', cookie: $cookie)->status);
+        self::assertSame(404, $this->request('GET', '/admin/user-reports/'.$report['id'].'/evidence/3', cookie: $adminCookie)->status);
+
+        self::assertSame(200, $this->api('POST', '/api/v1/admin/user-reports/'.$report['id'].'/resolve', ['status' => 'resolved', 'response' => 'Account warned.'], $adminCookie, $adminCsrf)->status);
+        self::assertSame(422, $this->api('POST', '/api/v1/admin/user-reports/'.$report['id'].'/resolve', ['status' => 'dismissed'], $adminCookie, $adminCsrf)->status);
+        $resolved = array_values(array_filter(
+            $this->json($this->request('GET', '/api/v1/user-reports', cookie: $cookie))['data'],
+            static fn (array $item): bool => $item['id'] === $report['id'],
+        ))[0];
+        self::assertSame(['resolved', 'Account warned.'], [$resolved['status'], $resolved['response']]);
+    }
+
     public function test_uploaded_backgrounds_form_an_owned_list_that_can_be_selected_and_removed(): void
     {
         [$cookie, $csrf] = $this->registerAccount('backgrounds@example.test');
@@ -436,6 +498,7 @@ SQL);
             $this->storage,
             $this->runtime['clock'],
             new NullLogger,
+            new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoUserReportRepository($this->pdo),
         );
         $result = $prune->run();
         self::assertSame(1, $result['orphans_deleted']);
@@ -763,7 +826,7 @@ SQL);
 
     private function clearManagedStorage(): void
     {
-        foreach (['attachments', 'avatars', 'backgrounds'] as $directory) {
+        foreach (\Planner\Infrastructure\Storage\LocalPrivateStorage::DIRECTORIES as $directory) {
             $path = $this->storage->root().'/'.$directory;
 
             foreach (new \FilesystemIterator($path, \FilesystemIterator::SKIP_DOTS) as $item) {

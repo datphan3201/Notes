@@ -1,7 +1,7 @@
 import { get, patch, post, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { repeatRule } from '../lib/calendar.js';
-import { finishCreation } from '../lib/workspace-ui.js';
+import { creationState, finishCreation } from '../lib/workspace-ui.js';
 import { captureRepeatChoice, taskCaptureValues } from './task-capture.js';
 import { localDate } from './task-views.js';
 import { checkMark } from '../lib/check-mark.js';
@@ -84,7 +84,7 @@ const avatar = (member) => {
 
 const roleLabel = (role) => t(role[0].toUpperCase() + role.slice(1));
 
-const errorText = (error) => Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+const errorText = (error) => t(Object.values(error.payload?.errors || {})[0]?.[0] || error.message);
 
 export function initTeamworkPage(root) {
     const track = root.querySelector('[data-team-goal-grid]');
@@ -242,10 +242,15 @@ export function initTeamworkPage(root) {
     const memberRow = (goal, member, canManage) => {
         const row = element('div', 'team-member-row');
         const memberPercent = completionPercent(member.done, member.assigned);
-        const bar = element('div', 'progress-track');
+        // Every row has the same four columns, so the bars line up and keep
+        // clear space from the role controls.
+        const bar = element('div', 'team-member-progress');
+        const progressTrack = element('div', 'progress-track');
         const fill = element('span');
         fill.style.width = `${memberPercent}%`;
-        bar.append(fill);
+        progressTrack.append(fill);
+        bar.append(progressTrack);
+        const actions = element('div', 'team-member-actions');
         const name = element('div', 'team-member-name');
         name.append(
             element(
@@ -261,8 +266,12 @@ export function initTeamworkPage(root) {
         );
         // The member's own profile biography, so teammates know who they work with.
         if (member.biography) name.append(element('p', 'team-member-bio', member.biography));
-        row.append(avatar(member), name, bar);
-        if (canManage && String(member.id) !== String(window.notesBootstrap.user.id)) {
+        row.append(avatar(member), name, bar, actions);
+        if (
+            canManage &&
+            String(member.id) !== String(window.notesBootstrap.user.id) &&
+            !(member.is_creator && !goal.i_am_creator)
+        ) {
             const role = element('select');
             role.setAttribute('aria-label', `${t('Role')}: ${member.display_name}`);
             for (const value of ['viewer', 'editor', 'admin'])
@@ -292,29 +301,180 @@ export function initTeamworkPage(root) {
                     showError(error);
                 }
             });
-            row.append(role, kick);
+            actions.append(role, kick);
         } else {
-            row.append(element('small', 'context-chip', roleLabel(member.role)));
+            actions.append(
+                element(
+                    'small',
+                    'context-chip',
+                    member.is_creator
+                        ? `${roleLabel(member.role)} · ${t('Creator')}`
+                        : roleLabel(member.role),
+                ),
+            );
         }
         return row;
     };
 
-    const updateTask = async (goal, task, changes) => {
+    // From the edit form, errors stay in the dialog so the user's changes survive.
+    const updateTask = async (goal, task, changes, form = null) => {
         try {
-            renderDetail(
-                (
-                    await patch(`/api/v1/team-goals/${goal.id}/tasks/${task.id}`, {
-                        base_version: task.version,
-                        ...changes,
-                    })
-                ).payload.data,
-            );
+            const updated = (
+                await patch(`/api/v1/team-goals/${goal.id}/tasks/${task.id}`, {
+                    base_version: task.version,
+                    ...changes,
+                })
+            ).payload.data;
+            // Saved edits are no longer a draft for the leave guard.
+            if (form) creationState(form).markSaved();
+            renderDetail(updated);
             loadOverview();
         } catch (error) {
+            if (form) {
+                dialogError(form, error);
+                return;
+            }
             showError(error);
             select(goal.id);
         }
     };
+
+    // Task details open in a dialog laid out like the personal Task detail page.
+    const taskDetail = root.querySelector('[data-team-task-detail]');
+    const taskDetailView = taskDetail.querySelector('[data-team-task-detail-view]');
+    const taskEditForm = taskDetail.querySelector('[data-team-task-edit-form]');
+    let detailTaskId = null;
+
+    const detailRow = (label, value) => {
+        const row = element('div');
+        row.append(element('dt', '', label), element('dd', '', value || '—'));
+        return row;
+    };
+
+    const fillTaskDetail = (goal, task) => {
+        const canEditTasks = ['admin', 'editor'].includes(goal.my_role);
+        const mine = String(task.assignee?.id) === String(window.notesBootstrap.user.id);
+        const done = task.status === 'done';
+        const overdue = !done && task.due_date && task.due_date < today();
+        taskDetail.querySelector('[data-team-task-detail-goal]').textContent =
+            `${t('Teamwork')} / ${goal.name}`;
+        taskDetail.querySelector('[data-team-task-detail-name]').textContent = task.name;
+        taskDetail.querySelector('[data-team-task-detail-meta]').textContent = [
+            t(STATUS_LABELS[task.status]),
+            task.assignee?.display_name || t('Unassigned'),
+            task.due_date ? `${overdue ? t('Overdue') : t('Due')}: ${task.due_date}` : '',
+        ]
+            .filter(Boolean)
+            .join(' · ');
+        taskDetail.querySelector('[data-team-task-detail-description]').textContent =
+            task.description || t('No description.');
+        taskDetail.querySelector('[data-team-task-detail-list]').replaceChildren(
+            detailRow(t('Status'), t(STATUS_LABELS[task.status])),
+            detailRow(t('Assignee'), task.assignee?.display_name || t('Unassigned')),
+            detailRow(t('Start date'), task.start_date),
+            detailRow(t('Due date'), task.due_date),
+            detailRow(
+                t('Estimated time'),
+                task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
+            ),
+            detailRow(t('Importance'), `${task.importance}/5`),
+            detailRow(
+                t('Reminder'),
+                task.reminder_at
+                    ? new Date(task.reminder_at).toLocaleString([], {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                      })
+                    : '',
+            ),
+            detailRow(t('Repeat'), teamRepeatLabel(task.repeat)),
+            ...(task.completed_at
+                ? [detailRow(t('Completed'), new Date(task.completed_at).toLocaleString())]
+                : []),
+        );
+        const transition = taskDetail.querySelector('[data-team-task-detail-transition]');
+        transition.textContent = done ? t('Reopen') : t('Complete');
+        transition.disabled = !canEditTasks && !mine;
+        transition.onclick = () => updateTask(goal, task, { status: done ? 'todo' : 'done' });
+        const edit = taskDetail.querySelector('[data-team-task-detail-edit]');
+        edit.hidden = !canEditTasks;
+        edit.onclick = () => {
+            const assignee = taskEditForm.querySelector('[data-team-task-edit-assignee]');
+            assignee.replaceChildren(new Option(t('Unassigned'), ''));
+            for (const member of goal.members)
+                if (member.status === 'accepted')
+                    assignee.append(new Option(member.display_name, member.id));
+            taskEditForm.elements.name.value = task.name;
+            taskEditForm.elements.description.value = task.description || '';
+            assignee.value = task.assignee?.id || '';
+            taskEditForm.elements.start_date.value = task.start_date || '';
+            taskEditForm.elements.due_date.value = task.due_date || '';
+            taskEditForm.elements.estimated_minutes.value = task.estimated_minutes || '';
+            taskEditForm.elements.importance.value = String(task.importance);
+            // Filling the form is not an edit: only changes from here are a draft.
+            creationState(taskEditForm).markSaved();
+            taskEditForm.onsubmit = async (event) => {
+                event.preventDefault();
+                const values = taskEditForm.elements;
+                await updateTask(
+                    goal,
+                    task,
+                    {
+                        name: values.name.value.trim(),
+                        description: values.description.value,
+                        assignee_id: values.assignee_id.value || null,
+                        start_date: values.start_date.value || null,
+                        due_date: values.due_date.value || null,
+                        estimated_minutes: values.estimated_minutes.value
+                            ? Number(values.estimated_minutes.value)
+                            : null,
+                        importance: Number(values.importance.value),
+                    },
+                    taskEditForm,
+                );
+            };
+            taskDetailView.hidden = true;
+            taskEditForm.hidden = false;
+            taskEditForm.elements.name.focus();
+        };
+    };
+
+    const openTaskDetail = (goal, task) => {
+        detailTaskId = task.id;
+        taskDetail.querySelector('[data-dialog-error]').classList.add('is-hidden');
+        taskDetailView.hidden = false;
+        taskEditForm.hidden = true;
+        fillTaskDetail(goal, task);
+        if (!taskDetail.open) taskDetail.showModal();
+    };
+
+    /** Keeps an open detail dialog in step with the latest team goal data. */
+    const refreshTaskDetail = (goal) => {
+        if (!taskDetail.open || !detailTaskId) return;
+        const task = goal.tasks.find((item) => item.id === detailTaskId);
+        if (!task) {
+            taskDetail.close();
+            return;
+        }
+        taskDetailView.hidden = false;
+        taskEditForm.hidden = true;
+        fillTaskDetail(goal, task);
+    };
+
+    // The edit form is refilled each time it opens, so a hidden or closed draft
+    // cannot be resumed and must not keep the leave guard armed.
+    const discardTaskEdit = () => {
+        creationState(taskEditForm).markSaved();
+        taskEditForm.hidden = true;
+        taskDetailView.hidden = false;
+    };
+    taskDetail
+        .querySelector('[data-team-task-edit-cancel]')
+        .addEventListener('click', discardTaskEdit);
+    taskDetail.addEventListener('close', () => {
+        detailTaskId = null;
+        discardTaskEdit();
+    });
 
     const taskRow = (goal, task, canEditTasks) => {
         const mine = String(task.assignee?.id) === String(window.notesBootstrap.user.id);
@@ -335,6 +495,16 @@ export function initTeamworkPage(root) {
         );
 
         const copy = element('div', 'team-task-copy');
+        copy.tabIndex = 0;
+        copy.setAttribute('role', 'button');
+        copy.setAttribute('aria-label', `${t('Open details')}: ${task.name}`);
+        copy.addEventListener('click', () => openTaskDetail(goal, task));
+        copy.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openTaskDetail(goal, task);
+            }
+        });
         copy.append(element('strong', '', task.name));
         if (task.description) copy.append(element('p', 'subtle-copy', task.description));
         const meta = [`${t('Assigned')}: ${task.assignee?.display_name || t('Unassigned')}`];
@@ -429,6 +599,7 @@ export function initTeamworkPage(root) {
             card.classList.toggle('is-selected', isSelected);
             card.setAttribute('aria-pressed', String(isSelected));
         });
+        refreshTaskDetail(goal);
     };
 
     const appendMessages = (messages) => {
@@ -503,6 +674,8 @@ export function initTeamworkPage(root) {
     root.querySelector('[data-open-dialog="team-goal-dialog"]').addEventListener('click', () => {
         editing = false;
         goalForm.reset();
+        // The leave guard compares against this baseline, so an untouched form is not a draft.
+        creationState(goalForm).markSaved();
         newMembers = [];
         renderMembersDraft();
         root.querySelector('[data-team-new-members]').hidden = false;
@@ -513,6 +686,7 @@ export function initTeamworkPage(root) {
         goalForm.elements.name.value = current.name;
         goalForm.elements.description.value = current.description;
         goalForm.elements.due_date.value = current.due_date || '';
+        creationState(goalForm).markSaved();
         root.querySelector('[data-team-new-members]').hidden = true;
         root.querySelector('[data-team-dialog-title]').textContent = t('Edit goal');
         dialog.showModal();
@@ -534,7 +708,7 @@ export function initTeamworkPage(root) {
                   ).payload.data
                 : (await post('/api/v1/team-goals', { ...fields, members: newMembers })).payload
                       .data;
-            dialog.close();
+            finishCreation(goalForm);
             await loadOverview();
             select(goal.id);
         } catch (error) {

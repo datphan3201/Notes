@@ -21,12 +21,18 @@ function loadState() {
 // Validation errors carry per-field details; show them instead of only the
 // generic "The submitted data is invalid." message.
 function errorText(error) {
-    const details = Object.values(error?.payload?.errors || {}).flat().filter(Boolean);
+    const details = Object.values(error?.payload?.errors || {})
+        .flat()
+        .filter(Boolean);
     const seconds = Number(error?.retryAfter);
     if (error?.status === 429 && seconds > 0) {
-        details.push(t('Try again in :minutes minutes.').replace(':minutes', Math.ceil(seconds / 60)));
+        details.push(
+            t('Try again in :minutes minutes.').replace(':minutes', Math.ceil(seconds / 60)),
+        );
     }
-    return [error?.message || t('The assistant could not answer right now.'), ...details].join('\n');
+    return [error?.message || t('The assistant could not answer right now.'), ...details].join(
+        '\n',
+    );
 }
 
 // Models answer in Markdown. Render only **bold** and `code` as DOM nodes
@@ -37,10 +43,14 @@ function inlineMarkdown(text) {
         .filter(Boolean)
         .map((part) => {
             if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-                return Object.assign(document.createElement('strong'), { textContent: part.slice(2, -2) });
+                return Object.assign(document.createElement('strong'), {
+                    textContent: part.slice(2, -2),
+                });
             }
             if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
-                return Object.assign(document.createElement('code'), { textContent: part.slice(1, -1) });
+                return Object.assign(document.createElement('code'), {
+                    textContent: part.slice(1, -1),
+                });
             }
             return document.createTextNode(part);
         });
@@ -135,13 +145,20 @@ export function initAssistant(doc = document) {
         proposalItems(message).forEach(({ action, label, changes }) => {
             const item = document.createElement('li');
             item.classList.toggle('is-destructive', DESTRUCTIVE.includes(action));
-            item.append(Object.assign(document.createElement('strong'), { textContent: t(ACTION_LABELS[action] || action) }), ` ${label}`);
+            item.append(
+                Object.assign(document.createElement('strong'), {
+                    textContent: t(ACTION_LABELS[action] || action),
+                }),
+                ` ${label}`,
+            );
             if (changes.length) {
                 const details = document.createElement('ul');
                 changes.forEach(({ field, from, to }) => {
                     const line = document.createElement('li');
                     const before = shorten(from);
-                    line.textContent = before ? `${t(FIELD_LABELS[field] || field)}: ${before} → ${shorten(to)}` : `${t(FIELD_LABELS[field] || field)}: ${shorten(to)}`;
+                    line.textContent = before
+                        ? `${t(FIELD_LABELS[field] || field)}: ${before} → ${shorten(to)}`
+                        : `${t(FIELD_LABELS[field] || field)}: ${shorten(to)}`;
                     details.append(line);
                 });
                 item.append(details);
@@ -156,13 +173,19 @@ export function initAssistant(doc = document) {
             message.outcome = outcome;
             message.text = text;
             saveState(state);
-            footer.replaceChildren(Object.assign(document.createElement('small'), { textContent: text }));
+            footer.replaceChildren(
+                Object.assign(document.createElement('small'), { textContent: text }),
+            );
         };
         if (message.outcome) {
             settle(message.outcome, message.text);
         } else {
             const button = (label, className, handler) => {
-                const element = Object.assign(document.createElement('button'), { type: 'button', className, textContent: label });
+                const element = Object.assign(document.createElement('button'), {
+                    type: 'button',
+                    className,
+                    textContent: label,
+                });
                 element.addEventListener('click', async () => {
                     footer.querySelectorAll('button').forEach((b) => (b.disabled = true));
                     try {
@@ -180,10 +203,18 @@ export function initAssistant(doc = document) {
                         base_version: proposal.version,
                         proposal_hash: proposal.proposal_hash,
                     });
-                    settle('applied', t('Applied :count changes.').replace(':count', proposalItems(message).length));
+                    settle(
+                        'applied',
+                        t('Applied :count changes.').replace(
+                            ':count',
+                            proposalItems(message).length,
+                        ),
+                    );
                 }),
                 button(t('Cancel'), 'button', async () => {
-                    await post(`/api/v1/ai/actions/${proposal.id}/reject`, { base_version: proposal.version });
+                    await post(`/api/v1/ai/actions/${proposal.id}/reject`, {
+                        base_version: proposal.version,
+                    });
                     settle('rejected', t('Cancelled. Nothing was changed.'));
                 }),
             );
@@ -229,7 +260,9 @@ export function initAssistant(doc = document) {
         launcher.focus();
     };
 
-    state.messages.forEach((message) => (message.role === 'proposal' ? renderProposal(message) : render(message.role, message.text)));
+    state.messages.forEach((message) =>
+        message.role === 'proposal' ? renderProposal(message) : render(message.role, message.text),
+    );
     launcher.setAttribute('aria-expanded', 'false');
     if (state.open) open({ focus: false });
 
@@ -269,12 +302,17 @@ export function initAssistant(doc = document) {
                     .map(({ action, label }) => `${action} "${label}"`)
                     .join('; ');
                 const outcome = outcomes[message.outcome] || 'waiting for confirmation';
-                return { role: 'assistant', text: `[Proposed changes: ${changes}. Status: ${outcome}. This request is handled.]` };
+                return {
+                    role: 'assistant',
+                    text: `[Proposed changes: ${changes}. Status: ${outcome}. This request is handled.]`,
+                };
             });
         say('user', question);
         form.elements.question.value = '';
         try {
-            const { answer, proposal, preview } = (await post('/api/v1/ai/chat', { question, history })).payload.data;
+            const { answer, proposal, preview } = (
+                await post('/api/v1/ai/chat', { question, history })
+            ).payload.data;
             // A tool call (proposal) often arrives without text; the card speaks for it.
             if (answer) say('assistant', answer);
             else if (!proposal) say('error', t('The assistant could not answer right now.'));

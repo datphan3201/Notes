@@ -175,6 +175,7 @@ final readonly class AccountController
             '/settings/notifications' => ['settings/notifications', 'Notifications', 'settings.notifications'],
             '/settings/password' => ['settings/password', 'Security', 'settings.password'],
             '/settings/history' => ['settings/history', 'Task history', 'settings.history'],
+            '/settings/reports' => ['settings/reports', 'Report a user', 'settings.reports'],
             default => throw new \LogicException('Unexpected settings route.'),
         };
 

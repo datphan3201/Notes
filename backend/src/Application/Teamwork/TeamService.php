@@ -136,10 +136,11 @@ final readonly class TeamService
         $this->role($role);
 
         return $this->transactions->run(function () use ($userId, $goalId, $memberId, $role): array {
-            $this->lockGoal($goalId);
+            $goal = $this->lockGoal($goalId);
             $members = $this->teams->members($goalId, true);
             $this->requireRole($goalId, $userId, ['admin']);
             $this->findMember($members, $memberId);
+            $this->assertNotCreator($goal, $userId, $memberId);
             if ($role !== 'admin') {
                 $this->assertAdminRemains($members, $memberId);
             }
@@ -149,11 +150,11 @@ final readonly class TeamService
         });
     }
 
-    /** Admins remove anyone; any member may remove themselves (leave). */
+    /** Admins remove anyone but the goal's creator; any member may remove themselves (leave). */
     public function removeMember(int $userId, string $goalId, int $memberId): void
     {
         $this->transactions->run(function () use ($userId, $goalId, $memberId): void {
-            $this->lockGoal($goalId);
+            $goal = $this->lockGoal($goalId);
             $members = $this->teams->members($goalId, true);
             if ($memberId !== $userId) {
                 $this->requireRole($goalId, $userId, ['admin']);
@@ -161,6 +162,7 @@ final readonly class TeamService
                 $this->findMember($members, $userId);
             }
             $this->findMember($members, $memberId);
+            $this->assertNotCreator($goal, $userId, $memberId);
             $this->assertAdminRemains($members, $memberId);
             $this->teams->deleteMember($goalId, $memberId);
             $this->notifications->resolveSubject($memberId, 'team_invite', $goalId);
@@ -385,6 +387,7 @@ final readonly class TeamService
                 'biography' => (string) ($member['biography'] ?? ''),
                 'role' => (string) $member['role'],
                 'status' => (string) $member['status'],
+                'is_creator' => $goal['created_by'] !== null && (int) $goal['created_by'] === $id,
                 'assigned' => $stats[$id]['assigned'] ?? 0,
                 'done' => $stats[$id]['done'] ?? 0,
             ];
@@ -394,6 +397,7 @@ final readonly class TeamService
         return [
             ...$this->goalBase($goal),
             'my_role' => $myRole,
+            'i_am_creator' => $goal['created_by'] !== null && (int) $goal['created_by'] === $userId,
             'progress' => ['done' => $done, 'total' => count($tasks)],
             'members' => $serializedMembers,
             'tasks' => array_map(static fn (array $task): array => [
@@ -597,6 +601,20 @@ final readonly class TeamService
     private function lockGoal(string $goalId): array
     {
         return $this->teams->goal($goalId, true) ?? $this->notFound();
+    }
+
+    /**
+     * The member who created the goal keeps their role and membership against
+     * other admins, including admins they promoted; only they can change it.
+     *
+     * @param array<string, mixed> $goal
+     */
+    private function assertNotCreator(array $goal, int $actorId, int $memberId): void
+    {
+        $creator = $goal['created_by'] === null ? null : (int) $goal['created_by'];
+        if ($creator === $memberId && $actorId !== $memberId) {
+            throw new HttpException(403, 'TEAM_CREATOR_PROTECTED', 'Only the goal creator can change their own role or membership.');
+        }
     }
 
     /** @param array<string, mixed> $input */

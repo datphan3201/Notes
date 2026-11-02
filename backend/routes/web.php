@@ -80,6 +80,7 @@ return static function (
     \Planner\Http\Controller\TeamController $teams,
     \Planner\Http\Controller\AIChatController $chat,
     \Planner\Http\Controller\EmailController $email,
+    \Planner\Http\Controller\UserReportController $userReports,
 ) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
@@ -132,6 +133,11 @@ return static function (
 
             return $admin->lock($request, $parameters);
         }, auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/user-reports', 'api.user-reports.index', $handler([$userReports, 'mine']), auth: true),
+        new Route(['POST'], '/api/v1/user-reports', 'api.user-reports.store', $handler([$userReports, 'store']), auth: true, csrf: true, rateLimit: 'user-reports'),
+        new Route(['GET'], '/api/v1/admin/user-reports', 'api.admin.user-reports', $handler([$userReports, 'index']), auth: true),
+        new Route(['POST'], '/api/v1/admin/user-reports/{id}/resolve', 'api.admin.user-reports.resolve', $handler([$userReports, 'resolve']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/admin/user-reports/{id}/evidence/{position}', 'admin.user-reports.evidence', $handler([$userReports, 'evidence']), auth: true),
         new Route(['GET'], '/api/v1/admin/settings', 'api.admin.settings', $handler([$admin, 'settings']), auth: true),
         new Route(['PATCH'], '/api/v1/admin/settings', 'api.admin.settings.update', $handler([$admin, 'updateSettings']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/teamwork', 'planning.teamwork', $handler([$account, 'planningPage']), auth: true),
@@ -181,6 +187,7 @@ return static function (
         new Route(['GET'], '/settings/profile', 'settings.profile', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/preferences', 'settings.preferences', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/password', 'settings.password', $handler([$account, 'settingsPage']), auth: true),
+        new Route(['GET'], '/settings/reports', 'settings.reports', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/goals', 'planning.goals', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/goals/{id}', 'planning.goal', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/tasks', 'planning.tasks', $handler([$account, 'planningPage']), auth: true),

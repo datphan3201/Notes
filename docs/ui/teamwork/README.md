@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-Teamwork uses its own tables/services and membership permissions. A team admin is not a system admin. Non-members receive 404.
+Teamwork uses its own tables/services and membership permissions. A team admin is not a system admin. Non-members receive 404. The member who created a team goal (`created_by`) is protected: other admins, including ones the creator promoted, cannot change the creator's role or remove them (403 `TEAM_CREATOR_PROTECTED`); only the creator can step down or leave, and the last-admin rule still applies. Clicking a team Task opens a details dialog laid out like the personal Task page; editors can edit its fields there (reminder and repeat are kept).
 
 The page has searchable Goal cards, a paged carousel and focused Details/Members/Tasks/Chat panels.
 
