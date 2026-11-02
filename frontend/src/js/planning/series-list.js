@@ -3,7 +3,7 @@ import { t } from '../lib/i18n.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 
 /** Renders repeating Task series with pause/resume/end controls. */
-export function renderSeriesList(container, series, { today, reload, onError }) {
+export function renderSeriesList(container, series, { today, reload, onError, filtered = false }) {
     container.replaceChildren();
     for (const item of series) {
         const row = document.createElement('article');
@@ -67,9 +67,10 @@ export function renderSeriesList(container, series, { today, reload, onError }) 
     }
     if (!series.length)
         renderEmptyState(container, {
-            title: 'Make room for a routine.',
-            description:
-                'Use the repeat button when creating a task to schedule it daily, weekly, monthly or yearly.',
+            title: filtered ? 'No matching tasks.' : 'Make room for a routine.',
+            description: filtered
+                ? 'Try another name or status.'
+                : 'Use the repeat button when creating a task to schedule it daily, weekly, monthly or yearly.',
             icon: 'calendar',
         });
 }

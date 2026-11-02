@@ -140,6 +140,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | PATCH | `/api/v1/task-series/{id}` | `api.task-series.update` | yes | yes | mutations | [repeating.md](../ui/tasks/repeating.md) |
 | POST | `/api/v1/task-series/{id}/{action}` | `api.task-series.transition` | yes | yes | mutations | [repeating.md](../ui/tasks/repeating.md) |
 | GET | `/api/v1/dashboard` | `api.dashboard.show` | yes | no | — | [README.md](../ui/dashboard/README.md) |
+| PATCH | `/api/v1/dashboard/roadmap` | `api.dashboard.roadmap.update` | yes | yes | mutations | [README.md](../ui/dashboard/README.md) |
 | GET | `/api/v1/daily-selections/task` | `api.daily-selections.index` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | POST | `/api/v1/daily-selections/task` | `api.daily-selections.store` | yes | yes | mutations | [README.md](../ui/dashboard/README.md) |
 | DELETE | `/api/v1/daily-selections/task/{id}` | `api.daily-selections.destroy` | yes | yes | mutations | [README.md](../ui/dashboard/README.md) |

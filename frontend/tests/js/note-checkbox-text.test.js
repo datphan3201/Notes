@@ -8,6 +8,7 @@ import {
     replaceNoteText,
     toggleNoteCheckbox,
 } from '../../src/js/lib/note-checkbox-text.js';
+import { highlightTextSegments } from '../../src/js/notes/note-sharing.js';
 
 const caret = (start) => ({ start, end: start });
 
@@ -73,4 +74,18 @@ test('plain multiline replacement retains literal HTML, empty lines, and trailin
         value: '- [ ] <script>\n\n🐟\n',
         caret: 19,
     });
+});
+
+test('search highlight segments match case-insensitively and preserve original casing and literal HTML', () => {
+    assert.deepEqual(highlightTextSegments('Read <script>Quant</script> & quant paper', 'QUANT'), [
+        { text: 'Read <script>', match: false },
+        { text: 'Quant', match: true },
+        { text: '</script> & ', match: false },
+        { text: 'quant', match: true },
+        { text: ' paper', match: false },
+    ]);
+    assert.deepEqual(highlightTextSegments('Simple note', '   '), [
+        { text: 'Simple note', match: false },
+    ]);
+    assert.deepEqual(highlightTextSegments('', 'note'), []);
 });

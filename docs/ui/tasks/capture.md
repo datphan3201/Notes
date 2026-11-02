@@ -4,7 +4,7 @@
 
 Entry: **New task** dialog (`new-task-dialog`). Goal and Milestone capture reuse the same capture modules; Teamwork has its own payload/permission path.
 
-Required Task name, optional location, description, criteria, importance, dates, estimate, reminder and repeat controls are not independent entities. Dashboard Today also offers a minimal named Task capture that atomically selects the day and week; the full capture dialog here retains its existing fields.
+Required Task name, optional location, description, criteria, importance, dates, estimate, reminder and repeat controls are not independent entities. Dashboard Today also offers a minimal named Task capture that atomically selects the day and week; the full capture dialog retains its fields and now offers a separate Today/Week planning choice. Name comes first; optional descriptions/criteria and advanced fields are collapsed, with Create/Cancel available while scrolling.
 
 <!-- BEGIN GENERATED TRACE -->
 
@@ -16,8 +16,8 @@ A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed f
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L97) |
-| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L714) |
+| UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L119) |
+| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L797) |
 | Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L982) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L354) |
@@ -52,6 +52,22 @@ The schedule toolbar supplies presets and a draggable date picker. One-off captu
 | Persistence | [PdoTaskSeriesRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L49) |
 | Relevant tests (not a pass claim) | [calendar.test.js · repeat choices](../../../frontend/tests/js/calendar.test.js#L46)<br>[calendar.test.js · reminder presets](../../../frontend/tests/js/calendar.test.js#L36) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/task-series` (`api.task-series.store`) → [TaskSeriesController::store](../../../backend/src/Http/Controller/TaskSeriesController.php#L22) |
+
+### Name-first capture, Today/Week plan and result
+
+**Trace ID:** `tasks.capture.plan`
+
+Name comes first, then parent and Plan for. Today/Week views default Plan for to that view only for a clean draft; other views default Decide later. Optional description/criteria and advanced fields use native disclosure. The sticky Create/Cancel footer stays available while scrolling. A one-off Task is created before a separate daily/weekly selection; selection does not change its dates/status. If selection fails, creation is acknowledged once, the dialog closes, and an explicit partial-result message plus Open task link allows recovery without duplicate creation. Repeat disables Plan for; occurrences are selected individually. Successful series creation opens Repeating.
+
+| Layer | Entry point |
+| --- | --- |
+| UI / DOM | [tasks.php · data-task-plan&gt;](../../../frontend/src/views/planning/tasks.php#L126) |
+| CSS | [tasks.css · &#91;data-tasks-page&#93; .task-capture-footer {](../../../frontend/src/css/tasks.css#L42) |
+| Browser logic | [planning-page.js · const plan = form.elements.plan;](../../../frontend/src/js/planning/planning-page.js#L369)<br>[task-capture.js · export async function createCapturedTask](../../../frontend/src/js/planning/task-capture.js#L80) |
+| Controller / service / domain | [PlanningService.php · public function create(](../../../backend/src/Application/Planning/PlanningService.php#L96)<br>[DashboardService.php · public function addDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L273) |
+| Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoDashboardRepository.php · public function addDailySelection(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L172) |
+| Coverage limit | Browser smoke on an isolated local account checked Today/Week capture and simulated a failed selection after a real create. No new backend transaction or cross-request atomicity is claimed. |
+| HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/daily-selections/task` (`api.daily-selections.store`) → [DashboardController::addDailySelection](../../../backend/src/Http/Controller/DashboardController.php#L48)<br>`POST /api/v1/weekly-selections/{type}` (`api.weekly-selections.store`) → [DashboardController::addSelection](../../../backend/src/Http/Controller/DashboardController.php#L31) |
 
 <!-- END GENERATED TRACE -->
 

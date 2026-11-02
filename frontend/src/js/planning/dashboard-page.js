@@ -1,12 +1,16 @@
 import { t, statusLabel } from '../lib/i18n.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
-import { get, post, remove } from '../lib/http.js';
-import { weeklyTaskList, renderTaskChecklist } from './dashboard-tasks.js';
+import { get, post, put, remove } from '../lib/http.js';
+import { dashboardTaskList, weeklyTaskList, renderTaskChecklist } from './dashboard-tasks.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars, renderStreak } from './insights-ui.js';
 import { transitionEntity } from './transitions.js';
 import { checkMark } from '../lib/check-mark.js';
-import { streakLabel } from '../lib/habit-days.js';
+import {
+    habitCheckInSummary,
+    renderHabitChecklist,
+    renderHabitTargets,
+} from './dashboard-habits.js';
 import { initDashboardRoadmap } from './dashboard-roadmap.js';
 import { renderRecentActivity } from './recent-activity.js';
 
@@ -23,18 +27,13 @@ function rows(container, items, empty, type = 'task') {
         const row = document.createElement('a');
         row.className = 'dashboard-item';
         row.href =
-            type === 'habit'
-                ? '/habits'
-                : type === 'milestone'
-                  ? `/goals/${encodeURIComponent(item.goal_id)}#milestone=${encodeURIComponent(item.id)}`
-                  : `/tasks/${encodeURIComponent(item.id)}`;
+            type === 'milestone'
+                ? `/goals/${encodeURIComponent(item.goal_id)}#milestone=${encodeURIComponent(item.id)}`
+                : `/tasks/${encodeURIComponent(item.id)}`;
         const marker = document.createElement('span');
         marker.className = 'task-marker';
         marker.setAttribute('aria-hidden', 'true');
-        const complete =
-            type === 'habit'
-                ? item.done_today
-                : item.status === 'Done' || item.status === 'Completed';
+        const complete = item.status === 'Done' || item.status === 'Completed';
         marker.classList.toggle('is-complete', complete);
         if (complete) marker.append(checkMark());
         const copy = document.createElement('span');
@@ -42,10 +41,7 @@ function rows(container, items, empty, type = 'task') {
         const name = document.createElement('strong');
         name.textContent = item.name;
         const meta = document.createElement('small');
-        meta.textContent =
-            type === 'habit'
-                ? `${item.completed_days}/${item.target_frequency} ${t(item.period === 'weekly' ? 'this week' : 'today')} · ${t('Streak')}: ${streakLabel(item.streak, t)}${item.rest_today ? ` · ${t('Rest day')}` : ''}`
-                : `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${item.deadline}` : ''}`;
+        meta.textContent = `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${item.deadline}` : ''}`;
         copy.append(name, meta);
         row.append(marker, copy);
         container.append(row);
@@ -53,9 +49,8 @@ function rows(container, items, empty, type = 'task') {
     if (items.length > 4) {
         const link = document.createElement('a');
         link.className = 'section-link';
-        link.href =
-            type === 'habit' ? '/habits' : type === 'milestone' ? '/goals' : '/tasks?view=all';
-        link.textContent = `${t('View all')} ${items.length} ${t(type === 'milestone' ? 'milestones' : type === 'habit' ? 'habits' : 'tasks')} →`;
+        link.href = type === 'milestone' ? '/goals' : '/tasks?view=all';
+        link.textContent = `${t('View all')} ${items.length} ${t(type === 'milestone' ? 'milestones' : 'tasks')} →`;
         container.append(link);
     }
 }
@@ -224,11 +219,22 @@ function dayLabel(day) {
     return `${day.total} ${contribution} · ${date}${details ? ` — ${details}` : ''}`;
 }
 
+function weekRangeLabel(weekStart) {
+    const format = new Intl.DateTimeFormat(
+        window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
+        { month: 'short', day: 'numeric', timeZone: 'UTC' },
+    );
+    const start = new Date(`${weekStart}T00:00:00Z`);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 6);
+    return `${format.format(start)} – ${format.format(end)}`;
+}
+
 export function initDashboardPage(root) {
     const roadmap = initDashboardRoadmap(root, (error) => message(root, error));
-    root.querySelector('[data-dashboard-open-activity]').addEventListener('click', () => {
-        root.querySelector('[data-workspace-tab="activity"]').click();
-        root.querySelector('[data-workspace-tab="activity"]').focus();
+    root.querySelector('[data-dashboard-open-activity]')?.addEventListener('click', () => {
+        root.querySelector('[data-workspace-tab="activity"]')?.click();
+        root.querySelector('[data-workspace-tab="activity"]')?.focus();
     });
     let displayedMonth = null;
     let displayedYear = null;
@@ -246,10 +252,11 @@ export function initDashboardPage(root) {
             currentYear = data.years[0];
             renderYearActivity(root, data, direction);
             // The arrows step one calendar year at a time.
-            previous.disabled = displayedYear >= currentYear;
-            next.disabled = displayedYear <= oldestActivityYear;
+            if (previous) previous.disabled = displayedYear >= currentYear;
+            if (next) next.disabled = displayedYear <= oldestActivityYear;
         } catch (error) {
-            root.querySelector('[data-activity-days]').textContent = error.message;
+            const days = root.querySelector('[data-activity-days]');
+            if (days) days.textContent = error.message;
         } finally {
             yearLoading = false;
         }
@@ -260,7 +267,7 @@ export function initDashboardPage(root) {
         if (year >= oldestActivityYear && year <= currentYear) loadActivity(year);
     };
     // Scrolling over the spinner turns it like a wheel: scrolling up shows newer years.
-    root.querySelector('.activity-year-list').addEventListener(
+    root.querySelector('.activity-year-list')?.addEventListener(
         'wheel',
         (event) => {
             if (!event.deltaY) return;
@@ -269,7 +276,7 @@ export function initDashboardPage(root) {
         },
         { passive: false },
     );
-    root.querySelector('[data-activity-years]').addEventListener('click', (event) => {
+    root.querySelector('[data-activity-years]')?.addEventListener('click', (event) => {
         const year = event.target.closest('[data-year]')?.dataset.year;
         if (year) loadActivity(Number(year));
     });
@@ -280,6 +287,8 @@ export function initDashboardPage(root) {
     let reloadRequested = false;
     let taskBusy = false;
     let taskData = null;
+    const todaySort = root.querySelector('[data-dashboard-today-sort]');
+    const todayStatus = root.querySelector('[data-dashboard-today-status]');
     const weekSort = root.querySelector('[data-dashboard-week-sort]');
     const weekStatus = root.querySelector('[data-dashboard-week-status]');
     const addToday = root.querySelector('[data-dashboard-add-today]');
@@ -305,27 +314,47 @@ export function initDashboardPage(root) {
             onRemoveToday: (task) =>
                 runTaskAction(() => remove(`/api/v1/daily-selections/task/${task.id}`)),
         };
-        renderTaskChecklist(root.querySelector('[data-today-tasks]'), taskData.today_tasks, {
+        const filteredToday = dashboardTaskList(taskData.today_tasks, {
+            sort: todaySort ? todaySort.value : 'importance',
+            status: todayStatus ? todayStatus.value : 'all',
+            timezone: taskData.timezone,
+        });
+        renderTaskChecklist(root.querySelector('[data-today-tasks]'), filteredToday, {
             ...options,
             mode: 'today',
+            limit: Infinity,
         });
+        root.querySelector('[data-today-count]').textContent =
+            todayStatus && todayStatus.value !== 'all'
+                ? `${filteredToday.length} / ${taskData.today_tasks.length}`
+                : String(filteredToday.length);
         const filtered = weeklyTaskList(taskData.selected_tasks, {
             sort: weekSort.value,
             status: weekStatus.value,
             timezone: taskData.timezone,
         });
-        renderTaskChecklist(root.querySelector('[data-weekly-preview-tasks]'), filtered, {
+        renderTaskChecklist(root.querySelector('[data-weekly-tasks]'), filtered, {
             ...options,
             mode: 'week',
+            limit: Infinity,
         });
-        renderTaskChecklist(root.querySelector('[data-weekly-tasks]'), taskData.selected_tasks, {
-            ...options,
-            mode: 'week',
-        });
-        root.querySelector('[data-weekly-preview-count]').textContent =
+        root.querySelector('[data-weekly-task-count]').textContent =
             weekStatus.value === 'all'
                 ? String(filtered.length)
                 : `${filtered.length} / ${taskData.selected_tasks.length}`;
+        const summary = habitCheckInSummary(taskData.habits);
+        root.querySelector('[data-habits-today-count]').textContent = summary.total
+            ? `${summary.done} / ${summary.total}`
+            : '—';
+        renderHabitChecklist(root.querySelector('[data-habits-today]'), taskData.habits, {
+            busy: loading || taskBusy,
+            onToggle: (habit) =>
+                runTaskAction(() => {
+                    const path = `/api/v1/habits/${habit.id}/check-ins/${habit.today}`;
+                    return habit.done_today ? remove(path) : put(path);
+                }),
+        });
+        renderHabitTargets(root.querySelector('[data-dashboard-habits]'), taskData.habits);
         const reminder = root.querySelector('[data-overdue-reminder]');
         reminder.replaceChildren();
         const text = document.createElement('span');
@@ -373,6 +402,8 @@ export function initDashboardPage(root) {
         }
         return success;
     };
+    todaySort?.addEventListener('change', renderTaskPanels);
+    todayStatus?.addEventListener('change', renderTaskPanels);
     weekSort.addEventListener('change', renderTaskPanels);
     weekStatus.addEventListener('change', renderTaskPanels);
     addToday.addEventListener('click', async () => {
@@ -436,13 +467,13 @@ export function initDashboardPage(root) {
         tooltip.style.left = `${Math.max(12, Math.min(window.innerWidth - width - 12, bounds.left + bounds.width / 2 - width / 2))}px`;
         tooltip.style.top = `${Math.max(8, bounds.top - tooltip.offsetHeight - 10)}px`;
     };
-    grid.addEventListener('pointerover', showTooltip);
-    grid.addEventListener('focusin', showTooltip);
-    grid.addEventListener('pointerout', hideTooltip);
-    grid.addEventListener('focusout', hideTooltip);
+    grid?.addEventListener('pointerover', showTooltip);
+    grid?.addEventListener('focusin', showTooltip);
+    grid?.addEventListener('pointerout', hideTooltip);
+    grid?.addEventListener('focusout', hideTooltip);
     document.addEventListener('scroll', hideTooltip, true);
     window.addEventListener('resize', hideTooltip);
-    grid.addEventListener('keydown', (event) => {
+    grid?.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') hideTooltip();
     });
 
@@ -477,7 +508,7 @@ export function initDashboardPage(root) {
                 },
             ).format(new Date(`${data.today}T00:00:00Z`));
             root.querySelector('[data-today-count]').textContent = data.today_tasks.length;
-            root.querySelector('[data-weekly-task-count]').textContent = data.selected_tasks.length;
+            root.querySelector('[data-week-range]').textContent = weekRangeLabel(data.week_start);
             root.querySelector('[data-weekly-milestone-count]').textContent =
                 data.selected_milestones.length;
             loadActivity(displayedYear);
@@ -539,18 +570,6 @@ export function initDashboardPage(root) {
                 },
                 'milestone',
             );
-            rows(
-                root.querySelector('[data-dashboard-habits]'),
-                data.habits,
-                {
-                    title: 'Build a steady rhythm.',
-                    description: 'Create a habit and it will appear here with its own streak.',
-                    icon: 'habits',
-                    href: '/habits',
-                    action: 'Explore habits',
-                },
-                'habit',
-            );
         } catch (error) {
             message(root, error);
             if (!displayedMonth) {
@@ -575,9 +594,9 @@ export function initDashboardPage(root) {
             }
         }
     };
-    previous.addEventListener('click', () => moveYear(1));
-    next.addEventListener('click', () => moveYear(-1));
-    refresh.addEventListener('click', () => load());
+    previous?.addEventListener('click', () => moveYear(1));
+    next?.addEventListener('click', () => moveYear(-1));
+    refresh?.addEventListener('click', () => load());
     load(null);
 }
 

@@ -57,6 +57,9 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] DASH17 — Change roadmap during a delayed Dashboard refresh: the latest choice, preview links and saved preference remain coherent.
 - [ ] DASH18 — Activity shows 30 inclusive local dates across month/year boundaries, fills zero days and excludes reversed facts; View activity opens the existing yearly tab.
 - [ ] DASH19 — Desktop/mobile retain header → roadmap ordering, Activity before Habit streak, no global horizontal overflow and accessible native selectors/checklist controls.
+- [ ] DASH20 — Today contains no week card: Activity and Habits, then the Today checklist. Checking a Habit updates its row, count and streak; unchecking restores them, and a Habit whose local date differs from the account date uses its own date.
+- [ ] DASH21 — This week shows progress/bars, Milestones with Habit targets, then the full Weekly tasks list; Sort/Status work independently, the badge shows filtered/total, and more than four selected Tasks are all listed.
+- [ ] DASH22 — Roadmap connectors fill in proportion to the preceding Milestone's progress (0%, partial, 100%); Completed Milestones show solid nodes and fully filled connectors; the last node has no connector.
 
 ## Areas, Goals, roadmaps and Milestones — GOAL
 
@@ -106,6 +109,13 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] TASK17 — Task Note conflict between tabs preserves saved/draft choices.
 - [ ] TASK18 — Archive a QA Task: it leaves active lists/API usage while other Tasks remain unchanged.
 
+- [ ] TASK19 — Opening Tasks without a valid view defaults to All; view links preserve context. Completed follows the selected view/search/tag filters and pages separately from open work.
+- [ ] TASK20 — Visible Search/Status/Sort compose independently. Importance is descending; scheduled sort uses account-local work time with undated tasks last and stable ties.
+- [ ] TASK21 — Clean Today/Week capture defaults Plan for to that view. Reopening a dirty capture preserves its values. Creating retains search/status/view/page and offers Open task; a failed planning step never creates a duplicate.
+- [ ] TASK22 — Repeat disables Plan for; individual occurrences remain selectable later. Advanced capture fields remain accessible and the Create/Cancel footer stays visible on mobile.
+- [ ] TASK23 — Native More options opens by keyboard and exposes dates/reminder/repeat/Archive. Row names align; context chips fit their text; Today icons expose meaningful hover/accessibility labels.
+- [ ] TASK24 — Today add/remove from detail matches row behavior. Overview contains the completion checklist; Notes/Resources stay in Notes and preserve drafts when changing tabs.
+
 ## Personal repeating work — REPEAT
 
 [Behavior and source trace](../ui/tasks/repeating.md)
@@ -119,6 +129,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] REPEAT07 — Template/rule edits before/after the first occurrence enforce the service’s locking/replacement rules.
 - [ ] REPEAT08 — Occurrence completion does not increase finite Goal progress or reopen a Completed Goal.
 - [ ] REPEAT09 — Tasks/Dashboard reads may top up horizon; scheduler/catch-up/DST tests require controlled time and separate evidence.
+- [ ] REPEAT10 — Repeating name search and All/Active/Paused/Ended share the same result/count/paging; Task-only controls are hidden and Ended has no Pause/Resume action.
 
 ## Habits, streaks and Rest Days — HABIT
 
@@ -126,7 +137,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 - [ ] HABIT01 — Create daily and weekly Habits with target, timezone, optional Goal/Tags and description.
 - [ ] HABIT02 — Edit/archive QA Habit durably without affecting existing Habits.
-- [ ] HABIT03 — Today check-in is idempotent; Undo reverses the right check-in and Activity.
+- [ ] HABIT03 — The checkbox before the Habit name checks in/undoes today directly, matching Dashboard; repeated check-in is idempotent and Undo reverses the right Activity.
 - [ ] HABIT04 — Allowed past/today dates use Habit-local time; future check-ins are rejected.
 - [ ] HABIT05 — Dots distinguish checked/missed/rest/open/untracked; dates before tracking are not missed.
 - [ ] HABIT06 — Daily streak counts days and weekly streak counts qualifying weeks without counting a day twice.
@@ -134,6 +145,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] HABIT08 — Cancel future rest within its allowed window; rest protects streak without adding completion Activity.
 - [ ] HABIT09 — Aggregate Dashboard streak considers all required daily Habits and correctly distinguishes rest/missed.
 - [ ] HABIT10 — Browser timezone alias Asia/Saigon is canonicalized to Asia/Ho_Chi_Minh. Existing checked-in legacy Habits can save unrelated edits with an equivalent timezone while keeping stored timezone/history; genuinely different zones remain rejected.
+- [ ] HABIT11 — More options provides the next three Rest Day choices and Archive; cancel preserves state, confirmation retains history, and Escape/refresh/mutations restore useful focus. Edit and its sticky Cancel/Save footer remain accessible on mobile.
 
 ## Notes — NOTE
 
@@ -254,6 +266,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] HISTORY03 — Reopen an overdue Task: cancel changes nothing; choose a non-past deadline or leave it empty to clear the old date. It leaves Overdue/History without a fabricated completion reversal.
 - [ ] HISTORY04 — On disposable data, retention archives eligible history without hard-delete or unrelated-object changes.
 - [ ] HISTORY05 — Admin cap applies in addition to optional user retention; no fabricated retention test result is inferred from a list refresh.
+- [ ] HISTORY06 — History shows search/results before collapsed rules; completed time/due date sorts newest first, 12-row paging clamps after changes and searching descriptions resets the page. Back to Tasks returns to All.
 
 ## Email links — EMAIL
 
@@ -284,8 +297,9 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] AI01 — Floating chat opens/closes with preserved focus; /ai is not a browser page.
 - [ ] AI02 — Disabled provider reports unavailable without domain writes or fake responses.
 - [ ] AI03 — If an authorized live provider is configured, bounded owned context/question returns a safe answer; report this separately.
-- [ ] AI04 — API-only proposals reject malformed/foreign/stale/hash/expiry violations; no browser approval editor is implied.
-- [ ] AI05 — Explicit Apply commits allowed creates atomically; replay/reject behave idempotently and forbidden Modify/Delete never runs.
+- [ ] AI04 — Chat proposal cards show the queued before/after changes. Malformed/foreign/stale/hash/expiry violations reject Apply; no separate /ai page is implied.
+- [ ] AI05 — Explicit Apply runs only supported create/edit/transition/archive/delete operations atomically through ordinary services; no domain write occurs before confirmation. Replay/Cancel retain their outcome.
+- [ ] AI06 — Chat reads are owner-scoped; editing an object after proposal generation returns 409 without applying it. Conversation history includes earlier proposal outcomes and does not silently repeat handled requests.
 
 ## Help walkthrough — HELP
 

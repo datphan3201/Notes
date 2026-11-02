@@ -8,11 +8,19 @@
         {
           "id": "tasks.collection",
           "label": "Collection, refresh, search and pagination",
-          "behavior": "The browser fetches Tasks, Dashboard selections, Goals, Milestones and series; a latest-request guard prevents old responses replacing newer reads. Page size is 8, or 4 below 600px. Tags currently have a hidden filter control.",
+          "behavior": "Tasks defaults to All unless a valid view query is supplied. Visible search, Status and Sort are independent; sorting is stable by importance or account-local scheduled time (undated last). Reads use a latest-request guard. Active and Completed lists page independently at 8 rows, or 4 below 600px. Tags appear under More filters when available. Creating retains the current view/search/status/page and offers an Open task result link.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
               "symbol": "data-tasks-page"
+            },
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-sort"
+            },
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-create-status"
             }
           ],
           "client": [
@@ -23,6 +31,10 @@
             {
               "path": "frontend/src/js/planning/collection-page.js",
               "symbol": "export function collectionPage"
+            },
+            {
+              "path": "frontend/src/js/planning/tasks-collection.js",
+              "symbol": "export function sortTasks"
             }
           ],
           "server": [
@@ -47,6 +59,10 @@
               "path": "frontend/tests/js/collection-page.test.js",
               "symbol": "test('a page shrinks safely after filtering or its final row is removed'",
               "label": "page shrinks"
+            },
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "test('sorting uses account-local scheduled time, keeps undated work last and is independent of filtering'"
             }
           ],
           "routes": [
@@ -55,16 +71,15 @@
           ],
           "styles": [
             {
-              "path": "frontend/src/css/feedback.css",
-              "symbol": ".task-row-icon {",
-              "label": "Task row action icons"
+              "path": "frontend/src/css/tasks.css",
+              "symbol": "[data-tasks-page] .collection-controls {"
             }
           ]
         },
         {
           "id": "tasks.row",
-          "label": "Task row: tick, dates, week, Edit, Remove, Important",
-          "behavior": "Rows are built in JavaScript. Complete/Reopen uses shared acknowledgement handling; the week button changes selection, Important changes importance, and Remove archives. Inspect the row builder before changing icons or interaction order.",
+          "label": "Task row: completion, Today, week, Edit, Important and More options",
+          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week/Today, Edit and Important stay inline; native More options reveals due/reminder/repeat and Archive. Archive retains data. Today uses + or a check with native hover labels and accessible names; automatic membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -111,9 +126,9 @@
           ],
           "styles": [
             {
-              "path": "frontend/src/css/feedback.css",
-              "symbol": ".task-row-icon {",
-              "label": "Task row action icons"
+              "path": "frontend/src/css/tasks.css",
+              "symbol": "grid-template-columns: auto minmax(0, 1fr) auto;",
+              "label": "Aligned task row grid"
             }
           ]
         }
@@ -126,7 +141,7 @@
         {
           "id": "tasks.filter.today",
           "label": "Today",
-          "behavior": "Includes explicit account-local daily selections, matching deadline/start/occurrence dates, overlapping work intervals and unfinished overdue work not yet in History. Explicit daily selection can reveal historical work deliberately. Add for today from a Task row also selects the current week and changes no Task dates/status. Task-row add/remove actions use +/× icons with native hover labels and accessible names.",
+          "behavior": "Includes explicit account-local daily selections, matching deadline/start/occurrence dates, overlapping work intervals and unfinished overdue work not yet in History. Explicit daily selection can reveal historical work deliberately. Add for today from a Task row also selects the current week and changes no Task dates/status. Task-row add/remove actions use +/check icons with native hover labels and accessible names.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -412,7 +427,7 @@
         {
           "id": "tasks.filter.all",
           "label": "All",
-          "behavior": "All fetched Tasks that do not qualify for History, then the independent search/status/tag filters. The default Open tasks status still hides Done Tasks.",
+          "behavior": "Default catalogue view when no valid view query is supplied. All fetched Tasks outside History, followed by independent search/status/tag filters and sorting. Open tasks hides Done rows in the main list; its separate Completed group uses the same view membership.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -516,7 +531,7 @@
         {
           "id": "tasks.filter.completed",
           "label": "Completed section and History boundary",
-          "behavior": "Under the default Open tasks filter, recently Done Tasks appear in a separate section. History uses configurable elapsed completed-hours and local overdue-days thresholds. This is a projection; pruning is a separate server job.",
+          "behavior": "Under Open tasks, recently Done Tasks appear in a separate, independently paged section only when they match the selected Today/Next/Week/Backlog/All view. Search/tag/sort apply too. Overdue has no Done membership. History uses configurable elapsed completed-hours and local overdue-days thresholds; pruning remains a separate server job.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -524,6 +539,10 @@
             }
           ],
           "client": [
+            {
+              "path": "frontend/src/js/planning/tasks-collection.js",
+              "symbol": "export function completedInView"
+            },
             {
               "path": "frontend/src/js/planning/task-views.js",
               "symbol": "export function taskInHistory"
@@ -559,6 +578,10 @@
               "path": "frontend/tests/js/task-views.test.js",
               "symbol": "test('history uses elapsed completion time and local calendar overdue dates'",
               "label": "history uses elapsed"
+            },
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "test('Completed follows Today/Week/Next/All membership instead of leaking global completions'"
             }
           ],
           "routes": [
@@ -723,6 +746,60 @@
             "api.tasks.store",
             "api.task-series.store"
           ]
+        },
+        {
+          "id": "tasks.capture.plan",
+          "label": "Name-first capture, Today/Week plan and result",
+          "behavior": "Name comes first, then parent and Plan for. Today/Week views default Plan for to that view only for a clean draft; other views default Decide later. Optional description/criteria and advanced fields use native disclosure. The sticky Create/Cancel footer stays available while scrolling. A one-off Task is created before a separate daily/weekly selection; selection does not change its dates/status. If selection fails, creation is acknowledged once, the dialog closes, and an explicit partial-result message plus Open task link allows recovery without duplicate creation. Repeat disables Plan for; occurrences are selected individually. Successful series creation opens Repeating.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-plan>"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const plan = form.elements.plan;"
+            },
+            {
+              "path": "frontend/src/js/planning/task-capture.js",
+              "symbol": "export async function createCapturedTask"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function create("
+            },
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function addDailySelection("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function addDailySelection("
+            }
+          ],
+          "tests": [],
+          "test_scope": "Browser smoke on an isolated local account checked Today/Week capture and simulated a failed selection after a real create. No new backend transaction or cross-request atomicity is claimed.",
+          "routes": [
+            "api.tasks.store",
+            "api.daily-selections.store",
+            "api.weekly-selections.store"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/tasks.css",
+              "symbol": "[data-tasks-page] .task-capture-footer {"
+            }
+          ]
         }
       ]
     },
@@ -733,14 +810,22 @@
         {
           "id": "tasks.repeating.list",
           "label": "Repeating list: Pause, Resume, End",
-          "behavior": "Rows show series state, frequency, start/end and optional reminder time. Pause retains existing Tasks. Resume skips missed paused dates; End asks to archive future NotStarted occurrences, preserving started/Done work. Ended is terminal: API Pause/Resume returns 422 after ownership/version checks; repeated End with the current version is a no-op. Start a new series for future repeating work.",
+          "behavior": "Repeating uses name search plus an independent All/Active/Paused/Ended series-state select; Task status/sort/tag controls are hidden. The badge, list and pagination use the same filtered series, including Ended in All. Rows show series state, frequency, start/end and optional reminder time. Pause retains existing Tasks. Resume skips missed paused dates; End asks to archive future NotStarted occurrences, preserving started/Done work. Ended is terminal: API Pause/Resume returns 422 after ownership/version checks; repeated End with the current version is a no-op. Start a new series for future repeating work.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
               "symbol": "data-task-view=\"repeating\""
+            },
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-series-status>"
             }
           ],
           "client": [
+            {
+              "path": "frontend/src/js/planning/tasks-collection.js",
+              "symbol": "export function seriesPage"
+            },
             {
               "path": "frontend/src/js/planning/series-list.js",
               "symbol": "export function renderSeriesList"
@@ -774,6 +859,10 @@
             {
               "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
               "symbol": "public function test_ended_series_http_transitions_preserve_auth_csrf_ownership_versions_and_replay("
+            },
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "test('Repeating search/state/count/paging use the same series including terminal rows'"
             }
           ],
           "routes": [
@@ -1015,7 +1104,7 @@
         {
           "id": "task.detail.checklist",
           "label": "Completion Checklist",
-          "behavior": "Checklist records are separate owned/versioned rows. Check/uncheck writes Activity; order is a complete-ID-set mutation. This is distinct from inline checkable text in a working note.",
+          "behavior": "Overview contains the completion Checklist beside the Task definition (stacked on mobile). Checklist records are separate owned/versioned rows. Check/uncheck writes Activity; order is a complete-ID-set mutation. This is distinct from inline checkable text in a working note.",
           "ui": [
             {
               "path": "frontend/src/views/planning/task.php",
@@ -1069,7 +1158,7 @@
         {
           "id": "task.detail.note",
           "label": "Working note, Check box and Resources",
-          "behavior": "The Task note uses explicit Save. Linking/creating the owned Note is handled by saveTaskNote; text persists through the Note API. Resource URLs are derived from plain note text. There is no promise of browser-crash recovery for this explicit-save editor.",
+          "behavior": "Working notes and Resources remain only in the dedicated Notes tab; switching tabs preserves the current draft without moving/recreating the editor. The Task note uses explicit Save. Linking/creating the owned Note is handled by saveTaskNote; text persists through the Note API. Resource URLs are derived from plain note text. There is no promise of browser-crash recovery for this explicit-save editor.",
           "ui": [
             {
               "path": "frontend/src/views/planning/task.php",
@@ -1178,6 +1267,48 @@
             "api.tasks.contributions.index",
             "api.tasks.contributions.store",
             "api.tasks.contributions.destroy"
+          ]
+        },
+        {
+          "id": "task.detail.plan",
+          "label": "Today and week planning actions",
+          "behavior": "The header offers week selection and an icon-only Today toggle with native hover/accessibility labels. + adds Today; a check indicates membership. Explicit selections can be removed; automatic Today membership is disabled for removal here. Done disables Today selection. Actions reuse existing owned Dashboard selection APIs and change no Task dates/status.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-task-today disabled"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "root.querySelector('[data-task-today]').addEventListener("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function addDailySelection("
+            },
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "public function removeDailySelection("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+              "symbol": "public function addDailySelection("
+            }
+          ],
+          "tests": [],
+          "test_scope": "Real-browser smoke checked add/remove through the row and detail header on isolated local tasks.",
+          "routes": [
+            "api.dashboard.show",
+            "api.daily-selections.store",
+            "api.daily-selections.destroy",
+            "api.weekly-selections.store",
+            "api.weekly-selections.destroy"
           ]
         }
       ]
@@ -1655,7 +1786,7 @@
         {
           "id": "dashboard.today",
           "label": "Today progress and checklist",
-          "behavior": "Today combines account-local daily selections, matching due/start/occurrence dates, overlapping work intervals and recent unfinished overdue work. Explicit daily selections remain visible even when a Task otherwise qualifies for History. Both Task panels use the existing versioned Complete/Reopen flow. On progress means InProgress; Scheduled means a planned start, occurrence or work interval today; a deadline alone is Due today. Completed rows retain their check state until the applicable membership/History boundary. Today owns one progress summary above its checklist: Done / full Today membership, including checked rows; an empty denominator is null and renders —. Current focus has been removed; Task completion/editing remains on the actual Task controls.",
+          "behavior": "Today combines account-local daily selections, matching due/start/occurrence dates, overlapping work intervals and recent unfinished overdue work. Explicit daily selections remain visible even when a Task otherwise qualifies for History. Today and Weekly task rows use the existing versioned Complete/Reopen flow. On progress means InProgress; Scheduled means a planned start, occurrence or work interval today; a deadline alone is Due today. Completed rows retain their check state until the applicable membership/History boundary. Today owns one progress summary above its checklist: Done / full Today membership, including checked rows; an empty denominator is null and renders —. Current focus has been removed; Task completion/editing remains on the actual Task controls.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -1664,6 +1795,14 @@
             {
               "path": "frontend/src/views/planning/dashboard.php",
               "symbol": "data-today-completed"
+            },
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-dashboard-today-sort"
+            },
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-dashboard-today-status"
             },
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -1743,7 +1882,7 @@
         {
           "id": "dashboard.week",
           "label": "This week and weekly summary",
-          "behavior": "The Today workspace places This week beside the Today checklist; the existing This week workspace retains its Task/Milestone/Habit views. Task rows support completion and Add for today without moving/removing weekly membership or changing Task dates/status. Two independent native selects sort by Importance (descending) or Scheduled time (earliest first, unscheduled last), and filter All/Not started/On progress/Blocked/Completed. Sorting/filtering does not rewrite stored order, membership or weekly percentage denominators. Previews still show four rows with a link to the complete Tasks view. The row action is a compact + icon with Add for today as its native hover tooltip and accessible name; already-present Tasks show a check mark. It stays inline on mobile. The formerly separate weekly statistics card is merged into this checklist card: percentage, Done/total, comparison and weekly bars appear above the controls/list. Filtering never changes the full selected denominator.",
+          "behavior": "The This week tab mirrors the Today layout: a progress card (percentage, Done/total, previous-week comparison and weekly bars) beside a Milestones card that also lists weekly Habit targets, then one full-width Weekly tasks checklist. Today no longer contains any week content. Task rows support completion and Add for today without moving/removing weekly membership or changing Task dates/status. Two independent native selects sort by Importance (descending) or Scheduled time (earliest first, unscheduled last), and filter All/Not started/On progress/Blocked/Completed. Sorting/filtering does not rewrite stored order, membership or weekly percentage denominators; the count badge shows filtered/total while a status filter is active. The tab lists the whole selection (Today previews stay at four rows). The row action is a compact + icon with Add for today as its native hover tooltip and accessible name; already-present Tasks show a check mark. Filtering never changes the full selected denominator.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -1759,7 +1898,7 @@
             },
             {
               "path": "frontend/src/views/planning/dashboard.php",
-              "symbol": "data-weekly-preview-tasks"
+              "symbol": "data-weekly-task-count"
             },
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -1827,7 +1966,7 @@
           "styles": [
             {
               "path": "frontend/src/css/feedback.css",
-              "symbol": ".dashboard-week-filters {"
+              "symbol": ".dashboard-week-tasks .dashboard-week-filters {"
             }
           ]
         },
@@ -1929,11 +2068,15 @@
         {
           "id": "dashboard.habits",
           "label": "Habit streak and quick check-in",
-          "behavior": "Habit streaks and daily state derive from check-ins/rest days. Habit-local dates may differ from the account timezone; do not sum weekly targets into a daily denominator.",
+          "behavior": "Today shows a Habits card beside Activity: the aggregate streak and its recent days, then each Habit with a checkbox that checks in or undoes today for that Habit's own local date (PUT/DELETE of the existing check-in route; Habit-local dates may differ from the account timezone). A day counts toward the streak only when every daily Habit is done or on a rest day. Rows show completed/target for the period, streak and rest-day state. Weekly Habits are checked in on individual days but their weekly target progress is read-only on the This week tab (Habit targets); weekly targets are never summed into a daily denominator. Creating, editing, resting and archiving remain on /habits.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
               "symbol": "data-dashboard-habits"
+            },
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-habits-today aria-live"
             }
           ],
           "client": [
@@ -1944,12 +2087,24 @@
             {
               "path": "frontend/src/js/planning/insights-ui.js",
               "symbol": "export function renderStreak"
+            },
+            {
+              "path": "frontend/src/js/planning/dashboard-habits.js",
+              "symbol": "export function renderHabitChecklist("
+            },
+            {
+              "path": "frontend/src/js/planning/dashboard-habits.js",
+              "symbol": "export function renderHabitTargets("
             }
           ],
           "server": [
             {
               "path": "backend/src/Application/Habits/HabitProgress.php",
               "symbol": "public function describe("
+            },
+            {
+              "path": "backend/src/Application/Dashboard/DashboardService.php",
+              "symbol": "private function habitProgress("
             }
           ],
           "storage": [
@@ -1971,11 +2126,29 @@
               "path": "backend/tests/Plain/Integration/DashboardReviewsTest.php",
               "symbol": "public function test_dashboard_streak_deduplicates_habits_respects_owner_and_recalculates_after_undo(",
               "label": "public function test_dashboard_streak_deduplicates_habits_respects_owner_and_recalculates_after_u..."
+            },
+            {
+              "path": "frontend/tests/js/dashboard-habits.test.js",
+              "symbol": "test('habit check-in summary counts only Habits checked in on their own today'"
+            },
+            {
+              "path": "frontend/tests/js/dashboard-habits.test.js",
+              "symbol": "test('weekly targets list only weekly Habits and preserve server order'"
             }
           ],
           "routes": [
             "api.habits.check-ins.store",
             "api.habits.check-ins.destroy"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".dashboard-habit-list {"
+            },
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".dashboard-habit-targets-heading {"
+            }
           ]
         },
         {
@@ -2099,7 +2272,7 @@
         {
           "id": "dashboard.roadmap",
           "label": "Roadmap below the header and account selection",
-          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice.",
+          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. The connector after each node fills green in proportion to that Milestone's own progress (Completed is 100%, otherwise finished Tasks over its Tasks); a node is solid when complete and outlined green when partly done. Progress is a factual Task ratio, not a prediction. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice.",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -2118,6 +2291,10 @@
             {
               "path": "frontend/src/js/planning/dashboard-roadmap.js",
               "symbol": "export function initDashboardRoadmap("
+            },
+            {
+              "path": "frontend/src/js/planning/dashboard-roadmap.js",
+              "symbol": "export function milestoneProgress("
             },
             {
               "path": "frontend/src/js/lib/read-coordinator.js",
@@ -2151,13 +2328,21 @@
           "styles": [
             {
               "path": "frontend/src/css/feedback.css",
-              "symbol": ".dashboard-roadmap-controls {"
+              "symbol": ".dashboard-page > .dashboard-roadmap {"
+            },
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".dashboard-roadmap .roadmap-preview a:not(:last-child)::after {"
             }
           ],
           "tests": [
             {
               "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
               "symbol": "public function test_dashboard_roadmap_choice_is_persisted_owner_scoped_and_explicitly_cleared("
+            },
+            {
+              "path": "frontend/tests/js/dashboard-habits.test.js",
+              "symbol": "test('roadmap connector progress follows the Milestone, clamped to 0-100'"
             }
           ],
           "test_scope": "HTTP coverage verifies persistence, ownership, CSRF, validation and archived-choice clearing. Browser evidence separately exercises reload, preview navigation and a deliberately delayed stale Dashboard refresh.",
@@ -2177,11 +2362,15 @@
         {
           "id": "habits.collection",
           "label": "Habit cards and New/Edit dialog",
-          "behavior": "Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
+          "behavior": "The existing theme/cards and Edit fields are retained. Check-in sits before the name; the calendar follows the text and moves below on narrower screens. Edit remains at the end; More options opens the existing secondary popover. Parent chips fit their text. Refresh is an icon with a native tooltip. Edit keeps Cancel then Save changes in a sticky footer on mobile. Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
           "ui": [
             {
               "path": "frontend/src/views/planning/habits.php",
               "symbol": "data-habit-create-form"
+            },
+            {
+              "path": "frontend/src/views/planning/habits.php",
+              "symbol": "habit-dialog-footer"
             }
           ],
           "client": [
@@ -2241,12 +2430,19 @@
             "api.habits.store",
             "api.habits.update",
             "api.habits.archive"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/habits.css",
+              "symbol": "grid-template-columns: 44px minmax(0, 1fr) max-content max-content;",
+              "label": "Habit action layout"
+            }
           ]
         },
         {
           "id": "habits.checkins",
           "label": "Check-in, undo and streak",
-          "behavior": "At most one check-in per Habit/local date. No future check-in; repeated PUT is idempotent. Undo reverses Activity. Streaks derive from check-ins and rest history, not a stored score.",
+          "behavior": "The left-hand checkbox immediately checks in or undoes today, consistently with Dashboard; it no longer opens a menu. It exposes checkbox state and an action-specific accessible name. Calendar buttons retain dated check-in/undo. Controls disable during their request and restore focus after refresh. At most one check-in per Habit/local date. No future check-in; repeated PUT is idempotent. Undo reverses Activity. Streaks derive from check-ins and rest history, not a stored score.",
           "ui": [
             {
               "path": "frontend/src/views/planning/habits.php",
@@ -2261,6 +2457,10 @@
             {
               "path": "frontend/src/js/lib/habit-days.js",
               "symbol": "export function habitDayState("
+            },
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "tick.setAttribute('role', 'checkbox');"
             }
           ],
           "server": [
@@ -2324,8 +2524,8 @@
         },
         {
           "id": "habits.rest",
-          "label": "Missed days and Rest Day menu",
-          "behavior": "A Rest Day can be planned only for tomorrow through local today+3. Today, past and later dates are rejected. A rest cannot hide an existing check-in or create completion Activity. The backend returns the available window.",
+          "label": "More options and Rest Day window",
+          "behavior": "More options exposes the next three Rest Day buttons and a separate Archive action. Selected rest dates can be canceled here or through the calendar. Escape closes the popover and returns focus to its trigger. A Rest Day can be planned only for tomorrow through local today+3. Today, past and later dates are rejected. A rest cannot hide an existing check-in or create completion Activity. The backend returns the available window.",
           "ui": [
             {
               "path": "frontend/src/views/planning/habits.php",
@@ -2336,6 +2536,10 @@
             {
               "path": "frontend/src/js/planning/habits-page.js",
               "symbol": "const toggleRest = (habit, date, rested) =>"
+            },
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "const openMenuFor = (anchor, habit, restDays) =>"
             }
           ],
           "server": [
@@ -2367,6 +2571,44 @@
           "routes": [
             "api.habits.rest-days.store",
             "api.habits.rest-days.destroy"
+          ]
+        },
+        {
+          "id": "habits.archive",
+          "label": "Archive confirmation and retained history",
+          "behavior": "Archive is secondary inside More options. Confirmation explains removal from active lists without deleting data; cancel performs no write. The existing owner/version-checked API timestamps the Habit and increments its version while retaining check-ins, rest days and Activity. Native PDO prepares require distinct archived_at/updated_at bindings even when their timestamp values are equal. A removed row returns keyboard focus to Refresh.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/habits.php",
+              "symbol": "data-habit-list aria-live"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/habits-page.js",
+              "symbol": "const archive = menuButton(t('Archive'),"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Habits/HabitService.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php",
+              "symbol": "public function archive("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/HabitsRecurrenceTest.php",
+              "symbol": "public function test_archiving_a_habit_preserves_history_and_other_habits_with_native_prepares("
+            }
+          ],
+          "routes": [
+            "api.habits.archive"
           ]
         }
       ]
@@ -3908,7 +4150,7 @@
         {
           "id": "history.rules",
           "label": "Completed-hours, overdue-days and retention settings",
-          "behavior": "Defaults are 24 elapsed completed-hours and 3 local overdue-days. Retention is optional; the admin history cap still applies. Changing thresholds changes membership without rewriting Task completion facts.",
+          "behavior": "Rules are available in a collapsed History rules panel below retrieval results. Defaults are 24 elapsed completed-hours and 3 local overdue-days. Retention is optional; the admin history cap still applies. Changing thresholds changes membership without rewriting Task completion facts.",
           "ui": [
             {
               "path": "frontend/src/views/settings/history.php",
@@ -3963,14 +4205,22 @@
         {
           "id": "history.list",
           "label": "Search, detail navigation and Reopen",
-          "behavior": "The client derives History membership and filters names/descriptions. Every retained historical Task offers Reopen. If its old deadline is overdue, the server requires a new non-past date or explicit null to clear it; no write occurs while the decision is pending or canceled. Replanning unfinished work does not invent a completion reversal. Completed Task reversal and ancestor acknowledgements remain authoritative.",
+          "behavior": "Search and results precede rules; Back to Tasks returns to the catalogue. The client derives History membership, searches names/descriptions, and pages 12 rows in descending completion time (Done) or due date (unfinished), with a stable ID tie-break. Search resets the page; reopen/filter changes clamp it. The client derives History membership and filters names/descriptions. Every retained historical Task offers Reopen. If its old deadline is overdue, the server requires a new non-past date or explicit null to clear it; no write occurs while the decision is pending or canceled. Replanning unfinished work does not invent a completion reversal. Completed Task reversal and ancestor acknowledgements remain authoritative.",
           "ui": [
             {
               "path": "frontend/src/views/settings/history.php",
               "symbol": "data-history-list"
+            },
+            {
+              "path": "frontend/src/views/settings/history.php",
+              "symbol": "data-history-pagination"
             }
           ],
           "client": [
+            {
+              "path": "frontend/src/js/settings/task-history.js",
+              "symbol": "export function historyPage"
+            },
             {
               "path": "frontend/src/js/settings/task-history.js",
               "symbol": "export function historyMatches"
@@ -4009,6 +4259,10 @@
             {
               "path": "frontend/tests/js/dashboard-tasks.test.js",
               "symbol": "test('reopening an overdue Task sends the chosen date with existing acknowledgement and version'"
+            },
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "test('History sorts completion/due facts newest first, searches descriptions and clamps pages after reopen'"
             }
           ],
           "routes": [
@@ -4635,8 +4889,8 @@
       "components": [
         {
           "id": "ai.chat",
-          "label": "Open assistant, status and question/answer",
-          "behavior": "The chat dialog queries availability and submits a question. Server-owned context selection and provider calls must not leak secrets or bypass normal ownership rules. Disabled mode reports unavailable honestly.",
+          "label": "Tool-calling chat, owned reads and conversation history",
+          "behavior": "The chat sends the recent conversation as real turns. AIChatService runs up to six model rounds over owner-scoped read tools and queues supported writes into a proposal instead of mutating domain data. Disabled mode reports unavailable; provider calls do not bypass normal ownership. Preview and explicit Apply/Cancel live in the floating chat.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -4665,6 +4919,14 @@
             {
               "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
               "symbol": "public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_task_request_creates_nothing_until_the_proposal_is_applied("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_agent_reads_then_queues_task_and_note_changes_applied_only_on_confirmation("
             }
           ],
           "routes": [
@@ -4674,10 +4936,20 @@
         },
         {
           "id": "ai.proposal",
-          "label": "API-only proposal generation, Apply and Reject",
-          "behavior": "AIActionService freezes proposal/hash/context versions; Apply revalidates owner, versions, hash and expiry and calls ordinary services atomically. Replaying an applied proposal returns the stored ID mapping. Modify/Delete are not allowed proposal operations.",
-          "ui": [],
-          "client": [],
+          "label": "Chat proposal preview, Apply and Cancel",
+          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Tasks/Habits and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
+          "ui": [
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "data-assistant-log"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/assistant.js",
+              "symbol": "const renderProposal = (message) =>"
+            }
+          ],
           "server": [
             {
               "path": "backend/src/Application/AI/AIActionService.php",
@@ -4711,6 +4983,14 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_apply_rejects_context_changed_after_generation("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_agent_queues_goal_and_habit_changes_applied_only_on_confirmation("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal("
             }
           ],
           "routes": [
@@ -4718,6 +4998,12 @@
             "api.ai.actions.show",
             "api.ai.actions.apply",
             "api.ai.actions.reject"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": ".assistant-proposal-actions {"
+            }
           ]
         }
       ]

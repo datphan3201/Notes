@@ -32,140 +32,185 @@
     </article>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
     <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Dashboard sections')) ?>">
-        <button type="button" role="tab" id="dashboard-tab-today" aria-controls="dashboard-panel-today" aria-selected="true" tabindex="0" data-workspace-tab="today"><?= $view->e($view->t('Today')) ?></button>
-        <button type="button" role="tab" id="dashboard-tab-week" aria-controls="dashboard-panel-week" aria-selected="false" tabindex="-1" data-workspace-tab="week"><?= $view->e($view->t('This week')) ?></button>
+        <button type="button" role="tab" id="dashboard-tab-today" aria-controls="dashboard-panel-today" aria-selected="true" tabindex="0" data-workspace-tab="today"><?= $view->e($view->t('Daily')) ?></button>
+        <button type="button" role="tab" id="dashboard-tab-week" aria-controls="dashboard-panel-week" aria-selected="false" tabindex="-1" data-workspace-tab="week"><?= $view->e($view->t('Weekly')) ?></button>
         <button type="button" role="tab" id="dashboard-tab-activity" aria-controls="dashboard-panel-activity" aria-selected="false" tabindex="-1" data-workspace-tab="activity"><?= $view->e($view->t('Activity')) ?></button>
     </nav>
     <section id="dashboard-panel-today" role="tabpanel" aria-labelledby="dashboard-tab-today" data-workspace-panel="today">
-        <div class="dashboard-summary-grid dashboard-insights-grid">
-            <article class="planning-panel dashboard-recent-panel">
-                <div class="section-heading">
-                    <h2><?= $view->e($view->t('Activity')) ?></h2>
-                    <small><?= $view->e($view->t('Last 30 days')) ?></small>
-                </div>
-                <div class="recent-activity-body">
-                    <div class="recent-activity-stats">
-                        <strong data-recent-activity-total>—</strong>
-                        <span data-recent-activity-unit><?= $view->e($view->t('contributions')) ?></span>
-                        <small data-recent-activity-days></small>
-                        <button class="text-button" type="button" data-dashboard-open-activity><?= $view->e($view->t('View activity →')) ?></button>
-                    </div>
-                    <div class="recent-activity-calendar">
-                        <div class="recent-activity-weekdays" aria-hidden="true">
-                            <?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday): ?>
-                                <span><?= $view->e($view->t($weekday)) ?></span>
-                            <?php endforeach; ?>
+        <div class="dashboard-split-layout">
+            <div class="dashboard-split-main">
+                <section class="planning-panel today-panel" aria-labelledby="today-title">
+                    <div class="today-panel-header">
+                        <div class="today-panel-overview">
+                            <div class="week-summary dashboard-task-summary">
+                                <div data-today-ring></div>
+                                <div class="dashboard-task-summary-copy">
+                                    <strong data-today-completed>—</strong>
+                                    <small><?= $view->e($view->t('tasks completed today')) ?></small>
+                                </div>
+                            </div>
+                            <div class="section-heading">
+                                <h2 id="today-title">
+                                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
+                                    <?= $view->e($view->t('Daily tasks')) ?>
+                                    <span class="count-badge" data-today-count>—</span>
+                                </h2>
+                                <button class="button button-quiet" type="button" data-dashboard-add-today>
+                                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                                    <?= $view->e($view->t('Add task')) ?>
+                                </button>
+                            </div>
                         </div>
-                        <div data-recent-activity-grid role="group" aria-label="<?= $view->e($view->t('Activity for the last 30 days')) ?>"></div>
+                        <div class="dashboard-week-filters dashboard-today-filters">
+                            <label class="field" for="dashboard-today-sort">
+                                <span><?= $view->e($view->t('Sort by')) ?></span>
+                                <select id="dashboard-today-sort" data-dashboard-today-sort>
+                                    <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
+                                    <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
+                                </select>
+                            </label>
+                            <label class="field" for="dashboard-today-status">
+                                <span><?= $view->e($view->t('Status')) ?></span>
+                                <select id="dashboard-today-status" data-dashboard-today-status>
+                                    <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
+                                    <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
+                                    <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
+                                </select>
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <p class="subtle-copy recent-activity-detail" data-recent-activity-detail aria-live="polite"><?= $view->e($view->t('Select a day to see its activity.')) ?></p>
-            </article>
-            <article class="planning-panel">
-                <h2><?= $view->e($view->t('Habit streak')) ?></h2>
-                <div data-habit-streak></div>
-            </article>
-        </div>
-        <div class="dashboard-focus-grid">
-            <section class="planning-panel today-panel" aria-labelledby="today-title">
-                <div class="section-heading">
-                    <h2 id="today-title">
-                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
-                        <?= $view->e($view->t('Today')) ?>
-                        <span class="count-badge" data-today-count>—</span>
-                    </h2>
-                    <button class="button button-quiet" type="button" data-dashboard-add-today>
-                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
-                        <?= $view->e($view->t('Add task')) ?>
-                    </button>
-                </div>
-                <div class="week-summary dashboard-task-summary">
-                    <div data-today-ring></div>
-                    <div><strong data-today-completed>—</strong><small><?= $view->e($view->t('tasks completed today')) ?></small></div>
-                </div>
-                <div data-today-tasks aria-live="polite">
-                    <p class="loading-copy"><?= $view->e($view->t('Loading today\'s tasks…')) ?></p>
-                </div>
-            </section>
-            <section class="planning-panel dashboard-week-panel" aria-labelledby="dashboard-week-title">
-                <div class="section-heading">
-                    <h2 id="dashboard-week-title"><?= $view->e($view->t('This week')) ?> <span class="count-badge" data-weekly-preview-count>—</span></h2>
-                    <a class="section-link" href="/tasks?view=all"><?= $view->e($view->t('Select tasks')) ?> →</a>
-                </div>
-                <div class="week-summary dashboard-task-summary">
-                    <div data-week-ring></div>
-                    <div>
-                        <strong data-week-completed>—</strong>
-                        <small><?= $view->e($view->t('selected tasks completed')) ?></small>
-                        <small data-week-change></small>
+                    <div data-today-tasks aria-live="polite">
+                        <p class="loading-copy"><?= $view->e($view->t('Loading today\'s tasks…')) ?></p>
                     </div>
-                </div>
-                <div class="day-bars" data-week-bars></div>
-                <div class="dashboard-week-filters">
-                    <label class="field" for="dashboard-week-sort">
-                        <span><?= $view->e($view->t('Sort by')) ?></span>
-                        <select id="dashboard-week-sort" data-dashboard-week-sort>
-                            <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
-                            <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
-                        </select>
-                    </label>
-                    <label class="field" for="dashboard-week-status">
-                        <span><?= $view->e($view->t('Status')) ?></span>
-                        <select id="dashboard-week-status" data-dashboard-week-status>
-                            <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
-                            <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                            <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
-                            <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
-                            <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
-                        </select>
-                    </label>
-                </div>
-                <div data-weekly-preview-tasks aria-live="polite"><p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p></div>
-            </section>
+                </section>
+                <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite"></p>
+            </div>
+            <div class="dashboard-split-side">
+                <article class="planning-panel dashboard-habits-panel" aria-labelledby="dashboard-habits-title">
+                    <div class="section-heading">
+                        <h2 id="dashboard-habits-title">
+                            <?= $view->e($view->t('Habits')) ?>
+                            <span class="count-badge" data-habits-today-count>—</span>
+                        </h2>
+                        <a class="section-link" href="/habits"><?= $view->e($view->t('Manage habits')) ?> →</a>
+                    </div>
+                    <div data-habit-streak></div>
+                    <div class="dashboard-habit-list" data-habits-today aria-live="polite">
+                        <p class="loading-copy"><?= $view->e($view->t('Loading habits…')) ?></p>
+                    </div>
+                </article>
+                <article class="planning-panel dashboard-recent-panel">
+                    <div class="section-heading">
+                        <h2><?= $view->e($view->t('Activity')) ?></h2>
+                        <small><?= $view->e($view->t('Last 30 days')) ?></small>
+                    </div>
+                    <div class="recent-activity-section">
+                        <div class="recent-activity-calendar">
+                            <div class="recent-activity-weekdays" aria-hidden="true">
+                                <?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday): ?>
+                                    <span><?= $view->e($view->t($weekday)) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <div data-recent-activity-grid role="group" aria-label="<?= $view->e($view->t('Activity for the last 30 days')) ?>"></div>
+                        </div>
+                        <div class="recent-activity-stats">
+                            <div class="recent-activity-stats-summary">
+                                <strong data-recent-activity-total>—</strong>
+                                <span data-recent-activity-unit><?= $view->e($view->t('contributions')) ?></span>
+                                <small data-recent-activity-days></small>
+                            </div>
+                            <button class="text-button" type="button" data-dashboard-open-activity><?= $view->e($view->t('View activity →')) ?></button>
+                        </div>
+                        <p class="subtle-copy recent-activity-detail" data-recent-activity-detail aria-live="polite"><?= $view->e($view->t('Select a day to see its activity.')) ?></p>
+                    </div>
+                </article>
+            </div>
         </div>
-        <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite"></p>
     </section>
-    <section id="dashboard-panel-week" class="" role="tabpanel" aria-labelledby="dashboard-tab-week" data-workspace-panel="week" hidden>
-        <div class="weekly-heading">
-            <div>
-                <h2><?= $view->e($view->t('This week')) ?></h2>
-                <p><?= $view->e($view->t('Make space for the work you want to move forward.')) ?></p>
+    <section id="dashboard-panel-week" role="tabpanel" aria-labelledby="dashboard-tab-week" data-workspace-panel="week" hidden>
+        <div class="dashboard-split-layout">
+            <div class="dashboard-split-main">
+                <section class="planning-panel dashboard-week-tasks" aria-labelledby="dashboard-week-tasks-title">
+                    <div class="today-panel-header">
+                        <div class="today-panel-overview">
+                            <div class="week-summary dashboard-task-summary">
+                                <div data-week-ring></div>
+                                <div class="dashboard-task-summary-copy">
+                                    <strong data-week-completed>—</strong>
+                                    <small><?= $view->e($view->t('selected tasks completed')) ?></small>
+                                    <small data-week-change></small>
+                                </div>
+                            </div>
+                            <div class="section-heading">
+                                <h2 id="dashboard-week-tasks-title">
+                                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
+                                    <?= $view->e($view->t('Weekly tasks')) ?>
+                                    <span class="count-badge" data-weekly-task-count>—</span>
+                                </h2>
+                                <a class="section-link" href="/tasks?view=all"><?= $view->e($view->t('Select tasks')) ?> →</a>
+                            </div>
+                        </div>
+                        <div class="dashboard-week-filters">
+                            <label class="field" for="dashboard-week-sort">
+                                <span><?= $view->e($view->t('Sort by')) ?></span>
+                                <select id="dashboard-week-sort" data-dashboard-week-sort>
+                                    <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
+                                    <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
+                                </select>
+                            </label>
+                            <label class="field" for="dashboard-week-status">
+                                <span><?= $view->e($view->t('Status')) ?></span>
+                                <select id="dashboard-week-status" data-dashboard-week-status>
+                                    <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
+                                    <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
+                                    <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div data-weekly-tasks aria-live="polite">
+                        <p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p>
+                    </div>
+                </section>
             </div>
-            <svg class="ui-icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
+            <div class="dashboard-split-side">
+                <article class="planning-panel dashboard-week-side">
+                    <div class="section-heading">
+                        <h2>
+                            <svg class="ui-icon" aria-hidden="true"><use href="#icon-goals"/></svg>
+                            <?= $view->e($view->t('Milestones')) ?>
+                            <span class="count-badge" data-weekly-milestone-count>—</span>
+                        </h2>
+                    </div>
+                    <div data-weekly-milestones aria-live="polite">
+                        <p class="loading-copy"><?= $view->e($view->t('Loading milestones…')) ?></p>
+                    </div>
+                    <div class="section-heading dashboard-habit-targets-heading">
+                        <h3>
+                            <svg class="ui-icon" aria-hidden="true"><use href="#icon-habits"/></svg>
+                            <?= $view->e($view->t('Habit targets')) ?>
+                        </h3>
+                        <a class="section-link" href="/habits"><?= $view->e($view->t('View all')) ?></a>
+                    </div>
+                    <div data-dashboard-habits aria-live="polite">
+                        <p class="loading-copy"><?= $view->e($view->t('Loading habits…')) ?></p>
+                    </div>
+                </article>
+                <article class="planning-panel dashboard-week-panel" aria-labelledby="dashboard-week-title">
+                    <div class="section-heading">
+                        <h2 id="dashboard-week-title"><?= $view->e($view->t('Weekly')) ?></h2>
+                        <small data-week-range></small>
+                    </div>
+                    <div class="dashboard-week-bars-wrapper" style="width: 100%;">
+                        <div class="day-bars" data-week-bars></div>
+                    </div>
+                </article>
+            </div>
         </div>
-        <div class="dashboard-weekly-grid">
-            <section class="planning-panel">
-                <div class="section-heading">
-                    <h2><?= $view->e($view->t('Selected tasks')) ?></h2>
-                    <span class="count-badge" data-weekly-task-count>—</span>
-                </div>
-                <div data-weekly-tasks aria-live="polite">
-                    <p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p>
-                </div>
-            </section>
-            <section class="planning-panel">
-                <div class="section-heading">
-                    <h2><?= $view->e($view->t('Milestones')) ?></h2>
-                    <span class="count-badge" data-weekly-milestone-count>—</span>
-                </div>
-                <div data-weekly-milestones aria-live="polite">
-                    <p class="loading-copy"><?= $view->e($view->t('Loading milestones…')) ?></p>
-                </div>
-            </section>
-        </div>
-        <section class="planning-panel habits-panel">
-            <div class="section-heading">
-                <h2>
-                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-habits"/></svg>
-                    <?= $view->e($view->t('Habits')) ?>
-                </h2>
-                <a class="section-link" href="/habits"><?= $view->e($view->t('View all')) ?></a>
-            </div>
-            <p class="panel-description"><?= $view->e($view->t('Small steps toward your goals.')) ?></p>
-            <div data-dashboard-habits aria-live="polite">
-                <p class="loading-copy"><?= $view->e($view->t('Loading habits…')) ?></p>
-            </div>
-        </section>
         <a class="review-prompt" href="/reviews">
             <span class="review-prompt-icon">
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-reviews"/></svg>

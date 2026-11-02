@@ -9,6 +9,10 @@ Notes lives at `/`, not `/notes`. The workspace supports owned Notes and a separ
 - [Private attachments and Note backgrounds](files.md)
 - [Tags and labels](../shared/tags.md)
 
+## Pending interface review
+
+[ISSUE-017](../../issues.md#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) proposes compact preferences and clearer action hierarchy while preserving the current visual system. Save currently invokes save-and-close; its wording/behavior needs confirmation before implementation. [ISSUE-018](../../issues.md#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) and [ISSUE-019](../../issues.md#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) track reproduced browser rendering discrepancies. No application change was made by this review.
+
 <!-- BEGIN GENERATED TRACE -->
 
 ### All notes, search, sort, grid/list and paging
@@ -35,11 +39,11 @@ NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L133) |
-| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L341) |
+| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L420) |
 | Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L15)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15) |
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
-| Relevant tests (not a pass claim) | [autosave-machine.test.js · debounces valid edits](../../../frontend/tests/js/autosave-machine.test.js#L89)<br>[autosave-machine.test.js · J14 IME](../../../frontend/tests/js/autosave-machine.test.js#L315)<br>[autosave-machine.test.js · J01 a new note](../../../frontend/tests/js/autosave-machine.test.js#L336)<br>[note-checkbox-text.test.js · projection preserves](../../../frontend/tests/js/note-checkbox-text.test.js#L14) |
+| Relevant tests (not a pass claim) | [autosave-machine.test.js · debounces valid edits](../../../frontend/tests/js/autosave-machine.test.js#L89)<br>[autosave-machine.test.js · J14 IME](../../../frontend/tests/js/autosave-machine.test.js#L315)<br>[autosave-machine.test.js · J01 a new note](../../../frontend/tests/js/autosave-machine.test.js#L336)<br>[note-checkbox-text.test.js · projection preserves](../../../frontend/tests/js/note-checkbox-text.test.js#L15) |
 | HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L47)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L69) |
 
 ### Delete and tombstones

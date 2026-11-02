@@ -24,7 +24,9 @@
             <div class="section-heading">
                 <h2><?= $view->e($view->t('List of habits')) ?></h2>
                 <div class="action-row">
-                    <button class="button button-quiet" type="button" data-planning-retry><?= $view->e($view->t('Refresh')) ?></button>
+                    <button class="icon-button" type="button" data-planning-retry aria-label="<?= $view->e($view->t('Refresh habits')) ?>" title="<?= $view->e($view->t('Refresh habits')) ?>">
+                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
+                    </button>
                 </div>
             </div>
             <div data-habit-list aria-live="polite">
@@ -101,7 +103,7 @@
                 </select>
             </div>
             <div class="field" data-habit-tags></div>
-            <div class="dialog-footer">
+            <div class="dialog-footer habit-dialog-footer">
                 <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
                 <button class="button button-primary" type="submit"><?= $view->e($view->t('Save changes')) ?></button>
             </div>

@@ -31,8 +31,8 @@ function scheduleKey(task, timezone) {
     return task.start_date || task.occurrence_date || '9999';
 }
 
-/** Sorting and status filtering are independent and never rewrite the selection order. */
-export function weeklyTaskList(
+/** Sorting and status filtering are independent and never rewrite the underlying order. */
+export function dashboardTaskList(
     tasks,
     { sort = 'importance', status = 'all', timezone = 'UTC' } = {},
 ) {
@@ -51,6 +51,10 @@ export function weeklyTaskList(
         });
 }
 
+export function weeklyTaskList(tasks, options) {
+    return dashboardTaskList(tasks, options);
+}
+
 /** Uses the same completion button and context chips as the existing Task rows. */
 export function renderTaskChecklist(
     container,
@@ -65,6 +69,7 @@ export function renderTaskChecklist(
         onAddToday,
         onRemoveToday,
         busy = false,
+        limit = 4,
     },
 ) {
     container.replaceChildren();
@@ -84,7 +89,7 @@ export function renderTaskChecklist(
                   },
         );
     }
-    for (const task of items.slice(0, 4)) {
+    for (const task of items.slice(0, limit)) {
         const row = document.createElement('article');
         row.className = 'dashboard-item dashboard-checklist-row';
         const done = task.status === 'Done';
@@ -171,7 +176,7 @@ export function renderTaskChecklist(
         }
         container.append(row);
     }
-    if (items.length > 4) {
+    if (items.length > limit) {
         const link = document.createElement('a');
         link.className = 'section-link';
         link.href = `/tasks?view=${mode === 'today' ? 'today' : 'week'}`;

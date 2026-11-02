@@ -14,7 +14,7 @@
     {
       "id": "task_root",
       "label": "/tasks",
-      "sublabel": "initTasksPage"
+      "sublabel": "Catalogue; defaults to All"
     },
     {
       "id": "time_views",
@@ -32,13 +32,13 @@
       "id": "series_view",
       "parent": "task_root",
       "label": "Repeating",
-      "sublabel": "TaskSeries collection"
+      "sublabel": "Own search and state filter"
     },
     {
       "id": "history_gate",
       "parent": "task_root",
       "label": "Completed / History",
-      "sublabel": "Configurable thresholds"
+      "sublabel": "View-scoped Done; retained History"
     },
     {
       "id": "view_today",
@@ -68,7 +68,7 @@
       "id": "view_all",
       "parent": "time_views",
       "label": "All",
-      "sublabel": "Non-history plus current filters"
+      "sublabel": "Default; non-history plus filters"
     },
     {
       "id": "status_open",
@@ -101,6 +101,18 @@
       "parent": "time_views",
       "label": "Overdue",
       "sublabel": "Retained unfinished past-deadline work"
+    },
+    {
+      "id": "sort_control",
+      "parent": "task_root",
+      "label": "Sort",
+      "sublabel": "Importance or scheduled time"
+    },
+    {
+      "id": "series_states",
+      "parent": "series_view",
+      "label": "All / Active / Paused / Ended",
+      "sublabel": "Count and paging match filters"
     }
   ],
   "cards": [
@@ -109,7 +121,8 @@
       "title": "Independent planning and completion",
       "items": [
         "Add for today records the account-local day and current week atomically; Task dates/status do not change.",
-        "Today and Week use the same Task Complete/Reopen operations. A time view is not a stored status."
+        "Today and Week use the same Task Complete/Reopen operations. A time view is not a stored status.",
+        "Full capture can create then select Today/Week; failed selection retains the created Task and reports the partial result."
       ]
     },
     {
@@ -117,7 +130,8 @@
       "title": "History and quiet reminders",
       "items": [
         "Automatic Today and Dashboard overdue reminders respect History thresholds; explicit day/week choices can reveal historical work.",
-        "Overdue remains accessible. Reopen replaces an overdue deadline with a non-past date or explicitly removes it."
+        "Overdue remains accessible. Reopen replaces an overdue deadline with a non-past date or explicitly removes it.",
+        "Completed follows the selected time view; History lists retained work newest first with search and paging."
       ]
     },
     {

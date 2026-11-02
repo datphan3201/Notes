@@ -197,6 +197,41 @@ final class HabitsRecurrenceTest extends TestCase
         self::assertSame(2, $habits->show($this->owner, $habit['id'])['streak']['count']);
     }
 
+    public function test_archiving_a_habit_preserves_history_and_other_habits_with_native_prepares(): void
+    {
+        self::assertFalse((bool) $this->pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES));
+        $service = $this->runtime['habit_service'];
+        $habit = $service->create($this->owner, ['name' => 'Archive me', 'timezone' => 'UTC']);
+        $other = $service->create($this->owner, ['name' => 'Keep me', 'timezone' => 'UTC']);
+        $today = $this->runtime['clock']->now()->format('Y-m-d');
+        $tomorrow = $this->runtime['clock']->now()->modify('+1 day')->format('Y-m-d');
+        $service->checkIn($this->owner, $habit['id'], $today);
+        $service->rest($this->owner, $habit['id'], $tomorrow);
+        $current = $service->show($this->owner, $habit['id']);
+        $factsBefore = [];
+        foreach (['habit_check_ins', 'habit_rest_days', 'activities'] as $table) {
+            $query = $this->pdo->prepare('SELECT * FROM '.$table.' WHERE user_id = :user_id ORDER BY id');
+            $query->execute(['user_id' => $this->owner]);
+            $factsBefore[$table] = $query->fetchAll();
+        }
+
+        $archived = $service->archive($this->owner, $habit['id'], ['base_version' => $current['version']]);
+
+        self::assertNotNull($archived['archived_at']);
+        self::assertSame($current['version'] + 1, $archived['version']);
+        self::assertSame([$other['id']], array_column($service->list($this->owner), 'id'));
+        self::assertSame($other['version'], $service->show($this->owner, $other['id'])['version']);
+        foreach ($factsBefore as $table => $facts) {
+            $query = $this->pdo->prepare('SELECT * FROM '.$table.' WHERE user_id = :user_id ORDER BY id');
+            $query->execute(['user_id' => $this->owner]);
+            self::assertSame($facts, $query->fetchAll(), $table.' must survive archival unchanged');
+        }
+        $query = $this->pdo->prepare('SELECT archived_at, updated_at FROM habits WHERE user_id = :user_id AND id = :id');
+        $query->execute(['user_id' => $this->owner, 'id' => $habit['id']]);
+        $stored = $query->fetch();
+        self::assertSame($stored['archived_at'], $stored['updated_at']);
+    }
+
     public function test_materializer_copies_templates_and_is_retry_safe(): void
     {
         $today = $this->runtime['clock']->now()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');

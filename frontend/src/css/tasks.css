@@ -1,0 +1,82 @@
+/* Tasks catalogue and editor only; use the established theme and controls. */
+[data-tasks-page] .task-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 1rem;
+}
+[data-tasks-page] .task-row-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    overflow-wrap: anywhere;
+}
+[data-tasks-page] .task-row-copy .context-chip {
+    align-self: flex-start;
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
+}
+[data-tasks-page] .task-row-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+[data-tasks-page] .task-row-secondary {
+    flex-basis: 100%;
+    text-align: right;
+}
+[data-tasks-page] .task-row-secondary summary {
+    cursor: pointer;
+    color: var(--muted);
+}
+[data-tasks-page] .task-row-secondary .action-row {
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+}
+[data-tasks-page] .collection-controls {
+    display: grid;
+    grid-template-columns: minmax(12rem, 2fr) repeat(2, minmax(9rem, 1fr));
+}
+[data-tasks-page] .task-capture-footer {
+    position: sticky;
+    bottom: -1px;
+    background: var(--surface);
+    padding-block: 1rem;
+    z-index: 1;
+}
+[data-task-detail] .task-detail-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+[data-task-detail] .task-detail-grid .task-note-checklist {
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+@media (max-width: 800px) {
+    [data-tasks-page] .task-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    [data-tasks-page] .task-row-actions {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+    [data-tasks-page] .task-row-secondary {
+        text-align: left;
+    }
+    [data-tasks-page] .task-row-secondary .action-row {
+        justify-content: flex-start;
+    }
+    [data-tasks-page] .collection-controls,
+    [data-task-detail] .task-detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+[data-tasks-page] [data-task-create-status]:empty {
+    display: none;
+}
+[data-tasks-page] .collection-controls > .field {
+    min-width: 0;
+}

@@ -1,12 +1,39 @@
 import { get, patch } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { taskInHistory, historyThresholds } from '../planning/task-views.js';
+import { collectionPage, renderPagination } from '../planning/collection-page.js';
 import { transitionEntity } from '../planning/transitions.js';
 
 export function historyMatches(task, query) {
     const needle = query.trim().toLocaleLowerCase();
     if (!needle) return true;
     return `${task.name} ${task.description || ''}`.toLocaleLowerCase().includes(needle);
+}
+
+// Completed records use completion time; unfinished history uses its due date.
+export function historyPage(
+    tasks,
+    {
+        today,
+        query = '',
+        page = 0,
+        size = 12,
+        now = Date.now(),
+        thresholds = historyThresholds(),
+    } = {},
+) {
+    const timestamp = (task) =>
+        task.status === 'Done' ? task.completed_at || '' : `${task.deadline}T00:00:00Z`;
+    const items = tasks
+        .filter(
+            (task) => taskInHistory(task, today, now, thresholds) && historyMatches(task, query),
+        )
+        .sort(
+            (a, b) =>
+                timestamp(b).localeCompare(timestamp(a)) ||
+                String(a.id).localeCompare(String(b.id)),
+        );
+    return collectionPage(items, { page, size });
 }
 
 export function initTaskHistory(root) {
@@ -16,12 +43,16 @@ export function initTaskHistory(root) {
     const list = root.querySelector('[data-history-list]');
     let tasks = [];
     let today = null;
+    let page = 0;
 
     const render = () => {
-        const thresholds = historyThresholds();
-        const items = tasks
-            .filter((task) => taskInHistory(task, today, Date.now(), thresholds))
-            .filter((task) => historyMatches(task, search.value));
+        const result = historyPage(tasks, { today, query: search.value, page });
+        page = result.page;
+        const items = result.items;
+        renderPagination(root.querySelector('[data-history-pagination]'), result, (next) => {
+            page = next;
+            render();
+        });
         list.replaceChildren();
         if (!items.length) {
             list.textContent = t('No tasks in history.');
@@ -93,7 +124,10 @@ export function initTaskHistory(root) {
                 Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
         }
     });
-    search.addEventListener('input', render);
+    search.addEventListener('input', () => {
+        page = 0;
+        render();
+    });
     load().catch((error) => {
         list.textContent = error.message;
     });

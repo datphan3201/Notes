@@ -174,6 +174,8 @@ final readonly class DashboardService
                 'target_frequency' => (int) $habit['target_frequency'],
                 'primary_goal_id' => $habit['primary_goal_id'] === null ? null : (string) $habit['primary_goal_id'],
                 'completed_days' => count(array_filter(array_keys($done), static fn (int|string $date): bool => (string) $date >= $from && (string) $date <= $today)),
+                // Habit-local date: the check-in endpoint is keyed by it, not the account date.
+                'today' => $today,
                 'done_today' => isset($done[$today]),
                 'rest_today' => isset($rest[$today]),
                 'streak' => $progress['streak'],

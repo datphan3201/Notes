@@ -17,7 +17,7 @@
 | Milestone | Goal checkpoint; prerequisites are a separate acyclic relation |
 | Task | Optional one primary Goal/Milestone, or Inbox; plain-text criteria, dates/schedule, optional estimate, independent Checklist and working Note |
 | Dashboard roadmap | Explicit account-level Goal selection, shown below the header; no automatic highest-importance fallback. Archived/cleared/unset selections invite a new choice. |
-| Daily/weekly plan | Explicit daily selection also selects the current Monday week, without changing Task dates/status. Today includes date/schedule matches; manual choices do not carry forward automatically. Both Dashboard panels are checklists; overdue reminders stop at History boundaries. |
+| Daily/weekly plan | Explicit daily selection also selects the current Monday week, without changing Task dates/status. Today includes date/schedule matches; manual choices do not carry forward automatically. Dashboard Today and This week are separate tabs with the same layout (insight cards above one full-width checklist); Today never shows week content, and Habits can be checked in from Today. Overdue reminders stop at History boundaries. |
 | Progress | Finite primary children only; exclude Habits, contributions, occurrences and Tasks already represented through Milestones |
 | Contributions | Many-to-many related work; no movement, progress weight or prerequisite meaning |
 | Recurrence | Personal daily/weekly/monthly/yearly TaskSeries; Ended is terminal and future work requires a new series. Teamwork uses its separate completion-driven repeat path |
