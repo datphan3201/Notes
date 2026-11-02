@@ -19,7 +19,7 @@ The owned roadmap projection separates finite and recurring Tasks, direct Tasks,
 | UI / DOM | [goal.php · data-roadmap-map](../../../frontend/src/views/planning/goal.php#L26) |
 | CSS | [illustrated.css · Illustrated roadmap base](../../../frontend/src/css/illustrated.css#L87) |
 | Browser logic | [goal-roadmap.js · export function initGoalDetail](../../../frontend/src/js/planning/goal-roadmap.js#L29) |
-| Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L694)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L702) |
+| Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L725)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L733) |
 | Persistence | [PdoPlanningRepository.php · public function roadmapRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L403) |
 | Relevant tests (not a pass claim) | [goal-roadmap.test.js · refresh cannot erase](../../../frontend/tests/js/goal-roadmap.test.js#L20)<br>[PlanningCoreTest.php · public function test_roadmap_groups_only_owned_active_work_and_excludes_occurrences_from_finite_p...](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L257) |
 | Coverage limit | Projection and shared draft behavior are covered here; fishbone SVG layout, paging and responsive interaction require a browser check. |
@@ -49,7 +49,7 @@ Progress is the mean of immediate active child Goal percentages, completed Miles
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-transition](../../../frontend/src/views/planning/goal.php#L13) |
-| Browser logic | [transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L6) |
+| Browser logic | [transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7) |
 | Controller / service / domain | [GoalProgressCalculator.php · public function calculate(](../../../backend/src/Domain/Planning/GoalProgressCalculator.php#L17)<br>[PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L345) |
 | Persistence | [PdoPlanningRepository.php · public function progressRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L388) |
 | Relevant tests (not a pass claim) | [PlanningDomainTest.php · public function test_progress_uses_immediate_finite_components_and_detects_cycles(](../../../backend/tests/Plain/Unit/PlanningDomainTest.php#L26) |

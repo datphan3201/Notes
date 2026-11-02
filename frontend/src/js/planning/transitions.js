@@ -1,5 +1,6 @@
 import { post } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
+import { chooseReopenDeadline } from './reopen-task-dialog.js';
 
 // Only explicit server requests for acknowledgement can trigger another
 // submission. Network failures and version conflicts are never retried here.
@@ -7,7 +8,11 @@ export async function transitionEntity(
     type,
     entity,
     action,
-    { send = post, confirm = (message) => window.confirm(message) } = {},
+    {
+        send = post,
+        confirm = (message) => window.confirm(message),
+        chooseDeadline = chooseReopenDeadline,
+    } = {},
 ) {
     const body = { base_version: entity.version };
     const path = `/api/v1/${type}s/${encodeURIComponent(entity.id)}/${action}`;
@@ -17,7 +22,15 @@ export async function transitionEntity(
         } catch (error) {
             if (error.status !== 422) throw error;
             const ancestors = error.payload?.ancestors;
-            if (error.code === 'ANCESTOR_REOPEN_REQUIRED' && Array.isArray(ancestors)) {
+            if (
+                type === 'task' &&
+                action === 'reopen' &&
+                error.code === 'REOPEN_DEADLINE_REQUIRED'
+            ) {
+                const choice = await chooseDeadline(entity, error.payload.today);
+                if (choice === null) return null;
+                body.deadline = choice.deadline;
+            } else if (error.code === 'ANCESTOR_REOPEN_REQUIRED' && Array.isArray(ancestors)) {
                 if (
                     !confirm(
                         `${t('Reopen')} “${entity.name}” ${t('and these completed goals?')}\n${ancestors.map((goal) => `• ${goal.name}`).join('\n')}`,

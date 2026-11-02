@@ -115,7 +115,7 @@ final class DashboardReviewsTest extends TestCase
         );
         $dashboardService = new DashboardService(
             new PdoDashboardRepository($this->pdo), $this->runtime['planning_repository'],
-            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'], $progress,
+            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'], $progress, $this->runtime['planning_service'],
         );
         $planning = $this->runtime['planning_service'];
         $area = $planning->create('area', $this->owner, ['name' => 'Health']);
@@ -231,6 +231,190 @@ final class DashboardReviewsTest extends TestCase
         self::assertCount(2,$ids);
         self::assertContains($start['id'],$ids);
         self::assertContains($span['id'],$ids);
+    }
+
+    public function test_daily_selection_is_idempotent_and_adds_week_without_changing_task_fields(): void
+    {
+        $planning = $this->runtime['planning_service'];
+        $task = $planning->create('task', $this->owner, [
+            'name' => 'Plan independently', 'deadline' => '2027-02-20',
+            'start_date' => '2027-02-01', 'scheduled_start' => '2027-02-02T09:00:00Z',
+            'scheduled_end' => '2027-02-02T10:00:00Z',
+        ]);
+        $dashboard = $this->runtime['dashboard_service'];
+        $selected = $dashboard->addDailySelection($this->owner, ['id' => $task['id']]);
+        self::assertSame([$task['id']], array_column($selected, 'id'));
+        self::assertSame($selected, $dashboard->addDailySelection($this->owner, ['id' => $task['id']]));
+        self::assertSame([$task['id']], array_column($dashboard->selections('task', $this->owner), 'id'));
+        self::assertSame($task, $planning->show('task', $this->owner, $task['id']));
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM activities')->fetchColumn());
+        self::assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM daily_task_selections')->fetchColumn());
+        $dashboard->removeDailySelection($this->owner, $task['id']);
+        $dashboard->removeDailySelection($this->owner, $task['id']);
+        self::assertSame([], $dashboard->dailySelections($this->owner));
+        self::assertSame([$task['id']], array_column($dashboard->selections('task', $this->owner), 'id'));
+    }
+
+    public function test_daily_selection_uses_owner_date_and_does_not_carry_into_tomorrow(): void
+    {
+        $this->pdo->prepare("INSERT INTO user_preferences (user_id, timezone, created_at, updated_at) VALUES (:user, 'America/Los_Angeles', '2026-11-02 00:00:00.000000', '2026-11-02 00:00:00.000000') ON DUPLICATE KEY UPDATE timezone = 'America/Los_Angeles'")->execute(['user' => $this->owner]);
+        $clock = new class implements Clock {
+            public DateTimeImmutable $instant;
+
+            public function __construct()
+            {
+                $this->instant = new DateTimeImmutable('2026-11-02T01:00:00Z');
+            }
+
+            public function now(): DateTimeImmutable
+            {
+                return $this->instant;
+            }
+        };
+        $dashboard = new DashboardService(
+            new PdoDashboardRepository($this->pdo), $this->runtime['planning_repository'],
+            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'],
+            new HabitProgress($this->runtime['habit_repository'], $clock), $this->runtime['planning_service'],
+        );
+        $task = $this->runtime['planning_service']->create('task', $this->owner, ['name' => 'Sunday locally']);
+        $dashboard->addDailySelection($this->owner, ['id' => $task['id']]);
+        self::assertSame('2026-11-01', $this->pdo->query('SELECT local_date FROM daily_task_selections')->fetchColumn());
+        self::assertSame('2026-10-26', $this->pdo->query('SELECT week_start FROM weekly_task_selections')->fetchColumn());
+        $clock->instant = new DateTimeImmutable('2026-11-02T09:00:00Z');
+        self::assertSame([], $dashboard->dailySelections($this->owner));
+        self::assertSame([], $dashboard->selections('task', $this->owner));
+        self::assertSame(1, (int) $this->pdo->query('SELECT COUNT(*) FROM daily_task_selections')->fetchColumn());
+    }
+
+    public function test_today_checklist_keeps_completed_selections_and_silences_historical_overdue_reminders(): void
+    {
+        $planning = $this->runtime['planning_service'];
+        $dashboard = $this->runtime['dashboard_service'];
+        $now = $this->runtime['clock']->now();
+        $today = $now->format('Y-m-d');
+        $recent = $planning->create('task', $this->owner, ['name' => 'Recent overdue', 'deadline' => $now->modify('-1 day')->format('Y-m-d')]);
+        $old = $planning->create('task', $this->owner, ['name' => 'Historical overdue', 'deadline' => $now->modify('-3 days')->format('Y-m-d')]);
+        $due = $planning->create('task', $this->owner, ['name' => 'Due today', 'deadline' => $today]);
+        $manual = $planning->create('task', $this->owner, ['name' => 'Manually planned']);
+        $dashboard->addDailySelection($this->owner, ['id' => $manual['id']]);
+        $data = $dashboard->dashboard($this->owner, null);
+        self::assertSame([$recent['id']], array_column($data['overdue_tasks'], 'id'));
+        $ids = array_column($data['today_tasks'], 'id');
+        self::assertContains($recent['id'], $ids);
+        self::assertContains($due['id'], $ids);
+        self::assertContains($manual['id'], $ids);
+        self::assertNotContains($old['id'], $ids);
+        $done = $planning->transition('task', $this->owner, $manual['id'], 'complete', ['base_version' => $manual['version']]);
+        $data = $dashboard->dashboard($this->owner, null);
+        self::assertSame('Done', array_column($data['today_tasks'], null, 'id')[$manual['id']]['status']);
+        self::assertSame('Done', $data['selected_tasks'][0]['status']);
+        self::assertSame(1, $data['week_summary']['completed']);
+        $planning->transition('task', $this->owner, $manual['id'], 'reopen', ['base_version' => $done['version']]);
+        self::assertSame(0, $dashboard->dashboard($this->owner, null)['week_summary']['completed']);
+        $planning->transition('task', $this->owner, $recent['id'], 'complete', ['base_version' => $recent['version']]);
+        self::assertSame([], $dashboard->dashboard($this->owner, null)['overdue_tasks']);
+    }
+
+    public function test_reopening_overdue_work_requires_a_new_or_removed_deadline_atomically(): void
+    {
+        $planning = $this->runtime['planning_service'];
+        $now = $this->runtime['clock']->now();
+        $task = $planning->create('task', $this->owner, ['name' => 'Replan old work', 'deadline' => $now->modify('-4 days')->format('Y-m-d')]);
+        try {
+            $planning->transition('task', $this->owner, $task['id'], 'reopen', ['base_version' => $task['version']]);
+            self::fail('An old deadline requires an explicit decision.');
+        } catch (\Planner\Http\HttpException $error) {
+            self::assertSame('REOPEN_DEADLINE_REQUIRED', $error->errorCode);
+        }
+        self::assertSame($task, $planning->show('task', $this->owner, $task['id']));
+        try {
+            $planning->transition('task', $this->owner, $task['id'], 'reopen', ['base_version' => $task['version'], 'deadline' => $now->modify('-1 day')->format('Y-m-d')]);
+            self::fail('A new deadline cannot already be overdue.');
+        } catch (ValidationException $error) {
+            self::assertArrayHasKey('deadline', $error->errors);
+        }
+        $reopened = $planning->transition('task', $this->owner, $task['id'], 'reopen', ['base_version' => $task['version'], 'deadline' => null]);
+        self::assertNull($reopened['deadline']);
+        self::assertSame('InProgress', $reopened['status']);
+        self::assertSame([], $this->runtime['dashboard_service']->dashboard($this->owner, null)['overdue_tasks']);
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM activities')->fetchColumn());
+        $completed = $planning->transition('task', $this->owner, $task['id'], 'complete', ['base_version' => $reopened['version']]);
+        $updated = $planning->update('task', $this->owner, $task['id'], ['base_version' => $completed['version'], 'deadline' => $now->modify('-1 day')->format('Y-m-d')]);
+        $newDate = $now->modify('+2 days')->format('Y-m-d');
+        $reopened = $planning->transition('task', $this->owner, $task['id'], 'reopen', ['base_version' => $updated['version'], 'deadline' => $newDate]);
+        self::assertSame($newDate, $reopened['deadline']);
+        self::assertSame(1, (int) $this->pdo->query("SELECT COUNT(*) FROM activities WHERE action = 'reversed'")->fetchColumn());
+    }
+
+    public function test_completed_history_cutoff_uses_elapsed_hours_across_daylight_saving_change(): void
+    {
+        $this->pdo->prepare("UPDATE user_preferences SET timezone = 'America/Los_Angeles' WHERE user_id = :user")->execute(['user' => $this->owner]);
+        $clock = new class implements Clock {
+            public function now(): DateTimeImmutable
+            {
+                return new DateTimeImmutable('2026-11-02T08:30:00Z');
+            }
+        };
+        $task = $this->runtime['planning_service']->create('task', $this->owner, ['name' => 'Completed before DST boundary', 'start_date' => '2026-11-02']);
+        $this->pdo->prepare("UPDATE tasks SET status = 'Done', completed_at = '2026-11-01 08:00:00.000000' WHERE user_id = :user AND id = :id")->execute(['user' => $this->owner, 'id' => $task['id']]);
+        $dashboard = new DashboardService(
+            new PdoDashboardRepository($this->pdo), $this->runtime['planning_repository'],
+            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'],
+            new HabitProgress($this->runtime['habit_repository'], $clock), $this->runtime['planning_service'],
+        );
+        self::assertSame([], $dashboard->dashboard($this->owner, null)['today_tasks']);
+    }
+
+    public function test_today_summary_tracks_the_complete_membership_including_checked_tasks(): void
+    {
+        $dashboard = $this->runtime['dashboard_service'];
+        $planning = $this->runtime['planning_service'];
+        self::assertSame(['total' => 0, 'completed' => 0, 'percentage' => null], $dashboard->dashboard($this->owner, null)['today_summary']);
+        $tasks = [];
+        foreach (['First', 'Second', 'Third'] as $name) {
+            $tasks[] = $planning->create('task', $this->owner, ['name' => $name]);
+            $dashboard->addDailySelection($this->owner, ['id' => $tasks[array_key_last($tasks)]['id']]);
+        }
+        $done = $planning->transition('task', $this->owner, $tasks[0]['id'], 'complete', ['base_version' => $tasks[0]['version']]);
+        $data = $dashboard->dashboard($this->owner, null);
+        self::assertSame(['total' => 3, 'completed' => 1, 'percentage' => 33.3], $data['today_summary']);
+        self::assertCount(3, $data['today_tasks']);
+        self::assertSame(33.3, $data['week_summary']['percentage']);
+        $planning->transition('task', $this->owner, $tasks[1]['id'], 'complete', ['base_version' => $tasks[1]['version']]);
+        self::assertSame(66.7, $dashboard->dashboard($this->owner, null)['today_summary']['percentage']);
+        $planning->transition('task', $this->owner, $tasks[0]['id'], 'reopen', ['base_version' => $done['version']]);
+        self::assertSame(33.3, $dashboard->dashboard($this->owner, null)['today_summary']['percentage']);
+    }
+
+    public function test_recent_activity_spans_thirty_local_dates_across_years_and_excludes_reversals(): void
+    {
+        $clock = new class implements Clock {
+            public function now(): DateTimeImmutable
+            {
+                return new DateTimeImmutable('2026-01-01T12:00:00Z');
+            }
+        };
+        $dashboard = new DashboardService(
+            new PdoDashboardRepository($this->pdo), $this->runtime['planning_repository'],
+            $this->runtime['transactions'], $clock, $this->runtime['habit_repository'],
+            new HabitProgress($this->runtime['habit_repository'], $clock), $this->runtime['planning_service'],
+        );
+        $activity = $this->runtime['activity_repository'];
+        foreach (['2025-12-02', '2025-12-03', '2025-12-31', '2026-01-01', '2026-01-02'] as $date) {
+            $task = $this->runtime['planning_service']->create('task', $this->owner, ['name' => 'Fact '.$date]);
+            $factId = $this->runtime['uuid']->generate();
+            $activity->insert($factId, $this->owner, 'task', $task['id'], 1, 'completed', $date.' 12:00:00.000000', $date, 'UTC');
+            if ($date === '2025-12-31') {
+                $activity->insert($this->runtime['uuid']->generate(), $this->owner, 'task', $task['id'], 2, 'reversed', '2026-01-01 12:00:00.000000', '2026-01-01', 'UTC', $factId);
+            }
+        }
+        $data = $dashboard->dashboard($this->owner, '2025-11');
+        self::assertSame('2025-12-03', $data['recent_activity']['from']);
+        self::assertSame('2026-01-01', $data['recent_activity']['to']);
+        self::assertSame(2, $data['recent_activity']['total']);
+        self::assertSame(2, $data['recent_activity']['active_days']);
+        self::assertSame(['2025-12-03', '2026-01-01'], array_column($data['recent_activity']['days'], 'date'));
+        self::assertSame([], $data['activity_days']);
     }
 
     private function wipeTargetDatabase(): void

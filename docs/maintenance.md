@@ -7,9 +7,9 @@
 1. Find the exact URL/label in the [route index](README.md). Open its component trace; do not search migration phases.
 2. Follow the PHP template/DOM hook and browser symbol. Inspect relevant CSS in the [shared shell map](ui/shared/shell.md#style-file-ownership).
 3. Follow named routes to controllers, services/domain and repositories. Confirm actual branches and effects, including shared consumers and permissions.
-4. If intended behavior changes, update its maintained behavior/decision first. Record observed discrepancies in [the issue report](issues.md) instead of silently rewriting intent or implementation.
+4. Confirm intended behavior changes with the user when intent is unclear. Collect discrepancies for [the issue report](issues.md) within the same task.
 5. Change code/tests through the normal repository rules. Preserve unrelated local work and keep secrets out of examples.
-6. Update narrative, structured trace entries and diagrams, regenerate links and run relevant checks.
+6. At completion, consolidate owning narrative, structured traces and diagrams; regenerate/check them once the implementation is stable. Add one concise [audit entry](audit-history.md) with the final change and evidence. Do not write per-step documentation/status diaries.
 
 ## Trace source of truth
 
@@ -37,7 +37,7 @@ Use Archify for diagrams; no Mermaid/ASCII duplicate is maintained. Each [diagra
 Read the installed Archify skill, relevant schema and repository-authoring guidance. On this machine the tool repo is `~/code/tools/archify`; it is an external authoring tool, not a runtime dependency. Typical invocation from the project root:
 
 ```bash
-node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-classification/candidate.json docs/diagrams/task-classification/index.html --repo-root . --quality showcase --json
+node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --json
 ```
 
 ARCHIFY_CHROME may point to an installed Chromium executable. Keep receipts from failed runs out of the maintained final result; repairs follow the skill's review/output ownership rules. Do not edit generated HTML or receipts by hand. Report a failed diagram as failed, and distinguish automated browser checks from visual inspection.

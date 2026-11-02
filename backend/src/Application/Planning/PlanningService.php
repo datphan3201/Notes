@@ -347,6 +347,9 @@ final readonly class PlanningService
         $allowed = $type === 'milestone' || $type === 'task'
             ? ['base_version', 'acknowledge_open_tasks', 'acknowledge_unchecked_items', 'acknowledge_ancestor_reopen']
             : ['base_version', 'acknowledge_ancestor_reopen'];
+        if ($type === 'task' && $action === 'reopen') {
+            $allowed[] = 'deadline';
+        }
         $this->keys($input, $allowed);
         $baseVersion = $this->baseVersion($input);
 
@@ -363,11 +366,34 @@ final readonly class PlanningService
                 default => throw new \LogicException('Unsupported planning transition.'),
             };
 
-            if ($current['status'] === $target) {
+            $today = $this->clock->now()->setTimezone(new \DateTimeZone($this->repository->ownerTimezone($userId)))->format('Y-m-d');
+            $replan = $type === 'task' && $action === 'reopen';
+            $overdueDeadline = $replan && $current['deadline'] !== null && $current['deadline'] < $today;
+            if ($current['status'] === $target && !$overdueDeadline && !($replan && array_key_exists('deadline', $input))) {
                 return $this->serialize($current);
             }
 
             $this->assertVersion($current, $baseVersion);
+            $dateChanges = [];
+            if ($overdueDeadline && !array_key_exists('deadline', $input)) {
+                throw new HttpException(422, 'REOPEN_DEADLINE_REQUIRED', 'Choose a new due date or remove the previous overdue date.', payload: [
+                    'errors' => ['deadline' => ['Choose a new due date or remove the previous overdue date.']],
+                    'today' => $today,
+                ]);
+            }
+            if ($replan && array_key_exists('deadline', $input)) {
+                $deadline = $this->date($input, 'deadline');
+                if ($deadline !== null && $deadline < $today) {
+                    throw new ValidationException(['deadline' => ['The new due date cannot be in the past.']]);
+                }
+                $this->validateDates([...$current, 'deadline' => $deadline]);
+                if ($deadline !== $current['deadline']) {
+                    $dateChanges['deadline'] = $deadline;
+                }
+            }
+            if ($current['status'] === $target && $dateChanges === []) {
+                return $this->serialize($current);
+            }
 
             if ($type === 'goal' && $action === 'complete') {
                 $hasChildren = $this->repository->activeCount('goal', $userId, 'parent_goal_id', $id) > 0
@@ -460,9 +486,14 @@ final readonly class PlanningService
             $completedAt = in_array($target, ['Completed', 'Done'], true) ? $this->now() : null;
 
             $updated = $this->repository->update($type, $userId, $id, [
+                ...$dateChanges,
                 'status' => $target,
                 'completed_at' => $completedAt,
             ], $this->now());
+            // Replanning unfinished historical work does not reverse a completion fact.
+            if ($type === 'task' && $action === 'reopen' && $current['status'] !== TaskStatus::Done->value) {
+                return $this->serialize($updated);
+            }
             $timezone = $this->repository->ownerTimezone($userId);
             $effectiveDate = $this->clock->now()->setTimezone(new \DateTimeZone($timezone))->format('Y-m-d');
             $sourceType = $type;

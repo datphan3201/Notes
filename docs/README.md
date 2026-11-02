@@ -62,6 +62,7 @@ Example: **“Change how Today counts Tasks.”**
 ## Cross-cutting references
 
 - [Issue report: discovered problems and pending decisions](issues.md)
+- [Brief audit history](audit-history.md)
 - [Current decisions and product boundaries](architecture/decisions.md)
 - [Runtime/layers](architecture/runtime.md), [data/transactions](architecture/persistence.md), [HTTP/security](architecture/http-security.md), [interaction invariants](architecture/interactions.md)
 - [Installation, development, production and jobs](operations/README.md)

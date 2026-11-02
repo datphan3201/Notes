@@ -51,21 +51,21 @@ export const walkthroughSteps = [
         group: { en: 'Dashboard', vi: 'Dashboard' },
         title: { en: 'See what needs attention today', vi: 'Xem việc cần làm hôm nay' },
         intro: {
-            en: 'Dashboard → Today gathers today’s work, overdue tasks and your current focus.',
-            vi: 'Dashboard → Hôm nay gom công việc trong ngày, việc quá hạn và việc bạn đang tập trung.',
+            en: 'Dashboard → Today brings daily work and the weekly plan together. Overdue reminders quiet down when tasks enter History.',
+            vi: 'Dashboard → Hôm nay đặt công việc trong ngày cạnh kế hoạch tuần. Nhắc quá hạn tự ẩn khi công việc vào Lịch sử.',
         },
         instructions: [
             {
-                en: 'Today lists tasks due, starting or scheduled today; Needs attention lists overdue work.',
-                vi: 'Hôm nay liệt kê việc đến hạn, bắt đầu hoặc có lịch trong ngày; Cần chú ý liệt kê việc quá hạn.',
+                en: 'Today and This week are checklists. Use Add for today on a weekly task without changing its dates; tick either list to complete it.',
+                vi: 'Hôm nay và Tuần này là danh sách kiểm tra. Chọn Thêm vào hôm nay ở một việc trong tuần mà không đổi ngày; đánh dấu ở một trong hai danh sách để hoàn thành.',
             },
             {
                 en: 'The habit streak counts a day only when every daily habit was done or resting, with at least one done.',
                 vi: 'Chuỗi thói quen chỉ tính một ngày khi mọi thói quen hằng ngày đều đã làm hoặc đang nghỉ, và có ít nhất một thói quen đã làm.',
             },
             {
-                en: 'Current focus picks an open task from your week; complete it right there.',
-                vi: 'Việc đang tập trung lấy một việc chưa xong trong tuần; bạn có thể hoàn thành ngay tại đó.',
+                en: 'Today and This week each show progress above their checklist. Filters do not change the progress totals.',
+                vi: 'Hôm nay và Tuần này đều có tiến độ phía trên danh sách. Bộ lọc không thay đổi tổng tiến độ.',
             },
         ],
     },
@@ -83,8 +83,8 @@ export const walkthroughSteps = [
         },
         instructions: [
             {
-                en: 'Pin a task with the pin icon in Tasks, or use Select for week on a milestone.',
-                vi: 'Ghim một việc bằng biểu tượng ghim trong Công việc, hoặc chọn Chọn cho tuần ở một cột mốc.',
+                en: 'Choose the roadmap below the header; the selection is saved to your account. The 30-day Activity card opens the full yearly view.',
+                vi: 'Chọn roadmap dưới header; lựa chọn được lưu theo tài khoản. Thẻ Hoạt động 30 ngày mở được bảng cả năm.',
             },
             {
                 en: 'Activity colours each day by completed tasks, checklist items, habit check-ins and milestones. Hover a day for details.',

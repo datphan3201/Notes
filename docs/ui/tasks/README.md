@@ -40,9 +40,9 @@ Rows are built in JavaScript. Complete/Reopen uses shared acknowledgement handli
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L74) |
+| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L78) |
 | CSS | [feedback.css · Task row action icons](../../../frontend/src/css/feedback.css#L417) |
-| Browser logic | [planning-page.js · const taskRow = (task) =&gt;](../../../frontend/src/js/planning/planning-page.js#L397)<br>[transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L6) |
+| Browser logic | [planning-page.js · const taskRow = (task) =&gt;](../../../frontend/src/js/planning/planning-page.js#L401)<br>[transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7) |
 | Controller / service / domain | [PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L345) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94)<br>[PdoPlanningRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L116) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L135) |

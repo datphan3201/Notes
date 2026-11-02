@@ -33,6 +33,8 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-005](#issue-005--residual-known-issues-page-mixes-reporting-with-retired-contract-history) | Residual known-issues page mixes reporting with retired contract history | Low | Resolved | Central issue register and focused verification-limits guide; caller/link checks pass |
 | [ISSUE-006](#issue-006--dashboard-habit-fixture-assumes-tuesday-is-not-in-the-future) | Dashboard Habit fixture assumes Tuesday is not in the future | Low | Resolved | Fixed-time fixture and full backend suite pass; production date guard unchanged |
 | [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Open | Full staged diff check reports trailing whitespace and blank lines at EOF; artifact receipts remain valid |
+| [ISSUE-008](#issue-008--today-task-capture-and-membership-are-not-clear-in-the-ui) | Today task capture and membership are not clear in the UI | Low | Resolved | Approved daily/weekly checklist, selection and overdue policies implemented; PHP/Node/browser checks pass |
+| [ISSUE-009](#issue-009--dashboard-roadmap-has-no-explicit-account-level-selection) | Dashboard roadmap has no explicit account-level selection | Low | Resolved | Explicit saved selection and header placement implemented; service/HTTP/browser checks pass |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -127,6 +129,32 @@ The severity assessments below describe observed impact, not a completed securit
 - **Evidence:** Full staged diff inspection; documentation checker still passes and diagram candidate/artifact hashes match receipts. No application defect is established.
 - **Next step:** Normalize Markdown output in the generator and address HTML whitespace through the Archify delivery workflow, regenerating final receipts after any artifact change. Do not silently edit delivered HTML and invalidate receipts.
 - **Resolution criteria:** A full staged whitespace check passes, healthy/negative documentation-tool tests pass and all final diagram receipts remain valid.
+
+## ISSUE-008 — Today task capture and membership are not clear in the UI
+
+- **Status:** Resolved.
+- **Severity:** Low; missing direct planning actions and inconsistent/discoverability behavior, without demonstrated Task loss.
+- **Recorded:** 2026-11-02, from the user's report and Dashboard screenshot.
+- **Affected UI:** [Dashboard Today/This week](ui/dashboard/README.md), [Task time views](ui/tasks/filters.md), [Task history](ui/settings/history.md).
+- **Original behavior:** Today/Needs attention used different date/overdue projections; Today/Week rows looked like checklists but navigated to detail instead of completing work. There was no direct day selection, task capture reset navigation to All, and Reopen could leave the same overdue deadline in place. All old overdue Tasks stayed in the Dashboard reminder despite History thresholds.
+- **Approved policy:** On progress means InProgress. Add for today preserves dates/status and also selects the week. Scheduled is a planned start/occurrence or overlapping work interval; a deadline today is Due today. Overdue reminders stop at History boundaries and become encouragement at zero. Reopen requires a non-past replacement deadline or explicit removal of an old overdue date. No automatic carry-forward or preview-size increase.
+- **Resolution:** Added owner-scoped daily selection/capture with atomic week membership and migration 0025; adjacent interactive checklists, two independent Week selects, factual labels and a compact reminder; retained overdue work is reachable through Tasks → Overdue. Reopen uses the existing workspace-dialog style and version/ancestor acknowledgement rules, updates dates/status atomically and does not fabricate completion reversals for unfinished work. Help, translations and source traces were updated.
+- **Verification:** Full PHPUnit: 138 tests, 1190 assertions on guarded goals_test; Node: 80 tests; frontend build/format and touched-PHP lint pass. Browser QA verified capture, Week → Today, removal without unpinning Week, synchronized completion/reopen, independent filters, schedule/due/overdue labels, canceled/replanned Reopen and mobile layout. [Executed scope](testing/documentation-checks.md) and [brief audit entry](audit-history.md) retain evidence boundaries.
+- **Operational evidence:** Forward migration 0025 was applied only after checking goals_dev and the exact pending migration; the existing Task count stayed unchanged. Browser mutations used a separate QA account; existing roadmap/demo Tasks were not modified by these checks.
+- **Limits:** Browser tests are focused flows, not all feature acceptance. Live SMTP/AI, deployment and broad concurrency were not certified. Existing History retention/archival remains separate from reminder suppression.
+
+## ISSUE-009 — Dashboard roadmap has no explicit account-level selection
+
+- **Status:** Resolved.
+- **Severity:** Low; users cannot deliberately choose displayed context, without demonstrated data loss or cross-account access.
+- **Recorded:** 2026-11-02 (Asia/Saigon), from the user's report.
+- **Affected UI:** [Dashboard roadmap](ui/dashboard/README.md#roadmap-below-the-header-and-account-selection).
+- **Original behavior:** The browser filtered root/non-completed Goals and implicitly showed the highest-importance Goal; it offered no saved roadmap selection and the strip sat between summary cards and checklists.
+- **Approved behavior:** Place the strip directly below the header, save the choice per account, and invite selection when unset rather than auto-selecting. Consolidate Today/Week percentages into their checklists; replace Current focus with existing-style 30-day Activity, retaining the yearly view and Habit streak.
+- **Resolution:** Added owner-scoped roadmap preference/PATCH and forward migration 0026, native Goal selection, explicit empty/clear/archived behavior and stale-request/revision guards. Moved the strip, consolidated progress cards and added a factual 30-day calendar; removed obsolete Current focus behavior and its mobile grid placement from the new layout.
+- **Verification:** Full backend: 141 tests, 1222 assertions; Node: 83 tests. HTTP covers auth/CSRF, owned persistence, invalid fields, foreign/archived 404 and clearing archived preferences. Browser QA covers saved selection after reload, a deliberately delayed stale Dashboard response, 33% progress at 1/3 despite status filtering, day details/year navigation, header placement and responsive layout. [Executed scope](testing/documentation-checks.md) · [Audit entry](audit-history.md).
+- **Operational scope:** Migration 0026 was applied after checking the live goals_dev database and exact pending migration; no existing Goal or Task was rewritten and no roadmap was automatically selected. Test cleanup used goals_test; browser mutations used a separate QA account.
+- **Limits:** Focused browser flows are not full product/deployment acceptance. The live SMTP/AI and broad concurrency boundaries remain outside this evidence.
 
 ## New issue template
 

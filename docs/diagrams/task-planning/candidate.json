@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Approved contract: Task views, daily plans and statuses",
+    "output": "docs/diagrams/task-planning/index.html",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "task_root",
+      "label": "/tasks",
+      "sublabel": "initTasksPage"
+    },
+    {
+      "id": "time_views",
+      "parent": "task_root",
+      "label": "Time views",
+      "sublabel": "Derived membership"
+    },
+    {
+      "id": "status_filter",
+      "parent": "task_root",
+      "label": "Status filter",
+      "sublabel": "Applied independently"
+    },
+    {
+      "id": "series_view",
+      "parent": "task_root",
+      "label": "Repeating",
+      "sublabel": "TaskSeries collection"
+    },
+    {
+      "id": "history_gate",
+      "parent": "task_root",
+      "label": "Completed / History",
+      "sublabel": "Configurable thresholds"
+    },
+    {
+      "id": "view_today",
+      "parent": "time_views",
+      "label": "Today",
+      "sublabel": "Daily choices, local dates, recent overdue"
+    },
+    {
+      "id": "view_next",
+      "parent": "time_views",
+      "label": "Next",
+      "sublabel": "Any future relevant date"
+    },
+    {
+      "id": "view_week",
+      "parent": "time_views",
+      "label": "This week",
+      "sublabel": "Explicit current-week selection"
+    },
+    {
+      "id": "view_backlog",
+      "parent": "time_views",
+      "label": "Backlog",
+      "sublabel": "Undated and not selected"
+    },
+    {
+      "id": "view_all",
+      "parent": "time_views",
+      "label": "All",
+      "sublabel": "Non-history plus current filters"
+    },
+    {
+      "id": "status_open",
+      "parent": "status_filter",
+      "label": "Open tasks (default)"
+    },
+    {
+      "id": "status_done",
+      "parent": "status_filter",
+      "label": "Done"
+    },
+    {
+      "id": "status_notstarted",
+      "parent": "status_filter",
+      "label": "NotStarted"
+    },
+    {
+      "id": "status_inprogress",
+      "parent": "status_filter",
+      "label": "On progress",
+      "sublabel": "Stored as InProgress"
+    },
+    {
+      "id": "status_blocked",
+      "parent": "status_filter",
+      "label": "Blocked"
+    },
+    {
+      "id": "view_overdue",
+      "parent": "time_views",
+      "label": "Overdue",
+      "sublabel": "Retained unfinished past-deadline work"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Independent planning and completion",
+      "items": [
+        "Add for today records the account-local day and current week atomically; Task dates/status do not change.",
+        "Today and Week use the same Task Complete/Reopen operations. A time view is not a stored status."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "History and quiet reminders",
+      "items": [
+        "Automatic Today and Dashboard overdue reminders respect History thresholds; explicit day/week choices can reveal historical work.",
+        "Overdue remains accessible. Reopen replaces an overdue deadline with a non-past date or explicitly removes it."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Approved contract scope",
+      "items": [
+        "Describes the approved local planning contract, not a pinned committed-source snapshot.",
+        "Current UI, HTTP, SQL and regression pointers are maintained in docs/ui/tasks/filters.md and docs/ui/dashboard/README.md."
+      ]
+    }
+  ]
+}

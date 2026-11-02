@@ -14,10 +14,12 @@
 | Distinct graph relations | goal/milestone/task/habit contributions and milestone_dependencies; [Planning service](../../backend/src/Application/Planning/PlanningService.php) |
 | Habit | habits, habit_check_ins, habit_rest_days; [Habit repository](../../backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php) |
 | Recurrence | task_series and template relations, tasks.series_id/occurrence_date; [Series repository](../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php) |
-| Activity/Review | activities, goal_daily_snapshots, reviews, weekly_task_selections, weekly_milestone_selections; [repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
+| Activity/Review | activities, goal_daily_snapshots, reviews, daily_task_selections, weekly_task_selections, weekly_milestone_selections; [repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
 | Shared Notes / reports | note_shares, note_reports; [sharing](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php), [reports](../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php) |
 | Teamwork | team_goals, team_members, team_tasks, team_messages; [Team repository](../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php) |
 | Infrastructure | attachments, pending_file_deletions, user_backgrounds, notifications, ai_actions, rate_limit_buckets, scheduled_jobs, schema_migrations |
+
+Dashboard roadmap selection is stored in user_preferences.dashboard_roadmap_goal_id with a composite owner/Goal foreign key; [migration 0026](../../backend/database/plain-migrations/0026_add_dashboard_roadmap_preference.php) is the DDL source. Archived Goals are excluded on read without silently selecting another Goal.
 
 The table groups above are a navigation index, not a replacement for complete DDL. Read migrations for exact columns, indexes, foreign keys and deletion actions.
 

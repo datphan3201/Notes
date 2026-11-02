@@ -347,11 +347,15 @@ export function initTasksPage(root) {
     const form = root.querySelector('[data-task-create-form]');
     let tasks = [];
     const requestedView = new URLSearchParams(location.search).get('view');
-    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'repeating'].includes(requestedView)
+    let taskView = ['today', 'next', 'week', 'backlog', 'all', 'overdue', 'repeating'].includes(
+        requestedView,
+    )
         ? requestedView
         : 'today';
     let today = localDate(new Date().toISOString(), window.notesBootstrap.preferences.timezone);
     let selectedIds = new Set();
+    let dailyIds = new Set();
+    let todayIds = new Set();
     let parentOptions = new Map();
     const parent = root.querySelector('[data-task-parent]');
     let page = 0;
@@ -490,7 +494,23 @@ export function initTasksPage(root) {
                     ),
             );
             week.setAttribute('aria-pressed', String(selectedIds.has(task.id)));
-            actions.append(dateButton, reminderButton, repeatButton, week);
+            const planToday = document.createElement('button');
+            planToday.type = 'button';
+            planToday.className = 'icon-button task-row-icon';
+            const planLabel = dailyIds.has(task.id) ? t('Remove from today') : t('Add for today');
+            planToday.textContent = dailyIds.has(task.id) ? '×' : '+';
+            planToday.title = planLabel;
+            planToday.setAttribute('aria-label', `${planLabel}: ${task.name}`);
+            planToday.disabled = todayIds.has(task.id) && !dailyIds.has(task.id);
+            planToday.setAttribute('aria-pressed', String(todayIds.has(task.id)));
+            planToday.addEventListener('click', () =>
+                mutate(planToday, () =>
+                    dailyIds.has(task.id)
+                        ? remove(`/api/v1/daily-selections/task/${task.id}`)
+                        : post('/api/v1/daily-selections/task', { id: task.id }),
+                ),
+            );
+            actions.append(dateButton, reminderButton, repeatButton, week, planToday);
         }
         const edit = document.createElement('a');
         edit.className = 'button button-quiet';
@@ -524,6 +544,16 @@ export function initTasksPage(root) {
         );
         important.classList.toggle('is-important', task.importance === 5);
         important.setAttribute('aria-pressed', String(task.importance === 5));
+        if (taskView === 'overdue' && !done) {
+            const reopen = document.createElement('button');
+            reopen.type = 'button';
+            reopen.className = 'button button-quiet';
+            reopen.textContent = t('Reopen');
+            reopen.addEventListener('click', () =>
+                mutate(reopen, () => transitionEntity('task', task, 'reopen')),
+            );
+            actions.append(reopen);
+        }
         actions.append(edit, removeButton, important);
         article.append(action, copy, actions);
         return article;
@@ -542,7 +572,14 @@ export function initTasksPage(root) {
             }
             const count = collectionPage(
                 visibleTasks().filter((task) =>
-                    taskMatchesView(task, button.dataset.taskView, today, timezone, selectedIds),
+                    taskMatchesView(
+                        task,
+                        button.dataset.taskView,
+                        today,
+                        timezone,
+                        selectedIds,
+                        dailyIds,
+                    ),
                 ),
                 {
                     query: search.value,
@@ -564,7 +601,7 @@ export function initTasksPage(root) {
         // Completed (not yet in history) Tasks sit under the active list; unticking moves them back.
         const completed = collectionPage(
             visibleTasks().filter((task) =>
-                taskMatchesView(task, 'completed', today, timezone, selectedIds),
+                taskMatchesView(task, 'completed', today, timezone, selectedIds, dailyIds),
             ),
             { query: search.value, status: 'all', page: 0, size: 100 },
         );
@@ -573,7 +610,7 @@ export function initTasksPage(root) {
         completedList.replaceChildren(...completed.items.map(taskRow));
         const result = collectionPage(
             visibleTasks().filter((task) =>
-                taskMatchesView(task, taskView, today, timezone, selectedIds),
+                taskMatchesView(task, taskView, today, timezone, selectedIds, dailyIds),
             ),
             {
                 query: search.value,
@@ -613,6 +650,8 @@ export function initTasksPage(root) {
             series = seriesResponse.payload.data;
             today = dashboard.payload.data.today;
             selectedIds = new Set(dashboard.payload.data.selected_tasks.map((task) => task.id));
+            dailyIds = new Set(dashboard.payload.data.daily_task_ids);
+            todayIds = new Set(dashboard.payload.data.today_tasks.map((task) => task.id));
             const parentValue = parent.value;
             const previousParent = parentOptions.get(parentValue);
             parentOptions = new Map();

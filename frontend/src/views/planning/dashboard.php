@@ -17,6 +17,19 @@
             </a>
         </div>
     </header>
+    <article class="planning-panel dashboard-roadmap" aria-labelledby="dashboard-roadmap-title">
+        <div class="section-heading">
+            <h2 id="dashboard-roadmap-title"><?= $view->e($view->t('Your roadmap')) ?></h2>
+            <div class="dashboard-roadmap-controls">
+                <label class="sr-only" for="dashboard-roadmap-select"><?= $view->e($view->t('Choose a roadmap')) ?></label>
+                <select id="dashboard-roadmap-select" data-dashboard-roadmap-select disabled>
+                    <option value=""><?= $view->e($view->t('Choose a roadmap')) ?></option>
+                </select>
+                <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
+            </div>
+        </div>
+        <div class="roadmap-preview" data-dashboard-roadmap><p><?= $view->e($view->t('Choose a roadmap to display here.')) ?></p></div>
+    </article>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
     <nav class="workspace-section-menu" role="tablist" aria-label="<?= $view->e($view->t('Dashboard sections')) ?>">
         <button type="button" role="tab" id="dashboard-tab-today" aria-controls="dashboard-panel-today" aria-selected="true" tabindex="0" data-workspace-tab="today"><?= $view->e($view->t('Today')) ?></button>
@@ -24,37 +37,35 @@
         <button type="button" role="tab" id="dashboard-tab-activity" aria-controls="dashboard-panel-activity" aria-selected="false" tabindex="-1" data-workspace-tab="activity"><?= $view->e($view->t('Activity')) ?></button>
     </nav>
     <section id="dashboard-panel-today" role="tabpanel" aria-labelledby="dashboard-tab-today" data-workspace-panel="today">
-        <div class="dashboard-summary-grid">
-            <article class="planning-panel">
-                <h2><?= $view->e($view->t('This week')) ?></h2>
-                <div class="week-summary">
-                    <div data-week-ring></div>
-                    <div>
-                        <strong data-week-completed>—</strong>
-                        <small><?= $view->e($view->t('selected tasks completed')) ?></small>
-                        <small data-week-change></small>
+        <div class="dashboard-summary-grid dashboard-insights-grid">
+            <article class="planning-panel dashboard-recent-panel">
+                <div class="section-heading">
+                    <h2><?= $view->e($view->t('Activity')) ?></h2>
+                    <small><?= $view->e($view->t('Last 30 days')) ?></small>
+                </div>
+                <div class="recent-activity-body">
+                    <div class="recent-activity-stats">
+                        <strong data-recent-activity-total>—</strong>
+                        <span data-recent-activity-unit><?= $view->e($view->t('contributions')) ?></span>
+                        <small data-recent-activity-days></small>
+                        <button class="text-button" type="button" data-dashboard-open-activity><?= $view->e($view->t('View activity →')) ?></button>
+                    </div>
+                    <div class="recent-activity-calendar">
+                        <div class="recent-activity-weekdays" aria-hidden="true">
+                            <?php foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday): ?>
+                                <span><?= $view->e($view->t($weekday)) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                        <div data-recent-activity-grid role="group" aria-label="<?= $view->e($view->t('Activity for the last 30 days')) ?>"></div>
                     </div>
                 </div>
-                <div class="day-bars" data-week-bars></div>
-            </article>
-            <article class="planning-panel">
-                <h2><?= $view->e($view->t('Current focus')) ?></h2>
-                <div data-current-focus>
-                    <p class="loading-copy"><?= $view->e($view->t('Finding your next step…')) ?></p>
-                </div>
+                <p class="subtle-copy recent-activity-detail" data-recent-activity-detail aria-live="polite"><?= $view->e($view->t('Select a day to see its activity.')) ?></p>
             </article>
             <article class="planning-panel">
                 <h2><?= $view->e($view->t('Habit streak')) ?></h2>
                 <div data-habit-streak></div>
             </article>
         </div>
-        <article class="planning-panel dashboard-roadmap">
-            <div class="section-heading">
-                <h2><?= $view->e($view->t('Your roadmap')) ?></h2>
-                <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
-            </div>
-            <div class="roadmap-preview" data-dashboard-roadmap></div>
-        </article>
         <div class="dashboard-focus-grid">
             <section class="planning-panel today-panel" aria-labelledby="today-title">
                 <div class="section-heading">
@@ -63,25 +74,56 @@
                         <?= $view->e($view->t('Today')) ?>
                         <span class="count-badge" data-today-count>—</span>
                     </h2>
-                    <a class="section-link" href="/tasks?view=all">
-                        <?= $view->e($view->t('All tasks')) ?>
-                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-arrow"/></svg>
-                    </a>
+                    <button class="button button-quiet" type="button" data-dashboard-add-today>
+                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                        <?= $view->e($view->t('Add task')) ?>
+                    </button>
+                </div>
+                <div class="week-summary dashboard-task-summary">
+                    <div data-today-ring></div>
+                    <div><strong data-today-completed>—</strong><small><?= $view->e($view->t('tasks completed today')) ?></small></div>
                 </div>
                 <div data-today-tasks aria-live="polite">
                     <p class="loading-copy"><?= $view->e($view->t('Loading today\'s tasks…')) ?></p>
                 </div>
             </section>
-            <div class="planning-panel overdue-section">
+            <section class="planning-panel dashboard-week-panel" aria-labelledby="dashboard-week-title">
                 <div class="section-heading">
-                    <h3><?= $view->e($view->t('Needs attention')) ?></h3>
-                    <a class="section-link" href="/tasks?view=all"><?= $view->e($view->t('View all →')) ?></a>
+                    <h2 id="dashboard-week-title"><?= $view->e($view->t('This week')) ?> <span class="count-badge" data-weekly-preview-count>—</span></h2>
+                    <a class="section-link" href="/tasks?view=all"><?= $view->e($view->t('Select tasks')) ?> →</a>
                 </div>
-                <div data-overdue-tasks aria-live="polite">
-                    <p class="loading-copy"><?= $view->e($view->t('Checking deadlines…')) ?></p>
+                <div class="week-summary dashboard-task-summary">
+                    <div data-week-ring></div>
+                    <div>
+                        <strong data-week-completed>—</strong>
+                        <small><?= $view->e($view->t('selected tasks completed')) ?></small>
+                        <small data-week-change></small>
+                    </div>
                 </div>
-            </div>
+                <div class="day-bars" data-week-bars></div>
+                <div class="dashboard-week-filters">
+                    <label class="field" for="dashboard-week-sort">
+                        <span><?= $view->e($view->t('Sort by')) ?></span>
+                        <select id="dashboard-week-sort" data-dashboard-week-sort>
+                            <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
+                            <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
+                        </select>
+                    </label>
+                    <label class="field" for="dashboard-week-status">
+                        <span><?= $view->e($view->t('Status')) ?></span>
+                        <select id="dashboard-week-status" data-dashboard-week-status>
+                            <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
+                            <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
+                            <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                            <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
+                            <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
+                        </select>
+                    </label>
+                </div>
+                <div data-weekly-preview-tasks aria-live="polite"><p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p></div>
+            </section>
         </div>
+        <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite"></p>
     </section>
     <section id="dashboard-panel-week" class="" role="tabpanel" aria-labelledby="dashboard-tab-week" data-workspace-panel="week" hidden>
         <div class="weekly-heading">
@@ -175,6 +217,27 @@
             <div class="activity-tooltip is-hidden" data-activity-tooltip role="tooltip" id="activity-tooltip"></div>
         </section>
     </section>
+    <dialog class="workspace-dialog" id="dashboard-today-dialog" aria-labelledby="dashboard-today-dialog-title" data-workspace-dialog>
+        <header class="section-heading">
+            <h2 id="dashboard-today-dialog-title"><?= $view->e($view->t('Add for today')) ?></h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <p class="field-error is-hidden" data-today-dialog-error role="alert"></p>
+        <form class="stack-form" data-today-select-form>
+            <div class="field">
+                <label for="dashboard-today-task"><?= $view->e($view->t('Select task')) ?></label>
+                <select id="dashboard-today-task" name="id" required></select>
+            </div>
+            <div class="dialog-footer"><button class="button button-primary" type="submit"><?= $view->e($view->t('Add for today')) ?></button></div>
+        </form>
+        <form class="stack-form" data-today-create-form>
+            <div class="field">
+                <label for="dashboard-today-name"><?= $view->e($view->t('New task')) ?></label>
+                <input id="dashboard-today-name" name="name" maxlength="200" required placeholder="<?= $view->e($view->t('What needs to get done?')) ?>">
+            </div>
+            <div class="dialog-footer"><button class="button button-primary" type="submit"><?= $view->e($view->t('Create task')) ?></button></div>
+        </form>
+    </dialog>
     <p class="dashboard-timezone">
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
         <span data-dashboard-timezone></span>

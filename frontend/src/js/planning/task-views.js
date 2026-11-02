@@ -11,9 +11,12 @@ export function localDate(timestamp, timezone) {
     const value = (type) => parts.find((part) => part.type === type).value;
     return `${value('year')}-${value('month')}-${value('day')}`;
 }
-export function taskMatchesView(task, view, today, timezone, selectedIds) {
+export function taskMatchesView(task, view, today, timezone, selectedIds, dailyIds = new Set()) {
     if (view === 'completed') return task.status === 'Done' && !taskInHistory(task, today);
     if (view === 'history') return taskInHistory(task, today);
+    if (view === 'overdue') return taskIsOverdue(task, today);
+    if (view === 'week') return selectedIds.has(task.id);
+    if (view === 'today' && dailyIds.has(task.id)) return true;
     if (taskInHistory(task, today)) return false;
     const scheduled = localDate(task.scheduled_start, timezone);
     const scheduledEnd = localDate(task.scheduled_end, timezone) || scheduled;
@@ -26,7 +29,6 @@ export function taskMatchesView(task, view, today, timezone, selectedIds) {
         );
     if (view === 'next')
         return [...dates, scheduledEnd].some((date) => date != null && date > today);
-    if (view === 'week') return selectedIds.has(task.id);
     if (view === 'backlog')
         return dates.every((date) => !date) && !task.scheduled_end && !selectedIds.has(task.id);
     return true;

@@ -38,6 +38,10 @@
                     <?= $view->e($view->t('Backlog')) ?>
                     <span class="count-badge" data-task-view-count="backlog">—</span>
                 </button>
+                <button type="button" data-task-view="overdue" aria-pressed="false">
+                    <?= $view->e($view->t('Overdue')) ?>
+                    <span class="count-badge" data-task-view-count="overdue">—</span>
+                </button>
                 <button type="button" data-task-view="all" aria-pressed="false">
                     <?= $view->e($view->t('All')) ?>
                     <span class="count-badge" data-task-view-count="all">—</span>

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0a53ab0d-9075-4ed9-acd2-3a01eb5f35dd",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/index.html",
+  "specification": {
+    "sha256": "9970d0a2cf6db06d4ba84a83abaf417ab79adc383d507a26c825162bc62faa13",
+    "bytes": 3480
+  },
+  "artifact": {
+    "sha256": "6284b7f64780ce98159d60b5551e85cf16cb613bbfd284a7ad0af032dd556d89",
+    "bytes": 850164
+  }
+}

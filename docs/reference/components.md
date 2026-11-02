@@ -11,6 +11,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.week` | [This week](../ui/tasks/filters.md#this-week) | /tasks — Time filters, statuses and counts |
+| `tasks.filter.overdue` | [Overdue](../ui/tasks/filters.md#overdue) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.backlog` | [Backlog](../ui/tasks/filters.md#backlog) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.all` | [All](../ui/tasks/filters.md#all) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.status` | [Status and count badges](../ui/tasks/filters.md#status-and-count-badges) | /tasks — Time filters, statuses and counts |
@@ -35,10 +36,12 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `milestone.dependencies` | [Prerequisites and completion lock](../ui/goals/milestones.md#prerequisites-and-completion-lock) | /goals/{id} — Milestone panel |
 | `milestone.tasks` | [Finite/recurring Tasks, weekly selection and Complete](../ui/goals/milestones.md#finiterecurring-tasks-weekly-selection-and-complete) | /goals/{id} — Milestone panel |
 | `milestone.edit` | [Edit, contributions and archive](../ui/goals/milestones.md#edit-contributions-and-archive) | /goals/{id} — Milestone panel |
-| `dashboard.today` | [Today, Needs attention and current focus](../ui/dashboard/README.md#today-needs-attention-and-current-focus) | /dashboard — Today, This week and Activity |
+| `dashboard.today` | [Today checklist and current focus](../ui/dashboard/README.md#today-checklist-and-current-focus) | /dashboard — Today, This week and Activity |
 | `dashboard.week` | [This week and weekly summary](../ui/dashboard/README.md#this-week-and-weekly-summary) | /dashboard — Today, This week and Activity |
 | `dashboard.activity` | [Year Activity heatmap and factual tooltip](../ui/dashboard/README.md#year-activity-heatmap-and-factual-tooltip) | /dashboard — Today, This week and Activity |
 | `dashboard.habits` | [Habit streak and quick check-in](../ui/dashboard/README.md#habit-streak-and-quick-check-in) | /dashboard — Today, This week and Activity |
+| `dashboard.today.capture` | [Add task / Add for today](../ui/dashboard/README.md#add-task--add-for-today) | /dashboard — Today, This week and Activity |
+| `dashboard.overdue.reminder` | [Overdue reminder and encouragement](../ui/dashboard/README.md#overdue-reminder-and-encouragement) | /dashboard — Today, This week and Activity |
 | `habits.collection` | [Habit cards and New/Edit dialog](../ui/habits/README.md#habit-cards-and-newedit-dialog) | /habits — Habits, streaks and Rest Days |
 | `habits.checkins` | [Check-in, undo and streak](../ui/habits/README.md#check-in-undo-and-streak) | /habits — Habits, streaks and Rest Days |
 | `habits.rest` | [Missed days and Rest Day menu](../ui/habits/README.md#missed-days-and-rest-day-menu) | /habits — Habits, streaks and Rest Days |

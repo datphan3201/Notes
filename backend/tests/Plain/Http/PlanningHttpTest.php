@@ -157,6 +157,97 @@ final class PlanningHttpTest extends TestCase
         }
     }
 
+    public function test_daily_selection_http_preserves_ownership_csrf_validation_and_task_version(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $created = $this->request('POST', '/api/v1/tasks', ['name' => 'Choose today'], $cookie, $csrf, true);
+        $task = $this->json($created)['data'];
+        $path = '/api/v1/daily-selections/task';
+        self::assertSame(401, $this->request('POST', $path, ['id' => $task['id']], json: true)->status);
+        self::assertSame(419, $this->request('POST', $path, ['id' => $task['id']], $cookie, json: true)->status);
+        self::assertSame(422, $this->request('POST', $path, ['id' => 'bad'], $cookie, $csrf, true)->status);
+        self::assertSame(422, $this->request('POST', $path, ['id' => $task['id'], 'date' => '2030-01-01'], $cookie, $csrf, true)->status);
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $response = $this->request('POST', $path, ['id' => $task['id']], $cookie, $csrf, true);
+            self::assertSame(200, $response->status);
+            self::assertSame([$task['id']], array_column($this->json($response)['data'], 'id'));
+        }
+        self::assertSame($task, $this->json($this->request('GET', '/api/v1/tasks/'.$task['id'], cookie: $cookie))['data']);
+        self::assertSame([$task['id']], array_column($this->json($this->request('GET', $path, cookie: $cookie))['data'], 'id'));
+        self::assertCount(1, $this->json($this->request('GET', '/api/v1/weekly-selections/task', cookie: $cookie))['data']);
+        $other = $this->runtime['account_repository']->insertUser('daily-other@example.test', 'Other', password_hash('long test password', PASSWORD_BCRYPT), '2026-11-02 00:00:00.000000');
+        $foreign = $this->runtime['planning_service']->create('task', $other->id, ['name' => 'Private']);
+        self::assertSame(404, $this->request('POST', $path, ['id' => $foreign['id']], $cookie, $csrf, true)->status);
+        self::assertSame(404, $this->request('DELETE', $path.'/'.$foreign['id'], [], $cookie, $csrf)->status);
+        self::assertSame(204, $this->request('DELETE', $path.'/'.$task['id'], [], $cookie, $csrf)->status);
+        self::assertSame([], $this->json($this->request('GET', $path, cookie: $cookie))['data']);
+        self::assertCount(1, $this->json($this->request('GET', '/api/v1/weekly-selections/task', cookie: $cookie))['data']);
+    }
+
+    public function test_today_capture_creates_and_selects_atomically_and_overdue_reopen_requires_date_decision(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $path = '/api/v1/daily-selections/task';
+        $invalid = $this->request('POST', $path, ['name' => ''], $cookie, $csrf, true);
+        self::assertSame(422, $invalid->status);
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM tasks')->fetchColumn());
+        $captured = $this->request('POST', $path, ['name' => 'Captured today'], $cookie, $csrf, true);
+        self::assertSame(200, $captured->status);
+        $task = $this->json($captured)['data'][0];
+        self::assertSame('Captured today', $task['name']);
+        self::assertSame('NotStarted', $task['status']);
+        self::assertNull($task['deadline']);
+        $data = $this->json($this->request('GET', '/api/v1/dashboard', cookie: $cookie))['data'];
+        self::assertSame([$task['id']], array_column($data['today_tasks'], 'id'));
+        self::assertSame([$task['id']], array_column($data['selected_tasks'], 'id'));
+        $yesterday = $this->runtime['clock']->now()->modify('-1 day')->format('Y-m-d');
+        $updated = $this->json($this->request('PATCH', '/api/v1/tasks/'.$task['id'], ['base_version' => $task['version'], 'deadline' => $yesterday], $cookie, $csrf, true))['data'];
+        $reopenPath = '/api/v1/tasks/'.$task['id'].'/reopen';
+        $missing = $this->request('POST', $reopenPath, ['base_version' => $updated['version']], $cookie, $csrf, true);
+        self::assertSame(422, $missing->status);
+        self::assertSame('REOPEN_DEADLINE_REQUIRED', $this->json($missing)['code']);
+        self::assertSame(409, $this->request('POST', $reopenPath, ['base_version' => $task['version'], 'deadline' => null], $cookie, $csrf, true)->status);
+        self::assertSame(422, $this->request('POST', $reopenPath, ['base_version' => $updated['version'], 'deadline' => $yesterday], $cookie, $csrf, true)->status);
+        $reopened = $this->request('POST', $reopenPath, ['base_version' => $updated['version'], 'deadline' => null], $cookie, $csrf, true);
+        self::assertSame(200, $reopened->status);
+        self::assertNull($this->json($reopened)['data']['deadline']);
+        self::assertSame('InProgress', $this->json($reopened)['data']['status']);
+        self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM activities')->fetchColumn());
+    }
+
+    public function test_dashboard_roadmap_choice_is_persisted_owner_scoped_and_explicitly_cleared(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $path = '/api/v1/dashboard/roadmap';
+        $dashboard = fn (): array => $this->json($this->request('GET', '/api/v1/dashboard', cookie: $cookie))['data'];
+        self::assertNull($dashboard()['roadmap_goal_id']);
+        $areas = $this->json($this->request('GET', '/api/v1/areas', cookie: $cookie))['data'];
+        $goal = $this->json($this->request('POST', '/api/v1/goals', ['area_id' => $areas[0]['id'], 'name' => 'Chosen roadmap'], $cookie, $csrf, true))['data'];
+        self::assertNull($dashboard()['roadmap_goal_id']);
+        self::assertSame(401, $this->request('PATCH', $path, ['goal_id' => $goal['id']], json: true)->status);
+        self::assertSame(419, $this->request('PATCH', $path, ['goal_id' => $goal['id']], $cookie, json: true)->status);
+        self::assertSame(422, $this->request('PATCH', $path, ['goal_id' => 'bad'], $cookie, $csrf, true)->status);
+        self::assertSame(422, $this->request('PATCH', $path, ['goal_id' => $goal['id'], 'unknown' => true], $cookie, $csrf, true)->status);
+        $response = $this->request('PATCH', $path, ['goal_id' => $goal['id']], $cookie, $csrf, true);
+        self::assertSame(200, $response->status);
+        self::assertSame(['goal_id' => $goal['id']], $this->json($response)['data']);
+        self::assertSame($goal['id'], $dashboard()['roadmap_goal_id']);
+        self::assertSame($goal['version'], $this->json($this->request('GET', '/api/v1/goals/'.$goal['id'], cookie: $cookie))['data']['version']);
+        $other = $this->runtime['account_repository']->insertUser('roadmap-other@example.test', 'Other', password_hash('long test password', PASSWORD_BCRYPT), '2026-11-02 00:00:00.000000');
+        $area = $this->runtime['planning_service']->create('area', $other->id, ['name' => 'Private']);
+        $foreign = $this->runtime['planning_service']->create('goal', $other->id, ['area_id' => $area['id'], 'name' => 'Private roadmap']);
+        self::assertSame(404, $this->request('PATCH', $path, ['goal_id' => $foreign['id']], $cookie, $csrf, true)->status);
+        self::assertSame($goal['id'], $dashboard()['roadmap_goal_id']);
+        self::assertSame(200, $this->request('DELETE', '/api/v1/goals/'.$goal['id'], ['base_version' => $goal['version']], $cookie, $csrf, true)->status);
+        self::assertNull($dashboard()['roadmap_goal_id']);
+        self::assertSame(404, $this->request('PATCH', $path, ['goal_id' => $goal['id']], $cookie, $csrf, true)->status);
+        self::assertSame(200, $this->request('PATCH', $path, ['goal_id' => null], $cookie, $csrf, true)->status);
+        $owner = $this->runtime['account_repository']->findByEmail('planner-http@example.test')->id;
+        $statement = $this->pdo->prepare('SELECT dashboard_roadmap_goal_id FROM user_preferences WHERE user_id = :user_id');
+        $statement->execute(['user_id' => $owner]);
+        self::assertNull($statement->fetchColumn());
+    }
+
     private function register(): array
     {
         $page=$this->request('GET','/register');

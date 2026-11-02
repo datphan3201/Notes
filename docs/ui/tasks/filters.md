@@ -2,9 +2,9 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-Query parameter: `?view=today|next|week|backlog|all|repeating`; unrecognized values fall back to Today. Clicking a view changes browser state within this page.
+Query parameter: `?view=today|next|week|overdue|backlog|all|repeating`; unrecognized values fall back to Today. Clicking a view changes browser state within this page.
 
-[Archify: Task classifications](../../diagrams/task-classification/index.html) distinguishes time views, stored statuses and series.
+[Archify: Task classifications](../../diagrams/task-planning/index.html) distinguishes time views, stored statuses and series.
 
 <!-- BEGIN GENERATED TRACE -->
 
@@ -12,16 +12,16 @@ Query parameter: `?view=today|next|week|backlog|all|repeating`; unrecognized val
 
 **Trace ID:** `tasks.filter.today`
 
-Includes a local deadline/start/occurrence date equal to today, a scheduled interval covering today, or unfinished overdue work. History-qualified work is excluded before membership is evaluated.
+Includes explicit account-local daily selections, matching deadline/start/occurrence dates, overlapping work intervals and unfinished overdue work not yet in History. Explicit daily selection can reveal historical work deliberately. Add for today from a Task row also selects the current week and changes no Task dates/status. Task-row add/remove actions use +/× icons with native hover labels and accessible names.
 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-view="today"](../../../frontend/src/views/planning/tasks.php#L25) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [task-views.js · if (view === 'today')](../../../frontend/src/js/planning/task-views.js#L21)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L531) |
+| Browser logic | [task-views.js · if (view === 'today')](../../../frontend/src/js/planning/task-views.js#L24)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L561)<br>[planning-page.js · const planToday = document.createElement(](../../../frontend/src/js/planning/planning-page.js#L497) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
-| Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
-| Relevant tests (not a pass claim) | [task-views.test.js · scheduled tasks cross UTC](../../../frontend/tests/js/task-views.test.js#L11)<br>[task-views.test.js · unfinished tasks overdue](../../../frontend/tests/js/task-views.test.js#L50)<br>[task-views.test.js · today includes an interval](../../../frontend/tests/js/task-views.test.js#L75) |
+| Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51)<br>[PdoDashboardRepository.php · public function dailySelections(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L139) |
+| Relevant tests (not a pass claim) | [task-views.test.js · scheduled tasks cross UTC](../../../frontend/tests/js/task-views.test.js#L11)<br>[task-views.test.js · unfinished tasks overdue](../../../frontend/tests/js/task-views.test.js#L50)<br>[task-views.test.js · today includes an interval](../../../frontend/tests/js/task-views.test.js#L75)<br>[dashboard-tasks.test.js · test('daily and weekly selections can explicitly reveal historical work while Overdue remains accessible'](../../../frontend/tests/js/dashboard-tasks.test.js#L59) |
 | HTTP | `GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`GET /api/v1/dashboard` (`api.dashboard.show`) → [DashboardController::show](../../../backend/src/Http/Controller/DashboardController.php#L18) |
 
 ### Next
@@ -34,7 +34,7 @@ Includes any future deadline/start/occurrence/scheduled date, including schedule
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-view="next"](../../../frontend/src/views/planning/tasks.php#L29) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [task-views.js · if (view === 'next')](../../../frontend/src/js/planning/task-views.js#L27)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L531) |
+| Browser logic | [task-views.js · if (view === 'next')](../../../frontend/src/js/planning/task-views.js#L30)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L561) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [task-views.test.js · scheduled tasks cross UTC](../../../frontend/tests/js/task-views.test.js#L11)<br>[task-views.test.js · today includes an interval](../../../frontend/tests/js/task-views.test.js#L75) |
@@ -44,17 +44,32 @@ Includes any future deadline/start/occurrence/scheduled date, including schedule
 
 **Trace ID:** `tasks.filter.week`
 
-Membership is the current Monday-week Task selection set, not a due-date query. Completion does not automatically remove a selection.
+Membership is the explicit current Monday-week selection set, including historical or completed selected work. Completion does not remove a selection. Selecting a Task for Today adds weekly membership atomically; automatic date-based Today membership alone does not select the week.
 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-view="week"](../../../frontend/src/views/planning/tasks.php#L33) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [task-views.js · if (view === 'week')](../../../frontend/src/js/planning/task-views.js#L29)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L531) |
-| Controller / service / domain | [DashboardService.php · public function dashboard(](../../../backend/src/Application/Dashboard/DashboardService.php#L71) |
-| Persistence | [PdoDashboardRepository.php · public function selections(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L72) |
+| Browser logic | [task-views.js · if (view === 'week')](../../../frontend/src/js/planning/task-views.js#L18)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L561) |
+| Controller / service / domain | [DashboardService.php · public function dashboard(](../../../backend/src/Application/Dashboard/DashboardService.php#L73) |
+| Persistence | [PdoDashboardRepository.php · public function selections(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L97) |
 | Relevant tests (not a pass claim) | [task-views.test.js · scheduled tasks cross UTC](../../../frontend/tests/js/task-views.test.js#L11) |
 | HTTP | `GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`GET /api/v1/dashboard` (`api.dashboard.show`) → [DashboardController::show](../../../backend/src/Http/Controller/DashboardController.php#L18) |
+
+### Overdue
+
+**Trace ID:** `tasks.filter.overdue`
+
+Shows fetched active unfinished Tasks with a deadline before the account-local today, including historical overdue work hidden from automatic Today/reminders. Reopen requires a new non-past due date or explicit removal of the old date; dates/status update atomically and the Task leaves Overdue. Complete/archive also removes overdue membership.
+
+| Layer | Entry point |
+| --- | --- |
+| UI / DOM | [tasks.php · data-task-view="overdue"](../../../frontend/src/views/planning/tasks.php#L41) |
+| Browser logic | [task-views.js · if (view === 'overdue')](../../../frontend/src/js/planning/task-views.js#L17)<br>[planning-page.js · if (taskView === 'overdue' &amp;&amp; !done)](../../../frontend/src/js/planning/planning-page.js#L547)<br>[reopen-task-dialog.js · export function chooseReopenDeadline(](../../../frontend/src/js/planning/reopen-task-dialog.js#L4) |
+| Controller / service / domain | [PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L345) |
+| Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
+| Relevant tests (not a pass claim) | [DashboardReviewsTest.php · public function test_reopening_overdue_work_requires_a_new_or_removed_deadline_atomically(](../../../backend/tests/Plain/Integration/DashboardReviewsTest.php#L318)<br>[PlanningHttpTest.php · public function test_today_capture_creates_and_selects_atomically_and_overdue_reopen_requires_date_decision(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L187)<br>[dashboard-tasks.test.js · test('cancelling the overdue date decision never submits a mutation retry'](../../../frontend/tests/js/dashboard-tasks.test.js#L109) |
+| HTTP | `GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`POST /api/v1/tasks/{id}/reopen` (`api.tasks.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92) |
 
 ### Backlog
 
@@ -66,7 +81,7 @@ No deadline, start, occurrence or schedule date and not selected this week. Inbo
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-view="backlog"](../../../frontend/src/views/planning/tasks.php#L37) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [task-views.js · if (view === 'backlog')](../../../frontend/src/js/planning/task-views.js#L30)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L531) |
+| Browser logic | [task-views.js · if (view === 'backlog')](../../../frontend/src/js/planning/task-views.js#L32)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L561) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [task-views.test.js · backlog preserves inbox](../../../frontend/tests/js/task-views.test.js#L25) |
@@ -80,9 +95,9 @@ All fetched Tasks that do not qualify for History, then the independent search/s
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-view="all"](../../../frontend/src/views/planning/tasks.php#L41) |
+| UI / DOM | [tasks.php · data-task-view="all"](../../../frontend/src/views/planning/tasks.php#L45) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [task-views.js · export function taskMatchesView](../../../frontend/src/js/planning/task-views.js#L14)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L531) |
+| Browser logic | [task-views.js · export function taskMatchesView](../../../frontend/src/js/planning/task-views.js#L14)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L561) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [task-views.test.js · backlog preserves inbox](../../../frontend/tests/js/task-views.test.js#L25) |
@@ -96,9 +111,9 @@ Stored Task statuses are NotStarted, InProgress, Blocked and Done. Open tasks ex
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-status](../../../frontend/src/views/planning/tasks.php#L57) |
+| UI / DOM | [tasks.php · data-task-status](../../../frontend/src/views/planning/tasks.php#L61) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
-| Browser logic | [collection-page.js · export function collectionPage](../../../frontend/src/js/planning/collection-page.js#L4)<br>[task-views.js · export function taskViewStatus](../../../frontend/src/js/planning/task-views.js#L36) |
+| Browser logic | [collection-page.js · export function collectionPage](../../../frontend/src/js/planning/collection-page.js#L4)<br>[task-views.js · export function taskViewStatus](../../../frontend/src/js/planning/task-views.js#L38) |
 | Controller / service / domain | [TaskStatus.php · enum TaskStatus](../../../backend/src/Domain/Planning/TaskStatus.php#L7) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [collection-page.test.js · task filtering](../../../frontend/tests/js/collection-page.test.js#L10)<br>[task-views.test.js · each view count](../../../frontend/tests/js/task-views.test.js#L59) |
@@ -111,9 +126,9 @@ Under the default Open tasks filter, recently Done Tasks appear in a separate se
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-completed hidden](../../../frontend/src/views/planning/tasks.php#L78) |
+| UI / DOM | [tasks.php · data-task-completed hidden](../../../frontend/src/views/planning/tasks.php#L82) |
 | CSS | [feedback.css · Completed section](../../../frontend/src/css/feedback.css#L437) |
-| Browser logic | [task-views.js · export function taskInHistory](../../../frontend/src/js/planning/task-views.js#L66)<br>[task-views.js · export function historyThresholds](../../../frontend/src/js/planning/task-views.js#L59) |
+| Browser logic | [task-views.js · export function taskInHistory](../../../frontend/src/js/planning/task-views.js#L68)<br>[task-views.js · export function historyThresholds](../../../frontend/src/js/planning/task-views.js#L61) |
 | Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L29) |
 | Persistence | [PdoTaskHistoryRepository.php · public function historyTasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L32)<br>[PdoTaskHistoryRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L47) |
 | Relevant tests (not a pass claim) | [task-views.test.js · each view count](../../../frontend/tests/js/task-views.test.js#L59)<br>[task-views.test.js · history uses elapsed](../../../frontend/tests/js/task-views.test.js#L115) |

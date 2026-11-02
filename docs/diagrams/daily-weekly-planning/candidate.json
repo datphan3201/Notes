@@ -1,0 +1,175 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Approved contract: Week to Today and checklist completion",
+    "output": "docs/diagrams/daily-weekly-planning/index.html",
+    "quality_profile": "showcase",
+    "locale": "en"
+  },
+  "lanes": [
+    {
+      "id": "dashboard",
+      "label": "Dashboard interaction"
+    },
+    {
+      "id": "planning",
+      "label": "Owned planning rules"
+    }
+  ],
+  "mainPath": [
+    "week",
+    "choose",
+    "select",
+    "today",
+    "complete",
+    "done"
+  ],
+  "nodes": [
+    {
+      "id": "week",
+      "lane": "dashboard",
+      "col": 0,
+      "type": "frontend",
+      "label": "This week",
+      "sublabel": "Sort + status selects"
+    },
+    {
+      "id": "choose",
+      "lane": "dashboard",
+      "col": 1,
+      "type": "frontend",
+      "label": "Add for today",
+      "sublabel": "Keep weekly membership"
+    },
+    {
+      "id": "select",
+      "lane": "planning",
+      "col": 2,
+      "type": "database",
+      "label": "Day + week",
+      "sublabel": "Atomic owner-scoped write"
+    },
+    {
+      "id": "today",
+      "lane": "dashboard",
+      "col": 3,
+      "type": "frontend",
+      "label": "Today checklist",
+      "sublabel": "One row per Task"
+    },
+    {
+      "id": "complete",
+      "lane": "dashboard",
+      "col": 4,
+      "type": "backend",
+      "label": "Complete",
+      "sublabel": "Version + acknowledgements"
+    },
+    {
+      "id": "done",
+      "lane": "dashboard",
+      "col": 5,
+      "type": "frontend",
+      "label": "Checked in both",
+      "sublabel": "Same Task, same facts"
+    },
+    {
+      "id": "scheduled",
+      "lane": "planning",
+      "col": 3,
+      "type": "backend",
+      "label": "Date membership",
+      "sublabel": "Account-local date or interval"
+    },
+    {
+      "id": "reopen",
+      "lane": "planning",
+      "col": 5,
+      "type": "backend",
+      "label": "Reopen",
+      "sublabel": "Resolve overdue date first"
+    },
+    {
+      "id": "updated",
+      "lane": "planning",
+      "col": 4,
+      "type": "backend",
+      "label": "Task updated",
+      "sublabel": "New non-past date or no due date"
+    }
+  ],
+  "edges": [
+    {
+      "from": "week",
+      "to": "choose",
+      "label": "choose work"
+    },
+    {
+      "from": "choose",
+      "to": "select",
+      "label": "owned Task"
+    },
+    {
+      "from": "select",
+      "to": "today",
+      "label": "current local day"
+    },
+    {
+      "from": "scheduled",
+      "to": "today",
+      "label": "due/start/occurrence/interval"
+    },
+    {
+      "from": "today",
+      "to": "complete",
+      "label": "tick"
+    },
+    {
+      "from": "complete",
+      "to": "done",
+      "label": "accepted"
+    },
+    {
+      "from": "done",
+      "to": "reopen",
+      "label": "untick"
+    },
+    {
+      "from": "reopen",
+      "to": "updated",
+      "label": "date choice when overdue"
+    },
+    {
+      "from": "updated",
+      "to": "today",
+      "label": "if Today membership remains"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Selection is not a status or date edit",
+      "items": [
+        "Add for today never sets InProgress or rewrites deadline/start/scheduled times. Creating a named Task here also selects day/week in the same transaction.",
+        "No automatic day/week carry-forward. Removing a manual day selection keeps the Task/week; automatic membership can still show it."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Factual labels and quiet overdue reminders",
+      "items": [
+        "On progress means InProgress. Scheduled means a work start/occurrence/interval today; a deadline today is Due today.",
+        "Complete/archive/new deadline removes the overdue condition. Reminders stop at History thresholds; retained old work remains in Tasks \u2192 Overdue."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Approved contract scope",
+      "items": [
+        "This workflow describes approved local behavior, not a committed-source snapshot. See docs/ui/dashboard/README.md for current code/test traces.",
+        "The illustrated panel/dialog style and four-row previews are retained. Week sort and status filtering do not change membership or summary denominators."
+      ]
+    }
+  ]
+}

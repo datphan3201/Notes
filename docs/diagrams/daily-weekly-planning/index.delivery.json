@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "9b6d1b35-a26a-4cd6-aca1-ed1017bf056c",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/candidate.json",
+  "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
+  "specification": {
+    "sha256": "eb78d2364bb4fd226cd1e03278ddd8b9d8ab8814a5b265a3ba719dcf86d04ab0",
+    "bytes": 4274
+  },
+  "artifact": {
+    "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
+    "bytes": 842990
+  }
+}

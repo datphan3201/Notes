@@ -9,6 +9,7 @@ use DateTimeZone;
 use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
 use Planner\Application\Habits\HabitProgress;
+use Planner\Application\Planning\PlanningService;
 use Planner\Domain\Habits\HabitStreak;
 use Planner\Infrastructure\Persistence\Pdo\Habits\PdoHabitRepository;
 use Planner\Infrastructure\Database\TransactionManager;
@@ -26,6 +27,7 @@ final readonly class DashboardService
         private Clock $clock,
         private PdoHabitRepository $habits,
         private HabitProgress $progress,
+        private PlanningService $taskPlanning,
     ) {
     }
 
@@ -82,6 +84,11 @@ final readonly class DashboardService
         $today = $now->format('Y-m-d');
         $dayStart = new DateTimeImmutable($today.' 00:00:00', $zone);
         $dayEnd = $dayStart->modify('+1 day');
+        $thresholds = $this->dashboard->historyThresholds($userId);
+        $doneCutoff = Timestamp::database($now->setTimezone(new DateTimeZone('UTC'))->modify('-'.$thresholds['history_completed_hours'].' hours'));
+        $overdueCutoff = $dayStart->modify('-'.$thresholds['history_overdue_days'].' days')->format('Y-m-d');
+        $daily = $this->dashboard->dailySelections($userId, $today);
+        $dailyIds = array_column($daily, 'id');
         $weekStart = $now->modify('monday this week')->format('Y-m-d');
         $weekEnd = (new DateTimeImmutable($weekStart, $zone))->modify('+6 days')->format('Y-m-d');
         $activity = [];
@@ -108,12 +115,28 @@ final readonly class DashboardService
         [$habits, $dailyHabits] = $this->habitProgress($userId);
         $streak = (new HabitStreak)->overall($dailyHabits, $today);
         $trackingSince = $dailyHabits === [] ? null : min(array_column($dailyHabits, 'since'));
+        $todayTasks = $this->serializeRows($this->dashboard->todayTasks($userId, $today, Timestamp::database($dayStart), Timestamp::database($dayEnd), $doneCutoff, $overdueCutoff));
+        $todayCompleted = count(array_filter($todayTasks, static fn (array $task): bool => $task['status'] === 'Done'));
+        $recentFrom = $dayStart->modify('-29 days')->format('Y-m-d');
+        $recentDays = [];
+        foreach ($this->dashboard->activity($userId, $recentFrom, $today) as $row) {
+            $date = (string) $row['effective_date'];
+            $recentDays[$date] ??= ['date' => $date, 'total' => 0, 'counts' => []];
+            $recentDays[$date]['counts'][(string) $row['source_type']] = (int) $row['count'];
+            $recentDays[$date]['total'] += (int) $row['count'];
+        }
 
         return [
             'timezone' => $timezone, 'month' => $month, 'today' => $today,
             'activity_days' => array_values($activity),
-            'today_tasks' => $this->serializeRows($this->dashboard->todayTasks($userId, $today, Timestamp::database($dayStart), Timestamp::database($dayEnd))),
-            'overdue_tasks' => $this->serializeRows($this->dashboard->overdueTasks($userId, $today)),
+            'today_tasks' => $todayTasks,
+            'today_summary' => ['total' => count($todayTasks), 'completed' => $todayCompleted,
+                'percentage' => $todayTasks === [] ? null : round($todayCompleted / count($todayTasks) * 100, 1)],
+            'recent_activity' => ['from' => $recentFrom, 'to' => $today, 'total' => array_sum(array_column($recentDays, 'total')),
+                'active_days' => count($recentDays), 'days' => array_values($recentDays)],
+            'roadmap_goal_id' => $this->dashboard->roadmapGoalId($userId),
+            'overdue_tasks' => $this->serializeRows($this->dashboard->overdueTasks($userId, $today, $overdueCutoff)),
+            'daily_task_ids' => $dailyIds,
             'week_start' => $weekStart,
             'selected_tasks' => $selected,
             'week_summary' => ['total' => count($selected), 'completed' => $completed, 'percentage' => $percentage,
@@ -216,6 +239,77 @@ final readonly class DashboardService
         return $this->selections($type, $userId);
     }
 
+    /** @param array<string, mixed> $input @return array{goal_id:?string} */
+    public function updateRoadmap(int $userId, array $input): array
+    {
+        $this->keys($input, ['goal_id']);
+        if (!array_key_exists('goal_id', $input)) {
+            throw new ValidationException(['goal_id' => ['Choose a Goal or clear the roadmap selection.']]);
+        }
+        $goalId = $input['goal_id'] === null ? null : $this->uuid($input['goal_id']);
+
+        return $this->transactions->run(function () use ($userId, $goalId): array {
+            $this->planning->lockOwner($userId);
+            if ($goalId !== null && $this->planning->find('goal', $userId, $goalId, true) === null) {
+                throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+            $this->dashboard->setRoadmapGoal($userId, $goalId, Timestamp::database($this->clock->now()));
+
+            return ['goal_id' => $goalId];
+        });
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function dailySelections(int $userId): array
+    {
+        $today = $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
+
+        return $this->serializeRows($this->dashboard->dailySelections($userId, $today));
+    }
+
+    /** @param array<string, mixed> $input @return list<array<string, mixed>> */
+    public function addDailySelection(int $userId, array $input): array
+    {
+        $this->keys($input, ['id', 'name']);
+        if (array_key_exists('id', $input) === array_key_exists('name', $input)) {
+            throw new ValidationException(['id' => ['Provide an existing Task id or a new Task name.']]);
+        }
+        $id = array_key_exists('id', $input) ? $this->uuid($input['id']) : null;
+
+        return $this->transactions->run(function () use ($userId, $id, $input): array {
+            $this->planning->lockOwner($userId);
+            if ($id === null) {
+                $id = $this->taskPlanning->create('task', $userId, ['name' => $input['name']])['id'];
+            }
+            if ($this->planning->find('task', $userId, $id, true) === null) {
+                throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+            $now = $this->clock->now();
+            $local = $now->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)));
+            $date = $local->format('Y-m-d');
+            $week = $local->modify('monday this week')->format('Y-m-d');
+            // Daily and weekly membership are one atomic intent, not Task date/status edits.
+            $this->dashboard->addDailySelection($userId, $date, $id, Timestamp::database($now));
+            if (!$this->dashboard->selectionExists('task', $userId, $week, $id)) {
+                $this->dashboard->addSelection('task', $userId, $week, $id, 0, Timestamp::database($now));
+            }
+
+            return $this->serializeRows($this->dashboard->dailySelections($userId, $date));
+        });
+    }
+
+    public function removeDailySelection(int $userId, string $id): void
+    {
+        $this->transactions->run(function () use ($userId, $id): void {
+            $this->planning->lockOwner($userId);
+            if ($this->planning->find('task', $userId, $id, true) === null) {
+                throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+            $date = $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
+            $this->dashboard->removeDailySelection($userId, $date, $id);
+        });
+    }
+
     private function weekStart(int $userId): string
     {
         return $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->modify('monday this week')->format('Y-m-d');
@@ -237,8 +331,11 @@ final readonly class DashboardService
     {
         return array_map(function (array $row): array {
             unset($row['user_id']);
+            if (array_key_exists('selected_for_today', $row)) {
+                $row['selected_for_today'] = (bool) $row['selected_for_today'];
+            }
             foreach (['version', 'position', 'importance', 'selection_position', 'estimated_minutes'] as $field) if (isset($row[$field])) $row[$field] = (int) $row[$field];
-            foreach (['scheduled_start', 'scheduled_end'] as $field) if (array_key_exists($field, $row)) $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
+            foreach (['scheduled_start', 'scheduled_end', 'completed_at', 'created_at', 'updated_at', 'archived_at'] as $field) if (array_key_exists($field, $row)) $row[$field] = Timestamp::api($row[$field] === null ? null : (string) $row[$field]);
             return $row;
         }, $rows);
     }

@@ -4,7 +4,7 @@
 
 Entry: **New task** dialog (`new-task-dialog`). Goal and Milestone capture reuse the same capture modules; Teamwork has its own payload/permission path.
 
-Required Task name, optional location, description, criteria, importance, dates, estimate, reminder and repeat controls are not independent entities.
+Required Task name, optional location, description, criteria, importance, dates, estimate, reminder and repeat controls are not independent entities. Dashboard Today also offers a minimal named Task capture that atomically selects the day and week; the full capture dialog here retains its existing fields.
 
 <!-- BEGIN GENERATED TRACE -->
 
@@ -16,9 +16,9 @@ A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed f
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L93) |
-| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L675) |
-| Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L951) |
+| UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L97) |
+| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L714) |
+| Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L982) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L354) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34) |
@@ -33,7 +33,7 @@ The shared PHP partial renders schedule-related fields. Browser input is normali
 | --- | --- |
 | UI / DOM | [task-capture-fields.php · estimated_minutes](../../../frontend/src/views/planning/task-capture-fields.php#L34)<br>[importance-options.php · &lt;?php foreach (&#91;1 =&gt;](../../../frontend/src/views/planning/importance-options.php#L1) |
 | Browser logic | [task-capture.js · export function taskCaptureValues](../../../frontend/src/js/planning/task-capture.js#L7) |
-| Controller / service / domain | [PlanningService.php · private function validateCreate(](../../../backend/src/Application/Planning/PlanningService.php#L856)<br>[PlanningService.php · private function validateDates(](../../../backend/src/Application/Planning/PlanningService.php#L1299) |
+| Controller / service / domain | [PlanningService.php · private function validateCreate(](../../../backend/src/Application/Planning/PlanningService.php#L887)<br>[PlanningService.php · private function validateDates(](../../../backend/src/Application/Planning/PlanningService.php#L1330) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_estimates_are_optional_versioned_and_do_not_change_completion_facts(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L396) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`PATCH /api/v1/tasks/{id}` (`api.tasks.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54) |

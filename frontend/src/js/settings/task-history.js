@@ -49,12 +49,8 @@ export function initTaskHistory(root) {
             const reopen = document.createElement('button');
             reopen.type = 'button';
             reopen.className = 'button button-quiet';
-            reopen.textContent = task.status === 'Done' ? t('Reopen') : t('Open task');
+            reopen.textContent = t('Reopen');
             reopen.addEventListener('click', async () => {
-                if (task.status !== 'Done') {
-                    window.location.assign(`/tasks/${encodeURIComponent(task.id)}#edit`);
-                    return;
-                }
                 reopen.disabled = true;
                 try {
                     if (await transitionEntity('task', task, 'reopen')) await load();

@@ -1,46 +1,23 @@
 # Executed verification scope
 
-[Testing](README.md) · [Maintenance](../maintenance.md) · [Issue report](../issues.md)
+[Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
-Checked on 2026-11-02 (Asia/Saigon), against committed baseline b1b5f976a9efdba105d7de6b7dd4417a5e52f74f plus the local worktree. Evidence below covers the documentation refactor and the approved ISSUE-001/002 fixes. It is not a universal application acceptance report.
-
-## Backend issue fixes
-
-The runtime changes are limited to HabitService timezone/legacy-input compatibility and TaskSeriesService timezone/terminal-state validation. Tests add service/HTTP regressions and make one existing Dashboard fixture independent of the host weekday. Existing Vite/CSP/auth-template edits were preserved.
-
-Commands below ran from backend unless a repository-root path is shown. MySQL cleanup targeted only goals_test: the testing environment, configured database and actual SELECT DATABASE() were checked before execution. The running goals_dev database was not used by the test suite.
+Checked on 2026-11-02 (Asia/Saigon), against committed baseline 31947eb plus the local daily/weekly planning and Dashboard overview worktree. This is scoped execution evidence, not universal application acceptance.
 
 | Check actually executed | Result |
 | --- | --- |
-| Original timezone alias regression before the fix | Failed as expected: expected Asia/Ho_Chi_Minh, actual Asia/Saigon |
-| New focused service regressions before the fix | 4 tests, 24 assertions; alias and terminal-state failures plus legacy frozen-Habit edit error reproduced |
-| `php vendor/bin/phpunit -c phpunit.xml tests/Plain/Integration/HabitsRecurrenceTest.php tests/Plain/Http/PlanningHttpTest.php` | Passed: 15 tests, 156 assertions |
-| First `php vendor/bin/phpunit -c phpunit.xml` | 131 tests, 1112 assertions, one calendar-dependent Dashboard fixture error; recorded as ISSUE-006 |
-| Dashboard case after fixed Clock injection | Passed: 1 test, 7 assertions; production future-date guard retained |
-| Final `php vendor/bin/phpunit -c phpunit.xml` | Passed: 131 tests, 1118 assertions; 3m 47.623s |
+| `php vendor/bin/phpunit -c phpunit.xml` from backend | Passed: 141 tests, 1222 assertions; 4m 28.683s on PHP 8.5.0 and guarded real goals_test |
+| `npm run test:unit` from frontend | Passed: 83 tests |
+| `npm run format:check` / `npm run build` | Passed |
+| PHP lint for touched PHP runtime/routes/bootstrap/tests/migrations/views | Final scoped result below |
+| Documentation checker / isolated CLI fixtures | Final regenerated results below |
+| Archify Dashboard composition contract | Final automated receipt under the linked diagram folder |
+| Migration 0026 on the live local app | Verified goals_dev and exact pending migration before applying; migration check passes; no Goal/Task rewrite or automatic roadmap selection |
 
-The targeted cases exercise canonical aliases/UTC/fixed offsets, invalid input, legacy checked-in Habit edits without history rewrites, terminal Ended rejection, authentication/CSRF/ownership/version precedence, same-state replay and occurrence preservation. No historical timezone backfill or application migration was required. Test setup applies migrations only within goals_test.
+Backend coverage includes the daily-selection/overdue policies from ISSUE-008 and the new Today denominator, 30-day window across year boundaries, zero/reversed facts and persisted owner-scoped roadmap choice. The new PATCH checks authentication/CSRF, malformed/unknown fields, foreign/archived IDs, unchanged Goal versions and explicit preference clearing. Integration cleanup verified the testing environment, configured goals_test and actual SELECT DATABASE()=goals_test; live goals_dev was never a cleanup target.
 
-## Documentation and artifacts
+Browser QA used an isolated account. It verified empty invitations despite available Goals, selection/reload persistence, correct owned preview links and preservation of a newer choice when a deliberately held old Dashboard response arrives. Completing one of three Tasks produced 33% in both checklist summaries and one recent Activity contribution; filtering Week to Done left both summaries at 33%. Day details and View activity opened the full-year tab. Header → roadmap placement and responsive desktop/mobile layouts were inspected; global horizontal overflow was absent. Existing demo/roadmap records were not modified by these checks. Screenshots remain ignored local artifacts.
 
-| Check actually executed | Result |
-| --- | --- |
-| `php tools/docs/check.php` | Passed: 197 route declarations / 200 method-path pairs, 30 UI documents, 83 components, 168 referenced source files, 8 diagram receipts and 195 unique manual case IDs; source references and local links/anchors valid |
-| `php tools/docs/sync.php --write` and `php tools/docs/sync.php` | Refreshed generated source/test anchors; zero stale outputs |
-| `php tools/docs/tests/run.php` | Passed: 17 isolated positive/negative CLI scenarios; no secrets, application bootstrap or database |
-| Archify finalize for the terminal TaskSeries contract map | All four gates passed: validate, deliver, strict artifact/provenance check and browser check; exact hashes match the final receipts |
-| PHP lint for the two changed services and three test files | Passed |
-| Unstaged `git diff --check` before publication | Passed for tracked edits; did not include then-untracked documents |
-| Full `git diff --cached --check` during publication | Reports cosmetic whitespace in generated HTML/Markdown; recorded as ISSUE-007; artifact bytes preserved to retain valid receipts |
-| `GET http://localhost:8000/up` and original PHP/Vite process inspection | Health data.status=ok; existing host remains running |
-| Runtime source/config SHA-256 comparison with the snapshot before these issue fixes | Only HabitService.php and TaskSeriesService.php changed; unrelated runtime edits preserved |
+The existing illustrated panels, progress rings, native selects, activity colours and checklist/dialog controls were reused. Four-row previews and no automatic daily carry-forward remain. Live SMTP/AI, deployment, full concurrency/failure injection and all-feature browser acceptance are outside this scope. The source-trace checker certifies registered links/routes/receipts, not business correctness.
 
-The documentation refactor also checked the route inventory against the runtime route command, preserved all 195 manual case IDs, validated the rewritten testing skill and finalized the other seven diagrams. Those diagrams cite their pinned committed revision. The replacement [terminal TaskSeries map](../diagrams/task-series-lifecycle/index.html) explicitly describes the approved contract without attributing uncommitted implementation bytes to that earlier revision.
-
-Component/source indexes come from the UI registry. Named test pointers, corrected persistence owners and helper-versus-browser coverage notes address [ISSUE-003 through ISSUE-005](../issues.md). Documentation-tool fixtures reject ambiguous/missing source references, duplicate document ownership and route/link/diagram drift.
-
-## Limits
-
-No live account/series mutations, scheduler/prune jobs, SMTP/AI delivery checks, browser feature walkthrough or perceptual visual audit were performed for these fixes. Manual checklist items remain unchecked. The backend suite certifies its exercised paths on PHP 8.5.0 and isolated MySQL, not deployment configuration or every browser interaction. Archify browser checks validate the diagram artifacts.
-
-Retired documentation/private local evidence was backed up outside the repository before removal; no historical archive was added to active docs. These checks were recorded before publication; subsequent commits and pushes are tracked by Git history.
+[ISSUE-007](../issues.md#issue-007--staged-generated-documents-contain-cosmetic-whitespace) remains open for cosmetic whitespace in generated diagram HTML. Preserve delivered bytes and valid receipts rather than hand-editing generated HTML. Prior executed totals belong to their audit/issue scopes; they do not independently certify this worktree.

@@ -41,6 +41,23 @@ final readonly class DashboardController
     {
         return Response::json(['data' => $this->dashboard->reorder($parameters['type'], $this->userId(), $request->input())]);
     }
+    public function dailySelections(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->dashboard->dailySelections($this->userId())]);
+    }
+    public function addDailySelection(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->dashboard->addDailySelection($this->userId(), $request->input())]);
+    }
+    public function removeDailySelection(Request $request, array $parameters): Response
+    {
+        $this->dashboard->removeDailySelection($this->userId(), $parameters['id']);
+        return new Response(204);
+    }
+    public function updateRoadmap(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->dashboard->updateRoadmap($this->userId(), $request->input())]);
+    }
     private function userId(): int
     {
         return $this->auth->requireUser()->id;

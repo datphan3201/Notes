@@ -40,14 +40,23 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 - [ ] DASH01 — Today, This week and Activity sections switch without inventing separate page routes.
 - [ ] DASH02 — Today includes matching due/start/occurrence/overlapping schedules in the account timezone without duplicate rows.
-- [ ] DASH03 — Needs attention identifies unfinished overdue work using the actual deadline.
-- [ ] DASH04 — Current focus prefers eligible weekly/Today/overdue work and does not recommend Blocked work.
-- [ ] DASH05 — Focus Edit opens the existing edit flow and Complete preserves acknowledgement requirements.
+- [ ] DASH03 — The compact overdue reminder excludes Done/archived/History-qualified Tasks, links to Overdue, and becomes encouragement at zero.
+- [ ] DASH04 — Today and Week each show one progress summary above the checklist; empty denominators show — and filtering never changes the full totals.
+- [ ] DASH05 — Open/edit Tasks from their rows; checklist Complete/Reopen preserves acknowledgement requirements without a separate Current focus card.
 - [ ] DASH06 — Weekly percentage equals completed active selections / all active selections; empty denominators are honest.
 - [ ] DASH07 — Previous-week comparison is unavailable without its denominator and otherwise uses percentage points.
 - [ ] DASH08 — Activity year navigation, weekday alignment, tooltip counts and legend match server facts.
 - [ ] DASH09 — Complete, reverse and complete again: Activity follows unreversed facts; Note edits do not increase it.
 - [ ] DASH10 — Habit cards, aggregate streak and roadmap preview link to the correct owned objects and show factual counts.
+- [ ] DASH11 — Add an existing Task or create a named Task in Today; day/week membership commits together without changing dates/status. Foreign IDs remain inaccessible.
+- [ ] DASH12 — Complete/Reopen from either checklist updates both and the weekly summary; required confirmations remain explicit.
+- [ ] DASH13 — Week sort (Importance/Scheduled time) and status filter work independently; filters do not change stored membership or summary denominators.
+- [ ] DASH14 — Remove a daily selection without removing the Task/week; scheduled work can remain in Today. No automatic next-day carry-forward occurs.
+- [ ] DASH15 — On progress, Scheduled, Due today and Overdue labels describe actual status/date facts; desktop/mobile controls fit the existing UI and four-row previews remain.
+- [ ] DASH16 — Choose a roadmap below the header; reload and another authenticated session retain it. Unset/clear/archived choices invite selection, and foreign Goal IDs are rejected.
+- [ ] DASH17 — Change roadmap during a delayed Dashboard refresh: the latest choice, preview links and saved preference remain coherent.
+- [ ] DASH18 — Activity shows 30 inclusive local dates across month/year boundaries, fills zero days and excludes reversed facts; View activity opens the existing yearly tab.
+- [ ] DASH19 — Desktop/mobile retain header → roadmap ordering, Activity before Habit streak, no global horizontal overflow and accessible native selectors/checklist controls.
 
 ## Areas, Goals, roadmaps and Milestones — GOAL
 
@@ -242,7 +251,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 - [ ] HISTORY01 — Configure completed-hours/overdue-days and verify threshold boundary membership.
 - [ ] HISTORY02 — Search retained Task names/descriptions and navigate detail.
-- [ ] HISTORY03 — Reopen a Task; its old deadline may independently keep it in History.
+- [ ] HISTORY03 — Reopen an overdue Task: cancel changes nothing; choose a non-past deadline or leave it empty to clear the old date. It leaves Overdue/History without a fabricated completion reversal.
 - [ ] HISTORY04 — On disposable data, retention archives eligible history without hard-delete or unrelated-object changes.
 - [ ] HISTORY05 — Admin cap applies in addition to optional user retention; no fabricated retention test result is inferred from a list refresh.
 

@@ -971,3 +971,167 @@
     color: var(--accent);
     font-weight: 600;
 }
+
+/* Daily/weekly planning reuses Task checklist controls and existing panel styling. */
+.dashboard-week-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.dashboard-week-filters .field {
+    min-width: 0;
+    margin: 0;
+}
+.dashboard-checklist-row {
+    align-items: flex-start;
+}
+.dashboard-checklist-row .task-completion-button {
+    flex: 0 0 auto;
+    margin-top: 3px;
+}
+.dashboard-checklist-row .dashboard-item-copy {
+    flex: 1 1 0;
+    color: inherit;
+    text-decoration: none;
+}
+.dashboard-checklist-row.is-done strong {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+.dashboard-task-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.dashboard-task-labels .is-overdue {
+    color: var(--danger);
+}
+.dashboard-plan-button {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    font-size: 1.25rem;
+    padding: 0;
+}
+.dashboard-overdue-reminder {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 16px;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+    margin: 16px 0 0;
+}
+@media (max-width: 900px) {
+    .dashboard-checklist-row {
+        flex-wrap: wrap;
+    }
+}
+
+/* Dashboard overview: one progress summary per checklist and an explicit roadmap. */
+.dashboard-page > .dashboard-roadmap {
+    margin: 0 0 18px;
+}
+.dashboard-roadmap-controls {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px 16px;
+    min-width: 0;
+}
+.dashboard-roadmap-controls select {
+    width: min(340px, 100%);
+    flex: 0 1 340px;
+    max-width: 100%;
+}
+.dashboard-summary-grid.dashboard-insights-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.dashboard-summary-grid.dashboard-insights-grid > .planning-panel {
+    grid-column: auto;
+    grid-row: auto;
+}
+.dashboard-insights-grid > .planning-panel:nth-child(2)::before {
+    content: none;
+}
+.dashboard-task-summary {
+    margin: 12px 0 18px;
+}
+.dashboard-task-summary .progress-ring {
+    width: 72px;
+    height: 72px;
+}
+.dashboard-week-panel > .day-bars {
+    height: 44px;
+    margin-bottom: 18px;
+}
+.recent-activity-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.recent-activity-stats {
+    display: grid;
+    gap: 4px;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+}
+.recent-activity-stats > strong {
+    color: var(--text);
+    font-size: 1.75rem;
+}
+.recent-activity-stats .text-button {
+    justify-self: start;
+    padding: 6px 0 0;
+}
+.recent-activity-calendar {
+    display: flex;
+    gap: 8px;
+    --recent-activity-cell: 17px;
+}
+.recent-activity-weekdays,
+[data-recent-activity-grid] {
+    display: grid;
+    grid-template-rows: repeat(7, var(--recent-activity-cell));
+    gap: 4px;
+}
+.recent-activity-weekdays {
+    color: var(--muted);
+    font-size: 0.625rem;
+    line-height: var(--recent-activity-cell);
+}
+[data-recent-activity-grid] {
+    grid-auto-flow: column;
+    grid-auto-columns: var(--recent-activity-cell);
+}
+[data-recent-activity-grid] .activity-day {
+    width: var(--recent-activity-cell);
+    height: var(--recent-activity-cell);
+    min-height: 0;
+    min-width: 0;
+}
+.recent-activity-detail {
+    font-size: var(--font-size-caption);
+    margin: 12px 0 0;
+}
+@media (max-width: 900px) {
+    .dashboard-summary-grid.dashboard-insights-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .dashboard-roadmap > .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .dashboard-roadmap-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .dashboard-roadmap-controls select {
+        width: 100%;
+    }
+}

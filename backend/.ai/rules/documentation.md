@@ -9,7 +9,7 @@ paths:
 
 # UI-driven documentation
 
-Write English. Organize around actual route and visible component. Trace template/DOM → client → named HTTP route → service/domain → PDO → tests. Keep implementation descriptions distinct from intended decisions and evidence of executed checks.
+Write English. Consolidate docs once at completion with one brief audit-history entry; do not maintain per-step work logs. Organize around actual route and visible component. Trace template/DOM → client → named HTTP route → service/domain → PDO → tests. Keep implementation descriptions distinct from intended decisions and evidence of executed checks.
 
 Record discovered problems in [the shared issue report](../../../docs/issues.md) during the same task. Use stable IDs, explicit evidence/status, affected UI/source links and resolution criteria. Distinguish reproduced failures from source-inspected or unverified findings. Keep resolved entries with verification evidence and link to them from feature docs; do not duplicate issue details across pages or infer authorization to implement a fix.
 

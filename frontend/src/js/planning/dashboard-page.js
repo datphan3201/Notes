@@ -1,11 +1,14 @@
 import { t, statusLabel } from '../lib/i18n.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
-import { get } from '../lib/http.js';
+import { get, post, remove } from '../lib/http.js';
+import { weeklyTaskList, renderTaskChecklist } from './dashboard-tasks.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars, renderStreak } from './insights-ui.js';
 import { transitionEntity } from './transitions.js';
-import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
+import { checkMark } from '../lib/check-mark.js';
 import { streakLabel } from '../lib/habit-days.js';
+import { initDashboardRoadmap } from './dashboard-roadmap.js';
+import { renderRecentActivity } from './recent-activity.js';
 
 function message(root, error) {
     const output = root.querySelector('[data-planning-error]');
@@ -222,6 +225,11 @@ function dayLabel(day) {
 }
 
 export function initDashboardPage(root) {
+    const roadmap = initDashboardRoadmap(root, (error) => message(root, error));
+    root.querySelector('[data-dashboard-open-activity]').addEventListener('click', () => {
+        root.querySelector('[data-workspace-tab="activity"]').click();
+        root.querySelector('[data-workspace-tab="activity"]').focus();
+    });
     let displayedMonth = null;
     let displayedYear = null;
     let currentYear = null;
@@ -270,6 +278,147 @@ export function initDashboardPage(root) {
     const grid = root.querySelector('[data-activity-grid]');
     let loading = false;
     let reloadRequested = false;
+    let taskBusy = false;
+    let taskData = null;
+    const weekSort = root.querySelector('[data-dashboard-week-sort]');
+    const weekStatus = root.querySelector('[data-dashboard-week-status]');
+    const addToday = root.querySelector('[data-dashboard-add-today]');
+    const todayDialog = root.querySelector('#dashboard-today-dialog');
+    const dialogError = root.querySelector('[data-today-dialog-error]');
+    const selectForm = root.querySelector('[data-today-select-form]');
+    const createForm = root.querySelector('[data-today-create-form]');
+
+    const renderTaskPanels = () => {
+        if (!taskData) return;
+        const options = {
+            today: taskData.today,
+            timezone: taskData.timezone,
+            todayIds: new Set(taskData.today_tasks.map((task) => task.id)),
+            dailyIds: new Set(taskData.daily_task_ids),
+            busy: loading || taskBusy,
+            onToggle: (task) =>
+                runTaskAction(() =>
+                    transitionEntity('task', task, task.status === 'Done' ? 'reopen' : 'complete'),
+                ),
+            onAddToday: (task) =>
+                runTaskAction(() => post('/api/v1/daily-selections/task', { id: task.id })),
+            onRemoveToday: (task) =>
+                runTaskAction(() => remove(`/api/v1/daily-selections/task/${task.id}`)),
+        };
+        renderTaskChecklist(root.querySelector('[data-today-tasks]'), taskData.today_tasks, {
+            ...options,
+            mode: 'today',
+        });
+        const filtered = weeklyTaskList(taskData.selected_tasks, {
+            sort: weekSort.value,
+            status: weekStatus.value,
+            timezone: taskData.timezone,
+        });
+        renderTaskChecklist(root.querySelector('[data-weekly-preview-tasks]'), filtered, {
+            ...options,
+            mode: 'week',
+        });
+        renderTaskChecklist(root.querySelector('[data-weekly-tasks]'), taskData.selected_tasks, {
+            ...options,
+            mode: 'week',
+        });
+        root.querySelector('[data-weekly-preview-count]').textContent =
+            weekStatus.value === 'all'
+                ? String(filtered.length)
+                : `${filtered.length} / ${taskData.selected_tasks.length}`;
+        const reminder = root.querySelector('[data-overdue-reminder]');
+        reminder.replaceChildren();
+        const text = document.createElement('span');
+        text.textContent = taskData.overdue_tasks.length
+            ? `${taskData.overdue_tasks.length} ${t(taskData.overdue_tasks.length === 1 ? 'overdue task to review' : 'overdue tasks to review')}`
+            : t('You’re making steady progress.');
+        const link = document.createElement('a');
+        link.className = 'section-link';
+        link.href = '/tasks?view=overdue';
+        link.textContent = t('Overdue tasks');
+        reminder.append(text, link);
+    };
+    const runTaskAction = async (action) => {
+        if (taskBusy || loading) return false;
+        const focusKey = document.activeElement?.dataset.dashboardTaskControl;
+        taskBusy = true;
+        addToday.disabled = true;
+        refresh.disabled = true;
+        renderTaskPanels();
+        let success = false;
+        try {
+            const result = await action();
+            if (result !== null) await load();
+            success = result !== null;
+        } catch (error) {
+            if (error.status === 409) await load();
+            message(root, error);
+            if (todayDialog.open) {
+                dialogError.textContent =
+                    Object.values(error.payload?.errors || {}).flat()[0] || error.message;
+                dialogError.classList.remove('is-hidden');
+            }
+        } finally {
+            taskBusy = false;
+            addToday.disabled = loading;
+            refresh.disabled = loading;
+            renderTaskPanels();
+            if (focusKey)
+                [...root.querySelectorAll('[data-dashboard-task-control]')]
+                    .find(
+                        (control) =>
+                            control.dataset.dashboardTaskControl === focusKey && !control.disabled,
+                    )
+                    ?.focus();
+        }
+        return success;
+    };
+    weekSort.addEventListener('change', renderTaskPanels);
+    weekStatus.addEventListener('change', renderTaskPanels);
+    addToday.addEventListener('click', async () => {
+        dialogError.classList.add('is-hidden');
+        selectForm.elements.id.replaceChildren(new Option(t('Loading tasks…'), ''));
+        selectForm.querySelector('button').disabled = true;
+        todayDialog.showModal();
+        try {
+            const tasks = (await get('/api/v1/tasks')).payload.data;
+            const ids = new Set(taskData.today_tasks.map((task) => task.id));
+            selectForm.elements.id.replaceChildren(new Option(t('Select task'), ''));
+            for (const task of tasks.filter(
+                (task) => task.status !== 'Done' && !ids.has(task.id),
+            )) {
+                selectForm.elements.id.add(new Option(task.name, task.id));
+            }
+            selectForm.querySelector('button').disabled =
+                selectForm.elements.id.options.length === 1;
+        } catch (error) {
+            dialogError.textContent = error.message;
+            dialogError.classList.remove('is-hidden');
+        }
+    });
+    for (const form of [selectForm, createForm]) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (taskBusy || loading) return;
+            const data = new FormData(form);
+            const body = form === selectForm ? { id: data.get('id') } : { name: data.get('name') };
+            const controls = [...todayDialog.querySelectorAll('button, input, select')];
+            controls.forEach((control) => {
+                control.disabled = true;
+            });
+            const success = await runTaskAction(() => post('/api/v1/daily-selections/task', body));
+            controls.forEach((control) => {
+                control.disabled = false;
+            });
+            if (success) {
+                form.reset();
+                todayDialog.close();
+            }
+        });
+    }
+    todayDialog.addEventListener('cancel', (event) => {
+        if (taskBusy) event.preventDefault();
+    });
 
     const hideTooltip = () => {
         tooltip.classList.add('is-hidden');
@@ -304,14 +453,16 @@ export function initDashboardPage(root) {
         }
         loading = true;
         refresh.disabled = true;
-        const previousFocus = root.querySelector('[data-focus-complete]');
-        if (previousFocus) previousFocus.disabled = true;
+        addToday.disabled = true;
+        renderTaskPanels();
+        const roadmapRevision = roadmap.revision;
         root.setAttribute('aria-busy', 'true');
         root.querySelector('[data-planning-error]').classList.add('is-hidden');
         try {
             const query = requestedMonth ? `?month=${requestedMonth}` : '';
             const { payload } = await get(`/api/v1/dashboard${query}`);
             const data = payload.data;
+            taskData = data;
             displayedMonth = data.month;
             root.querySelector('[data-dashboard-timezone]').textContent =
                 `${t('Your time zone')}: ${data.timezone}`;
@@ -342,6 +493,18 @@ export function initDashboardPage(root) {
             );
             root.querySelector('[data-dashboard-greeting]').append(referenceDecoration('greeting'));
             renderRing(
+                root.querySelector('[data-today-ring]'),
+                data.today_summary.percentage,
+                t('Tasks completed today'),
+            );
+            root.querySelector('[data-today-completed]').textContent =
+                `${data.today_summary.completed} / ${data.today_summary.total}`;
+            renderRecentActivity(root, data.recent_activity, {
+                levelFor: activityLevel,
+                describe: dayLabel,
+            });
+            roadmap.load(data.roadmap_goal_id, roadmapRevision);
+            renderRing(
                 root.querySelector('[data-week-ring]'),
                 data.week_summary.percentage,
                 t('Selected tasks completed'),
@@ -363,122 +526,7 @@ export function initDashboardPage(root) {
                 data.week_summary.daily_activity,
             );
             renderStreak(root.querySelector('[data-habit-streak]'), data.habit_streak, data.today);
-            const focus = [...data.selected_tasks, ...data.today_tasks, ...data.overdue_tasks].find(
-                (task) => task.status !== 'Done' && task.status !== 'Blocked',
-            );
-            const focusContainer = root.querySelector('[data-current-focus]');
-            focusContainer.replaceChildren();
-            if (focus) {
-                const name = document.createElement('a');
-                name.className = 'focus-name';
-                name.href = `/tasks/${focus.id}`;
-                name.textContent = focus.name;
-                const chip = document.createElement('span');
-                chip.className = 'context-chip';
-                chip.textContent = focus.estimated_minutes
-                    ? `${focus.estimated_minutes} min · ${focus.status.replace(/([a-z])([A-Z])/g, '$1 $2')}`
-                    : focus.status.replace(/([a-z])([A-Z])/g, '$1 $2');
-                const description = document.createElement('p');
-                description.className = 'focus-description';
-                description.textContent =
-                    focus.description ||
-                    focus.completion_criteria ||
-                    t('Open this task and take the next small step.');
-                const actions = document.createElement('div');
-                actions.className = 'focus-actions';
-                const edit = document.createElement('a');
-                edit.className = 'button button-quiet';
-                edit.href = `/tasks/${focus.id}#edit`;
-                edit.textContent = '✎';
-                edit.setAttribute('aria-label', `${t('Edit')} ${focus.name}`);
-                edit.title = t('Edit task');
-                const complete = document.createElement('button');
-                complete.type = 'button';
-                complete.dataset.focusComplete = '';
-                complete.disabled = true;
-                complete.className = 'button button-primary';
-                setCheckedLabel(complete, t('Complete'));
-                complete.addEventListener('click', async () => {
-                    complete.disabled = true;
-                    try {
-                        if (await transitionEntity('task', focus, 'complete')) await load();
-                    } catch (error) {
-                        message(root, error);
-                    } finally {
-                        complete.disabled = false;
-                    }
-                });
-                actions.append(edit, complete);
-                focusContainer.append(name, chip, description, actions);
-            } else
-                renderEmptyState(focusContainer, {
-                    title: 'A little room to focus.',
-                    description: 'Choose an open task for this week.',
-                    href: '/tasks',
-                    action: 'Choose a task',
-                });
-            // Scenery is decorative; links and progress come from the owned roadmap.
-            try {
-                const goals = (await get('/api/v1/goals')).payload.data.filter(
-                    (goal) => !goal.parent_goal_id && goal.status !== 'Completed',
-                );
-                goals.sort((a, b) => b.importance - a.importance);
-                const preview = root.querySelector('[data-dashboard-roadmap]');
-                preview.replaceChildren();
-                if (goals.length) {
-                    const goal = goals[0];
-                    const roadmap = (await get(`/api/v1/goals/${goal.id}/roadmap`)).payload.data;
-                    const branch =
-                        focus &&
-                        roadmap.milestones.find((milestone) => milestone.id === focus.milestone_id);
-                    if (branch || focus?.goal_id === goal.id) {
-                        const context = document.createElement('a');
-                        context.className = 'context-chip';
-                        context.href = `/goals/${goal.id}${branch ? `#milestone=${branch.id}` : ''}`;
-                        context.textContent = branch ? branch.name : goal.name;
-                        focusContainer.querySelector('.focus-name').after(context);
-                    }
-                    root.querySelector('[data-dashboard-roadmap-link]').href = `/goals/${goal.id}`;
-                    root.querySelector('[data-dashboard-roadmap-link]').textContent =
-                        t('View full roadmap →');
-                    for (const milestone of (roadmap.milestones || []).slice(0, 6)) {
-                        const link = document.createElement('a');
-                        link.href = `/goals/${goal.id}#milestone=${milestone.id}`;
-                        link.textContent = milestone.name;
-                        link.classList.toggle('is-complete', milestone.status === 'Completed');
-                        preview.append(link);
-                    }
-                    if (!preview.childNodes.length) {
-                        const link = document.createElement('a');
-                        link.href = `/goals/${goal.id}`;
-                        link.textContent = goal.name;
-                        preview.append(link);
-                    }
-                } else
-                    preview.textContent = t('Create a goal to give your next steps a direction.');
-            } catch {
-                root.querySelector('[data-dashboard-roadmap]').textContent = t(
-                    'Roadmap unavailable. Open Goals or refresh to try again.',
-                );
-            }
-            rows(root.querySelector('[data-today-tasks]'), data.today_tasks, {
-                title: 'A little room to focus.',
-                description:
-                    'No tasks are scheduled for today. Choose your next step from your task list.',
-                href: '/tasks',
-                action: 'Explore your tasks',
-            });
-            rows(root.querySelector('[data-overdue-tasks]'), data.overdue_tasks, {
-                title: 'All caught up.',
-                description: 'No overdue tasks to carry forward.',
-                icon: 'check',
-            });
-            rows(root.querySelector('[data-weekly-tasks]'), data.selected_tasks, {
-                title: 'Choose your focus.',
-                description: 'Select tasks for this week from your task list.',
-                href: '/tasks',
-                action: 'Select tasks',
-            });
+            renderTaskPanels();
             rows(
                 root.querySelector('[data-weekly-milestones]'),
                 data.selected_milestones,
@@ -516,10 +564,10 @@ export function initDashboardPage(root) {
             }
         } finally {
             loading = false;
+            addToday.disabled = taskBusy;
+            renderTaskPanels();
             root.setAttribute('aria-busy', 'false');
             refresh.disabled = false;
-            const complete = root.querySelector('[data-focus-complete]');
-            if (complete) complete.disabled = false;
             // A mutation finishing during another read must still get a fresh view.
             if (reloadRequested) {
                 reloadRequested = false;

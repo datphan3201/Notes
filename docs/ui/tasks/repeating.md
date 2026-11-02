@@ -16,7 +16,7 @@ Rows show series state, frequency, start/end and optional reminder time. Pause r
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-view="repeating"](../../../frontend/src/views/planning/tasks.php#L45) |
+| UI / DOM | [tasks.php · data-task-view="repeating"](../../../frontend/src/views/planning/tasks.php#L49) |
 | Browser logic | [series-list.js · export function renderSeriesList](../../../frontend/src/js/planning/series-list.js#L6) |
 | Controller / service / domain | [TaskSeriesService.php · public function transition(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L111) |
 | Persistence | [PdoTaskSeriesRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L61)<br>[PdoTaskSeriesRepository.php · public function archiveFutureNotStarted(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L143) |
@@ -45,8 +45,8 @@ HTTP creation materializes immediately. The scheduler materializes hourly; Task 
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L74) |
-| Browser logic | [planning-page.js · get('/api/v1/task-series'](../../../frontend/src/js/planning/planning-page.js#L609) |
+| UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L78) |
+| Browser logic | [planning-page.js · get('/api/v1/task-series'](../../../frontend/src/js/planning/planning-page.js#L646) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>[TaskSeriesService.php · public function materializeDue(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L185)<br>[TaskSeriesService.php · public function materialize(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L160) |
 | Persistence | [PdoTaskSeriesRepository.php · public function occurrence(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L84)<br>[PdoTaskSeriesRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L49)<br>[PdoPlanningRepository.php · public function linkOccurrence(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L443) |
 | Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_repeating_tasks_carry_a_local_reminder_and_extend_without_a_scheduler(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L177) |
