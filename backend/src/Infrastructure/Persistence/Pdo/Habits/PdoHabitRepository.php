@@ -64,8 +64,9 @@ final readonly class PdoHabitRepository
     /** @return array<string, mixed> */
     public function archive(int $userId, string $id, string $timestamp): array
     {
-        $statement = $this->pdo->prepare('UPDATE habits SET archived_at = :timestamp, version = version + 1, updated_at = :timestamp WHERE user_id = :user_id AND id = :id AND archived_at IS NULL');
-        $statement->execute(['timestamp' => $timestamp, 'user_id' => $userId, 'id' => $id]);
+        // Native prepares reject a repeated named parameter, so each use has its own name.
+        $statement = $this->pdo->prepare('UPDATE habits SET archived_at = :archived_at, version = version + 1, updated_at = :updated_at WHERE user_id = :user_id AND id = :id AND archived_at IS NULL');
+        $statement->execute(['archived_at' => $timestamp, 'updated_at' => $timestamp, 'user_id' => $userId, 'id' => $id]);
         $statement = $this->pdo->prepare('SELECT * FROM habits WHERE user_id = :user_id AND id = :id');
         $statement->execute(['user_id' => $userId, 'id' => $id]);
 
