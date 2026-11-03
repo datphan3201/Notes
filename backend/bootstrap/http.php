@@ -293,6 +293,14 @@ $noteController = new NoteController(
     new NoteValidator(new InputValidator),
     $noteSerializer,
     $cleanup,
+    new \Planner\Application\Notes\NoteLinkService(
+        $noteService,
+        $planningService,
+        new \Planner\Infrastructure\Persistence\Pdo\Notes\PdoNoteLinkRepository($services['pdo']),
+        $services['transactions'],
+        $services['clock'],
+        $inputValidator,
+    ),
 );
 $noteShareController = new \Planner\Http\Controller\NoteShareController($auth, $noteShareService, $reportService, new NoteValidator($inputValidator), $inputValidator);
 $adminController = new \Planner\Http\Controller\AdminController($auth, $reportService, $inputValidator, $accountController);

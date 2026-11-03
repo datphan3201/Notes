@@ -787,3 +787,93 @@
         flex: 1;
     }
 }
+/* Checklist lines in card previews. */
+.note-preview-box {
+    display: inline-grid;
+    place-content: center;
+    width: 0.95em;
+    height: 0.95em;
+    margin-right: 0.45em;
+    vertical-align: -0.12em;
+    color: var(--on-accent);
+    border: 1.5px solid var(--control-border, var(--border));
+    border-radius: 4px;
+}
+.note-preview-box.is-checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.note-preview-box .check-mark {
+    width: 0.7em;
+    height: 0.7em;
+}
+/* The Goal or Task a note belongs to. */
+.note-link-chip {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 6px;
+    align-items: center;
+    max-width: 100%;
+    margin: -4px 0 12px;
+    padding: 3px 9px;
+    overflow: hidden;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    font-size: var(--font-size-caption);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.note-link-chip .ui-icon {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+}
+.note-card-attachment {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+}
+.note-card-attachment .line-icon {
+    width: 14px;
+    height: 14px;
+}
+.note-card-action .ui-icon,
+.note-card-action .line-icon {
+    width: 17px;
+    height: 17px;
+}
+/* Related notes on Goal and Task pages. */
+.linked-notes-list {
+    display: grid;
+    gap: 8px;
+}
+.linked-note {
+    display: grid;
+    gap: 3px;
+    padding: 10px 12px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+}
+.linked-note:hover,
+.linked-note:focus-visible {
+    border-color: var(--accent);
+}
+.linked-note span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.linked-note small {
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+}
+[data-task-detail] .linked-notes {
+    margin-top: 16px;
+}

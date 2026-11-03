@@ -15,6 +15,9 @@ const paths = {
     more: ['M5.5 12h.01M12 12h.01M18.5 12h.01'],
     edit: ['M4 20h4L19 9l-4-4L4 16v4Z', 'M13.5 6.5l4 4'],
     archive: ['M4 5h16v4H4Z', 'M5.5 9v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V9', 'M10 13h4'],
+    paperclip: [
+        'M20 11.5 12 19.5a5 5 0 0 1-7-7L13.5 4a3.3 3.3 0 0 1 4.7 4.7l-8.4 8.4a1.7 1.7 0 0 1-2.4-2.4L15 7.6',
+    ],
     // Solid accents (greeting, streak): vector so they follow every theme instead of a raster crop.
     sparkle: [
         'M11 3.5 12.8 9 18 10.8 12.8 12.6 11 18l-1.8-5.4L4 10.8 9.2 9Z',
@@ -24,6 +27,17 @@ const paths = {
         'M12 2.8c.6 3 4.9 5.2 4.9 10a4.9 4.9 0 0 1-9.8 0c0-2.3 1.2-3.7 2.4-4.9.3 1.5 1 2.5 1.9 3 .1-2.9.1-5.4.6-8.1Z',
     ],
 };
+
+/** A symbol from the shared SVG sprite (views/layouts/icons.php), e.g. spriteIcon('goals'). */
+export function spriteIcon(name) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'ui-icon');
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', `#icon-${name}`);
+    svg.append(use);
+    return svg;
+}
 
 export function lineIcon(name, { filled = false, solid = false } = {}) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

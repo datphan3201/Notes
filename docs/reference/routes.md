@@ -109,6 +109,9 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/api/v1/notes/{note}` | `api.notes.show` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
 | PATCH | `/api/v1/notes/{note}` | `api.notes.update` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
 | DELETE | `/api/v1/notes/{note}` | `api.notes.destroy` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
+| PUT | `/api/v1/notes/{note}/link` | `api.notes.link` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
+| GET | `/api/v1/goals/{id}/notes` | `api.goals.notes` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
+| GET | `/api/v1/tasks/{id}/notes` | `api.tasks.notes` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
 | GET | `/api/v1/labels` | `api.labels.index` | yes | no | note-reads | [tags.md](../ui/shared/tags.md) |
 | POST | `/api/v1/labels` | `api.labels.store` | yes | yes | mutations | [tags.md](../ui/shared/tags.md) |
 | PATCH | `/api/v1/labels/{label}` | `api.labels.update` | yes | yes | mutations | [tags.md](../ui/shared/tags.md) |

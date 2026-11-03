@@ -6,6 +6,7 @@ namespace Planner\Http\Controller;
 
 use Planner\Application\Account\AuthService;
 use Planner\Application\Files\ProcessFileDeletion;
+use Planner\Application\Notes\NoteLinkService;
 use Planner\Application\Notes\NoteListQuery;
 use Planner\Application\Notes\NoteSerializer;
 use Planner\Application\Notes\NoteService;
@@ -22,7 +23,14 @@ final readonly class NoteController
         private NoteValidator $validator,
         private NoteSerializer $serializer,
         private ProcessFileDeletion $cleanup,
+        private NoteLinkService $links,
     ) {
+    }
+
+    /** A Note with its Goal/Task link (null when unlinked). @return array<string, mixed> */
+    private function linked(int $userId, \Planner\Domain\Notes\NoteRecord $note): array
+    {
+        return [...$this->serializer->full($note), 'link' => $this->links->forNotes($userId, [$note->id])[$note->id] ?? null];
     }
 
     /** @param array<string, string> $parameters */
@@ -32,8 +40,10 @@ final readonly class NoteController
         $input = $this->validator->listing($request->query);
         $page = $this->list->paginate($user->id, $input['q'], $input['label_ids'], $input['page'], $input['sort'], $input['direction']);
 
+        $links = $this->links->forNotes($user->id, array_map(static fn ($note): string => $note->id, $page['items']));
+
         return Response::json([
-            'data' => array_map($this->serializer->summary(...), $page['items']),
+            'data' => array_map(fn ($note): array => [...$this->serializer->summary($note), 'link' => $links[$note->id] ?? null], $page['items']),
             'meta' => [
                 'current_page' => $page['current_page'],
                 'per_page' => $page['per_page'],
@@ -50,7 +60,7 @@ final readonly class NoteController
         $result = $this->notes->create($user->id, $this->validator->create($request->input()));
 
         return Response::json([
-            'data' => $this->serializer->full($result['note']),
+            'data' => $this->linked($user->id, $result['note']),
             'meta' => ['replayed' => $result['replayed']],
         ], $result['replayed'] ? 200 : 201);
     }
@@ -61,7 +71,7 @@ final readonly class NoteController
         $user = $this->auth->requireUser();
 
         return Response::json([
-            'data' => $this->serializer->full($this->notes->show($user->id, $parameters['note'])),
+            'data' => $this->linked($user->id, $this->notes->show($user->id, $parameters['note'])),
         ]);
     }
 
@@ -75,7 +85,31 @@ final readonly class NoteController
             $this->validator->update($request->input()),
         );
 
-        return Response::json(['data' => $this->serializer->full($note)]);
+        return Response::json(['data' => $this->linked($user->id, $note)]);
+    }
+
+    /** PUT /api/v1/notes/{note}/link {goal_id} | {task_id} | {} @param array<string, string> $parameters */
+    public function link(Request $request, array $parameters): Response
+    {
+        $user = $this->auth->requireUser();
+
+        return Response::json(['data' => $this->links->link($user->id, $parameters['note'], $request->input())]);
+    }
+
+    /** GET /api/v1/goals/{id}/notes @param array<string, string> $parameters */
+    public function goalNotes(Request $request, array $parameters): Response
+    {
+        $user = $this->auth->requireUser();
+
+        return Response::json(['data' => $this->links->notesFor($user->id, 'goal', $parameters['id'])]);
+    }
+
+    /** GET /api/v1/tasks/{id}/notes @param array<string, string> $parameters */
+    public function taskNotes(Request $request, array $parameters): Response
+    {
+        $user = $this->auth->requireUser();
+
+        return Response::json(['data' => $this->links->notesFor($user->id, 'task', $parameters['id'])]);
     }
 
     /** @param array<string, string> $parameters */

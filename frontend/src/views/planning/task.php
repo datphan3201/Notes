@@ -106,6 +106,19 @@
                 <div class="resources-list" data-task-resources></div>
             </section>
         </article>
+        <div class="linked-notes planning-panel" data-linked-notes="task" data-linked-id="<?= $view->e($task_id) ?>">
+            <div class="section-heading">
+                <div>
+                    <h2><?= $view->e($view->t('Related notes')) ?></h2>
+                    <p class="subtle-copy"><?= $view->e($view->t('Notes linked to this task from the Notes page.')) ?></p>
+                </div>
+                <a class="button button-quiet" href="/" data-linked-notes-new>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                    <?= $view->e($view->t('New linked note')) ?>
+                </a>
+            </div>
+            <div class="linked-notes-list" data-linked-notes-list></div>
+        </div>
     </section>
     <section id="task-panel-related" role="tabpanel" aria-labelledby="task-tab-related" data-workspace-panel="related" hidden>
         <article class="planning-panel">

@@ -54,6 +54,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `reviews.facts` | [Refresh facts, Finalize, Reopen and Delete](../ui/reviews/README.md#refresh-facts-finalize-reopen-and-delete) | /reviews — Collection and Review editor |
 | `notes.collection` | [All notes, search, sort, grid/list and paging](../ui/notes/README.md#all-notes-search-sort-gridlist-and-paging) | / — Notes |
 | `notes.editor` | [New note, title/content, color, pin and Save](../ui/notes/README.md#new-note-titlecontent-color-pin-and-save) | / — Notes |
+| `notes.links` | [Note links to a Goal or Task](../ui/notes/README.md#note-links-to-a-goal-or-task) | / — Notes |
 | `notes.delete` | [Delete and tombstones](../ui/notes/README.md#delete-and-tombstones) | / — Notes |
 | `notes.autosave` | [Dirty, saving, saved and retry state](../ui/notes/autosave.md#dirty-saving-saved-and-retry-state) | / — Notes autosave, recovery and conflicts |
 | `notes.recovery` | [Recover draft, offline retry and session changes](../ui/notes/autosave.md#recover-draft-offline-retry-and-session-changes) | / — Notes autosave, recovery and conflicts |

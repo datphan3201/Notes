@@ -1,3 +1,4 @@
+import { renderLinkedNotes } from '../notes/linked-notes.js';
 import { formatDay, formatPercent } from '../lib/format.js';
 import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { get, patch, post, remove } from '../lib/http.js';
@@ -29,6 +30,7 @@ function element(tag, text, className) {
 
 export function initGoalDetail(root) {
     const id = root.dataset.goalId;
+    renderLinkedNotes(root.querySelector('[data-linked-notes]'));
     const find = (selector) => root.querySelector(selector);
     const errorOutput = find('[data-planning-error]');
     const map = find('[data-roadmap-map]');

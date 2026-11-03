@@ -174,6 +174,22 @@
             </form>
         </details>
         <details name="goal-information-sections" class="goal-information-section">
+            <summary><?= $view->e($view->t('Related notes')) ?></summary>
+            <div class="linked-notes" data-linked-notes="goal" data-linked-id="<?= $view->e($goal_id) ?>">
+            <div class="section-heading">
+                <div>
+                    <h2><?= $view->e($view->t('Related notes')) ?></h2>
+                    <p class="subtle-copy"><?= $view->e($view->t('Notes linked to this goal from the Notes page.')) ?></p>
+                </div>
+                <a class="button button-quiet" href="/" data-linked-notes-new>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                    <?= $view->e($view->t('New linked note')) ?>
+                </a>
+            </div>
+            <div class="linked-notes-list" data-linked-notes-list></div>
+        </div>
+        </details>
+        <details name="goal-information-sections" class="goal-information-section">
             <summary><?= $view->e($view->t('Tags')) ?></summary>
             <div data-goal-tags></div>
         </details>

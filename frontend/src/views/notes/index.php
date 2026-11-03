@@ -155,6 +155,12 @@
                         <input type="color" value="#fde68a" data-color-custom>
                     </label>
                 </div>
+                <label class="note-link-picker">
+                    <span class="control-label"><?= $view->e($view->t('Linked to')) ?></span>
+                    <select data-note-link>
+                        <option value=""><?= $view->e($view->t('Not linked')) ?></option>
+                    </select>
+                </label>
                 <label class="note-background-picker is-hidden" data-note-background-field>
                     <span class="control-label"><?= $view->e($view->t('Background image')) ?></span>
                     <select data-note-background>
@@ -164,7 +170,7 @@
             </div>
             <div class="editor-actions">
                 <button class="button button-quiet" type="button" data-editor-pin aria-pressed="false">
-                    <span aria-hidden="true">♢</span>
+                    <svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3-1-6Z M12 15v6"/></svg>
                     <span data-pin-label><?= $view->e($view->t('Pin')) ?></span>
                 </button>
                 <button class="button button-quiet" type="button" data-editor-labels>

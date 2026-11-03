@@ -1,10 +1,16 @@
 import { t } from '../lib/i18n.js';
 import { get, patch, post, remove } from '../lib/http';
+import { lineIcon, spriteIcon } from '../lib/line-icons.js';
 import { pageWindow } from '../lib/pagination.js';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
-import { NoteSharing, appendHighlightedText, applyNoteStyle } from './note-sharing.js';
+import {
+    NoteSharing,
+    appendHighlightedText,
+    appendNotePreview,
+    applyNoteStyle,
+} from './note-sharing.js';
 
 export class NotesPage {
     constructor(root) {
@@ -54,6 +60,26 @@ export class NotesPage {
         // Recovery must inspect the previous page's draft before a new editor
         // can write its first account-scoped recovery record.
         this.root.querySelector('[data-new-note]').disabled = false;
+        this.openFromLocation();
+    }
+
+    /**
+     * Goal and Task pages deep-link here: ?note=<id> opens a note, ?new=1&goal=<id> (or
+     * &task=<id>) starts one already linked to that work. The query is removed afterwards so
+     * a reload does not reopen it.
+     */
+    openFromLocation() {
+        const params = new URLSearchParams(window.location.search);
+        const noteId = params.get('note');
+        const linkType = params.has('goal') ? 'goal' : params.has('task') ? 'task' : null;
+        if (!noteId && !params.has('new')) return;
+        history.replaceState(null, '', window.location.pathname);
+        if (noteId) {
+            this.editor.openExisting(noteId);
+        } else {
+            this.editor.pendingLink = linkType ? `${linkType}:${params.get(linkType)}` : '';
+            this.editor.openNew();
+        }
     }
 
     bindShell() {
@@ -353,7 +379,7 @@ export class NotesPage {
             const share = document.createElement('button');
             share.className = 'icon-button note-card-action';
             share.type = 'button';
-            share.textContent = '⇄';
+            share.append(spriteIcon('share'));
             share.title = t('Share');
             share.setAttribute('aria-label', t('Share'));
             share.addEventListener('click', (event) => {
@@ -365,7 +391,7 @@ export class NotesPage {
         const pin = document.createElement('button');
         pin.className = 'icon-button note-card-action' + (note.is_pinned ? ' is-active' : '');
         pin.type = 'button';
-        pin.textContent = note.is_pinned ? '◆' : '◇';
+        pin.append(lineIcon('pin', { filled: note.is_pinned }));
         const pinLabel = t(note.is_pinned ? 'Unpin note' : 'Pin note');
         pin.title = pinLabel;
         pin.setAttribute('aria-label', pinLabel);
@@ -378,7 +404,7 @@ export class NotesPage {
         head.append(title, actions);
         const preview = document.createElement('p');
         preview.className = 'note-card-preview';
-        appendHighlightedText(preview, note.content_preview, this.query.q);
+        appendNotePreview(preview, note.content_preview, this.query.q);
         const footer = document.createElement('div');
         footer.className = 'note-card-footer';
         const labels = document.createElement('div');
@@ -400,7 +426,10 @@ export class NotesPage {
         if (note.attachment_count) {
             const attachmentMark = document.createElement('span');
             attachmentMark.className = 'note-card-attachment';
-            attachmentMark.textContent = '⌑ ' + note.attachment_count;
+            attachmentMark.append(
+                lineIcon('paperclip'),
+                document.createTextNode(String(note.attachment_count)),
+            );
             attachmentMark.setAttribute('aria-label', note.attachment_count + ' attachments');
             metaGroup.append(attachmentMark);
         }
@@ -408,7 +437,20 @@ export class NotesPage {
         meta.textContent = this.formatDate(note.updated_at);
         metaGroup.append(meta);
         footer.append(labels, metaGroup);
-        card.append(head, preview, footer);
+        card.append(head, preview);
+        if (note.link) {
+            // Where the note belongs: opens the Goal or Task without opening the editor.
+            const link = document.createElement('a');
+            link.className = 'note-link-chip';
+            link.href = `/${note.link.type === 'goal' ? 'goals' : 'tasks'}/${encodeURIComponent(note.link.id)}`;
+            link.append(
+                spriteIcon(note.link.type === 'goal' ? 'goals' : 'tasks'),
+                document.createTextNode(note.link.name),
+            );
+            link.addEventListener('click', (event) => event.stopPropagation());
+            card.append(link);
+        }
+        card.append(footer);
         return card;
     }
 

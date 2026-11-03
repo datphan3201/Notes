@@ -2934,6 +2934,70 @@
           ]
         },
         {
+          "id": "notes.links",
+          "label": "Note links to a Goal or Task",
+          "behavior": "A Note can belong to one active Goal or Task of the same owner. The editor's Linked to picker sets or clears it outside the autosave snapshot (a new Note applies the choice after its first save); cards show the link as a chip, and Goal information and the Task Notes tab list linked Notes with a shortcut that opens a new Note already linked. Links to another account's work, or to both a Goal and a Task, are rejected; archiving or deleting the target hides or removes the link.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-note-link"
+            },
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-linked-notes=\"goal\""
+            },
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-linked-notes=\"task\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "async setLink("
+            },
+            {
+              "path": "frontend/src/js/notes/linked-notes.js",
+              "symbol": "export async function renderLinkedNotes"
+            },
+            {
+              "path": "frontend/src/js/notes/notes-page.js",
+              "symbol": "openFromLocation() {"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteLinkService.php",
+              "symbol": "public function link("
+            },
+            {
+              "path": "backend/src/Http/Controller/NoteController.php",
+              "symbol": "public function link("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteLinkRepository.php",
+              "symbol": "public function save("
+            },
+            {
+              "path": "backend/database/plain-migrations/0028_create_note_links.php",
+              "symbol": "CREATE TABLE note_links"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NotesHttpTest.php",
+              "symbol": "public function test_note_links_to_one_goal_or_task_with_owner_isolation("
+            }
+          ],
+          "routes": [
+            "api.notes.link",
+            "api.goals.notes",
+            "api.tasks.notes"
+          ]
+        },
+        {
           "id": "notes.delete",
           "label": "Delete and tombstones",
           "behavior": "Deleting an owned Note also unlinks its Task. A retried create with a tombstoned UUID returns 410 instead of resurrecting data. Pending file deletion is handled after the metadata transaction.",
@@ -5542,6 +5606,9 @@
     "api.daily-selections.index": "docs/ui/dashboard/README.md",
     "api.daily-selections.store": "docs/ui/dashboard/README.md",
     "api.daily-selections.destroy": "docs/ui/dashboard/README.md",
-    "api.dashboard.roadmap.update": "docs/ui/dashboard/README.md"
+    "api.dashboard.roadmap.update": "docs/ui/dashboard/README.md",
+    "api.notes.link": "docs/ui/notes/README.md",
+    "api.goals.notes": "docs/ui/notes/README.md",
+    "api.tasks.notes": "docs/ui/notes/README.md"
   }
 }

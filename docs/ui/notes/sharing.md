@@ -14,8 +14,8 @@ Unknown emails return the same success shape but create no invitation. Owner can
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-share](../../../frontend/src/views/notes/index.php#L174) |
-| Browser logic | [note-sharing.js · export class NoteSharing](../../../frontend/src/js/notes/note-sharing.js#L74) |
+| UI / DOM | [index.php · data-editor-share](../../../frontend/src/views/notes/index.php#L180) |
+| Browser logic | [note-sharing.js · export class NoteSharing](../../../frontend/src/js/notes/note-sharing.js#L98) |
 | Controller / service / domain | [NoteShareService.php · public function share(](../../../backend/src/Application/Notes/NoteShareService.php#L37)<br>[NoteShareService.php · public function changePermission(](../../../backend/src/Application/Notes/NoteShareService.php#L76) |
 | Persistence | [PdoNoteShareRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L17)<br>[PdoNoteShareRepository.php · public function forNote(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L54)<br>[PdoNoteShareRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L89) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_owner_controls_note_sharing_permissions_and_notifications(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L54) |
@@ -30,7 +30,7 @@ Acceptance is required before access. Edit uses the Note version and explicit Sa
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-filter-shared](../../../frontend/src/views/notes/index.php#L63) |
-| Browser logic | [note-sharing.js · export class NoteSharing](../../../frontend/src/js/notes/note-sharing.js#L74) |
+| Browser logic | [note-sharing.js · export class NoteSharing](../../../frontend/src/js/notes/note-sharing.js#L98) |
 | Controller / service / domain | [NoteShareService.php · public function updateShared(](../../../backend/src/Application/Notes/NoteShareService.php#L153)<br>[NoteShareService.php · public function respond(](../../../backend/src/Application/Notes/NoteShareService.php#L111) |
 | Persistence | [PdoNoteShareRepository.php · public function findReceived(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L44)<br>[PdoNoteShareRepository.php · public function received(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L72)<br>[PdoNoteShareRepository.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php#L103) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_owner_controls_note_sharing_permissions_and_notifications(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L54) |
@@ -45,7 +45,7 @@ A recipient reports a reason; the report stores a title/content snapshot. Admin 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-filter-shared](../../../frontend/src/views/notes/index.php#L63) |
-| Browser logic | [note-sharing.js · async report()](../../../frontend/src/js/notes/note-sharing.js#L407) |
+| Browser logic | [note-sharing.js · async report()](../../../frontend/src/js/notes/note-sharing.js#L431) |
 | Controller / service / domain | [ReportService.php · public function report(](../../../backend/src/Application/Admin/ReportService.php#L35) |
 | Persistence | [PdoReportRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php#L16)<br>[PdoReportRepository.php · public function hasOpenReport(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php#L57) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L98) |

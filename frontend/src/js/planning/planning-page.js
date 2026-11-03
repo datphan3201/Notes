@@ -1,3 +1,4 @@
+import { renderLinkedNotes } from '../notes/linked-notes.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { taskCaptureValues, createCapturedTask, seriesPayload } from './task-capture.js';
 import { openScheduleMenu } from './schedule-picker.js';
@@ -981,6 +982,7 @@ export function initTasksPage(root) {
 
 export function initTaskDetail(root) {
     const id = root.dataset.taskId;
+    renderLinkedNotes(root.querySelector('[data-linked-notes]'));
     const reads = new LatestRequest();
     let task = null;
     let note = null;

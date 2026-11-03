@@ -19,7 +19,7 @@ Valid edits debounce at 500ms and dispatch within 2s of continuous typing. One l
 | Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
 | Relevant tests (not a pass claim) | [autosave-machine.test.js · debounces valid edits](../../../frontend/tests/js/autosave-machine.test.js#L89)<br>[autosave-machine.test.js · keeps typing](../../../frontend/tests/js/autosave-machine.test.js#L112)<br>[autosave-machine.test.js · J02 continuous](../../../frontend/tests/js/autosave-machine.test.js#L209) |
-| HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L47)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L69) |
+| HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L57)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L79) |
 
 ### Recover draft, offline retry and session changes
 
@@ -44,12 +44,12 @@ Creates use stable client-generated UUIDs. Exact replay is a no-op; stale differ
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L222) |
-| Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L658) |
+| UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L228) |
+| Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L700) |
 | Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
 | Relevant tests (not a pass claim) | [NotesHttpTest.php · public function test_create_replay_update_conflict_noop_search_and_tombstone_contract(](../../../backend/tests/Plain/Http/NotesHttpTest.php#L55) |
-| HTTP | `PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L69) |
+| HTTP | `PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L79) |
 
 <!-- END GENERATED TRACE -->
 

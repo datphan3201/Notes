@@ -22,7 +22,7 @@
 | Contributions | Many-to-many related work; no movement, progress weight or prerequisite meaning |
 | Recurrence | Personal daily/weekly/monthly/yearly TaskSeries; Ended is terminal and future work requires a new series. Teamwork uses its separate completion-driven repeat path |
 | Habit | Dedicated check-ins, fixed timezone after first check-in, streak/rest history; no Goal percentage contribution |
-| Notes | Plain-text snapshot, autosave/recovery, checkable lines, Tags, private attachments; explicit permission for shared title/content edits |
+| Notes | Plain-text snapshot, autosave/recovery, checkable lines, Tags, private attachments; explicit permission for shared title/content edits; optional link to one owned Goal or Task (note_links), kept outside the autosave snapshot |
 | Reviews / Activity | Persisted snapshot/reflection versus append-only completion/reversal facts; never fabricated scoring |
 | Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration |
 | Accounts | User/admin roles, locking, email verification/change, recovery, optional email/TOTP 2FA |
