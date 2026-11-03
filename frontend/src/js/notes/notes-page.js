@@ -1,5 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { get, patch, post, remove } from '../lib/http';
+import { pageWindow } from '../lib/pagination.js';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
@@ -24,9 +25,11 @@ export class NotesPage {
         this.noteRequests = new LatestRequest();
         this.searchDebounce = new DebouncedAction({ delay: 300 });
         this.editor = null;
-        document.addEventListener('notes:preferences-changed', (event) =>
-            Object.assign(this.preferences, event.detail),
-        );
+        // Preferences saved elsewhere on the page (Note preferences) apply immediately.
+        document.addEventListener('notes:preferences-changed', (event) => {
+            Object.assign(this.preferences, event.detail);
+            if (event.detail?.notes_view) this.applyView(event.detail.notes_view, false);
+        });
         this.bindShell();
         this.bindDialogs();
     }
@@ -411,27 +414,44 @@ export class NotesPage {
 
     renderPagination() {
         this.pagination.replaceChildren();
-        if (this.meta.last_page <= 1) return;
-        const previous = this.pageButton('‹', this.query.page - 1, this.query.page === 1);
-        this.pagination.append(previous);
-        for (let page = 1; page <= this.meta.last_page; page += 1) {
-            if (page > 5 && page < this.meta.last_page) continue;
+        const last = this.meta.last_page;
+        if (last <= 1) return;
+        const current = this.query.page;
+        this.pagination.append(
+            this.pageButton('‹', current - 1, current === 1, false, t('Previous page')),
+        );
+        for (const page of pageWindow(current, last)) {
+            if (page === null) {
+                const gap = document.createElement('span');
+                gap.className = 'page-gap';
+                gap.textContent = '…';
+                gap.setAttribute('aria-hidden', 'true');
+                this.pagination.append(gap);
+                continue;
+            }
             this.pagination.append(
-                this.pageButton(String(page), page, false, page === this.query.page),
+                this.pageButton(
+                    String(page),
+                    page,
+                    false,
+                    page === current,
+                    `${t('Page')} ${page} ${t('of')} ${last}`,
+                ),
             );
         }
         this.pagination.append(
-            this.pageButton('›', this.query.page + 1, this.query.page === this.meta.last_page),
+            this.pageButton('›', current + 1, current === last, false, t('Next page')),
         );
     }
 
-    pageButton(label, page, disabled, active = false) {
+    pageButton(label, page, disabled, active, accessibleLabel) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'page-button' + (active ? ' is-active' : '');
         button.textContent = label;
         button.disabled = disabled;
-        button.setAttribute('aria-label', 'Trang ' + page);
+        button.setAttribute('aria-label', accessibleLabel);
+        if (active) button.setAttribute('aria-current', 'page');
         button.addEventListener('click', () => {
             this.searchDebounce.cancel();
             this.query.page = page;

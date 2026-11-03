@@ -47,10 +47,10 @@ export function initNotePreferences(root) {
                 const saved = (await patch('/api/v1/preferences', { [key]: value })).payload.data;
                 Object.assign(window.notesBootstrap.preferences, saved);
                 applyAppearance(saved);
+                // NotesPage applies the layout and other note preferences from this event.
                 document.dispatchEvent(
                     new CustomEvent('notes:preferences-changed', { detail: saved }),
                 );
-                document.querySelector(`[data-view="${saved.notes_view}"]`)?.click();
                 render();
                 status.textContent = t('Saved');
             } catch (error) {
