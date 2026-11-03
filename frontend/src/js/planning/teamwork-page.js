@@ -196,6 +196,8 @@ export function initTeamworkPage(root) {
             );
         arrows[0].disabled = page === 0;
         arrows[1].disabled = page >= pages - 1;
+        // A single page needs no paging arrows; the cards then use the full width.
+        track.closest('.team-carousel')?.classList.toggle('is-single-page', pages <= 1);
     };
 
     const renderOverview = (data) => {

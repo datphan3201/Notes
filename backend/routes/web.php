@@ -142,6 +142,7 @@ return static function (
         new Route(['PATCH'], '/api/v1/admin/settings', 'api.admin.settings.update', $handler([$admin, 'updateSettings']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/teamwork', 'planning.teamwork', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/api/v1/team-goals', 'api.team-goals.index', $handler([$teams, 'index']), auth: true),
+        new Route(['GET'], '/api/v1/team-tasks/assigned', 'api.team-tasks.assigned', $handler([$teams, 'assigned']), auth: true),
         new Route(['POST'], '/api/v1/team-goals', 'api.team-goals.store', $handler([$teams, 'store']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/team-goals/{id}', 'api.team-goals.show', $handler([$teams, 'show']), auth: true),
         new Route(['PATCH'], '/api/v1/team-goals/{id}', 'api.team-goals.update', $handler([$teams, 'update']), auth: true, csrf: true, rateLimit: 'mutations'),

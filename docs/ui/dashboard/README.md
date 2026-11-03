@@ -34,7 +34,7 @@ The This week tab places its progress summary and Weekly tasks checklist in the 
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [dashboard.php · data-weekly-tasks](../../../frontend/src/views/planning/dashboard.php#L185)<br>[dashboard.php · data-dashboard-week-sort](../../../frontend/src/views/planning/dashboard.php#L168)<br>[dashboard.php · data-dashboard-week-status](../../../frontend/src/views/planning/dashboard.php#L175)<br>[dashboard.php · data-weekly-task-count](../../../frontend/src/views/planning/dashboard.php#L160)<br>[dashboard.php · data-week-ring](../../../frontend/src/views/planning/dashboard.php#L149)<br>[dashboard.php · data-week-activity-total](../../../frontend/src/views/planning/dashboard.php#L219) |
+| UI / DOM | [dashboard.php · data-weekly-tasks](../../../frontend/src/views/planning/dashboard.php#L197)<br>[dashboard.php · data-dashboard-week-sort](../../../frontend/src/views/planning/dashboard.php#L180)<br>[dashboard.php · data-dashboard-week-status](../../../frontend/src/views/planning/dashboard.php#L187)<br>[dashboard.php · data-weekly-task-count](../../../frontend/src/views/planning/dashboard.php#L172)<br>[dashboard.php · data-week-ring](../../../frontend/src/views/planning/dashboard.php#L161)<br>[dashboard.php · data-week-activity-total](../../../frontend/src/views/planning/dashboard.php#L231) |
 | CSS | [feedback.css · .dashboard-week-tasks .dashboard-week-filters {](../../../frontend/src/css/feedback.css#L1556)<br>[feedback.css · .dashboard-week-bars-wrapper .day-bars {](../../../frontend/src/css/feedback.css#L1437) |
 | Browser logic | [dashboard-page.js · data-weekly-tasks](../../../frontend/src/js/planning/dashboard-page.js#L340)<br>[dashboard-tasks.js · export function weeklyTaskList(](../../../frontend/src/js/planning/dashboard-tasks.js#L55)<br>[dashboard-tasks.js · export function renderTaskChecklist(](../../../frontend/src/js/planning/dashboard-tasks.js#L60)<br>[insights-ui.js · export function renderDayBars(](../../../frontend/src/js/planning/insights-ui.js#L22) |
 | Controller / service / domain | [DashboardService.php · public function addSelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L199) |
@@ -50,7 +50,7 @@ A compact 30-day calendar replaces Current focus in the Today workspace. Its inc
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [dashboard.php · data-activity-grid](../../../frontend/src/views/planning/dashboard.php#L256)<br>[dashboard.php · data-recent-activity-grid](../../../frontend/src/views/planning/dashboard.php#L123) |
+| UI / DOM | [dashboard.php · data-activity-grid](../../../frontend/src/views/planning/dashboard.php#L268)<br>[dashboard.php · data-recent-activity-grid](../../../frontend/src/views/planning/dashboard.php#L135) |
 | CSS | [feedback.css · .recent-activity-calendar {](../../../frontend/src/css/feedback.css#L1340)<br>[feedback.css · .recent-activity-overview {](../../../frontend/src/css/feedback.css#L1334) |
 | Browser logic | [dashboard-page.js · export function yearCalendar](../../../frontend/src/js/planning/dashboard-page.js#L80)<br>[dashboard-page.js · export function activityLevel](../../../frontend/src/js/planning/dashboard-page.js#L66)<br>[recent-activity.js · export function recentActivityCalendar(](../../../frontend/src/js/planning/recent-activity.js#L4)<br>[recent-activity.js · export function renderRecentActivity(](../../../frontend/src/js/planning/recent-activity.js#L17) |
 | Controller / service / domain | [DashboardService.php · public function yearActivity(](../../../backend/src/Application/Dashboard/DashboardService.php#L40)<br>[DashboardService.php · public function dashboard(](../../../backend/src/Application/Dashboard/DashboardService.php#L73) |
@@ -66,7 +66,7 @@ Today shows a Habits card beside Activity: the aggregate streak and its recent d
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [dashboard.php · data-dashboard-habits](../../../frontend/src/views/planning/dashboard.php#L209)<br>[dashboard.php · data-habits-today aria-live](../../../frontend/src/views/planning/dashboard.php#L101) |
+| UI / DOM | [dashboard.php · data-dashboard-habits](../../../frontend/src/views/planning/dashboard.php#L221)<br>[dashboard.php · data-habits-today aria-live](../../../frontend/src/views/planning/dashboard.php#L113) |
 | CSS | [feedback.css · .dashboard-habit-list {](../../../frontend/src/css/feedback.css#L1540)<br>[feedback.css · .dashboard-habit-targets-heading {](../../../frontend/src/css/feedback.css#L1543) |
 | Browser logic | [dashboard-page.js · data-dashboard-habits](../../../frontend/src/js/planning/dashboard-page.js#L361)<br>[insights-ui.js · export function renderStreak](../../../frontend/src/js/planning/insights-ui.js#L79)<br>[dashboard-habits.js · export function renderHabitChecklist(](../../../frontend/src/js/planning/dashboard-habits.js#L23)<br>[dashboard-habits.js · export function renderHabitTargets(](../../../frontend/src/js/planning/dashboard-habits.js#L73) |
 | Controller / service / domain | [HabitProgress.php · public function describe(](../../../backend/src/Application/Habits/HabitProgress.php#L47)<br>[DashboardService.php · private function habitProgress(](../../../backend/src/Application/Dashboard/DashboardService.php#L158) |
@@ -82,7 +82,7 @@ Choose an owned existing Task or create a named Inbox Task in the existing works
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [dashboard.php · data-dashboard-add-today](../../../frontend/src/views/planning/dashboard.php#L59)<br>[dashboard.php · id="dashboard-today-dialog"](../../../frontend/src/views/planning/dashboard.php#L279) |
+| UI / DOM | [dashboard.php · data-dashboard-add-today](../../../frontend/src/views/planning/dashboard.php#L59)<br>[dashboard.php · id="dashboard-today-dialog"](../../../frontend/src/views/planning/dashboard.php#L291) |
 | Browser logic | [dashboard-page.js · const runTaskAction = async (action) =&gt;](../../../frontend/src/js/planning/dashboard-page.js#L373)<br>[dashboard-page.js · addToday.addEventListener('click', async () =&gt;](../../../frontend/src/js/planning/dashboard-page.js#L412) |
 | Controller / service / domain | [DashboardService.php · public function addDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L273)<br>[DashboardService.php · public function removeDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L303) |
 | Persistence | [PdoDashboardRepository.php · public function dailySelections(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L159)<br>[PdoDashboardRepository.php · public function addDailySelection(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L172)<br>[PdoDashboardRepository.php · public function removeDailySelection(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L183)<br>[0025_create_daily_task_selections.php · CREATE TABLE daily_task_selections (](../../../backend/database/plain-migrations/0025_create_daily_task_selections.php#L16) |
@@ -120,6 +120,21 @@ The roadmap strip is directly below the page header, before the section tabs. A 
 | Relevant tests (not a pass claim) | [PlanningHttpTest.php · public function test_dashboard_roadmap_choice_is_persisted_owner_scoped_and_explicitly_cleared(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L218)<br>[dashboard-habits.test.js · test('roadmap connector progress follows the Milestone, clamped to 0-100'](../../../frontend/tests/js/dashboard-habits.test.js#L24) |
 | Coverage limit | HTTP coverage verifies persistence, ownership, CSRF, validation and archived-choice clearing. Browser evidence separately exercises reload, preview navigation and a deliberately delayed stale Dashboard refresh. |
 | HTTP | `PATCH /api/v1/dashboard/roadmap` (`api.dashboard.roadmap.update`) → [DashboardController::updateRoadmap](../../../backend/src/Http/Controller/DashboardController.php#L57)<br>`GET /api/v1/goals` (`api.goals.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`GET /api/v1/goals/{id}/roadmap` (`api.goals.roadmap`) → [PlanningController::roadmap](../../../backend/src/Http/Controller/PlanningController.php#L86)<br>`GET /api/v1/dashboard` (`api.dashboard.show`) → [DashboardController::show](../../../backend/src/Http/Controller/DashboardController.php#L18) |
+
+### Team tasks assigned to you
+
+**Trace ID:** `dashboard.team`
+
+The Daily tab lists open team Tasks assigned to the user across every active team Goal they joined (soonest due first, overdue highlighted), linking to that team Goal. The card is hidden when there are none; done Tasks, other members' Tasks and pending invitations never appear.
+
+| Layer | Entry point |
+| --- | --- |
+| UI / DOM | [dashboard.php · data-dashboard-team hidden](../../../frontend/src/views/planning/dashboard.php#L91) |
+| Browser logic | [dashboard-page.js · const loadTeamTasks = async () =&gt;](../../../frontend/src/js/planning/dashboard-page.js#L484) |
+| Controller / service / domain | [TeamService.php · public function assigned(](../../../backend/src/Application/Teamwork/TeamService.php#L68)<br>[TeamController.php · public function assigned(](../../../backend/src/Http/Controller/TeamController.php#L26) |
+| Persistence | [PdoTeamRepository.php · public function assignedTo(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L142) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_teamwork_roles_tasks_chat_and_member_isolation(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L158) |
+| HTTP | `GET /api/v1/team-tasks/assigned` (`api.team-tasks.assigned`) → [TeamController::assigned](../../../backend/src/Http/Controller/TeamController.php#L26) |
 
 <!-- END GENERATED TRACE -->
 

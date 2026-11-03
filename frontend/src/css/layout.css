@@ -474,12 +474,27 @@ body.navigation-open {
 .sidebar-user-copy small.is-warning {
     color: var(--danger);
 }
-/* A compact sign-out button leaves the name enough room to stay on whole words. */
+/* The user takes the full row; Settings and Sign out sit underneath, so names stay whole. */
+.sidebar-footer {
+    flex-wrap: wrap;
+}
+.sidebar-footer .sidebar-user {
+    flex: 1 0 100%;
+}
 .sidebar-footer .icon-button {
     width: 34px;
     height: 34px;
     flex: 0 0 auto;
 }
+.sidebar-footer form {
+    margin: 0;
+}
 .sidebar-user .avatar-small {
     flex: 0 0 auto;
+}
+/* Team work is shared, so it sits apart from the personal planning pages. */
+.sidebar-nav-divider {
+    height: 1px;
+    margin: 8px 12px;
+    background: var(--border);
 }

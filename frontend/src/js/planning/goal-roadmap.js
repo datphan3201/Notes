@@ -394,8 +394,21 @@ export function initGoalDetail(root) {
                     `${milestone.progress.completed}/${milestone.progress.total} ${t('tasks')} · ${statusLabel(milestone.status)}`,
                 ),
             );
-            if (milestone.completion_locked)
-                branch.append(element('small', t('Prerequisites unfinished'), 'roadmap-locked'));
+            // Waiting on an earlier Milestone is the normal order, not an error: name what comes first.
+            if (milestone.completion_locked) {
+                const waiting = milestone.prerequisites
+                    .filter((prerequisite) => prerequisite.status !== 'Completed')
+                    .map((prerequisite) => prerequisite.name);
+                branch.append(
+                    element(
+                        'small',
+                        waiting.length
+                            ? `${t('After')} ${waiting.join(', ')}`
+                            : t('Prerequisites unfinished'),
+                        'roadmap-locked',
+                    ),
+                );
+            }
             const preview = element('ul', undefined, 'roadmap-task-preview');
             for (const task of (milestone.tasks.some((task) => task.status !== 'Done')
                 ? milestone.tasks.filter((task) => task.status !== 'Done')

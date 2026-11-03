@@ -1559,3 +1559,34 @@
 .today-panel .dashboard-today-filters {
     margin-bottom: 8px;
 }
+/* Dashboard: team Tasks assigned to the user. */
+.dashboard-team-list {
+    display: grid;
+}
+.dashboard-team-task {
+    display: grid;
+    gap: 3px;
+    padding: 10px 0;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    text-decoration: none;
+}
+.dashboard-team-task:first-child {
+    border-top: 0;
+}
+.dashboard-team-task:hover strong {
+    color: var(--accent);
+}
+.dashboard-team-task small {
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+}
+.dashboard-team-task.is-overdue small {
+    color: var(--danger);
+}
+.team-carousel.is-single-page {
+    grid-template-columns: minmax(0, 1fr);
+}
+.team-carousel.is-single-page .team-carousel-arrow {
+    display: none;
+}

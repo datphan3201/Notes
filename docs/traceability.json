@@ -2368,6 +2368,48 @@
             "api.goals.roadmap",
             "api.dashboard.show"
           ]
+        },
+        {
+          "id": "dashboard.team",
+          "label": "Team tasks assigned to you",
+          "behavior": "The Daily tab lists open team Tasks assigned to the user across every active team Goal they joined (soonest due first, overdue highlighted), linking to that team Goal. The card is hidden when there are none; done Tasks, other members' Tasks and pending invitations never appear.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-dashboard-team hidden"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "const loadTeamTasks = async () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function assigned("
+            },
+            {
+              "path": "backend/src/Http/Controller/TeamController.php",
+              "symbol": "public function assigned("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function assignedTo("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_teamwork_roles_tasks_chat_and_member_isolation("
+            }
+          ],
+          "routes": [
+            "api.team-tasks.assigned"
+          ]
         }
       ]
     },
@@ -5609,6 +5651,7 @@
     "api.dashboard.roadmap.update": "docs/ui/dashboard/README.md",
     "api.notes.link": "docs/ui/notes/README.md",
     "api.goals.notes": "docs/ui/notes/README.md",
-    "api.tasks.notes": "docs/ui/notes/README.md"
+    "api.tasks.notes": "docs/ui/notes/README.md",
+    "api.team-tasks.assigned": "docs/ui/dashboard/README.md"
   }
 }

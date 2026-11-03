@@ -50,6 +50,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | PATCH | `/api/v1/admin/settings` | `api.admin.settings.update` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/teamwork` | `planning.teamwork` | yes | no | — | [README.md](../ui/teamwork/README.md) |
 | GET | `/api/v1/team-goals` | `api.team-goals.index` | yes | no | — | [README.md](../ui/teamwork/README.md) |
+| GET | `/api/v1/team-tasks/assigned` | `api.team-tasks.assigned` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | POST | `/api/v1/team-goals` | `api.team-goals.store` | yes | yes | mutations | [README.md](../ui/teamwork/README.md) |
 | GET | `/api/v1/team-goals/{id}` | `api.team-goals.show` | yes | no | — | [README.md](../ui/teamwork/README.md) |
 | PATCH | `/api/v1/team-goals/{id}` | `api.team-goals.update` | yes | yes | mutations | [README.md](../ui/teamwork/README.md) |

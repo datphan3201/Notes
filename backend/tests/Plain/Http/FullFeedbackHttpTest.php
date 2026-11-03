@@ -177,8 +177,14 @@ final class FullFeedbackHttpTest extends TestCase
         $detail = $this->data($this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Design mockups', 'assignee_id' => $viewerId], $lead));
         $task = $detail['tasks'][0];
         self::assertSame('team_task_assigned', $this->data($this->api('GET', '/api/v1/notifications', [], $viewer))['items'][0]['type']);
+        // Assigned team work reaches the assignee's personal views, and nobody else's.
+        $assigned = $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $viewer));
+        self::assertSame([['id' => $task['id'], 'name' => 'Design mockups', 'team_goal' => ['id' => $goalId, 'name' => 'Project Phoenix']]], array_map(static fn (array $row): array => array_intersect_key($row, array_flip(['id', 'name', 'team_goal'])), $assigned));
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $lead)));
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $outsider)));
         $done = $this->data($this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$task['id']}", ['base_version' => 1, 'status' => 'done'], $viewer));
         self::assertSame(['done' => 1, 'total' => 1], $done['progress']);
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $viewer)));
         self::assertSame(403, $this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$task['id']}", ['base_version' => 2, 'name' => 'Renamed'], $viewer)->status);
         self::assertSame(422, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$leadId", ['role' => 'viewer'], $lead)->status);
 

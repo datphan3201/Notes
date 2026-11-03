@@ -1024,7 +1024,8 @@
     line-height: 1.4;
 }
 .roadmap-locked {
-    color: var(--danger) !important;
+    color: var(--muted) !important;
+    font-style: italic;
 }
 .roadmap-pagination {
     grid-column: 1 / -1;

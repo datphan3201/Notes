@@ -24,7 +24,7 @@
 | Habit | Dedicated check-ins, fixed timezone after first check-in, streak/rest history; no Goal percentage contribution |
 | Notes | Plain-text snapshot, autosave/recovery, checkable lines, Tags, private attachments; explicit permission for shared title/content edits; optional link to one owned Goal or Task (note_links), kept outside the autosave snapshot |
 | Reviews / Activity | Persisted snapshot/reflection versus append-only completion/reversal facts; never fabricated scoring |
-| Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration |
+| Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration. Open team Tasks assigned to the user also appear on the personal Dashboard; the sidebar and breadcrumb mark it as the team space |
 | Accounts | User/admin roles, locking, email verification/change, recovery, optional email/TOTP 2FA |
 | AI | Chat agent with owner-scoped read tools (Areas, Goals, Tasks, Habits, Notes). Its Goal/Task create, edit, complete, reopen and archive, Habit create, edit, archive and check-in, and Note create, edit and delete are only queued into one validated proposal; nothing changes until the user confirms the chat card, and Apply runs ordinary services against the versions read (any change since → 409, nothing applied) |
 
