@@ -19,14 +19,15 @@
     </header>
     <article class="planning-panel dashboard-roadmap" aria-labelledby="dashboard-roadmap-title">
         <div class="section-heading">
-            <h2 id="dashboard-roadmap-title"><?= $view->e($view->t('Your roadmap')) ?></h2>
-            <div class="dashboard-roadmap-controls">
-                <label class="sr-only" for="dashboard-roadmap-select"><?= $view->e($view->t('Choose a roadmap')) ?></label>
+            <?php /* The roadmap picker is the visible card title; the hidden heading names the card without reading every option. */ ?>
+            <h2 class="sr-only" id="dashboard-roadmap-title"><?= $view->e($view->t('Roadmap')) ?></h2>
+            <label class="sr-only" for="dashboard-roadmap-select"><?= $view->e($view->t('Choose a roadmap')) ?></label>
+            <span class="roadmap-title-picker">
                 <select id="dashboard-roadmap-select" data-dashboard-roadmap-select disabled>
                     <option value=""><?= $view->e($view->t('Choose a roadmap')) ?></option>
                 </select>
-                <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
-            </div>
+            </span>
+            <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
         </div>
         <div class="roadmap-preview" data-dashboard-roadmap><p><?= $view->e($view->t('Choose a roadmap to display here.')) ?></p></div>
     </article>

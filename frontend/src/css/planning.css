@@ -371,6 +371,12 @@
     align-items: center;
     margin: 0;
 }
+/* Goal page: the roadmap is the page's main section, so its heading reads larger. */
+.section-heading h2.roadmap-heading {
+    margin-bottom: 2px;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+}
 .section-heading h2 .ui-icon {
     width: 18px;
     height: 18px;

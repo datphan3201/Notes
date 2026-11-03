@@ -19,7 +19,7 @@
         <div data-roadmap-overview>
             <div class="section-heading">
                 <div>
-                    <h2><?= $view->e($view->t('Your roadmap')) ?></h2>
+                    <h2 class="roadmap-heading"><?= $view->e($view->t('Roadmap')) ?></h2>
                     <p class="subtle-copy"><?= $view->e($view->t('Select the Goal name for its information, or a milestone for its tasks.')) ?></p>
                 </div>
                 <button class="button button-quiet" type="button" data-open-milestone-create data-open-dialog="new-milestone-dialog" disabled><?= $view->e($view->t('Add milestone')) ?></button>

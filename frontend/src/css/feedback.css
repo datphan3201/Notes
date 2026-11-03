@@ -1175,19 +1175,61 @@
 .dashboard-page > .dashboard-roadmap {
     margin: 0 0 18px;
 }
-.dashboard-roadmap-controls {
+.dashboard-roadmap > .section-heading {
     display: flex;
-    flex: 1 1 auto;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 10px 16px;
-    min-width: 0;
 }
-.dashboard-roadmap-controls select {
-    width: min(340px, 100%);
-    flex: 0 1 340px;
+/* The roadmap picker doubles as the card title: heading type without field chrome until it is
+   hovered or focused. The wrapper draws the chevron in the text colour for every theme. */
+.roadmap-title-picker {
+    position: relative;
+    display: inline-flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: min(100%, 560px);
+    margin-left: -10px;
+}
+.roadmap-title-picker::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    color: var(--muted);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+}
+.roadmap-title-picker select {
+    appearance: none;
+    width: auto;
+    min-width: 0;
     max-width: 100%;
+    min-height: 40px;
+    padding: 4px 38px 4px 10px;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: transparent;
+    border-color: transparent;
+}
+.roadmap-title-picker select:hover:not(:disabled),
+.roadmap-title-picker select:focus-visible {
+    background: var(--surface-soft);
+    border-color: var(--control-border, var(--border));
+}
+.roadmap-title-picker select:disabled {
+    background: transparent;
+    cursor: progress;
 }
 /* Model 1: Split layout with independent scrollable columns */
 .dashboard-split-layout {
@@ -1465,12 +1507,8 @@
         align-items: flex-start;
         flex-direction: column;
     }
-    .dashboard-roadmap-controls {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    .dashboard-roadmap-controls select {
-        width: 100%;
+    .roadmap-title-picker {
+        max-width: calc(100% + 10px);
     }
 }
 
