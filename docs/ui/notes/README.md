@@ -24,7 +24,7 @@ NotesPage owns loading, selection and read coordination. Browser layout preferen
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-notes-workspace](../../../frontend/src/views/notes/index.php#L1) |
-| Browser logic | [notes-page.js · export class NotesPage](../../../frontend/src/js/notes/notes-page.js#L8)<br>[read-coordinator.js · export class LatestRequest](../../../frontend/src/js/lib/read-coordinator.js#L1) |
+| Browser logic | [notes-page.js · export class NotesPage](../../../frontend/src/js/notes/notes-page.js#L9)<br>[read-coordinator.js · export class LatestRequest](../../../frontend/src/js/lib/read-coordinator.js#L1) |
 | Controller / service / domain | [NoteListQuery.php · public function paginate(](../../../backend/src/Application/Notes/NoteListQuery.php#L24) |
 | Persistence | [PdoNoteRepository.php · public function paginate(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L48) |
 | Relevant tests (not a pass claim) | [read-coordinator.test.js · Q01](../../../frontend/tests/js/read-coordinator.test.js#L13)<br>[read-coordinator.test.js · Q02](../../../frontend/tests/js/read-coordinator.test.js#L24)<br>[read-coordinator.test.js · Q03](../../../frontend/tests/js/read-coordinator.test.js#L50) |
@@ -39,7 +39,7 @@ NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L133) |
-| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L446) |
+| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L451) |
 | Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L15)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15) |
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |

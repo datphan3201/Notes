@@ -443,6 +443,11 @@
     opacity: 0.45;
     cursor: not-allowed;
 }
+.page-gap {
+    min-width: 20px;
+    color: var(--muted);
+    text-align: center;
+}
 .editor-modal {
     display: flex;
     flex-direction: column;

@@ -43,8 +43,8 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-015](#issue-015--habit-actions-have-unclear-hierarchy-and-inconsistent-check-in-behavior) | Habit actions have unclear hierarchy and inconsistent check-in behavior | Low | Resolved | Direct check-in, secondary Rest day/Archive, responsive and keyboard browser smoke |
 | [ISSUE-016](#issue-016--habit-archive-fails-with-native-pdo-prepares) | Habit archive fails with native PDO prepares | Medium | Resolved | Reproduced HY093; distinct SQL bindings; integration regression and live browser archive pass |
 | [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Needs decision | Screenshot/template review; Save invokes the close workflow |
-| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Open | Browser read fixtures reproduce page 6/12 without an active page; hardcoded Trang labels |
-| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Open | Intercepted preference response reports List/Saved while Grid stays visible |
+| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | In progress | Fix implemented with unit tests; browser verification pending |
+| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | In progress | Fix implemented; browser verification pending |
 | [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
 | [ISSUE-021](#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) | Demo Review snapshots do not match the runtime schema | Medium | Resolved | Reproduced serializer failure; corrected demo builder, guarded data repair and regression/UI checks pass |
 | [ISSUE-022](#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) | Dashboard Activity and Weekly charts are hard to read | Low | Resolved | Shared heatmap palette, balanced card layout and readable weekly columns; responsive browser checks |
@@ -258,23 +258,27 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-018 — Notes pagination omits the current middle page and localized labels
 
-- **Status:** Open.
+- **Status:** In progress — implemented; browser verification is pending.
 - **Severity:** Low; navigation/orientation and screen-reader wording; no demonstrated data corruption.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [NotesPage::renderPagination/pageButton](../frontend/src/js/notes/notes-page.js).
 - **Observed:** Only numbered pages 1–5 and the last page render; intermediate current pages have no active numbered button or gap indicator. Previous/Next and numbered controls use hardcoded Trang plus a page number, including on English UI.
 - **Evidence:** Intercepted GET list responses with last_page=12; navigating 5 to 6 produced no active page button. Returned accessible labels included Trang 1–5/12 and Trang 5/7 for navigation. This fixture tests browser rendering, not SQL pagination.
 - **Expected / next step:** Keep a visible current-page window and clear gaps/position, with localized Previous/Next/Page labels. Verify first/middle/last pages, search/page reset and both locales before resolving.
+- **Resolution (implemented):** [pageWindow](../frontend/src/js/lib/pagination.js) always shows the first and last page plus two pages on each side of the current one, with an ellipsis for skipped pages (a single skipped page is shown instead). The current page is marked with `aria-current="page"`; numbered buttons are labelled "Page N of M" and the arrows "Previous page"/"Next page" through the Vietnamese dictionary.
+- **Verification so far:** 5 new [pagination tests](../frontend/tests/js/pagination.test.js) cover short ranges, first/middle/last pages, single-page skips and clamping; 96 Node tests, Prettier and the Vite build pass. Browser checks of both locales and search/page reset are still pending.
 
 ## ISSUE-019 — Notes layout preferences do not refresh the visible layout
 
-- **Status:** Open.
+- **Status:** In progress — implemented; browser verification is pending.
 - **Severity:** Low; visible layout disagrees with the chosen preference until a later layout refresh; no content loss established.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [initNotePreferences](../frontend/src/js/settings/delivery-preferences.js), [NotesPage](../frontend/src/js/notes/notes-page.js) and [template](../frontend/src/views/notes/index.php).
 - **Observed:** Preference success updates state and dispatches notes:preferences-changed, but NotesPage only copies preferences. The follow-up selector targets data-view, while the actual toolbar uses data-view-toggle; applyView is not called.
 - **Evidence:** Intercepted PATCH preference response returned notes_view=list; the UI reported Saved while the Grid remained visible. No stored account preference was changed for this review.
 - **Expected / next step:** Consolidate the layout entry or apply the authoritative preference through the same view-rendering path and synchronize controls. Verify immediate switching and reload persistence with saved/draft state intact.
+- **Resolution (implemented):** NotesPage now applies `notes_view` from `notes:preferences-changed` through `applyView` (without saving again), and the dead `[data-view]` click in initNotePreferences was removed.
+- **Verification so far:** 96 Node tests, Prettier and the Vite build pass. Browser switching and reload persistence are still pending.
 
 ## ISSUE-020 — AI branch generated traces still describe pre-agent capabilities
 
