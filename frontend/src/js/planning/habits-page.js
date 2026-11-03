@@ -1,3 +1,4 @@
+import { lineIcon } from '../lib/line-icons.js';
 import { get, patch, post, put, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { renderEmptyState } from '../lib/empty-state.js';
@@ -276,10 +277,12 @@ export function initHabitsPage(root) {
         edit.addEventListener('click', () => openEdit(habit));
         const more = document.createElement('button');
         more.type = 'button';
-        more.className = 'text-button';
+        // Same ⋯ affordance as Task rows.
+        more.className = 'icon-button task-row-icon';
         more.dataset.habitMenu = '';
         more.dataset.habitControl = `${habit.id}:options`;
-        more.textContent = t('More options');
+        more.title = t('More options');
+        more.append(lineIcon('more'));
         more.setAttribute('aria-label', `${t('More options')}: ${habit.name}`);
         more.setAttribute('aria-haspopup', 'dialog');
         more.setAttribute('aria-expanded', 'false');

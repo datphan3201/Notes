@@ -1283,11 +1283,31 @@ body:not(:has(.settings-page)) .account-nav,
 @media (min-width: 901px) {
     :root:not([data-theme='dark'])[data-show-illustrations='true']
         .scene-header[data-reference-decoration='corner'] {
-        padding-right: 260px;
+        padding-right: 200px;
     }
 }
 @media (max-width: 900px) {
     .scene-header[data-reference-decoration='corner'] > .reference-corner {
         display: none;
+    }
+}
+/* Without its illustration (dark theme) the quote card centres a larger quote. */
+[data-theme='dark'] .quote-scene-card {
+    display: grid;
+    align-content: center;
+}
+[data-theme='dark'] .quote-scene-card .theme-quote {
+    max-width: 34ch;
+    padding-left: 14px;
+    border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+    border-radius: 0;
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.55;
+}
+@media (min-width: 901px) {
+    .scene-header[data-reference-decoration='corner'] > .reference-corner {
+        width: 190px;
+        height: 86px;
     }
 }

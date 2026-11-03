@@ -9,15 +9,15 @@
 }
 [data-habits-page] .habit-row-copy .context-chip {
     display: inline-block;
+    justify-self: start;
     width: auto;
     max-width: 100%;
     white-space: normal;
 }
 [data-habits-page] .habit-row-actions {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
+    align-items: center;
+    gap: 4px;
 }
 [data-habits-page] .habit-row > .habit-tick {
     grid-column: 1;
