@@ -48,6 +48,7 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
 | [ISSUE-021](#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) | Demo Review snapshots do not match the runtime schema | Medium | Resolved | Reproduced serializer failure; corrected demo builder, guarded data repair and regression/UI checks pass |
 | [ISSUE-022](#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) | Dashboard Activity and Weekly charts are hard to read | Low | Resolved | Shared heatmap palette, balanced card layout and readable weekly columns; responsive browser checks |
+| [ISSUE-026](#issue-026--ai-assistant-cannot-build-a-goal-roadmap-and-restructures-by-deleting-tasks) | AI assistant cannot build a Goal roadmap and restructures by deleting Tasks | High | Resolved | Integration tests cover roadmap, refs, moves and guards; scripted provider only |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -304,6 +305,16 @@ The severity assessments below describe observed impact, not a completed securit
 - **Observed:** Recent Activity did not inherit the year calendar's heat-level variables, leaving its cells effectively uncoloured; right-aligned content wasted the card's left side. Weekly columns were only 9px wide inside a short chart, and minimum fill height made zero-count dates look active.
 - **Resolution:** Shared existing light/dark palette variables; balanced total/calendar layout, legend and selected-date outline; larger weekly columns with per-day counts, distinct weekday labels, current-date emphasis and a factual total. Zero values have zero fill. The shared Reviews renderer retains its default markup; Dashboard opts into counts/tracks.
 - **Verification:** 91 Node tests and Vite build passed. Authenticated browser read fixtures using the demo projection (71 recent contributions, five on Monday) verified 30 coloured date buttons, selected-day details, seven columns, totals, zero fills, and no JavaScript errors. Light/dark screenshots and widths 320/390/768/1440 were inspected/checked. Empty activity was checked separately. These are chart presentation checks with intercepted reads and theme attributes, not a new backend, theme-preference persistence or all-feature acceptance test; existing demo records were not changed.
+
+## ISSUE-026 — AI assistant cannot build a Goal roadmap and restructures by deleting Tasks
+
+- **Status:** Resolved.
+- **Severity:** High for the AI flow; accepted plans were applied partially and existing Tasks were archived to restructure.
+- **Recorded:** 2026-11-03; user test of the floating AI chat ("create a Docker learning roadmap").
+- **Affected source:** [AIChatService](../backend/src/Application/AI/AIChatService.php), [ProposalValidator](../backend/src/Application/AI/ProposalValidator.php), [AIActionService](../backend/src/Application/AI/AIActionService.php), [assistantSummary](../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php).
+- **Observed:** The chat had no Milestone tools, and create tools returned no reference, so Tasks could only attach to Goals that already existed: an accepted "Goal with Tasks" plan created only the Goal, follow-up Tasks landed in the Inbox, and a request for Milestones produced prefixed sub-Goals while the old Tasks were deleted. The summary showed no Milestones or Task locations. Separately, Milestones and Tasks created by Apply all received position 0, so roadmap order followed random ids.
+- **Resolution:** Create tools return refs usable as parents in the same message; new `get_roadmap`, `create_roadmap`, `create_milestones`, `update/complete/reopen/delete_milestone` and `move_tasks` tools; `move_task` and Milestone change operations in ProposalValidator and Apply; multi-step tools queue all or nothing; sub-Goals are refused when the message asks for Milestones and delete-and-recreate of a Task is refused (withdrawing the queued delete); Apply appends Milestones/Tasks in proposal order; the summary includes Milestones and Task locations; the system prompt states the data model and the roadmap, acceptance, focus, restructure and deletion rules. [AI assistant guide](ui/shared/ai.md).
+- **Verification:** 4 new integration tests (roadmap in one proposal with order and prerequisites; refs, moves and the recreate guard; structural guards queue nothing; validator rejects an invalid move parent) plus the 11 existing AIActionTest cases; full PHPUnit 153 tests / 1358 assertions; 91 Node tests; Prettier; Vite build; documentation checks. Model compliance with the prompt was exercised with a scripted provider only, not with live Gemini.
 
 ## New issue template
 

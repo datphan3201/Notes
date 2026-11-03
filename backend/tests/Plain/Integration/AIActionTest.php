@@ -203,6 +203,133 @@ final class AIActionTest extends TestCase
         self::assertSame(0,(int)$this->pdo->query("SELECT COUNT(*) FROM tasks WHERE archived_at IS NOT NULL")->fetchColumn());
     }
 
+    public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal(): void
+    {
+        $area=$this->runtime['planning_service']->create('area',$this->owner,['name'=>'Learning']);
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [['name'=>'create_roadmap','args'=>[
+                'goal'=>['name'=>'Learn Docker','area_id'=>$area['id']],
+                'milestones'=>[
+                    ['name'=>'Basics','tasks'=>[['name'=>'Install Docker'],['name'=>'Run hello-world']]],
+                    ['name'=>'Images','tasks'=>[['name'=>'Write a Dockerfile'],['name'=>'Push an image']]],
+                ],
+            ]]]),
+            function (array $contents): array {
+                $response=json_encode(end($contents),JSON_THROW_ON_ERROR);
+                self::assertStringContainsString('queued_for_user_confirmation',$response);
+                return $this->step('Prepared the Learn Docker roadmap.');
+            },
+        ]);
+        $actions=$this->actionService($provider);
+
+        $reply=$this->chatService($provider,$actions)->ask($this->owner,'Create a roadmap to learn Docker');
+
+        // Goal, 2 Milestones, 1 ordering link and 4 Tasks, all on one confirmation card.
+        self::assertSame(['create_goal','create_milestone','create_task','create_task','create_milestone','order_milestones','create_task','create_task'],array_column($reply['preview'],'action'));
+        self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM goals')->fetchColumn());
+
+        $actions->apply($this->owner,$reply['proposal']['id'],['base_version'=>$reply['proposal']['version'],'proposal_hash'=>$reply['proposal']['proposal_hash']]);
+
+        $goal=$this->pdo->query("SELECT id, area_id FROM goals WHERE name = 'Learn Docker'")->fetch(PDO::FETCH_ASSOC);
+        self::assertSame($area['id'],$goal['area_id']);
+        // Proposal order survives as roadmap order (position), not random ids.
+        $milestones=$this->pdo->query("SELECT name, id FROM milestones WHERE goal_id = '{$goal['id']}' ORDER BY position, id")->fetchAll(PDO::FETCH_KEY_PAIR);
+        self::assertSame(['Basics','Images'],array_keys($milestones));
+        self::assertSame(['Install Docker','Run hello-world'],$this->pdo->query("SELECT name FROM tasks WHERE milestone_id = '{$milestones['Basics']}' ORDER BY position, id")->fetchAll(PDO::FETCH_COLUMN));
+        self::assertSame(2,(int)$this->pdo->query("SELECT COUNT(*) FROM tasks WHERE milestone_id = '{$milestones['Basics']}' AND goal_id IS NULL")->fetchColumn());
+        self::assertSame(2,(int)$this->pdo->query("SELECT COUNT(*) FROM tasks WHERE milestone_id = '{$milestones['Images']}'")->fetchColumn());
+        self::assertSame($milestones['Basics'],$this->pdo->query("SELECT prerequisite_id FROM milestone_dependencies WHERE milestone_id = '{$milestones['Images']}'")->fetchColumn());
+    }
+
+    public function test_chat_refs_build_inside_new_milestones_and_move_existing_tasks_instead_of_recreating(): void
+    {
+        $planning=$this->runtime['planning_service'];
+        $area=$planning->create('area',$this->owner,['name'=>'Learning']);
+        $goal=$planning->create('goal',$this->owner,['name'=>'Learn Docker','area_id'=>$area['id']]);
+        $install=$planning->create('task',$this->owner,['name'=>'Install Docker','goal_id'=>$goal['id']]);
+        $compose=$planning->create('task',$this->owner,['name'=>'Try Compose','goal_id'=>$goal['id']]);
+        $ref=null;
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [
+                ['name'=>'get_roadmap','args'=>['goal_id'=>$goal['id']]],
+                ['name'=>'create_milestones','args'=>['goal_id'=>$goal['id'],'milestones'=>[['name'=>'Setup'],['name'=>'Multi-container']]]],
+            ]),
+            function (array $contents) use (&$ref,$install,$compose): array {
+                $responses=end($contents)['parts'];
+                $direct=array_column($responses[0]['functionResponse']['response']['roadmap']['tasks_directly_in_goal'],'name');
+                sort($direct);
+                self::assertSame(['Install Docker','Try Compose'],$direct);
+                [$setup,$multi]=$responses[1]['functionResponse']['response']['milestones'];
+                $ref=$setup;
+                return $this->step('', [
+                    ['name'=>'move_tasks','args'=>['task_ids'=>[$install['id']],'milestone_id'=>$setup]],
+                    ['name'=>'move_tasks','args'=>['task_ids'=>[$compose['id']],'milestone_id'=>$multi]],
+                    ['name'=>'create_tasks','args'=>['tasks'=>[['name'=>'Run hello-world','milestone_id'=>$setup]]]],
+                    // Deleting and recreating a Task to restructure it is refused and the delete is withdrawn.
+                    ['name'=>'delete_task','args'=>['id'=>$install['id']]],
+                    ['name'=>'create_tasks','args'=>['tasks'=>[['name'=>'Install Docker','milestone_id'=>$setup]]]],
+                    ['name'=>'create_tasks','args'=>[]],
+                ]);
+            },
+            function (array $contents): array {
+                $responses=json_encode(end($contents),JSON_THROW_ON_ERROR);
+                self::assertSame(2,substr_count($responses,'"error"'));
+                return $this->step('Prepared the Milestones.');
+            },
+        ]);
+        $actions=$this->actionService($provider);
+
+        $reply=$this->chatService($provider,$actions)->ask($this->owner,'Split Learn Docker into milestones');
+
+        self::assertSame(['create_milestone','create_milestone','order_milestones','move_task','move_task','create_task'],array_column($reply['preview'],'action'));
+        $actions->apply($this->owner,$reply['proposal']['id'],['base_version'=>$reply['proposal']['version'],'proposal_hash'=>$reply['proposal']['proposal_hash']]);
+
+        $milestones=$this->pdo->query("SELECT name, id FROM milestones WHERE goal_id = '{$goal['id']}'")->fetchAll(PDO::FETCH_KEY_PAIR);
+        $moved=$planning->show('task',$this->owner,$install['id']);
+        self::assertNull($moved['goal_id']);
+        self::assertSame($milestones['Setup'],$moved['milestone_id']);
+        self::assertSame($milestones['Multi-container'],$planning->show('task',$this->owner,$compose['id'])['milestone_id']);
+        self::assertSame($milestones['Setup'],$this->pdo->query("SELECT milestone_id FROM tasks WHERE name = 'Run hello-world'")->fetchColumn());
+        self::assertSame(0,(int)$this->pdo->query('SELECT COUNT(*) FROM tasks WHERE archived_at IS NOT NULL')->fetchColumn());
+        self::assertNotNull($ref);
+    }
+
+    public function test_chat_structural_guards_queue_nothing_for_rejected_requests(): void
+    {
+        $planning=$this->runtime['planning_service'];
+        $area=$planning->create('area',$this->owner,['name'=>'Learning']);
+        $goal=$planning->create('goal',$this->owner,['name'=>'Learn Docker','area_id'=>$area['id']]);
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [
+                // A sub-Goal standing in for a Milestone is refused when the user asked for Milestones.
+                ['name'=>'create_goal','args'=>['name'=>'Learn Docker - Basics','parent_goal_id'=>$goal['id']]],
+                // One invalid Milestone rejects the whole roadmap, including its Goal.
+                ['name'=>'create_roadmap','args'=>['goal'=>['name'=>'Learn Kubernetes','area_id'=>$area['id']],'milestones'=>[['name'=>'Pods','tasks'=>[['name'=>'Run a pod']]],['tasks'=>[['name'=>'Orphan']]]]]],
+                // Only the Goal is not a roadmap.
+                ['name'=>'create_roadmap','args'=>['goal'=>['name'=>'Learn Helm','area_id'=>$area['id']]]],
+                ['name'=>'move_tasks','args'=>['task_ids'=>['00000000-0000-0000-0000-000000000000'],'goal_id'=>$goal['id'],'inbox'=>true]],
+            ]),
+            function (array $contents): array {
+                self::assertSame(4,substr_count(json_encode(end($contents),JSON_THROW_ON_ERROR),'"error"'));
+                return $this->step('I need more detail.');
+            },
+        ]);
+
+        $reply=$this->chatService($provider,$this->actionService($provider))->ask($this->owner,'Add milestones to Learn Docker');
+
+        self::assertNull($reply['proposal']);
+        self::assertSame([],$reply['preview']);
+    }
+
+    public function test_proposal_validator_rejects_moving_a_task_under_a_note(): void
+    {
+        $this->expectException(ValidationException::class);
+        (new ProposalValidator)->validate(json_encode(['schema_version'=>1,'summary'=>'','operations'=>[
+            ['op'=>'create_note','local_id'=>'n1','parent'=>null,'fields'=>['title'=>'x','content'=>'']],
+            ['op'=>'move_task','target'=>['type'=>'task','existing_id'=>'00000000-0000-0000-0000-000000000001','version'=>1],'parent'=>['local_id'=>'n1']],
+        ]],JSON_THROW_ON_ERROR));
+    }
+
     /** @param list<callable(array):array> $steps */
     private function scriptedProvider(array $steps): AIProviderInterface
     {

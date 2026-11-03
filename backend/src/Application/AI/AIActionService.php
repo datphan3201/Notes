@@ -195,10 +195,27 @@ final readonly class AIActionService
                     'create_note' => $this->createNote($userId, $fields),
                     'create_habit' => $this->habits->create($userId, [...$fields, 'primary_goal_id' => $parent['id'] ?? null]),
                     'create_goal' => $this->planning->create('goal', $userId, [...$fields, 'area_id' => $parent['type'] === 'area' ? $parent['id'] : null, 'parent_goal_id' => $parent['type'] === 'goal' ? $parent['id'] : null]),
-                    'create_milestone' => $this->planning->create('milestone', $userId, [...$fields, 'goal_id' => $parent['id']]),
-                    'create_task' => $this->planning->create('task', $userId, [...$fields, 'goal_id' => $parent !== null && $parent['type'] === 'goal' ? $parent['id'] : null, 'milestone_id' => $parent !== null && $parent['type'] === 'milestone' ? $parent['id'] : null]),
+                    // Append like the roadmap UI does; otherwise every new Milestone/Task gets position 0 and
+                    // the roadmap order (position, id) would follow random ids instead of the proposal order.
+                    'create_milestone' => $this->planning->create('milestone', $userId, [...$fields, 'goal_id' => $parent['id'],
+                        'position' => $this->planningRepository->activeCount('milestone', $userId, 'goal_id', $parent['id'])]),
+                    'create_task' => $this->planning->create('task', $userId, [...$fields, 'goal_id' => $parent !== null && $parent['type'] === 'goal' ? $parent['id'] : null, 'milestone_id' => $parent !== null && $parent['type'] === 'milestone' ? $parent['id'] : null,
+                        ...($parent === null ? [] : ['position' => $this->planningRepository->activeCount('task', $userId, $parent['type'] === 'milestone' ? 'milestone_id' : 'goal_id', $parent['id'])])]),
                 };
                 $locals[$operation['local_id']] = ['type' => substr($op, 7), 'id' => (string) $created['id'], 'version' => (int) $created['version']];
+            } elseif ($op === 'move_task') {
+                // A Task has one primary location, so the other parent column is cleared.
+                $target = $this->resolve($operation['target'], $locals, $existing, $allowedReferences);
+                $parent = $this->resolve($operation['parent'], $locals, $existing, $allowedReferences);
+                if ($parent !== null && !in_array($parent['type'], ['goal', 'milestone'], true)) {
+                    throw new ValidationException(['operations' => ['The parent object in the AI operation is invalid.']]);
+                }
+                $updated = $this->planning->update('task', $userId, $target['id'], [
+                    'goal_id' => $parent !== null && $parent['type'] === 'goal' ? $parent['id'] : null,
+                    'milestone_id' => $parent !== null && $parent['type'] === 'milestone' ? $parent['id'] : null,
+                    'base_version' => $target['version'],
+                ]);
+                $this->refreshReference($locals, $existing, 'task', $target['id'], (int) $updated['version']);
             } elseif (!array_key_exists('source', $operation)) {
                 // update/complete/reopen/archive Task, update/delete Note: always
                 // against the version loaded when the proposal was made.
@@ -214,6 +231,11 @@ final readonly class AIActionService
                     'complete_goal' => $this->planning->transition('goal', $userId, $target['id'], 'complete', $base),
                     'reopen_goal' => $this->planning->transition('goal', $userId, $target['id'], 'reopen', $base),
                     'archive_goal' => $this->planning->archive('goal', $userId, $target['id'], $base),
+                    'update_milestone' => $this->planning->update('milestone', $userId, $target['id'], [...$fields, ...$base]),
+                    'complete_milestone' => $this->planning->transition('milestone', $userId, $target['id'], 'complete', [...$base, 'acknowledge_open_tasks' => true]),
+                    'reopen_milestone' => $this->planning->transition('milestone', $userId, $target['id'], 'reopen', $base),
+                    // Without include_contents a Milestone that still has Tasks is refused, so Tasks are never lost implicitly.
+                    'archive_milestone' => $this->planning->archive('milestone', $userId, $target['id'], $base),
                     'update_habit' => $this->habits->update($userId, $target['id'], [...$fields, ...$base]),
                     'archive_habit' => $this->habits->archive($userId, $target['id'], $base),
                     'check_in_habit' => $this->checkInHabit($userId, $target['id'], (string) $fields['date']),

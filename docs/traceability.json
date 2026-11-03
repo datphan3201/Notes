@@ -5009,7 +5009,7 @@
         {
           "id": "ai.chat",
           "label": "Tool-calling chat, owned reads and conversation history",
-          "behavior": "The chat sends the recent conversation as real turns. AIChatService runs up to six model rounds over owner-scoped read tools and queues supported writes into a proposal instead of mutating domain data. Disabled mode reports unavailable; provider calls do not bypass normal ownership. Preview and explicit Apply/Cancel live in the floating chat.",
+          "behavior": "The chat sends the recent conversation as real turns. AIChatService runs up to six model rounds over owner-scoped read tools (including get_roadmap) and queues supported writes into a proposal instead of mutating domain data. Create tools return refs so a Goal, its ordered Milestones and their Tasks are queued together; sub-Goals standing in for requested Milestones and delete-and-recreate restructures are refused. Disabled mode reports unavailable; provider calls do not bypass normal ownership. Preview and explicit Apply/Cancel live in the floating chat.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5046,6 +5046,14 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_chat_agent_reads_then_queues_task_and_note_changes_applied_only_on_confirmation("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_refs_build_inside_new_milestones_and_move_existing_tasks_instead_of_recreating("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_structural_guards_queue_nothing_for_rejected_requests("
             }
           ],
           "routes": [
@@ -5056,7 +5064,7 @@
         {
           "id": "ai.proposal",
           "label": "Chat proposal preview, Apply and Cancel",
-          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Tasks/Habits and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
+          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Milestones/Tasks/Habits, Task moves, Milestone order and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically, appending new Milestones and Tasks in proposal order. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5110,6 +5118,10 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal("
             }
           ],
           "routes": [

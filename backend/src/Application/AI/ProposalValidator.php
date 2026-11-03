@@ -13,11 +13,15 @@ final readonly class ProposalValidator
     private const CHANGE = [
         'update_task', 'complete_task', 'reopen_task', 'archive_task',
         'update_goal', 'complete_goal', 'reopen_goal', 'archive_goal',
+        'update_milestone', 'complete_milestone', 'reopen_milestone', 'archive_milestone',
         'update_habit', 'archive_habit', 'check_in_habit',
         'update_note', 'delete_note',
     ];
+    /** Re-parents an existing Task (Goal, Milestone or Inbox) instead of deleting and recreating it. */
+    private const MOVE = ['move_task'];
     private const TASK_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline'];
     private const GOAL_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline'];
+    private const MILESTONE_UPDATE_FIELDS = ['name', 'description', 'completion_criteria', 'importance', 'deadline'];
     private const HABIT_FIELDS = ['name', 'description', 'importance', 'period', 'target_frequency'];
 
     /** @return array{proposal:array<string,mixed>,canonical:string,hash:string} */
@@ -36,10 +40,11 @@ final readonly class ProposalValidator
         foreach ($proposal['operations'] as $index => $operation) {
             if (!is_array($operation)) throw new ValidationException(['operations' => ["Operation $index is invalid."]]);
             $op = $operation['op'] ?? null;
-            if (!in_array($op, [...self::CREATE, ...self::CHANGE, 'add_contribution', 'add_milestone_dependency'], true)) throw new ValidationException(['operations' => ["Operation $index is not supported."]]);
+            if (!in_array($op, [...self::CREATE, ...self::CHANGE, ...self::MOVE, 'add_contribution', 'add_milestone_dependency'], true)) throw new ValidationException(['operations' => ["Operation $index is not supported."]]);
             $allowed = match (true) {
                 in_array($op, self::CREATE, true) => ['op','local_id','parent','fields'],
                 in_array($op, self::CHANGE, true) => ['op','target','fields'],
+                in_array($op, self::MOVE, true) => ['op','target','parent'],
                 default => ['op','source','target'],
             };
             if (array_diff(array_keys($operation), $allowed) !== []) throw new ValidationException(['operations' => ["Operation $index contains an unsupported field."]]);
@@ -55,6 +60,16 @@ final readonly class ProposalValidator
                 $this->reference($target, [], false);
                 if ($target['type'] !== substr($op, strrpos($op, '_') + 1)) throw new ValidationException(['operations' => ["Operation $index targets the wrong object type."]]);
                 $this->changeFields($op, $operation['fields'] ?? []);
+            } elseif (in_array($op, self::MOVE, true)) {
+                // The Task exists; its new parent may be created earlier in this proposal. null = Inbox.
+                $target = $operation['target'] ?? null;
+                $this->reference($target, [], false);
+                if ($target['type'] !== 'task') throw new ValidationException(['operations' => ["Operation $index targets the wrong object type."]]);
+                if (!array_key_exists('parent', $operation)) throw new ValidationException(['operations' => ["Operation $index needs a parent."]]);
+                $this->reference($operation['parent'], $locals, true);
+                $parent = $operation['parent'];
+                $parentType = $parent === null ? null : (isset($parent['local_id']) ? substr($locals[$parent['local_id']], 7) : $parent['type']);
+                if ($parentType !== null && !in_array($parentType, ['goal', 'milestone'], true)) throw new ValidationException(['operations' => ["Operation $index moves the Task under an invalid parent."]]);
             } else {
                 $this->reference($operation['source'] ?? null, $locals, false);
                 $this->reference($operation['target'] ?? null, $locals, false);
@@ -98,13 +113,14 @@ final readonly class ProposalValidator
             'update_task' => self::TASK_UPDATE_FIELDS,
             'reopen_task' => ['deadline'],
             'update_goal' => self::GOAL_UPDATE_FIELDS,
+            'update_milestone' => self::MILESTONE_UPDATE_FIELDS,
             'update_habit' => self::HABIT_FIELDS,
             'check_in_habit' => ['date'],
             'update_note' => ['title', 'content'],
             default => [],
         };
         $valid = is_array($fields) && ($fields === [] || !array_is_list($fields)) && array_diff(array_keys($fields), $allowed) === [];
-        if ($valid && in_array($op, ['update_task', 'update_goal', 'update_habit', 'update_note'], true) && $fields === []) $valid = false;
+        if ($valid && in_array($op, ['update_task', 'update_goal', 'update_milestone', 'update_habit', 'update_note'], true) && $fields === []) $valid = false;
         if ($valid && $op === 'check_in_habit') $valid = is_string($fields['date'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $fields['date']) === 1;
         if ($valid && $op === 'update_note') {
             foreach ($fields as $value) $valid = $valid && is_string($value);

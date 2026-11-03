@@ -83,7 +83,7 @@ final readonly class PdoAIActionRepository
             ?? throw new \RuntimeException('AI action missing after update.');
     }
 
-    /** @return array{goals:list<array<string,mixed>>,open_tasks:list<array<string,mixed>>,habits:list<array<string,mixed>>} bounded owner-only facts */
+    /** @return array{areas:list<array<string,mixed>>,goals:list<array<string,mixed>>,milestones:list<array<string,mixed>>,open_tasks:list<array<string,mixed>>,recent_notes:list<array<string,mixed>>,habits:list<array<string,mixed>>} bounded owner-only facts */
     public function assistantSummary(int $userId): array
     {
         $read = function (string $sql) use ($userId): array {
@@ -95,8 +95,10 @@ final readonly class PdoAIActionRepository
 
         return [
             'areas' => $read('SELECT id, name FROM areas WHERE user_id = :user AND archived_at IS NULL ORDER BY position LIMIT 30'),
-            'goals' => $read('SELECT id, name, status, deadline FROM goals WHERE user_id = :user AND archived_at IS NULL ORDER BY updated_at DESC LIMIT 50'),
-            'open_tasks' => $read("SELECT id, name, status, deadline, importance FROM tasks WHERE user_id = :user AND archived_at IS NULL AND status <> 'Done' ORDER BY deadline IS NULL, deadline, updated_at DESC LIMIT 100"),
+            // Parent columns let the assistant see the structure: Goal > Milestone > Task, or Inbox when both are null.
+            'goals' => $read('SELECT id, name, status, deadline, area_id, parent_goal_id FROM goals WHERE user_id = :user AND archived_at IS NULL ORDER BY updated_at DESC LIMIT 50'),
+            'milestones' => $read('SELECT m.id, m.goal_id, m.name, m.status, m.deadline FROM milestones m JOIN goals g ON g.id = m.goal_id AND g.user_id = m.user_id AND g.archived_at IS NULL WHERE m.user_id = :user AND m.archived_at IS NULL ORDER BY g.updated_at DESC, m.goal_id, m.position, m.id LIMIT 100'),
+            'open_tasks' => $read("SELECT id, name, status, deadline, importance, goal_id, milestone_id FROM tasks WHERE user_id = :user AND archived_at IS NULL AND status <> 'Done' ORDER BY deadline IS NULL, deadline, updated_at DESC LIMIT 100"),
             'recent_notes' => $read('SELECT id, title FROM notes WHERE user_id = :user AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 30'),
             'habits' => $read('SELECT id, name, period, target_frequency FROM habits WHERE user_id = :user AND archived_at IS NULL ORDER BY position LIMIT 50'),
         ];
