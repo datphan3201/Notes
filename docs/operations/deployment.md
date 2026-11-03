@@ -36,6 +36,13 @@ For Apache use the public [.htaccess](../../backend/public/.htaccess) with rewri
 
 Do not use goals_test/test cleanup or destructive schema-reset commands during a release. Production Vite dev-server mode is not supported.
 
+## Automation and CI/CD
+
+- [The GitHub Actions pipeline](../../.github/workflows/ci-cd.yml) runs documentation/traceability checks, frontend Prettier/Node tests/Vite build and PHPUnit against an isolated MySQL 8.4 `goals_test` service on every push and pull request to `main`.
+- When repository secrets `ORACLE_HOST`, `ORACLE_USER` and `ORACLE_SSH_KEY` (plus optional `ORACLE_PORT`, `ORACLE_DEPLOY_PATH` and `ORACLE_APP_URL`) are configured, pushes to `main` sync the checkout and prebuilt `backend/public/build` artifact to the host and execute [tools/deploy/release.sh](../../tools/deploy/release.sh). When those secrets are absent, the deploy job exits cleanly after CI verification.
+- For initial Ubuntu 24.04 LTS host setup on Oracle Cloud Always Free, [tools/deploy/oracle-ubuntu-setup.sh](../../tools/deploy/oracle-ubuntu-setup.sh) installs Nginx, MySQL, PHP 8.5-FPM with required extensions, Composer 2, Node.js 22 and Certbot.
+- For manual on-host releases, run `bash tools/deploy/release.sh --build-frontend` (or without `--build-frontend` when `backend/public/build/manifest.json` has already been synced).
+
 ## Back up and restore
 
 Use a protected MySQL option file for mysqldump/mysql authentication, not a password embedded in shell history. Back up goals database plus the configured private storage root and preserve their alignment. Store backups privately; they contain personal data and expiring secret mail links.

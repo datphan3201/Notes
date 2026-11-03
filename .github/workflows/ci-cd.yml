@@ -1,0 +1,143 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Verify Docs, Frontend & Backend
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: goals_test
+        ports:
+          - 3306:3306
+        options: >-
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_0900_ai_ci
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: curl, fileinfo, gd, intl, mbstring, pdo, pdo_mysql, session, sodium, zip
+          coverage: none
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify documentation and traceability
+        run: |
+          php tools/docs/check.php
+          php tools/docs/tests/run.php
+
+      - name: Lint, test and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run format:check
+          npm run test:unit
+          npm run build
+
+      - name: Validate and test backend (PHPUnit)
+        working-directory: backend
+        env:
+          APP_ENV: testing
+          PLANNER_DB_HOST: 127.0.0.1
+          PLANNER_DB_PORT: 3306
+          PLANNER_DB_DATABASE: goals_test
+          PLANNER_DB_ALLOWED: goals_test
+          PLANNER_DB_USERNAME: root
+          PLANNER_DB_PASSWORD: root
+          PLANNER_DB_CHARSET: utf8mb4
+          PLANNER_DB_COLLATION: utf8mb4_0900_ai_ci
+        run: |
+          composer validate --strict
+          composer install --prefer-dist --no-interaction
+          composer check-platform-reqs
+          php vendor/bin/phpunit -c phpunit.xml
+
+      - name: Upload built frontend assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-build
+          path: backend/public/build/
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy:
+    name: Deploy to Oracle Cloud
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download built frontend assets
+        uses: actions/download-artifact@v4
+        with:
+          name: public-build
+          path: build-artifact
+
+      - name: Deploy over SSH when Oracle Cloud secrets are configured
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+          ORACLE_SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
+          ORACLE_DEPLOY_PATH: ${{ secrets.ORACLE_DEPLOY_PATH }}
+          ORACLE_APP_URL: ${{ secrets.ORACLE_APP_URL }}
+        run: |
+          if [ -z "${ORACLE_HOST}" ] || [ -z "${ORACLE_USER}" ] || [ -z "${ORACLE_SSH_KEY}" ]; then
+            echo "::notice::Skipping SSH deployment: configure ORACLE_HOST, ORACLE_USER, and ORACLE_SSH_KEY repository secrets to enable automatic Oracle Cloud deployment."
+            exit 0
+          fi
+
+          SSH_PORT="${ORACLE_PORT:-22}"
+          DEPLOY_PATH="${ORACLE_DEPLOY_PATH:-/srv/planner}"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${ORACLE_SSH_KEY}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "${SSH_PORT}" -H "${ORACLE_HOST}" >> ~/.ssh/known_hosts
+
+          ssh -p "${SSH_PORT}" "${ORACLE_USER}@${ORACLE_HOST}" "
+            set -euo pipefail
+            cd '${DEPLOY_PATH}'
+            git fetch origin main
+            git reset --hard origin/main
+          "
+
+          rsync -avz --delete -e "ssh -p ${SSH_PORT}" \
+            build-artifact/ "${ORACLE_USER}@${ORACLE_HOST}:${DEPLOY_PATH}/backend/public/build/"
+
+          ssh -p "${SSH_PORT}" "${ORACLE_USER}@${ORACLE_HOST}" "
+            set -euo pipefail
+            cd '${DEPLOY_PATH}'
+            bash tools/deploy/release.sh
+          "
+
+          if [ -n "${ORACLE_APP_URL}" ]; then
+            curl -fsS "${ORACLE_APP_URL%/}/up"
+          fi
+
