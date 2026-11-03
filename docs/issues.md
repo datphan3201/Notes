@@ -310,6 +310,37 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution:** Shared existing light/dark palette variables; balanced total/calendar layout, legend and selected-date outline; larger weekly columns with per-day counts, distinct weekday labels, current-date emphasis and a factual total. Zero values have zero fill. The shared Reviews renderer retains its default markup; Dashboard opts into counts/tracks.
 - **Verification:** 91 Node tests and Vite build passed. Authenticated browser read fixtures using the demo projection (71 recent contributions, five on Monday) verified 30 coloured date buttons, selected-day details, seven columns, totals, zero fills, and no JavaScript errors. Light/dark screenshots and widths 320/390/768/1440 were inspected/checked. Empty activity was checked separately. These are chart presentation checks with intercepted reads and theme attributes, not a new backend, theme-preference persistence or all-feature acceptance test; existing demo records were not changed.
 
+## ISSUE-023 — Deployment automation could not provision or safely release production
+
+- **Status:** Resolved.
+- **Severity:** High; CI could not start, the host did not match the required MySQL version or serve the app, and releases migrated without a backup.
+- **Recorded:** 2026-11-03; review of the unmerged chore/deploy-automation branch.
+- **Affected source:** [CI/CD workflow](../.github/workflows/ci-cd.yml), host setup (then tools/deploy/oracle-ubuntu-setup.sh, now [setup.sh](../tools/deploy/setup.sh)), [release helper](../tools/deploy/release.sh); [production guide](operations/deployment.md).
+- **Observed:** mysqld arguments were passed as `docker create` options for the CI MySQL service; Ubuntu 24.04's apt `mysql-server` is 8.0, not 8.4, and MySQL's APT repository has no arm64 packages; no Nginx site or certificate was configured; the deploy job reported success when skipped for missing secrets; migrations ran without the backup the release procedure requires; no scheduler cron was installed; private storage and logs were not writable by PHP-FPM; `ssh-keyscan` trusted whatever host key it received; the iptables insert position assumed Oracle's rule layout.
+- **Resolution:** CI keeps only Docker options and pins the test database collation. Setup runs MySQL 8.4 from the official multi-arch image on loopback, creates the database, user and production .env, installs the Nginx site, Certbot TLS, scheduler and backup cron, PHP upload limits, writable-directory ACLs and minimal sudo rules, and runs the first release. Releases take a mandatory verified backup before migrating. Deployment is opt-in through `DEPLOY_ENABLED`, fails on missing secrets, pins the host key through `ORACLE_KNOWN_HOSTS`, deploys the verified commit and runs one at a time.
+- **Verification:** `bash -n` on all deploy scripts; a sandboxed release.sh run with stub composer/php checked the argument, .env, manifest and missing-backup guards, `--skip-backup`, relative/absolute path resolution and setgid directories; the setup script's generated production .env loaded through ConfigLoader; workflow YAML parsed. Not verified: shellcheck/actionlint (not available locally; CI now runs shellcheck), ACL behaviour (setfacl absent locally), and a real provisioning, certificate or GitHub deployment run on an Oracle instance.
+- **Follow-up:** On 2026-11-03 the SSH deploy job, `DEPLOY_ENABLED` and the `ORACLE_*` secrets were replaced by pull-based deployment, and oracle-ubuntu-setup.sh by the shared hosting module; see [ISSUE-024](#issue-024--hosting-behind-cloudflare-tunnel-breaks-client-addresses-and-csrf-origin) and the [production guide](operations/deployment.md#continuous-integration-and-deployment).
+
+## ISSUE-024 — Hosting behind Cloudflare Tunnel breaks client addresses and CSRF origin
+
+- **Status:** Resolved (deployment configuration; application code unchanged).
+- **Severity:** High for tunnel ingress; sign-in and every form would fail, and throttling would be shared by all visitors.
+- **Recorded:** 2026-11-03; source inspection while adding Cloudflare Tunnel ingress to [the hosting module](../tools/deploy/setup.sh).
+- **Affected source:** [Request::clientIp](../backend/src/Http/Request.php) uses REMOTE_ADDR for sessions, login and password-reset throttling and guest rate limits; [CsrfGuard](../backend/src/Http/Security/CsrfGuard.php) requires the Origin scheme/host/port to equal APP_URL.
+- **Observed:** Behind cloudflared every request reaches Nginx from 127.0.0.1, so all visitors would share one client identity. A quick tunnel's random trycloudflare.com hostname changes on each restart, so a fixed APP_URL would reject every state-changing request with 419.
+- **Resolution:** In tunnel ingresses Nginx trusts `CF-Connecting-IP` only from loopback peers (realip), and the local app server listens on 127.0.0.1 only. The quick-tunnel helper rewrites APP_URL and /etc/planner/public-url from cloudflared's metrics server on every tunnel start; named tunnels and direct ingress pin APP_URL to `https://<domain>`. Config is reloaded per request, so no PHP-FPM reload is needed. Mail links sent before a quick tunnel restart still break; this is documented as a quick-tunnel limitation.
+- **Verification:** Rendered Nginx site for quick-tunnel and direct ingress inspected; `env_set` behaviour checked against .env.example. Not verified: a live cloudflared quick or named tunnel, its `/quicktunnel` metrics response, or realip on a real host.
+
+## ISSUE-025 — Retired AI model is reported as a temporary provider outage
+
+- **Status:** Open (local configuration fixed; code unchanged).
+- **Severity:** Medium; the AI assistant stops working while the message suggests waiting, hiding a configuration fix.
+- **Recorded:** 2026-11-03; local AI chat reported "The AI provider is temporarily unavailable."
+- **Affected source:** [GoogleAIProvider::post](../backend/src/Infrastructure/AI/GoogleAIProvider.php); local backend/.env.
+- **Observed:** generateContent for `gemini-2.5-flash-lite` returned HTTP 404 NOT_FOUND ("no longer available to new users… use models/gemini-3.5-flash-lite"), while the model metadata endpoint still answered 200. post() maps every unlisted status, 404 included, to AI_PROVIDER_ERROR and the generic 503 "temporarily unavailable" message. Separately, the same method calls curl_close(), deprecated since PHP 8.5 (no effect since 8.0); it emits E_DEPRECATED on every attempt.
+- **Expected / next step:** Treat 404 like 400/403 (AI_CONFIGURATION, "cannot be used with the current configuration") and log the provider status and model; drop the curl_close() call. Confirm the intended message before changing behavior.
+- **Evidence:** One 5-token generateContent request per model with the configured key: gemini-2.5-flash-lite 404, gemini-3.5-flash-lite 200. Local AI_MODEL was changed to gemini-3.5-flash-lite (the .env.example default); no code was changed. The in-app chat after the change was not re-tested.
+
 ## ISSUE-026 — AI assistant cannot build a Goal roadmap and restructures by deleting Tasks
 
 - **Status:** Resolved.
