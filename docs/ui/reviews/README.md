@@ -54,5 +54,3 @@ Refresh rebuilds Draft facts while preserving reflections. Finalize freezes the 
 | HTTP | `POST /api/v1/reviews/{id}/{action}` (`api.reviews.transition`) → [ReviewController::transition](../../../backend/src/Http/Controller/ReviewController.php#L33)<br>`DELETE /api/v1/reviews/{id}` (`api.reviews.destroy`) → [ReviewController::destroy](../../../backend/src/Http/Controller/ReviewController.php#L37) |
 
 <!-- END GENERATED TRACE -->
-
-

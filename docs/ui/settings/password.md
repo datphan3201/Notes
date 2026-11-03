@@ -37,5 +37,3 @@ TOTP secret is encrypted and setup becomes active only after a valid code. Email
 | HTTP | `GET /api/v1/two-factor` (`api.two-factor.show`) → [TwoFactorController::status](../../../backend/src/Http/Controller/TwoFactorController.php#L83)<br>`POST /api/v1/two-factor/totp` (`api.two-factor.totp.begin`) → [TwoFactorController::beginTotp](../../../backend/src/Http/Controller/TwoFactorController.php#L88)<br>`POST /api/v1/two-factor/totp/confirm` (`api.two-factor.totp.confirm`) → [TwoFactorController::confirmTotp](../../../backend/src/Http/Controller/TwoFactorController.php#L95)<br>`POST /api/v1/two-factor/email` (`api.two-factor.email.send`) → [TwoFactorController::sendSetupEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L102)<br>`POST /api/v1/two-factor/email/confirm` (`api.two-factor.email.confirm`) → [TwoFactorController::confirmEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L110)<br>`POST /api/v1/two-factor/disable` (`api.two-factor.disable`) → [TwoFactorController::disable](../../../backend/src/Http/Controller/TwoFactorController.php#L117) |
 
 <!-- END GENERATED TRACE -->
-
-

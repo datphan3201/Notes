@@ -22,5 +22,3 @@ Known/unknown valid emails receive the same response. A reset has a hashed token
 | HTTP | `GET /forgot-password` (`password.forgot`) → [PasswordResetController::page](../../../backend/src/Http/Controller/PasswordResetController.php#L21)<br>`POST /forgot-password` (`password.forgot.store`) → [PasswordResetController::request](../../../backend/src/Http/Controller/PasswordResetController.php#L39)<br>`GET /reset-password` (`password.reset`) → [PasswordResetController::page](../../../backend/src/Http/Controller/PasswordResetController.php#L21)<br>`POST /reset-password` (`password.reset.store`) → [PasswordResetController::reset](../../../backend/src/Http/Controller/PasswordResetController.php#L51) |
 
 <!-- END GENERATED TRACE -->
-
-

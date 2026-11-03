@@ -52,5 +52,3 @@ Milestone edits and contribution changes use aggregate versions. Archiving with 
 | HTTP | `PATCH /api/v1/milestones/{id}` (`api.milestones.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`DELETE /api/v1/milestones/{id}` (`api.milestones.archive`) → [PlanningController::archive](../../../backend/src/Http/Controller/PlanningController.php#L65)<br>`POST /api/v1/milestones/{id}/contributions` (`api.milestones.contributions.store`) → [PlanningController::addContribution](../../../backend/src/Http/Controller/PlanningController.php#L127) |
 
 <!-- END GENERATED TRACE -->
-
-

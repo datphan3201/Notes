@@ -32,7 +32,7 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-004](#issue-004--duplicate-document-owners-can-overwrite-generated-trace-blocks) | Duplicate document owners can overwrite generated trace blocks | Low | Resolved | Generator/checker reject duplicate ownership in isolated regression cases |
 | [ISSUE-005](#issue-005--residual-known-issues-page-mixes-reporting-with-retired-contract-history) | Residual known-issues page mixes reporting with retired contract history | Low | Resolved | Central issue register and focused verification-limits guide; caller/link checks pass |
 | [ISSUE-006](#issue-006--dashboard-habit-fixture-assumes-tuesday-is-not-in-the-future) | Dashboard Habit fixture assumes Tuesday is not in the future | Low | Resolved | Fixed-time fixture and full backend suite pass; production date guard unchanged |
-| [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Open | Full staged diff check reports trailing whitespace and blank lines at EOF; artifact receipts remain valid |
+| [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Partly resolved | Markdown generator fixed; Archify HTML needs regeneration |
 | [ISSUE-008](#issue-008--today-task-capture-and-membership-are-not-clear-in-the-ui) | Today task capture and membership are not clear in the UI | Low | Resolved | Approved daily/weekly checklist, selection and overdue policies implemented; PHP/Node/browser checks pass |
 | [ISSUE-009](#issue-009--dashboard-roadmap-has-no-explicit-account-level-selection) | Dashboard roadmap has no explicit account-level selection | Low | Resolved | Explicit saved selection and header placement implemented; service/HTTP/browser checks pass |
 | [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
@@ -137,7 +137,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-007 — Staged generated documents contain cosmetic whitespace
 
-- **Status:** Open.
+- **Status:** Partly resolved — generated Markdown fixed; Archify HTML still open.
 - **Severity:** Low; formatting-only finding without demonstrated runtime or navigation impact.
 - **Recorded:** 2026-11-02, during pre-push staging review.
 - **Affected area:** Archify HTML under [diagrams](diagrams/README.md), generated UI Markdown and [documentation generation](../tools/docs/sync.php).
@@ -146,6 +146,7 @@ The severity assessments below describe observed impact, not a completed securit
 - **Evidence:** Full staged diff inspection; documentation checker still passes and diagram candidate/artifact hashes match receipts. No application defect is established.
 - **Next step:** Normalize Markdown output in the generator and address HTML whitespace through the Archify delivery workflow, regenerating final receipts after any artifact change. Do not silently edit delivered HTML and invalidate receipts.
 - **Resolution criteria:** A full staged whitespace check passes, healthy/negative documentation-tool tests pass and all final diagram receipts remain valid.
+- **Progress (2026-11-03):** [sync.php](../tools/docs/sync.php) now writes each generated UI document with exactly one final newline; regenerated documents pass a whitespace check against an empty tree, and the 17 documentation-tool tests pass. The nine delivered Archify `index.html` files still carry trailing spaces (15–18 lines each); they were not hand-edited because their receipts pin the artifact hashes. Remaining step: regenerate them through the Archify workflow and refresh the receipts.
 
 ## ISSUE-008 — Today task capture and membership are not clear in the UI
 

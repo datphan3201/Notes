@@ -37,5 +37,3 @@ Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/tim
 | HTTP | `GET /api/v1/goals` (`api.goals.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`POST /api/v1/goals` (`api.goals.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/goals/{id}/move` (`api.goals.move`) → [PlanningController::moveGoal](../../../backend/src/Http/Controller/PlanningController.php#L76)<br>`GET /goals/{id}` (`planning.goal`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L185) |
 
 <!-- END GENERATED TRACE -->
-
-

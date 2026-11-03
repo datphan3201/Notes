@@ -22,5 +22,3 @@ Names are normalized and owner-unique. Tag moves reject cycles; complete tag_ids
 | HTTP | `GET /api/v1/labels` (`api.labels.index`) → [LabelController::index](../../../backend/src/Http/Controller/LabelController.php#L26)<br>`POST /api/v1/labels` (`api.labels.store`) → [LabelController::store](../../../backend/src/Http/Controller/LabelController.php#L36)<br>`GET /api/v1/tags` (`api.tags.index`) → [LabelController::index](../../../backend/src/Http/Controller/LabelController.php#L26)<br>`POST /api/v1/tags/{tag}/move` (`api.tags.move`) → [LabelController::tagMove](../../../backend/src/Http/Controller/LabelController.php#L103) |
 
 <!-- END GENERATED TRACE -->
-
-

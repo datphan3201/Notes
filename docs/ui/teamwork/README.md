@@ -69,5 +69,3 @@ Messages are plain text, 1–2000 characters. The open chat polls every 5 second
 | HTTP | `GET /api/v1/team-goals/{id}/messages` (`api.team-goals.messages.index`) → [TeamController::messages](../../../backend/src/Http/Controller/TeamController.php#L114)<br>`POST /api/v1/team-goals/{id}/messages` (`api.team-goals.messages.store`) → [TeamController::postMessage](../../../backend/src/Http/Controller/TeamController.php#L125) |
 
 <!-- END GENERATED TRACE -->
-
-

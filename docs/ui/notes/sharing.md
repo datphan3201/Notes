@@ -52,5 +52,3 @@ A recipient reports a reason; the report stores a title/content snapshot. Admin 
 | HTTP | `POST /api/v1/shared-notes/{note}/report` (`api.shared-notes.report`) → [NoteShareController::report](../../../backend/src/Http/Controller/NoteShareController.php#L104) |
 
 <!-- END GENERATED TRACE -->
-
-

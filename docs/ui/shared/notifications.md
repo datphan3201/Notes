@@ -39,5 +39,3 @@ Due reminders are derived from Tasks and merged into the bell. Dismissal uses re
 | HTTP | `GET /api/v1/reminders` (`api.reminders.index`) → [ReminderController::index](../../../backend/src/Http/Controller/ReminderController.php#L14)<br>`POST /api/v1/reminders/{id}/read` (`api.reminders.read`) → [ReminderController::read](../../../backend/src/Http/Controller/ReminderController.php#L19) |
 
 <!-- END GENERATED TRACE -->
-
-

@@ -67,5 +67,3 @@ The admin can set the history cap (100–10000, default 1000). The history maint
 | HTTP | `GET /api/v1/admin/settings` (`api.admin.settings`) → [AdminController::settings](../../../backend/src/Http/Controller/AdminController.php#L88)<br>`PATCH /api/v1/admin/settings` (`api.admin.settings.update`) → [AdminController::updateSettings](../../../backend/src/Http/Controller/AdminController.php#L95) |
 
 <!-- END GENERATED TRACE -->
-
-

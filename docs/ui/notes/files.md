@@ -37,5 +37,3 @@ Only allowed media types preview. Safe filenames and a single byte Range are sup
 | HTTP | `GET/HEAD /files/attachments/{attachment}/preview` (`files.attachment.preview`) → [FileContentController::preview](../../../backend/src/Http/Controller/FileContentController.php#L23)<br>`GET/HEAD /files/attachments/{attachment}/download` (`files.attachment.download`) → [FileContentController::download](../../../backend/src/Http/Controller/FileContentController.php#L29) |
 
 <!-- END GENERATED TRACE -->
-
-

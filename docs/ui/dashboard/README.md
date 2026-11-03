@@ -137,5 +137,3 @@ The Daily tab lists open team Tasks assigned to the user across every active tea
 | HTTP | `GET /api/v1/team-tasks/assigned` (`api.team-tasks.assigned`) → [TeamController::assigned](../../../backend/src/Http/Controller/TeamController.php#L26) |
 
 <!-- END GENERATED TRACE -->
-
-

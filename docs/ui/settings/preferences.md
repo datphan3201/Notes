@@ -54,5 +54,3 @@ Quote text requires explicit Save; theme/toggles save independently. Preserve ne
 | HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L139) |
 
 <!-- END GENERATED TRACE -->
-
-

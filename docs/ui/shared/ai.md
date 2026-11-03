@@ -47,5 +47,3 @@ The chat card previews queued supported create/update/transition/archive operati
 | HTTP | `POST /api/v1/ai/actions` (`api.ai.actions.store`) → [AIActionController::store](../../../backend/src/Http/Controller/AIActionController.php#L17)<br>`GET /api/v1/ai/actions/{id}` (`api.ai.actions.show`) → [AIActionController::show](../../../backend/src/Http/Controller/AIActionController.php#L21)<br>`POST /api/v1/ai/actions/{id}/apply` (`api.ai.actions.apply`) → [AIActionController::apply](../../../backend/src/Http/Controller/AIActionController.php#L25)<br>`POST /api/v1/ai/actions/{id}/reject` (`api.ai.actions.reject`) → [AIActionController::reject](../../../backend/src/Http/Controller/AIActionController.php#L29) |
 
 <!-- END GENERATED TRACE -->
-
-

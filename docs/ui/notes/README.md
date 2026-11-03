@@ -77,5 +77,3 @@ Deleting an owned Note also unlinks its Task. A retried create with a tombstoned
 | HTTP | `DELETE /api/v1/notes/{note}` (`api.notes.destroy`) → [NoteController::destroy](../../../backend/src/Http/Controller/NoteController.php#L130) |
 
 <!-- END GENERATED TRACE -->
-
-

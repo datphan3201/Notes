@@ -135,5 +135,3 @@ Under Open tasks, recently Done Tasks appear in a separate, independently paged 
 | HTTP | `GET /settings/history` (`settings.history`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L170) |
 
 <!-- END GENERATED TRACE -->
-
-

@@ -71,5 +71,3 @@ Empty-container archive and include_contents=true are different operations. The 
 | HTTP | `DELETE /api/v1/goals/{id}` (`api.goals.archive`) → [PlanningController::archive](../../../backend/src/Http/Controller/PlanningController.php#L65) |
 
 <!-- END GENERATED TRACE -->
-
-

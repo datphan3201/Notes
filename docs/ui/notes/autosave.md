@@ -52,5 +52,3 @@ Creates use stable client-generated UUIDs. Exact replay is a no-op; stale differ
 | HTTP | `PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L79) |
 
 <!-- END GENERATED TRACE -->
-
-

@@ -70,5 +70,3 @@ Name comes first, then parent and Plan for. Today/Week views default Plan for to
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/daily-selections/task` (`api.daily-selections.store`) → [DashboardController::addDailySelection](../../../backend/src/Http/Controller/DashboardController.php#L48)<br>`POST /api/v1/weekly-selections/{type}` (`api.weekly-selections.store`) → [DashboardController::addSelection](../../../backend/src/Http/Controller/DashboardController.php#L31) |
 
 <!-- END GENERATED TRACE -->
-
-

@@ -21,5 +21,3 @@ TOTP permits the configured time-step window. Email fallback uses a hashed, expi
 | HTTP | `GET /two-factor` (`two-factor`) → [TwoFactorController::page](../../../backend/src/Http/Controller/TwoFactorController.php#L27)<br>`POST /two-factor` (`two-factor.verify`) → [TwoFactorController::verify](../../../backend/src/Http/Controller/TwoFactorController.php#L51)<br>`POST /two-factor/email` (`two-factor.email`) → [TwoFactorController::sendEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L70) |
 
 <!-- END GENERATED TRACE -->
-
-

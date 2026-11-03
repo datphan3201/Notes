@@ -100,5 +100,3 @@ The header offers week selection and an icon-only Today toggle with native hover
 | HTTP | `GET /api/v1/dashboard` (`api.dashboard.show`) → [DashboardController::show](../../../backend/src/Http/Controller/DashboardController.php#L18)<br>`POST /api/v1/daily-selections/task` (`api.daily-selections.store`) → [DashboardController::addDailySelection](../../../backend/src/Http/Controller/DashboardController.php#L48)<br>`DELETE /api/v1/daily-selections/task/{id}` (`api.daily-selections.destroy`) → [DashboardController::removeDailySelection](../../../backend/src/Http/Controller/DashboardController.php#L52)<br>`POST /api/v1/weekly-selections/{type}` (`api.weekly-selections.store`) → [DashboardController::addSelection](../../../backend/src/Http/Controller/DashboardController.php#L31)<br>`DELETE /api/v1/weekly-selections/{type}/{id}` (`api.weekly-selections.destroy`) → [DashboardController::removeSelection](../../../backend/src/Http/Controller/DashboardController.php#L35) |
 
 <!-- END GENERATED TRACE -->
-
-

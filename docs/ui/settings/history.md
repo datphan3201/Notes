@@ -39,5 +39,3 @@ Search and results precede rules; Back to Tasks returns to the catalogue. The cl
 | HTTP | `GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`POST /api/v1/tasks/{id}/reopen` (`api.tasks.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92) |
 
 <!-- END GENERATED TRACE -->
-
-
