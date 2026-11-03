@@ -326,6 +326,16 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution:** In tunnel ingresses Nginx trusts `CF-Connecting-IP` only from loopback peers (realip), and the local app server listens on 127.0.0.1 only. The quick-tunnel helper rewrites APP_URL and /etc/planner/public-url from cloudflared's metrics server on every tunnel start; named tunnels and direct ingress pin APP_URL to `https://<domain>`. Config is reloaded per request, so no PHP-FPM reload is needed. Mail links sent before a quick tunnel restart still break; this is documented as a quick-tunnel limitation.
 - **Verification:** Rendered Nginx site for quick-tunnel and direct ingress inspected; `env_set` behaviour checked against .env.example. Not verified: a live cloudflared quick or named tunnel, its `/quicktunnel` metrics response, or realip on a real host.
 
+## ISSUE-025 — Retired AI model is reported as a temporary provider outage
+
+- **Status:** Open (local configuration fixed; code unchanged).
+- **Severity:** Medium; the AI assistant stops working while the message suggests waiting, hiding a configuration fix.
+- **Recorded:** 2026-11-03; local AI chat reported "The AI provider is temporarily unavailable."
+- **Affected source:** [GoogleAIProvider::post](../backend/src/Infrastructure/AI/GoogleAIProvider.php); local backend/.env.
+- **Observed:** generateContent for `gemini-2.5-flash-lite` returned HTTP 404 NOT_FOUND ("no longer available to new users… use models/gemini-3.5-flash-lite"), while the model metadata endpoint still answered 200. post() maps every unlisted status, 404 included, to AI_PROVIDER_ERROR and the generic 503 "temporarily unavailable" message. Separately, the same method calls curl_close(), deprecated since PHP 8.5 (no effect since 8.0); it emits E_DEPRECATED on every attempt.
+- **Expected / next step:** Treat 404 like 400/403 (AI_CONFIGURATION, "cannot be used with the current configuration") and log the provider status and model; drop the curl_close() call. Confirm the intended message before changing behavior.
+- **Evidence:** One 5-token generateContent request per model with the configured key: gemini-2.5-flash-lite 404, gemini-3.5-flash-lite 200. Local AI_MODEL was changed to gemini-3.5-flash-lite (the .env.example default); no code was changed. The in-app chat after the change was not re-tested.
+
 ## New issue template
 
 ```text
