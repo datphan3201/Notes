@@ -305,6 +305,16 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution:** Shared existing light/dark palette variables; balanced total/calendar layout, legend and selected-date outline; larger weekly columns with per-day counts, distinct weekday labels, current-date emphasis and a factual total. Zero values have zero fill. The shared Reviews renderer retains its default markup; Dashboard opts into counts/tracks.
 - **Verification:** 91 Node tests and Vite build passed. Authenticated browser read fixtures using the demo projection (71 recent contributions, five on Monday) verified 30 coloured date buttons, selected-day details, seven columns, totals, zero fills, and no JavaScript errors. Light/dark screenshots and widths 320/390/768/1440 were inspected/checked. Empty activity was checked separately. These are chart presentation checks with intercepted reads and theme attributes, not a new backend, theme-preference persistence or all-feature acceptance test; existing demo records were not changed.
 
+## ISSUE-023 — Deployment automation could not provision or safely release production
+
+- **Status:** Resolved.
+- **Severity:** High; CI could not start, the host did not match the required MySQL version or serve the app, and releases migrated without a backup.
+- **Recorded:** 2026-11-03; review of the unmerged chore/deploy-automation branch.
+- **Affected source:** [CI/CD workflow](../.github/workflows/ci-cd.yml), [host setup](../tools/deploy/oracle-ubuntu-setup.sh), [release helper](../tools/deploy/release.sh); [production guide](operations/deployment.md).
+- **Observed:** mysqld arguments were passed as `docker create` options for the CI MySQL service; Ubuntu 24.04's apt `mysql-server` is 8.0, not 8.4, and MySQL's APT repository has no arm64 packages; no Nginx site or certificate was configured; the deploy job reported success when skipped for missing secrets; migrations ran without the backup the release procedure requires; no scheduler cron was installed; private storage and logs were not writable by PHP-FPM; `ssh-keyscan` trusted whatever host key it received; the iptables insert position assumed Oracle's rule layout.
+- **Resolution:** CI keeps only Docker options and pins the test database collation. Setup runs MySQL 8.4 from the official multi-arch image on loopback, creates the database, user and production .env, installs the Nginx site, Certbot TLS, scheduler and backup cron, PHP upload limits, writable-directory ACLs and minimal sudo rules, and runs the first release. Releases take a mandatory verified backup before migrating. Deployment is opt-in through `DEPLOY_ENABLED`, fails on missing secrets, pins the host key through `ORACLE_KNOWN_HOSTS`, deploys the verified commit and runs one at a time.
+- **Verification:** `bash -n` on all deploy scripts; a sandboxed release.sh run with stub composer/php checked the argument, .env, manifest and missing-backup guards, `--skip-backup`, relative/absolute path resolution and setgid directories; the setup script's generated production .env loaded through ConfigLoader; workflow YAML parsed. Not verified: shellcheck/actionlint (not available locally; CI now runs shellcheck), ACL behaviour (setfacl absent locally), and a real provisioning, certificate or GitHub deployment run on an Oracle instance.
+
 ## New issue template
 
 ```text

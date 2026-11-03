@@ -38,14 +38,37 @@ Do not use goals_test/test cleanup or destructive schema-reset commands during a
 
 ## Automation and CI/CD
 
-- [The GitHub Actions pipeline](../../.github/workflows/ci-cd.yml) runs documentation/traceability checks, frontend Prettier/Node tests/Vite build and PHPUnit against an isolated MySQL 8.4 `goals_test` service on every push and pull request to `main`.
-- When repository secrets `ORACLE_HOST`, `ORACLE_USER` and `ORACLE_SSH_KEY` (plus optional `ORACLE_PORT`, `ORACLE_DEPLOY_PATH` and `ORACLE_APP_URL`) are configured, pushes to `main` sync the checkout and prebuilt `backend/public/build` artifact to the host and execute [tools/deploy/release.sh](../../tools/deploy/release.sh). When those secrets are absent, the deploy job exits cleanly after CI verification.
-- For initial Ubuntu 24.04 LTS host setup on Oracle Cloud Always Free, [tools/deploy/oracle-ubuntu-setup.sh](../../tools/deploy/oracle-ubuntu-setup.sh) installs Nginx, MySQL, PHP 8.5-FPM with required extensions, Composer 2, Node.js 22 and Certbot.
-- For manual on-host releases, run `bash tools/deploy/release.sh --build-frontend` (or without `--build-frontend` when `backend/public/build/manifest.json` has already been synced).
+### Host provisioning
+
+[The Oracle Cloud setup script](../../tools/deploy/oracle-ubuntu-setup.sh) prepares an Ubuntu 24.04 LTS instance (amd64 or arm64) end to end. Clone the repository to a world-traversable path as the deploy user, point DNS at the instance, allow ingress TCP 80/443 in the VCN security list or NSG, then run from the clone:
+
+```bash
+sudo mkdir -p /srv/planner && sudo chown "$USER" /srv/planner
+git clone https://github.com/datphan3201/Notes.git /srv/planner
+sudo bash /srv/planner/tools/deploy/oracle-ubuntu-setup.sh --domain notes.example.com --email you@example.com
+```
+
+It installs Nginx, PHP 8.5-FPM with the required extensions, Composer 2, Node.js 22 and Certbot, and runs MySQL 8.4 from the official `mysql:8.4` Docker image (MySQL's APT repository publishes no arm64 packages) on 127.0.0.1:3306 with data in /var/lib/planner-mysql. On first run it creates the `planner` database and user, writes a production backend/.env with generated credentials and session key, installs the Nginx site from the rules above, obtains a Let's Encrypt certificate with an HTTPS redirect, opens host iptables before Oracle's REJECT rule, installs the [scheduler](jobs.md) cron as www-data and the nightly backup cron, and runs the first release. Pass `--skip-tls` while DNS is not ready; production cookies are Secure-only, so sign-in requires re-running without it. Re-running keeps MySQL data, /etc/planner credentials, backend/.env and backup.conf. Configure MAIL_* and optional AI_* in backend/.env afterwards.
+
+Writable directories (private storage and the log directory) are setgid www-data with default ACLs so files stay writable by both PHP-FPM and the deploy user; source files stay deploy-owned. The deploy user may only reload php8.5-fpm and run the backup helper through sudo.
+
+### Releases
+
+`bash tools/deploy/release.sh [--build-frontend]` ([source](../../tools/deploy/release.sh)) installs production dependencies, prepares writable directories, takes a verified pre-release backup and only then runs migrate, migrate:status and migrate:check before reloading PHP-FPM. It refuses to migrate when the backup helper is missing or fails; `--skip-backup` exists only for non-production hosts. Releases update the checkout in place, so a failure after the code update leaves new code running until it is fixed or rolled back to the printed previous revision.
+
+### GitHub Actions
+
+[The pipeline](../../.github/workflows/ci-cd.yml) runs shell-script checks, documentation/traceability checks, frontend Prettier/Node tests/Vite build and PHPUnit against an isolated MySQL 8.4 `goals_test` service on every push and pull request to `main`.
+
+Deployment is opt-in. With the repository variable `DEPLOY_ENABLED=true`, pushes to `main` (and manual runs on `main`) check out the verified commit on the host, sync the built backend/public/build artifact and run release.sh, one deployment at a time in the `production` environment. Without the variable the deploy job is reported as skipped; with it, missing secrets fail the run. Required secrets: `ORACLE_HOST`, `ORACLE_USER`, `ORACLE_SSH_KEY` (a private key whose public half is in the deploy user's authorized_keys) and `ORACLE_KNOWN_HOSTS`. Optional: `ORACLE_PORT`, `ORACLE_DEPLOY_PATH` (default /srv/planner) and `ORACLE_APP_URL` for the `/up` health check.
+
+`ORACLE_KNOWN_HOSTS` pins the host key; the workflow never trusts a key fetched at deploy time. Produce it with `ssh-keyscan -H -p <port> <host>` and accept it only after its fingerprints match those printed by the setup script or `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` on the instance console. A private repository additionally needs a read-only deploy key on the host for `git fetch`.
 
 ## Back up and restore
 
 Use a protected MySQL option file for mysqldump/mysql authentication, not a password embedded in shell history. Back up goals database plus the configured private storage root and preserve their alignment. Store backups privately; they contain personal data and expiring secret mail links.
+
+On provisioned hosts, [the backup helper](../../tools/deploy/backup.sh) is installed as root-owned /usr/local/sbin/planner-backup and configured by root-only /etc/planner/backup.conf. Each run writes database.sql.gz (single-transaction mysqldump through the root option file), private-storage.tar.gz, a MANIFEST with the source revision and SHA256SUMS to /var/backups/planner/<UTC time>-<label>, keeps 14 days by default and, when `RCLONE_REMOTE` is set, copies the backup off-site. Releases take a `pre-release` backup and cron takes a `daily` one; run `sudo planner-backup manual` before risky manual work. Local copies alone do not survive loss of the instance, so configure an off-site remote.
 
 Restore into a new database and private directory. Configure the candidate release to that target, run migrate:check, verify referenced files, authenticate and smoke-test in a controlled window, then switch traffic. Rehearse restoration instead of assuming a SQL dump certifies recoverability.
 

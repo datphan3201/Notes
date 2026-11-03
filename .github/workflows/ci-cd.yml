@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify Docs, Frontend & Backend
@@ -20,9 +23,9 @@ jobs:
           MYSQL_DATABASE: goals_test
         ports:
           - 3306:3306
+        # `options` are `docker create` flags, not mysqld arguments; MySQL 8.4 already defaults
+        # to utf8mb4/utf8mb4_0900_ai_ci and the next step pins the test database explicitly.
         options: >-
-          --character-set-server=utf8mb4
-          --collation-server=utf8mb4_0900_ai_ci
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=5s
           --health-timeout=5s
@@ -31,6 +34,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Pin test database charset and collation
+        run: |
+          docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot -e "
+            ALTER DATABASE goals_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+            SELECT VERSION(), DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATION_NAME
+              FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = 'goals_test';"
 
       - name: Setup PHP 8.5
         uses: shivammathur/setup-php@v2
@@ -45,6 +55,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Check deploy scripts
+        run: |
+          for script in tools/deploy/*.sh; do
+            bash -n "$script"
+          done
+          shellcheck --severity=warning tools/deploy/*.sh
 
       - name: Verify documentation and traceability
         run: |
@@ -88,56 +105,101 @@ jobs:
   deploy:
     name: Deploy to Oracle Cloud
     needs: verify
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # Opt-in: set the repository variable DEPLOY_ENABLED=true. Until then this job is reported as
+    # skipped rather than as a successful deployment; once enabled, missing secrets fail the run.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    env:
+      ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+      ORACLE_USER: ${{ secrets.ORACLE_USER }}
+      ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
+      ORACLE_DEPLOY_PATH: ${{ secrets.ORACLE_DEPLOY_PATH }}
+      ORACLE_APP_URL: ${{ secrets.ORACLE_APP_URL }}
 
     steps:
+      - name: Check deployment secrets
+        env:
+          ORACLE_SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          ORACLE_KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
+        run: |
+          missing=()
+          for name in ORACLE_HOST ORACLE_USER ORACLE_SSH_KEY ORACLE_KNOWN_HOSTS; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::DEPLOY_ENABLED is true but these secrets are missing: ${missing[*]}"
+            exit 1
+          fi
+
       - name: Download built frontend assets
         uses: actions/download-artifact@v4
         with:
           name: public-build
           path: build-artifact
 
-      - name: Deploy over SSH when Oracle Cloud secrets are configured
+      - name: Configure SSH with the pinned host key
         env:
-          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
-          ORACLE_USER: ${{ secrets.ORACLE_USER }}
           ORACLE_SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
-          ORACLE_PORT: ${{ secrets.ORACLE_PORT }}
-          ORACLE_DEPLOY_PATH: ${{ secrets.ORACLE_DEPLOY_PATH }}
-          ORACLE_APP_URL: ${{ secrets.ORACLE_APP_URL }}
+          ORACLE_KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
         run: |
-          if [ -z "${ORACLE_HOST}" ] || [ -z "${ORACLE_USER}" ] || [ -z "${ORACLE_SSH_KEY}" ]; then
-            echo "::notice::Skipping SSH deployment: configure ORACLE_HOST, ORACLE_USER, and ORACLE_SSH_KEY repository secrets to enable automatic Oracle Cloud deployment."
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$ORACLE_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Never trust a key fetched at deploy time: ORACLE_KNOWN_HOSTS is verified once by the owner.
+          printf '%s\n' "$ORACLE_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host planner-host
+            HostName ${ORACLE_HOST}
+            User ${ORACLE_USER}
+            Port ${ORACLE_PORT:-22}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+          EOF
+          chmod 600 ~/.ssh/config
+          ssh planner-host true
+
+      - name: Check out the verified commit on the host
+        run: |
+          ssh planner-host bash -s -- "${ORACLE_DEPLOY_PATH:-/srv/planner}" "${GITHUB_SHA}" <<'REMOTE'
+          set -euo pipefail
+          cd "$1"
+          echo "Previous revision: $(git rev-parse HEAD)"
+          git fetch --quiet origin main
+          git reset --hard "$2"
+          echo "Deployed revision: $(git rev-parse HEAD)"
+          REMOTE
+
+      - name: Sync built frontend assets
+        run: |
+          rsync -rltz --delete --chmod=D2775,F664 \
+            build-artifact/ "planner-host:${ORACLE_DEPLOY_PATH:-/srv/planner}/backend/public/build/"
+
+      - name: Back up, migrate and reload on the host
+        run: ssh planner-host "bash '${ORACLE_DEPLOY_PATH:-/srv/planner}/tools/deploy/release.sh'"
+
+      - name: Health check
+        run: |
+          if [ -z "${ORACLE_APP_URL}" ]; then
+            echo "::warning::ORACLE_APP_URL is not set; the /up health check was skipped."
             exit 0
           fi
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "${ORACLE_APP_URL%/}/up"
 
-          SSH_PORT="${ORACLE_PORT:-22}"
-          DEPLOY_PATH="${ORACLE_DEPLOY_PATH:-/srv/planner}"
-
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "${ORACLE_SSH_KEY}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p "${SSH_PORT}" -H "${ORACLE_HOST}" >> ~/.ssh/known_hosts
-
-          ssh -p "${SSH_PORT}" "${ORACLE_USER}@${ORACLE_HOST}" "
-            set -euo pipefail
-            cd '${DEPLOY_PATH}'
-            git fetch origin main
-            git reset --hard origin/main
-          "
-
-          rsync -avz --delete -e "ssh -p ${SSH_PORT}" \
-            build-artifact/ "${ORACLE_USER}@${ORACLE_HOST}:${DEPLOY_PATH}/backend/public/build/"
-
-          ssh -p "${SSH_PORT}" "${ORACLE_USER}@${ORACLE_HOST}" "
-            set -euo pipefail
-            cd '${DEPLOY_PATH}'
-            bash tools/deploy/release.sh
-          "
-
-          if [ -n "${ORACLE_APP_URL}" ]; then
-            curl -fsS "${ORACLE_APP_URL%/}/up"
-          fi
-
+      - name: Explain failed deployment state
+        if: failure()
+        run: |
+          echo "::error::Deployment of ${GITHUB_SHA} failed. The host may already run this revision's code without its migrations or assets."
+          echo "Check the step log above, then run tools/deploy/release.sh on the host or roll back to the 'Previous revision' it printed."
+          echo "Every release attempt that reached the backup step left a pre-release backup in /var/backups/planner."
