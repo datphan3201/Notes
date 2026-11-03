@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2154  # settings come from the sourced /etc/planner/*.conf
 set -euo pipefail
 
-# Database + private-storage backup for hosts provisioned by oracle-ubuntu-setup.sh.
-# Installed as root-owned /usr/local/sbin/planner-backup so the deploy user can run it
-# through sudo without being able to edit it. Settings come from /etc/planner/backup.conf.
+# Database + private-storage backup for hosts provisioned by tools/deploy/setup.sh.
+# Installed as root-owned /usr/local/sbin/planner-backup (with the shared helpers in
+# /usr/local/lib/planner) so the deploy user can run it through sudo without being able to edit
+# it. Settings come from /etc/planner/backup.conf.
 # Usage:
 #   sudo planner-backup [label]     # label: lowercase letters, digits and dashes (default: manual)
 
 CONFIG_FILE="/etc/planner/backup.conf"
 
-die() {
-    echo "Error: $*" >&2
-    exit 1
-}
+# shellcheck source=lib/common.sh
+. /usr/local/lib/planner/common.sh
 
-[ "$(id -u)" -eq 0 ] || die "planner-backup must run as root (use sudo)."
-[ -f "${CONFIG_FILE}" ] || die "${CONFIG_FILE} is missing. Run tools/deploy/oracle-ubuntu-setup.sh first."
+require_root
+[ -f "${CONFIG_FILE}" ] || die "${CONFIG_FILE} is missing. Run tools/deploy/setup.sh first."
 
 # shellcheck source=/dev/null
 . "${CONFIG_FILE}"

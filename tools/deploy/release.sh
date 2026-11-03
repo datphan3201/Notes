@@ -6,23 +6,26 @@ set -euo pipefail
 #   bash tools/deploy/release.sh [--build-frontend] [--skip-backup]
 # A verified database + private-storage backup is taken before migrations. --skip-backup
 # exists only for hosts without the planner-backup helper and must not be used in production.
+# Exit status 3 means the release failed before the database was touched, so the previous
+# revision can be restored safely; 4 means another release holds the lock (pull-deploy.sh relies
+# on both).
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=lib/common.sh
+. "${ROOT_DIR}/tools/deploy/lib/common.sh"
+
 BACKEND_DIR="${ROOT_DIR}/backend"
 ENV_FILE="${BACKEND_DIR}/.env"
 BACKUP_HELPER="/usr/local/sbin/planner-backup"
 WEB_GROUP="www-data"
 PHP_FPM_SERVICE="php8.5-fpm"
+LOCK_FILE="/tmp/planner-release.lock"
 BUILD_FRONTEND=false
 SKIP_BACKUP=false
+DATABASE_TOUCHED=false
 
 usage() {
     echo "Usage: bash tools/deploy/release.sh [--build-frontend] [--skip-backup]" >&2
-}
-
-die() {
-    echo "Error: $*" >&2
-    exit 1
 }
 
 for arg in "$@"; do
@@ -41,20 +44,21 @@ for arg in "$@"; do
     esac
 done
 
+exec 9>"${LOCK_FILE}"
+if ! flock -n 9; then
+    echo "Error: another release is already running." >&2
+    exit 4
+fi
+
+on_exit() {
+    local status=$?
+    if [ "${status}" -ne 0 ] && [ "${DATABASE_TOUCHED}" = false ]; then
+        exit 3
+    fi
+}
+trap on_exit EXIT
+
 [ -f "${ENV_FILE}" ] || die "${ENV_FILE} is missing. Configure production environment variables before releasing."
-
-# Last assignment of KEY in backend/.env, without surrounding quotes.
-env_value() {
-    sed -n "s/^$1=//p" "${ENV_FILE}" | tail -n 1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
-}
-
-# Resolve a configured path the same way ConfigLoader does (relative to backend/).
-backend_path() {
-    case "$1" in
-        /*) printf '%s\n' "$1" ;;
-        *) printf '%s\n' "${BACKEND_DIR}/$1" ;;
-    esac
-}
 
 can_use_web_group() {
     getent group "${WEB_GROUP}" >/dev/null 2>&1 && id -nG | tr ' ' '\n' | grep -qx "${WEB_GROUP}"
@@ -77,7 +81,7 @@ prepare_writable_dir() {
     fi
 }
 
-echo "==> Releasing revision $(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+log "Releasing revision $(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 # Secrets must be readable by PHP-FPM and the scheduler, never by other users.
 if can_use_web_group; then
@@ -86,7 +90,7 @@ fi
 chmod 640 "${ENV_FILE}"
 
 if [ "${BUILD_FRONTEND}" = true ]; then
-    echo "==> Building frontend assets..."
+    log "Building frontend assets..."
     (
         cd "${ROOT_DIR}/frontend"
         npm ci
@@ -98,29 +102,30 @@ if [ ! -f "${BACKEND_DIR}/public/build/manifest.json" ]; then
     die "${BACKEND_DIR}/public/build/manifest.json is missing. Run with --build-frontend or sync prebuilt assets first."
 fi
 
-echo "==> Installing backend production dependencies..."
+log "Installing backend production dependencies..."
 (
     cd "${BACKEND_DIR}"
     composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
     composer check-platform-reqs
 )
 
-echo "==> Preparing writable private storage and log directories..."
-PRIVATE_ROOT="$(env_value PRIVATE_STORAGE_ROOT)"
-LOG_PATH="$(env_value LOG_PATH)"
-prepare_writable_dir "$(backend_path "${PRIVATE_ROOT:-storage/app/private}")"
-prepare_writable_dir "$(dirname "$(backend_path "${LOG_PATH:-storage/logs/planner.log}")")"
+log "Preparing writable private storage and log directories..."
+PRIVATE_ROOT="$(env_get "${ENV_FILE}" PRIVATE_STORAGE_ROOT)"
+LOG_PATH="$(env_get "${ENV_FILE}" LOG_PATH)"
+prepare_writable_dir "$(backend_path "${BACKEND_DIR}" "${PRIVATE_ROOT:-storage/app/private}")"
+prepare_writable_dir "$(dirname "$(backend_path "${BACKEND_DIR}" "${LOG_PATH:-storage/logs/planner.log}")")"
 
 if [ "${SKIP_BACKUP}" = true ]; then
-    echo "==> WARNING: skipping the pre-migration backup (--skip-backup)." >&2
+    warn "skipping the pre-migration backup (--skip-backup)."
 elif [ -x "${BACKUP_HELPER}" ]; then
-    echo "==> Backing up database and private storage before migrations..."
+    log "Backing up database and private storage before migrations..."
     sudo -n "${BACKUP_HELPER}" pre-release
 else
-    die "${BACKUP_HELPER} is not installed, so no backup can be taken before migrating. Run tools/deploy/oracle-ubuntu-setup.sh, or pass --skip-backup only on a non-production host."
+    die "${BACKUP_HELPER} is not installed, so no backup can be taken before migrating. Run tools/deploy/setup.sh, or pass --skip-backup only on a non-production host."
 fi
 
-echo "==> Applying and verifying forward database migrations..."
+log "Applying and verifying forward database migrations..."
+DATABASE_TOUCHED=true
 (
     cd "${BACKEND_DIR}"
     php bin/console migrate
@@ -129,8 +134,8 @@ echo "==> Applying and verifying forward database migrations..."
 )
 
 if command -v systemctl >/dev/null 2>&1 && systemctl cat "${PHP_FPM_SERVICE}.service" >/dev/null 2>&1; then
-    echo "==> Reloading ${PHP_FPM_SERVICE}..."
+    log "Reloading ${PHP_FPM_SERVICE}..."
     sudo -n /usr/bin/systemctl reload "${PHP_FPM_SERVICE}"
 fi
 
-echo "==> Release completed successfully."
+log "Release completed successfully."
