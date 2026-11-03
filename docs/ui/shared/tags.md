@@ -14,7 +14,7 @@ Names are normalized and owner-unique. Tag moves reject cycles; complete tag_ids
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · &lt;button class="label-add-link" type="button" data-open-label-manager&gt;](../../../frontend/src/views/notes/index.php#L76) |
+| UI / DOM | [index.php · data-open-label-manager&gt;&lt;?= $view-&gt;e($view-&gt;t('Manage')) ?&gt;](../../../frontend/src/views/notes/index.php#L66) |
 | Browser logic | [tag-picker.js · export function createTagPicker](../../../frontend/src/js/planning/tag-picker.js#L38)<br>[notes-page.js · export class NotesPage](../../../frontend/src/js/notes/notes-page.js#L15) |
 | Controller / service / domain | [TagService.php · public function createTag(](../../../backend/src/Application/Tags/TagService.php#L140)<br>[TagService.php · public function updateTag(](../../../backend/src/Application/Tags/TagService.php#L170)<br>[TagService.php · public function archiveTag(](../../../backend/src/Application/Tags/TagService.php#L214) |
 | Persistence | [PdoTagRepository.php · public function listForOwner(](../../../backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php#L17)<br>[PdoTagRepository.php · public function updateTag(](../../../backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php#L182)<br>[PdoTagRepository.php · public function hierarchyEdges(](../../../backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php#L239) |

@@ -62,4 +62,14 @@ export function initNotePreferences(root) {
             }
         });
     render();
+    // The preferences popover closes on outside clicks and Escape.
+    document.addEventListener('click', (event) => {
+        if (root.open && !root.contains(event.target)) root.open = false;
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && root.open) {
+            root.open = false;
+            root.querySelector('summary')?.focus();
+        }
+    });
 }

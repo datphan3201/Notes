@@ -9,50 +9,45 @@
         <div class="workspace-header-actions">
             <span class="save-status" data-global-status role="status"></span>
             <button class="button button-quiet mobile-tags-button" type="button" data-open-label-manager><?= $view->e($view->t('Manage tags')) ?></button>
+            <details class="note-preferences" data-note-preferences>
+                <summary class="button button-quiet">
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-settings"/></svg>
+                    <span><?= $view->e($view->t('Preferences')) ?></span>
+                </summary>
+                <div class="note-preferences-panel">
+                    <section class="preference-section">
+                        <div>
+                            <h2><?= $view->e($view->t('Note text size')) ?></h2>
+                            <p class="subtle-copy"><?= $view->e($view->t('Applies to note content and previews.')) ?></p>
+                        </div>
+                        <div class="segmented-control" role="group" aria-label="<?= $view->e($view->t('Text size')) ?>">
+                            <button class="segment-button" type="button" data-pref="note_font_size" data-value="14"><?= $view->e($view->t('Small')) ?></button>
+                            <button class="segment-button" type="button" data-pref="note_font_size" data-value="16"><?= $view->e($view->t('Medium')) ?></button>
+                            <button class="segment-button" type="button" data-pref="note_font_size" data-value="18"><?= $view->e($view->t('Large')) ?></button>
+                        </div>
+                    </section>
+                    <section class="preference-section">
+                        <div>
+                            <h2><?= $view->e($view->t('New note color')) ?></h2>
+                            <p class="subtle-copy"><?= $view->e($view->t('Applies only to notes created after this selection.')) ?></p>
+                        </div>
+                        <div class="preference-color-options" role="group" aria-label="<?= $view->e($view->t('Default note color')) ?>">
+                            <button class="preference-color color-neutral" type="button" data-pref="default_note_color" data-value="neutral" aria-label="<?= $view->e($view->t('Default')) ?>"></button>
+                            <button class="preference-color color-lemon" type="button" data-pref="default_note_color" data-value="lemon" aria-label="<?= $view->e($view->t('Light yellow')) ?>"></button>
+                            <button class="preference-color color-mint" type="button" data-pref="default_note_color" data-value="mint" aria-label="<?= $view->e($view->t('Light green')) ?>"></button>
+                            <button class="preference-color color-sky" type="button" data-pref="default_note_color" data-value="sky" aria-label="<?= $view->e($view->t('Light blue')) ?>"></button>
+                            <button class="preference-color color-rose" type="button" data-pref="default_note_color" data-value="rose" aria-label="<?= $view->e($view->t('Light pink')) ?>"></button>
+                        </div>
+                    </section>
+                    <p role="status" data-note-preference-status></p>
+                </div>
+            </details>
             <button class="button button-primary" type="button" data-new-note disabled>
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <span><?= $view->e($view->t('New note')) ?></span>
             </button>
         </div>
     </header>
-    <details class="settings-panel" data-note-preferences>
-        <summary class="button button-quiet"><?= $view->e($view->t('Note preferences')) ?></summary>
-        <section class="preference-section">
-            <div>
-                <h2><?= $view->e($view->t('Note text size')) ?></h2>
-                <p class="subtle-copy"><?= $view->e($view->t('Applies to note content and previews.')) ?></p>
-            </div>
-            <div class="segmented-control" role="group" aria-label="<?= $view->e($view->t('Text size')) ?>">
-                <button class="segment-button" type="button" data-pref="note_font_size" data-value="14"><?= $view->e($view->t('Small')) ?></button>
-                <button class="segment-button" type="button" data-pref="note_font_size" data-value="16"><?= $view->e($view->t('Medium')) ?></button>
-                <button class="segment-button" type="button" data-pref="note_font_size" data-value="18"><?= $view->e($view->t('Large')) ?></button>
-            </div>
-        </section>
-        <section class="preference-section">
-            <div>
-                <h2><?= $view->e($view->t('New note color')) ?></h2>
-                <p class="subtle-copy"><?= $view->e($view->t('Applies only to notes created after this selection.')) ?></p>
-            </div>
-            <div class="preference-color-options" role="group" aria-label="<?= $view->e($view->t('Default note color')) ?>">
-                <button class="preference-color color-neutral" type="button" data-pref="default_note_color" data-value="neutral" aria-label="<?= $view->e($view->t('Default')) ?>"></button>
-                <button class="preference-color color-lemon" type="button" data-pref="default_note_color" data-value="lemon" aria-label="<?= $view->e($view->t('Light yellow')) ?>"></button>
-                <button class="preference-color color-mint" type="button" data-pref="default_note_color" data-value="mint" aria-label="<?= $view->e($view->t('Light green')) ?>"></button>
-                <button class="preference-color color-sky" type="button" data-pref="default_note_color" data-value="sky" aria-label="<?= $view->e($view->t('Light blue')) ?>"></button>
-                <button class="preference-color color-rose" type="button" data-pref="default_note_color" data-value="rose" aria-label="<?= $view->e($view->t('Light pink')) ?>"></button>
-            </div>
-        </section>
-        <section class="preference-section">
-            <div>
-                <h2><?= $view->e($view->t('Note layout')) ?></h2>
-                <p class="subtle-copy"><?= $view->e($view->t('Choose how to view your note library.')) ?></p>
-            </div>
-            <div class="segmented-control" role="group" aria-label="<?= $view->e($view->t('Note layout')) ?>">
-                <button class="segment-button" type="button" data-pref="notes_view" data-value="grid"><?= $view->e($view->t('Grid')) ?></button>
-                <button class="segment-button" type="button" data-pref="notes_view" data-value="list"><?= $view->e($view->t('List')) ?></button>
-            </div>
-        </section>
-        <p role="status" data-note-preference-status></p>
-    </details>
     <div class="workspace-layout">
         <aside class="notes-filter-panel" aria-label="<?= $view->e($view->t('Note filters')) ?>">
             <button class="filter-all is-active" type="button" data-filter-all>
@@ -73,10 +68,6 @@
             <div class="label-filter-list" data-label-filter-list>
                 <p class="subtle-copy"><?= $view->e($view->t('Loading tags…')) ?></p>
             </div>
-            <button class="label-add-link" type="button" data-open-label-manager>
-                <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
-                <?= $view->e($view->t('Add tag')) ?>
-            </button>
         </aside>
         <section class="notes-column" aria-labelledby="notes-heading">
             <div class="notes-toolbar">
@@ -182,7 +173,7 @@
                     <?= $view->e($view->t('Share')) ?>
                 </button>
                 <button class="button button-danger-quiet is-hidden" type="button" data-editor-delete><?= $view->e($view->t('Delete')) ?></button>
-                <button class="button button-primary" type="button" data-editor-save><?= $view->e($view->t('Save')) ?></button>
+                <button class="button button-primary" type="button" data-editor-save><?= $view->e($view->t('Save and close')) ?></button>
             </div>
         </div>
         <div class="editor-label-popover is-hidden" data-editor-label-popover>

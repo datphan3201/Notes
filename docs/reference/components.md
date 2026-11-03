@@ -7,7 +7,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | Trace ID | Visible component | Page |
 | --- | --- | --- |
 | `tasks.collection` | [Collection, refresh, search and pagination](../ui/tasks/README.md#collection-refresh-search-and-pagination) | /tasks — Tasks |
-| `tasks.row` | [Task row: completion, Today, week, Edit, Important and More options](../ui/tasks/README.md#task-row-completion-today-week-edit-important-and-more-options) | /tasks — Tasks |
+| `tasks.row` | [Task row: completion, Today, week, Important and the ⋯ menu](../ui/tasks/README.md#task-row-completion-today-week-important-and-the--menu) | /tasks — Tasks |
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.week` | [This week](../ui/tasks/filters.md#this-week) | /tasks — Time filters, statuses and counts |
@@ -54,7 +54,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `reviews.editor` | [Reflections, Save and conflict choices](../ui/reviews/README.md#reflections-save-and-conflict-choices) | /reviews — Collection and Review editor |
 | `reviews.facts` | [Refresh facts, Finalize, Reopen and Delete](../ui/reviews/README.md#refresh-facts-finalize-reopen-and-delete) | /reviews — Collection and Review editor |
 | `notes.collection` | [All notes, search, sort, grid/list and paging](../ui/notes/README.md#all-notes-search-sort-gridlist-and-paging) | / — Notes |
-| `notes.editor` | [New note, title/content, color, pin and Save](../ui/notes/README.md#new-note-titlecontent-color-pin-and-save) | / — Notes |
+| `notes.editor` | [New note, title/content, color, pin and Save and close](../ui/notes/README.md#new-note-titlecontent-color-pin-and-save-and-close) | / — Notes |
 | `notes.links` | [Note links to a Goal or Task](../ui/notes/README.md#note-links-to-a-goal-or-task) | / — Notes |
 | `notes.delete` | [Delete and tombstones](../ui/notes/README.md#delete-and-tombstones) | / — Notes |
 | `notes.autosave` | [Dirty, saving, saved and retry state](../ui/notes/autosave.md#dirty-saving-saved-and-retry-state) | / — Notes autosave, recovery and conflicts |

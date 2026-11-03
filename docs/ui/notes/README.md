@@ -30,16 +30,16 @@ NotesPage owns loading, selection and read coordination. Browser layout preferen
 | Relevant tests (not a pass claim) | [read-coordinator.test.js · Q01](../../../frontend/tests/js/read-coordinator.test.js#L13)<br>[read-coordinator.test.js · Q02](../../../frontend/tests/js/read-coordinator.test.js#L24)<br>[read-coordinator.test.js · Q03](../../../frontend/tests/js/read-coordinator.test.js#L50) |
 | HTTP | `GET /api/v1/notes` (`api.notes.index`) → [NoteController::index](../../../backend/src/Http/Controller/NoteController.php#L37) |
 
-### New note, title/content, color, pin and Save
+### New note, title/content, color, pin and Save and close
 
 **Trace ID:** `notes.editor`
 
-NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; explicit Save flushes the normal save path.
+NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row.
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L133) |
-| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L451) |
+| UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L124) |
+| CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L481) |
 | Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L15)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15) |
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
@@ -54,7 +54,7 @@ A Note can belong to one active Goal or Task of the same owner. The editor's Lin
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L160)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L178)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
+| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L151)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L178)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
 | Browser logic | [note-editor.js · async setLink(](../../../frontend/src/js/notes/note-editor.js#L297)<br>[linked-notes.js · export async function renderLinkedNotes](../../../frontend/src/js/notes/linked-notes.js#L8)<br>[notes-page.js · openFromLocation() {](../../../frontend/src/js/notes/notes-page.js#L71) |
 | Controller / service / domain | [NoteLinkService.php · public function link(](../../../backend/src/Application/Notes/NoteLinkService.php#L38)<br>[NoteController.php · public function link(](../../../backend/src/Http/Controller/NoteController.php#L92) |
 | Persistence | [PdoNoteLinkRepository.php · public function save(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteLinkRepository.php#L17)<br>[0028_create_note_links.php · CREATE TABLE note_links](../../../backend/database/plain-migrations/0028_create_note_links.php#L19) |
@@ -69,7 +69,7 @@ Deleting an owned Note also unlinks its Task. A retried create with a tombstoned
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-delete](../../../frontend/src/views/notes/index.php#L184) |
+| UI / DOM | [index.php · data-editor-delete](../../../frontend/src/views/notes/index.php#L175) |
 | Browser logic | [note-editor.js · async deleteNote()](../../../frontend/src/js/notes/note-editor.js#L882) |
 | Controller / service / domain | [NoteService.php · public function delete(](../../../backend/src/Application/Notes/NoteService.php#L197) |
 | Persistence | [PdoNoteRepository.php · public function tombstone(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L197) |

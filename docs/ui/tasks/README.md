@@ -34,11 +34,11 @@ Tasks defaults to All unless a valid view query is supplied. Visible search, Sta
 | Relevant tests (not a pass claim) | [collection-page.test.js · task filtering](../../../frontend/tests/js/collection-page.test.js#L10)<br>[collection-page.test.js · page shrinks](../../../frontend/tests/js/collection-page.test.js#L21)<br>[tasks-collection.test.js · test('sorting uses account-local scheduled time, keeps undated work last and is independent of filtering'](../../../frontend/tests/js/tasks-collection.test.js#L25) |
 | HTTP | `GET /tasks` (`planning.tasks`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L185)<br>`GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 
-### Task row: completion, Today, week, Edit, Important and More options
+### Task row: completion, Today, week, Important and the ⋯ menu
 
 **Trace ID:** `tasks.row`
 
-Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week/Today, Edit and Important stay inline; native More options reveals due/reminder/repeat and Archive. Archive retains data. Today uses + or a check with native hover labels and accessible names; automatic membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle.
+Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin), Today (sun) and Important (star) stay inline as icon toggles with hover labels and accessible names; the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle. Overdue rows show a red edge and facts line.
 
 | Layer | Entry point |
 | --- | --- |

@@ -52,7 +52,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] DASH12 — Complete/Reopen from either checklist updates both and the weekly summary; required confirmations remain explicit.
 - [ ] DASH13 — Week sort (Importance/Scheduled time) and status filter work independently; filters do not change stored membership or summary denominators.
 - [ ] DASH14 — Remove a daily selection without removing the Task/week; scheduled work can remain in Today. No automatic next-day carry-forward occurs.
-- [ ] DASH15 — On progress, Scheduled, Due today and Overdue labels describe actual status/date facts; desktop/mobile controls fit the existing UI and four-row previews remain.
+- [ ] DASH15 — In progress, Scheduled, Due today and Overdue labels describe actual status/date facts; desktop/mobile controls fit the existing UI and four-row previews remain.
 - [ ] DASH16 — Choose a roadmap below the header; reload and another authenticated session retain it. Unset/clear/archived choices invite selection, and foreign Goal IDs are rejected.
 - [ ] DASH17 — Change roadmap during a delayed Dashboard refresh: the latest choice, preview links and saved preference remain coherent.
 - [ ] DASH18 — Activity shows 30 inclusive local dates across month/year boundaries, fills zero days and excludes reversed facts; View activity opens the existing yearly tab.
@@ -113,7 +113,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] TASK20 — Visible Search/Status/Sort compose independently. Importance is descending; scheduled sort uses account-local work time with undated tasks last and stable ties.
 - [ ] TASK21 — Clean Today/Week capture defaults Plan for to that view. Reopening a dirty capture preserves its values. Creating retains search/status/view/page and offers Open task; a failed planning step never creates a duplicate.
 - [ ] TASK22 — Repeat disables Plan for; individual occurrences remain selectable later. Advanced capture fields remain accessible and the Create/Cancel footer stays visible on mobile.
-- [ ] TASK23 — Native More options opens by keyboard and exposes dates/reminder/repeat/Archive. Row names align; context chips fit their text; Today icons expose meaningful hover/accessibility labels.
+- [ ] TASK23 — The ⋯ row menu opens by keyboard, exposes labelled Due date/Remind me/Repeat/Edit/Archive and closes on Escape, outside click or a choice. Row names align; context chips fit their text; Today icons expose meaningful hover/accessibility labels.
 - [ ] TASK24 — Today add/remove from detail matches row behavior. Overview contains the completion checklist; Notes/Resources stay in Notes and preserve drafts when changing tabs.
 
 ## Personal repeating work — REPEAT

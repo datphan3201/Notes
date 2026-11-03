@@ -35,19 +35,22 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Open | Full staged diff check reports trailing whitespace and blank lines at EOF; artifact receipts remain valid |
 | [ISSUE-008](#issue-008--today-task-capture-and-membership-are-not-clear-in-the-ui) | Today task capture and membership are not clear in the UI | Low | Resolved | Approved daily/weekly checklist, selection and overdue policies implemented; PHP/Node/browser checks pass |
 | [ISSUE-009](#issue-009--dashboard-roadmap-has-no-explicit-account-level-selection) | Dashboard roadmap has no explicit account-level selection | Low | Resolved | Explicit saved selection and header placement implemented; service/HTTP/browser checks pass |
-| [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | In progress | Implemented; Node/build/lint pass; MySQL and browser verification pending |
+| [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
 | [ISSUE-011](#issue-011--tasks-completed-section-does-not-follow-the-selected-time-view) | Tasks Completed section does not follow the selected time view | Low | Resolved | View-scoped helper regression and browser scope/paging pass |
 | [ISSUE-012](#issue-012--repeating-exposes-inapplicable-task-filters-and-a-different-count-scope) | Repeating exposes inapplicable Task filters and a different count scope | Low | Resolved | Applicable series filters/count/paging verified with Node and browser fixtures |
 | [ISSUE-013](#issue-013--tasks-planning-and-retrieval-affordances-are-inconsistent-across-screens) | Tasks planning and retrieval affordances are inconsistent across screens | Low | Resolved | Approved layout implemented; local browser, Node, lint/build checks pass |
 | [ISSUE-014](#issue-014--archify-update-receipts-and-docs-checker-use-different-default-paths) | Archify update receipts and docs checker use different default paths | Low | Resolved | Explicit canonical receipt plus fresh browser directory; maintenance command documented |
 | [ISSUE-015](#issue-015--habit-actions-have-unclear-hierarchy-and-inconsistent-check-in-behavior) | Habit actions have unclear hierarchy and inconsistent check-in behavior | Low | Resolved | Direct check-in, secondary Rest day/Archive, responsive and keyboard browser smoke |
 | [ISSUE-016](#issue-016--habit-archive-fails-with-native-pdo-prepares) | Habit archive fails with native PDO prepares | Medium | Resolved | Reproduced HY093; distinct SQL bindings; integration regression and live browser archive pass |
-| [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Needs decision | Screenshot/template review; Save invokes the close workflow |
-| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | In progress | Fix implemented with unit tests; browser verification pending |
-| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | In progress | Fix implemented; browser verification pending |
+| [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Resolved | Decided and fixed; verified in the browser (2026-11-03) |
+| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
+| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
 | [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
 | [ISSUE-021](#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) | Demo Review snapshots do not match the runtime schema | Medium | Resolved | Reproduced serializer failure; corrected demo builder, guarded data repair and regression/UI checks pass |
 | [ISSUE-022](#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) | Dashboard Activity and Weekly charts are hard to read | Low | Resolved | Shared heatmap palette, balanced card layout and readable weekly columns; responsive browser checks |
+| [ISSUE-023](#issue-023--deployment-automation-could-not-provision-or-safely-release-production) | Deployment automation could not provision or safely release production | High | Resolved | Scripts rewritten into the shared hosting module; sandboxed release/pull-deploy runs |
+| [ISSUE-024](#issue-024--hosting-behind-cloudflare-tunnel-breaks-client-addresses-and-csrf-origin) | Hosting behind Cloudflare Tunnel breaks client addresses and CSRF origin | High | Resolved | Nginx realip from loopback; quick-tunnel APP_URL sync verified against live cloudflared metrics |
+| [ISSUE-025](#issue-025--retired-ai-model-is-reported-as-a-temporary-provider-outage) | Retired AI model is reported as a temporary provider outage | Medium | Resolved | 404 is a configuration error, quota is named; unit tests with a fake transport |
 | [ISSUE-026](#issue-026--ai-assistant-cannot-build-a-goal-roadmap-and-restructures-by-deleting-tasks) | AI assistant cannot build a Goal roadmap and restructures by deleting Tasks | High | Resolved | Integration tests cover roadmap, refs, moves and guards; scripted provider only |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
@@ -172,7 +175,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-010 — Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template
 
-- **Status:** In progress — implemented; browser verification is pending (see Limits).
+- **Status:** Resolved.
 - **Severity:** Low; information-architecture and discoverability problems without demonstrated data loss.
 - **Recorded:** 2026-11-02, from the user's report and Dashboard screenshots.
 - **Affected UI:** [Dashboard Today, This week, Habits and Roadmap](ui/dashboard/README.md).
@@ -181,6 +184,7 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution (implemented):** Reorganized the Dashboard view and browser modules, added `dashboard-habits.js`, exposed the Habit-local `today` date on each Dashboard Habit row (additive field), added Daily tasks Sort/Status comboboxes matching Weekly, and added connector fill via a `--segment-progress` CSS variable. No migration, route or write-path change; Habit check-in reuses the existing PUT/DELETE routes.
 - **Verification so far:** Backend integration tests (`DashboardReviewsTest.php` on goals_test): 15 tests, 93 assertions pass; Node: 86 tests pass (including Habit summary/targets, Milestone progress, and Daily/Weekly sort/status filtering); frontend format check and build pass; PHP lint passes.
 - **Limits:** Live browser flows (layout on desktop/mobile, Habit check-in click, connector fill, empty states) have not been run through Playwright for this change. The daily/weekly Archify diagram describes selection/completion contracts and was not regenerated.
+- **Browser verification (2026-11-03):** Playwright against the live local app (dark theme, 1280px): the first Daily Habit was checked in from the Dashboard (done_today false → true, label became "Undo today’s check-in") and undone again (→ false); no page errors.
 
 ## ISSUE-011 — Tasks Completed section does not follow the selected time view
 
@@ -247,7 +251,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-017 — Notes controls have redundant placement and unclear Save wording
 
-- **Status:** Needs decision.
+- **Status:** Resolved.
 - **Severity:** Low; hierarchy/discoverability and wording, with no demonstrated lost content.
 - **Recorded:** 2026-11-02 (Asia/Saigon), Notes design review.
 - **Affected UI/source:** [Notes template](../frontend/src/views/notes/index.php), collection toolbar and editor actions; [NoteEditor](../frontend/src/js/notes/note-editor.js).
@@ -255,10 +259,12 @@ The severity assessments below describe observed impact, not a completed securit
 - **Proposal:** Keep the current theme and writing area; make preferences a compact header action, retain one Grid/List entry, group editor metadata/attachments separately from its primary footer, and move permanent Delete to secondary actions. Keep autosave/recovery/conflict behavior. Prefer Save and close wording to preserve current behavior.
 - **Pending decision:** Preserve save-and-close with clearer wording, or deliberately change Save to save without closing. Do not remove explicit Save or rename permanent Note deletion to Archive without a separate requirement.
 - **Evidence limits:** Desktop/mobile screenshots of the collection and empty New note editor were inspected; persisted/shared action layouts were inspected in source. No Note content was changed, shared or deleted. This review is not a full save/recovery/sharing acceptance test.
+- **Decision and resolution (2026-11-03):** Kept save-and-close behavior and labelled it **Save and close**. Note preferences became a compact header **Preferences** popover (closes on outside click/Escape, full width on phones); the layout choice lives only in the toolbar Grid/List toggle; the sidebar keeps a single Manage entry for tags; permanent Delete moved to the start of the editor action row, apart from Save; the Linked to picker sits beside the colours so the footer keeps one row.
+- **Verification:** Playwright on the live local app at 1440px and 390px: popover fully visible and closing on outside click, editor footer on one row with Delete apart; no page errors.
 
 ## ISSUE-018 — Notes pagination omits the current middle page and localized labels
 
-- **Status:** In progress — implemented; browser verification is pending.
+- **Status:** Resolved.
 - **Severity:** Low; navigation/orientation and screen-reader wording; no demonstrated data corruption.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [NotesPage::renderPagination/pageButton](../frontend/src/js/notes/notes-page.js).
@@ -267,10 +273,11 @@ The severity assessments below describe observed impact, not a completed securit
 - **Expected / next step:** Keep a visible current-page window and clear gaps/position, with localized Previous/Next/Page labels. Verify first/middle/last pages, search/page reset and both locales before resolving.
 - **Resolution (implemented):** [pageWindow](../frontend/src/js/lib/pagination.js) always shows the first and last page plus two pages on each side of the current one, with an ellipsis for skipped pages (a single skipped page is shown instead). The current page is marked with `aria-current="page"`; numbered buttons are labelled "Page N of M" and the arrows "Previous page"/"Next page" through the Vietnamese dictionary.
 - **Verification so far:** 5 new [pagination tests](../frontend/tests/js/pagination.test.js) cover short ranges, first/middle/last pages, single-page skips and clamping; 96 Node tests, Prettier and the Vite build pass. Browser checks of both locales and search/page reset are still pending.
+- **Browser verification (2026-11-03):** Playwright with intercepted list metadata (last_page 12): after five Next clicks the bar read `‹ 1 … 4 5 [6] 7 8 … 12 ›` with aria-current on 6 and labels "Previous page" / "Page 4 of 12"; no page errors.
 
 ## ISSUE-019 — Notes layout preferences do not refresh the visible layout
 
-- **Status:** In progress — implemented; browser verification is pending.
+- **Status:** Resolved.
 - **Severity:** Low; visible layout disagrees with the chosen preference until a later layout refresh; no content loss established.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [initNotePreferences](../frontend/src/js/settings/delivery-preferences.js), [NotesPage](../frontend/src/js/notes/notes-page.js) and [template](../frontend/src/views/notes/index.php).
@@ -279,6 +286,7 @@ The severity assessments below describe observed impact, not a completed securit
 - **Expected / next step:** Consolidate the layout entry or apply the authoritative preference through the same view-rendering path and synchronize controls. Verify immediate switching and reload persistence with saved/draft state intact.
 - **Resolution (implemented):** NotesPage now applies `notes_view` from `notes:preferences-changed` through `applyView` (without saving again), and the dead `[data-view]` click in initNotePreferences was removed.
 - **Verification so far:** 96 Node tests, Prettier and the Vite build pass. Browser switching and reload persistence are still pending.
+- **Browser verification (2026-11-03):** Playwright on the live local app: choosing List in Note preferences hid the Grid and showed the List immediately (and back), without a reload; no page errors.
 
 ## ISSUE-020 — AI branch generated traces still describe pre-agent capabilities
 
@@ -333,13 +341,15 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-025 — Retired AI model is reported as a temporary provider outage
 
-- **Status:** Open (local configuration fixed; code unchanged).
+- **Status:** Resolved.
 - **Severity:** Medium; the AI assistant stops working while the message suggests waiting, hiding a configuration fix.
 - **Recorded:** 2026-11-03; local AI chat reported "The AI provider is temporarily unavailable."
 - **Affected source:** [GoogleAIProvider::post](../backend/src/Infrastructure/AI/GoogleAIProvider.php); local backend/.env.
 - **Observed:** generateContent for `gemini-2.5-flash-lite` returned HTTP 404 NOT_FOUND ("no longer available to new users… use models/gemini-3.5-flash-lite"), while the model metadata endpoint still answered 200. post() maps every unlisted status, 404 included, to AI_PROVIDER_ERROR and the generic 503 "temporarily unavailable" message. Separately, the same method calls curl_close(), deprecated since PHP 8.5 (no effect since 8.0); it emits E_DEPRECATED on every attempt.
 - **Expected / next step:** Treat 404 like 400/403 (AI_CONFIGURATION, "cannot be used with the current configuration") and log the provider status and model; drop the curl_close() call. Confirm the intended message before changing behavior.
 - **Evidence:** One 5-token generateContent request per model with the configured key: gemini-2.5-flash-lite 404, gemini-3.5-flash-lite 200. Local AI_MODEL was changed to gemini-3.5-flash-lite (the .env.example default); no code was changed. The in-app chat after the change was not re-tested.
+- **Resolution:** [GoogleAIProvider](../backend/src/Infrastructure/AI/GoogleAIProvider.php) treats 404 like 400/403 (AI_CONFIGURATION, no retries) and names exhausted quota after its retries (AI_QUOTA, "The AI usage limit has been reached. Try again later."); the deprecated curl_close() call is gone and HTTP goes through an injectable transport.
+- **Verification:** [GoogleAIProviderTest](../backend/tests/Plain/Unit/GoogleAIProviderTest.php): retired model (one call), quota (three calls), temporary outage then success, API key only in the header.
 
 ## ISSUE-026 — AI assistant cannot build a Goal roadmap and restructures by deleting Tasks
 

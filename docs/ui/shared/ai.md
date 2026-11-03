@@ -39,7 +39,7 @@ The chat card previews queued supported create/update/transition/archive operati
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L141) |
-| CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L290) |
+| CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L298) |
 | Browser logic | [assistant.js · const renderProposal = (message) =&gt;](../../../frontend/src/js/planning/assistant.js#L152) |
 | Controller / service / domain | [AIActionService.php · public function apply(](../../../backend/src/Application/AI/AIActionService.php#L108)<br>[ProposalValidator.php · public function validate(](../../../backend/src/Application/AI/ProposalValidator.php#L28) |
 | Persistence | [PdoAIActionRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L38)<br>[PdoAIActionRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L52)<br>[PdoAIActionRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L64) |

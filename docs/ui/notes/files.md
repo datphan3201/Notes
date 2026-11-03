@@ -14,7 +14,7 @@ Server MIME/signature and size validation is authoritative; attachment limit is 
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · &lt;select data-note-background&gt;](../../../frontend/src/views/notes/index.php#L166) |
+| UI / DOM | [index.php · &lt;select data-note-background&gt;](../../../frontend/src/views/notes/index.php#L157) |
 | Browser logic | [note-editor.js · async uploadFiles(](../../../frontend/src/js/notes/note-editor.js#L663) |
 | Controller / service / domain | [FileService.php · public function uploadAttachment(](../../../backend/src/Application/Files/FileService.php#L49)<br>[FileService.php · public function deleteAttachment(](../../../backend/src/Application/Files/FileService.php#L137)<br>[UploadValidator.php · public function attachment(](../../../backend/src/Application/Files/UploadValidator.php#L46)<br>[NoteService.php · public function setBackground(](../../../backend/src/Application/Notes/NoteService.php#L176) |
 | Persistence | [AttachmentRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L97)<br>[AttachmentRepository.php · public function tombstone(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L129)<br>[AttachmentRepository.php · public function findOwnedForNote(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L44)<br>[PdoNoteRepository.php · public function setBackground(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L253) |
@@ -29,7 +29,7 @@ Only allowed media types preview. Safe filenames and a single byte Range are sup
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L115) |
+| UI / DOM | [index.php · data-editor-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L106) |
 | Browser logic | [note-editor.js · attachmentRow(attachment) {](../../../frontend/src/js/notes/note-editor.js#L786) |
 | Controller / service / domain | [FileService.php · public function authorizedAttachment(](../../../backend/src/Application/Files/FileService.php#L171)<br>[FileStreamer.php · public function attachment(](../../../backend/src/Application/Files/FileStreamer.php#L14) |
 | Persistence | [LocalPrivateStorage.php · public function resolve(](../../../backend/src/Infrastructure/Storage/LocalPrivateStorage.php#L114) |

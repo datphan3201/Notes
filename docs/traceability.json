@@ -78,8 +78,8 @@
         },
         {
           "id": "tasks.row",
-          "label": "Task row: completion, Today, week, Edit, Important and More options",
-          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week/Today, Edit and Important stay inline; native More options reveals due/reminder/repeat and Archive. Archive retains data. Today uses + or a check with native hover labels and accessible names; automatic membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle.",
+          "label": "Task row: completion, Today, week, Important and the ⋯ menu",
+          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin), Today (sun) and Important (star) stay inline as icon toggles with hover labels and accessible names; the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle. Overdue rows show a red edge and facts line.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -2903,8 +2903,8 @@
         },
         {
           "id": "notes.editor",
-          "label": "New note, title/content, color, pin and Save",
-          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; explicit Save flushes the normal save path.",
+          "label": "New note, title/content, color, pin and Save and close",
+          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
@@ -3524,7 +3524,7 @@
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
-              "symbol": "<button class=\"label-add-link\" type=\"button\" data-open-label-manager>"
+              "symbol": "data-open-label-manager><?= $view->e($view->t('Manage')) ?>"
             }
           ],
           "client": [

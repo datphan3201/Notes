@@ -14,7 +14,7 @@ Valid edits debounce at 500ms and dispatch within 2s of continuous typing. One l
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-status](../../../frontend/src/views/notes/index.php#L125) |
+| UI / DOM | [index.php · data-editor-status](../../../frontend/src/views/notes/index.php#L116) |
 | Browser logic | [autosave-machine.js · export class AutosaveMachine](../../../frontend/src/js/notes/autosave-machine.js#L12) |
 | Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
@@ -29,7 +29,7 @@ One account-scoped sessionStorage record preserves acknowledged/draft/frozen req
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-session-recovery](../../../frontend/src/views/notes/index.php#L129) |
+| UI / DOM | [index.php · data-session-recovery](../../../frontend/src/views/notes/index.php#L120) |
 | Browser logic | [recovery-store.js · export class RecoveryStore](../../../frontend/src/js/lib/recovery-store.js#L5)<br>[autosave-machine.js · export class AutosaveMachine](../../../frontend/src/js/notes/autosave-machine.js#L12) |
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37) |
 | Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124) |
@@ -44,7 +44,7 @@ Creates use stable client-generated UUIDs. Exact replay is a no-op; stale differ
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L228) |
+| UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L219) |
 | Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L700) |
 | Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
