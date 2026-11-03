@@ -111,9 +111,9 @@
 .planning-list-item small {
     color: var(--muted);
 }
+/* Overdue reads through an edge and the red facts line, not a fully red card. */
 .planning-list-item.is-overdue {
-    background: var(--danger-soft);
-    border-color: var(--danger);
+    box-shadow: inset 3px 0 0 var(--danger);
 }
 .planning-list-item.is-overdue small {
     color: var(--danger);
@@ -728,20 +728,9 @@
     align-items: flex-start;
     text-align: left;
 }
+/* The time zone sits next to today's date in the header. */
 .dashboard-timezone {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    padding-inline: 4px;
     color: var(--muted);
-    font-size: var(--font-size-caption);
-    line-height: 1.8;
-    overflow-wrap: anywhere;
-}
-.dashboard-timezone .ui-icon {
-    width: 14px;
-    height: 14px;
-    margin-top: 2px;
 }
 .review-prompt {
     display: flex;
@@ -863,9 +852,6 @@
     .dashboard-side-column {
         grid-template-columns: 1fr 1fr;
         align-items: start;
-    }
-    .dashboard-timezone {
-        grid-column: 1 / -1;
     }
     .dashboard-weekly-grid {
         grid-template-columns: 1fr 1fr;

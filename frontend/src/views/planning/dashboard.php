@@ -1,7 +1,7 @@
 <section class="planning-page dashboard-page" data-dashboard-page aria-labelledby="dashboard-title">
     <header class="workspace-header scene-header" data-reference-decoration="landscape">
         <div>
-            <p class="dashboard-date" data-dashboard-date></p>
+            <p class="dashboard-date"><span data-dashboard-date></span> · <span class="dashboard-timezone" data-dashboard-timezone title="<?= $view->e($view->t('Your time zone')) ?>"></span></p>
             <h1 id="dashboard-title" data-dashboard-greeting><?= $view->e($view->t('Dashboard')) ?></h1>
             <p><?= $view->e($view->t('You’re making steady progress.')) ?></p>
         </div>
@@ -54,7 +54,7 @@
                                 <h2 id="today-title">
                                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
                                     <?= $view->e($view->t('Daily tasks')) ?>
-                                    <span class="count-badge" data-today-count>—</span>
+                                    <span class="count-badge" data-today-count hidden>—</span>
                                 </h2>
                                 <button class="button button-quiet" type="button" data-dashboard-add-today>
                                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
@@ -75,7 +75,7 @@
                                 <select id="dashboard-today-status" data-dashboard-today-status>
                                     <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
                                     <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
                                     <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
                                     <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
                                 </select>
@@ -85,8 +85,8 @@
                     <div data-today-tasks aria-live="polite">
                         <p class="loading-copy"><?= $view->e($view->t('Loading today\'s tasks…')) ?></p>
                     </div>
+                    <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite" hidden></p>
                 </section>
-                <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite"></p>
             </div>
             <div class="dashboard-split-side">
                 <article class="planning-panel dashboard-habits-panel" aria-labelledby="dashboard-habits-title">
@@ -175,7 +175,7 @@
                                 <select id="dashboard-week-status" data-dashboard-week-status>
                                     <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
                                     <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
                                     <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
                                     <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
                                 </select>
@@ -297,8 +297,4 @@
             <div class="dialog-footer"><button class="button button-primary" type="submit"><?= $view->e($view->t('Create task')) ?></button></div>
         </form>
     </dialog>
-    <p class="dashboard-timezone">
-        <svg class="ui-icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
-        <span data-dashboard-timezone></span>
-    </p>
 </section>

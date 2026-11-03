@@ -1,4 +1,4 @@
-import { referenceDecoration } from '../settings/reference-decoration.js';
+import { lineIcon } from '../lib/line-icons.js';
 import { t } from '../lib/i18n.js';
 import { checkMark, crossMark } from '../lib/check-mark.js';
 import { habitDayDescriptions, habitDayState } from '../lib/habit-days.js';
@@ -80,7 +80,7 @@ export function renderStreak(container, streak, today) {
     container.replaceChildren();
     const value = document.createElement('strong');
     value.className = 'streak-value';
-    const flame = referenceDecoration('flame');
+    const flame = lineIcon('flame', { solid: true });
     flame.classList.add('streak-flame');
     value.textContent = `${streak.days} ${t(streak.days === 1 ? 'day' : 'days')}`;
     value.prepend(flame);

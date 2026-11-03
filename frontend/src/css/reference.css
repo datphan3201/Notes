@@ -132,8 +132,18 @@
     font-size: 1.125rem;
 }
 .streak-flame {
-    margin-right: 7px;
-    font-size: 1.5rem;
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: 6px;
+    color: #f59e0b;
+    vertical-align: -0.15em;
+}
+.greeting-sparkle {
+    width: 0.8em;
+    height: 0.8em;
+    margin-left: 8px;
+    color: #f5b544;
+    vertical-align: 0.05em;
 }
 .streak-value {
     font-size: 1.5625rem;
@@ -661,23 +671,6 @@
 .reference-anchor {
     clip-path: circle(47% at 50% 50%);
 }
-.reference-greeting {
-    position: relative;
-    display: inline-block;
-    width: 28px;
-    height: 30px;
-    margin-left: 4px;
-    vertical-align: middle;
-    z-index: 0;
-}
-.reference-flame {
-    position: relative;
-    display: inline-block;
-    width: 22px;
-    height: 29px;
-    vertical-align: middle;
-    z-index: 0;
-}
 [data-goals-page] > .scene-header,
 [data-habits-page] > .scene-header,
 [data-teamwork-page] > .scene-header,
@@ -723,10 +716,6 @@
     .reference-corner {
         width: 180px;
         height: 80px;
-    }
-    .reference-flame {
-        width: 19px;
-        height: 25px;
     }
 }
 .dialog-footer {
@@ -1271,5 +1260,36 @@ body:not(:has(.settings-page)) .account-nav,
     textarea:not(.editor-content-input),
     [data-note-overview-host] [data-task-note-form] textarea {
         font-size: 1rem;
+    }
+}
+
+/* Dark theme: the tinted cards and small raster crops were drawn for light surfaces. Keep the
+   cards in the dark palette and drop the crops, which would otherwise read as grey boxes. */
+[data-theme='dark'] {
+    --scene-tint: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+[data-theme='dark'] .main-goal-card {
+    border-color: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    box-shadow: 0 0 0 1px var(--border);
+}
+[data-theme='dark'] .main-goal-card > .context-chip {
+    color: #b9a6ff;
+}
+[data-theme='dark'] :is(.reference-summit, .reference-plant, .reference-trophy, .reference-corner) {
+    display: none;
+}
+[data-theme='dark'] .quote-scene-card {
+    padding-right: 22px;
+}
+/* Header actions never sit on top of the corner illustration. */
+@media (min-width: 901px) {
+    :root:not([data-theme='dark'])[data-show-illustrations='true']
+        .scene-header[data-reference-decoration='corner'] {
+        padding-right: 260px;
+    }
+}
+@media (max-width: 900px) {
+    .scene-header[data-reference-decoration='corner'] > .reference-corner {
+        display: none;
     }
 }

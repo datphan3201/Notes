@@ -1161,9 +1161,14 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 8px 16px;
-    color: var(--muted);
+    color: var(--danger);
     font-size: var(--font-size-meta);
-    margin: 16px 0 0;
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+.dashboard-overdue-reminder[hidden] {
+    display: none;
 }
 @media (max-width: 900px) {
     .dashboard-checklist-row {
@@ -1238,14 +1243,9 @@
     gap: 20px;
     align-items: start;
 }
+/* Both columns scroll with the page: nested scroll areas hid the Activity card below the fold. */
 .dashboard-split-main,
 .dashboard-split-side {
-    max-height: calc(100vh - 250px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    padding-right: 6px;
     display: flex;
     flex-direction: column;
     gap: 16px;

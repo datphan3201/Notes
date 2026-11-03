@@ -74,11 +74,11 @@ $accountNavigation = [
                     </details>
                 </nav>
                 <div class="sidebar-footer">
-                    <a class="sidebar-user" href="/settings/profile" data-leave-guard>
+                    <a class="sidebar-user" href="/settings/profile" title="<?= $view->e($user['display_name']) ?>" data-leave-guard>
                         <span class="avatar avatar-small" data-avatar-fallback><?= $view->e($view->initial($user['display_name'])) ?></span>
                         <span class="sidebar-user-copy">
                             <strong><?= $view->e($user['display_name']) ?></strong>
-                            <small><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Verify your email')) ?></small>
+                            <small<?= $user['email_verified'] ? '' : ' class="is-warning"' ?>><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Verify email')) ?></small>
                         </span>
                     </a>
                     <form action="/logout" method="post" data-leave-guard-form>

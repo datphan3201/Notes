@@ -1,5 +1,6 @@
+import { formatDay, formatDayRange } from '../lib/format.js';
 import { get, patch, post, remove } from '../lib/http.js';
-import { t } from '../lib/i18n.js';
+import { t, statusLabel } from '../lib/i18n.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { renderRing, renderDayBars } from './insights-ui.js';
 import { DraftBuffer } from './draft-buffer.js';
@@ -77,11 +78,13 @@ export function initReviewsPage(root) {
         editor.hidden = false;
         root.querySelector('[data-review-new]').hidden = true;
         root.querySelector('[data-review-heading]').textContent =
-            `${t(review.kind)} · ${review.period_start} – ${review.period_end} · ${t(review.status)}`;
+            `${t(review.kind)} · ${formatDayRange(review.period_start, review.period_end)} · ${t(review.status)}`;
         root.querySelector('[data-review-facts]').textContent =
             `${review.snapshot.activities.length} ${t('completed activities')} · ${t('Facts for this period')}`;
-        root.querySelector('[data-review-period]').textContent =
-            `${review.period_start} – ${review.period_end}`;
+        root.querySelector('[data-review-period]').textContent = formatDayRange(
+            review.period_start,
+            review.period_end,
+        );
         const activities = review.snapshot.activities.filter((item) =>
             ['task', 'checklist', 'habit', 'milestone'].includes(item.source_type),
         );
@@ -131,7 +134,7 @@ export function initReviewsPage(root) {
         }
         for (const task of review.snapshot.overdue_tasks) {
             const item = document.createElement('li');
-            item.textContent = `${task.name} · ${t('Due')} ${task.deadline} · ${t(task.status)}`;
+            item.textContent = `${task.name} · ${t('Due')} ${formatDay(task.deadline)} · ${statusLabel(task.status)}`;
             entries.append(item);
         }
         facts.append(entries);
@@ -157,7 +160,7 @@ export function initReviewsPage(root) {
             button.type = 'button';
             button.className = 'planning-list-item';
             const copy = document.createElement('strong');
-            copy.textContent = `${t(review.kind)} · ${review.period_start}`;
+            copy.textContent = `${t(review.kind)} · ${formatDayRange(review.period_start, review.period_end)}`;
             const status = document.createElement('span');
             status.textContent = drafts.get(review.id)?.dirty
                 ? `${t(review.status)} · ${t('Unsaved changes')}`
@@ -311,7 +314,7 @@ export function initReviewsPage(root) {
         if (!current || pending) return;
         if (
             !window.confirm(
-                `${t('Delete this review?')} ${t(current.kind)} · ${current.period_start}`,
+                `${t('Delete this review?')} ${t(current.kind)} · ${formatDayRange(current.period_start, current.period_end)}`,
             )
         )
             return;

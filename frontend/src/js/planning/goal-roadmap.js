@@ -1,3 +1,4 @@
+import { formatDay, formatPercent } from '../lib/format.js';
 import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
@@ -132,7 +133,7 @@ export function initGoalDetail(root) {
         data.goal = goal;
         find('[data-goal-name]').textContent = goal.name;
         find('[data-goal-meta]').textContent =
-            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')}`;
+            `${statusLabel(goal.status)} · ${formatPercent(goal.progress ?? data.progress)} ${t('progress')}`;
         const headName = map.querySelector('[data-roadmap-goal-name]');
         const headState = map.querySelector('[data-roadmap-goal-state]');
         if (headName) headName.textContent = goal.name;
@@ -142,7 +143,7 @@ export function initGoalDetail(root) {
         );
         find('[data-goal-information-name]').textContent = goal.name;
         find('[data-goal-information-meta]').textContent =
-            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')} · ${t('Importance')} ${goal.importance}/5${goal.deadline ? ` · ${t('Due')} ${goal.deadline}` : ''}`;
+            `${statusLabel(goal.status)} · ${formatPercent(goal.progress ?? data.progress)} ${t('progress')} · ${t('Importance')} ${goal.importance}/5${goal.deadline ? ` · ${t('Due')} ${formatDay(goal.deadline)}` : ''}`;
         find('[data-goal-information-description]').textContent =
             goal.description || t('No description yet. Open Edit goal to add one.');
         for (const [key, value] of [
@@ -153,7 +154,7 @@ export function initGoalDetail(root) {
             find(`[data-goal-information-${key}-row]`).hidden = !value;
         }
         if (headState)
-            headState.textContent = `${goal.progress ?? data.progress ?? 0}% · ${statusLabel(goal.status)}`;
+            headState.textContent = `${formatPercent(goal.progress ?? data.progress)} · ${statusLabel(goal.status)}`;
         requestAnimationFrame(drawConnections);
         if (strategy.receive(strategyValues(goal), goal.version))
             writeForm(strategyForm, strategy.values);
@@ -346,7 +347,7 @@ export function initGoalDetail(root) {
         headName.dataset.roadmapGoalName = '';
         const headState = element(
             'span',
-            `${data.goal.progress}% · ${statusLabel(data.goal.status)}`,
+            `${formatPercent(data.goal.progress)} · ${statusLabel(data.goal.status)}`,
             'roadmap-goal-state',
         );
         headState.dataset.roadmapGoalState = '';

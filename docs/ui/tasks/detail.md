@@ -17,7 +17,7 @@ Edits use a separate DraftBuffer. A save acknowledges only the submitted snapsho
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [task.php · data-task-edit-form](../../../frontend/src/views/planning/task.php#L129) |
-| Browser logic | [planning-page.js · export function initTaskDetail](../../../frontend/src/js/planning/planning-page.js#L948)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1) |
+| Browser logic | [planning-page.js · export function initTaskDetail](../../../frontend/src/js/planning/planning-page.js#L982)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1) |
 | Controller / service / domain | [PlanningService.php · public function update(](../../../backend/src/Application/Planning/PlanningService.php#L163) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [goal-roadmap.test.js · late save acknowledgement](../../../frontend/tests/js/goal-roadmap.test.js#L6)<br>[goal-roadmap.test.js · refresh cannot erase](../../../frontend/tests/js/goal-roadmap.test.js#L20) |
@@ -48,7 +48,7 @@ Overview contains the completion Checklist beside the Task definition (stacked o
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [task.php · data-task-checklist aria-live](../../../frontend/src/views/planning/task.php#L64) |
-| Browser logic | [planning-page.js · data-checklist-form](../../../frontend/src/js/planning/planning-page.js#L1306) |
+| Browser logic | [planning-page.js · data-checklist-form](../../../frontend/src/js/planning/planning-page.js#L1340) |
 | Controller / service / domain | [PlanningService.php · public function createChecklist(](../../../backend/src/Application/Planning/PlanningService.php#L572)<br>[PlanningService.php · public function updateChecklist(](../../../backend/src/Application/Planning/PlanningService.php#L592) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94)<br>[PdoPlanningRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L116) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L135) |
@@ -63,7 +63,7 @@ Working notes and Resources remain only in the dedicated Notes tab; switching ta
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [task.php · data-task-note-form](../../../frontend/src/views/planning/task.php#L98) |
-| Browser logic | [planning-page.js · const noteForm =](../../../frontend/src/js/planning/planning-page.js#L1035)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15)<br>[task-views.js · export function resourceLinks](../../../frontend/src/js/planning/task-views.js#L41) |
+| Browser logic | [planning-page.js · const noteForm =](../../../frontend/src/js/planning/planning-page.js#L1069)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15)<br>[task-views.js · export function resourceLinks](../../../frontend/src/js/planning/task-views.js#L41) |
 | Controller / service / domain | [PlanningService.php · public function saveTaskNote(](../../../backend/src/Application/Planning/PlanningService.php#L666)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
 | Persistence | [PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
 | Relevant tests (not a pass claim) | [note-checkbox-text.test.js · projection preserves](../../../frontend/tests/js/note-checkbox-text.test.js#L15)<br>[note-checkbox-text.test.js · toggling duplicate titles](../../../frontend/tests/js/note-checkbox-text.test.js#L43)<br>[PlanningHttpTest.php · public function test_planning_habit_dashboard_review_and_disabled_ai_http_contracts(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L45) |
@@ -93,7 +93,7 @@ The header offers week selection and an icon-only Today toggle with native hover
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [task.php · data-task-today disabled](../../../frontend/src/views/planning/task.php#L14) |
-| Browser logic | [planning-page.js · root.querySelector('&#91;data-task-today&#93;').addEventListener(](../../../frontend/src/js/planning/planning-page.js#L1378) |
+| Browser logic | [planning-page.js · root.querySelector('&#91;data-task-today&#93;').addEventListener(](../../../frontend/src/js/planning/planning-page.js#L1412) |
 | Controller / service / domain | [DashboardService.php · public function addDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L273)<br>[DashboardService.php · public function removeDailySelection(](../../../backend/src/Application/Dashboard/DashboardService.php#L303) |
 | Persistence | [PdoDashboardRepository.php · public function addDailySelection(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L172) |
 | Coverage limit | Real-browser smoke checked add/remove through the row and detail header on isolated local tasks. |

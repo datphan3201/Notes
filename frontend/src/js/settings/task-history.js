@@ -1,3 +1,4 @@
+import { formatDay, formatMoment } from '../lib/format.js';
 import { get, patch } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { taskInHistory, historyThresholds } from '../planning/task-views.js';
@@ -67,8 +68,8 @@ export function initTaskHistory(root) {
             name.textContent = task.name;
             const facts = document.createElement('small');
             const when = task.completed_at
-                ? `${t('Completed at')} ${new Date(task.completed_at).toLocaleString()}`
-                : `${t('Due')} ${task.deadline}`;
+                ? `${t('Completed at')} ${formatMoment(task.completed_at, { timeZone: window.notesBootstrap?.preferences?.timezone })}`
+                : `${t('Due')} ${formatDay(task.deadline)}`;
             facts.textContent = `${statusLabel(task.status)} · ${when}`;
             copy.append(name, facts);
             if (task.description) {

@@ -30,6 +30,13 @@ import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
 import { lineIcon } from '../lib/line-icons.js';
 import { renderContributions } from './contributions-ui.js';
 import { createTagPicker, loadTags, sameTagIds, tagChips } from './tag-picker.js';
+import {
+    countLabel,
+    formatDay,
+    formatMoment,
+    formatMomentRange,
+    formatPercent,
+} from '../lib/format.js';
 export { initGoalDetail } from './goal-roadmap.js';
 
 export function buildGoalForest(goals) {
@@ -73,7 +80,7 @@ function linkForGoal(goal) {
     miniTrack.append(miniFill);
     const progress = document.createElement('span');
     progress.className = 'goal-tree-progress';
-    progress.textContent = `${goal.progress ?? 0}%`;
+    progress.textContent = formatPercent(goal.progress);
     meta.append(miniTrack, progress);
     link.append(name, meta);
     return link;
@@ -112,7 +119,7 @@ function renderGoalTree(container, areas, goals) {
             : 0;
         const count = document.createElement('span');
         count.className = 'subtle-copy';
-        count.textContent = `${rootsForArea.length} ${t(rootsForArea.length === 1 ? 'goal' : 'goals')} · ${progress}% ${t('average goal progress')}`;
+        count.textContent = `${countLabel(rootsForArea.length, 'goal', 'goals')} · ${formatPercent(progress)} ${t('average goal progress')}`;
         const track = document.createElement('span');
         track.className = 'progress-track';
         const fill = document.createElement('i');
@@ -267,7 +274,7 @@ export function initGoalsPage(root) {
                     !primary.expected_result && !primary.description,
                 );
                 const progress = document.createElement('strong');
-                progress.textContent = `${statusLabel(primary.status)} · ${primary.progress}%`;
+                progress.textContent = `${statusLabel(primary.status)} · ${formatPercent(primary.progress)}`;
                 const track = document.createElement('span');
                 track.className = 'progress-track';
                 const fill = document.createElement('i');
@@ -427,6 +434,31 @@ export function initTasksPage(root) {
         button.addEventListener('click', onClick);
         return button;
     };
+    // Labelled entries of a row's ⋯ menu.
+    const menuItem = (label, symbol, onClick) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'menu-item';
+        button.append(
+            symbol,
+            Object.assign(document.createElement('span'), { textContent: label }),
+        );
+        button.addEventListener('click', onClick);
+        return button;
+    };
+    // One row menu open at a time; it closes on outside clicks, Escape or after choosing an entry.
+    const closeMenus = (except) =>
+        root.querySelectorAll('.task-row-menu[open]').forEach((menu) => {
+            if (menu !== except) menu.open = false;
+        });
+    document.addEventListener('click', (event) => {
+        const menu = event.target.closest?.('.task-row-menu');
+        closeMenus(menu);
+        if (menu && event.target.closest('.menu-item')) menu.open = false;
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenus(null);
+    });
     const mutate = async (button, operation) => {
         button.disabled = true;
         try {
@@ -451,26 +483,23 @@ export function initTasksPage(root) {
         name.textContent = task.name;
         const facts = document.createElement('small');
         const timezone = window.notesBootstrap.preferences.timezone;
-        const format = new Intl.DateTimeFormat(undefined, {
-            timeZone: timezone,
-            dateStyle: 'short',
-            timeStyle: 'short',
-        });
         facts.textContent = [
-            task.status === 'InProgress' ? t('On progress') : statusLabel(task.status),
+            statusLabel(task.status),
             overdue ? t('Overdue') : '',
             task.deadline === today
                 ? t('Due today')
                 : task.deadline
-                  ? `${t('Due')} ${task.deadline}`
+                  ? `${t('Due')} ${formatDay(task.deadline)}`
                   : '',
             dailyIds.has(task.id) ? t('Added for today') : '',
             task.scheduled_start
-                ? `${t('Scheduled')} ${format.format(new Date(task.scheduled_start))}${task.scheduled_end ? ` – ${format.format(new Date(task.scheduled_end))}` : ''}`
+                ? `${t('Scheduled')} ${formatMomentRange(task.scheduled_start, task.scheduled_end, { timeZone: timezone })}`
                 : task.start_date || task.occurrence_date
-                  ? `${t('Scheduled')} ${task.start_date || task.occurrence_date}`
+                  ? `${t('Scheduled')} ${formatDay(task.start_date || task.occurrence_date)}`
                   : '',
-            task.reminder_at ? `${t('Reminder')} ${format.format(new Date(task.reminder_at))}` : '',
+            task.reminder_at
+                ? `${t('Reminder')} ${formatMoment(task.reminder_at, { timeZone: timezone })}`
+                : '',
             task.series_id ? t('Repeats') : '',
             task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
         ]
@@ -497,15 +526,20 @@ export function initTasksPage(root) {
         );
         const actions = document.createElement('div');
         actions.className = 'action-row task-row-actions';
+        // Frequent planning toggles stay inline as icons; everything else lives in one labelled menu.
         const secondary = document.createElement('details');
-        secondary.className = 'task-row-secondary';
+        secondary.className = 'task-row-menu';
         const summary = document.createElement('summary');
-        summary.textContent = t('More options');
+        summary.className = 'icon-button task-row-icon';
+        summary.setAttribute('aria-label', `${t('More options')}: ${task.name}`);
+        summary.title = t('More options');
+        summary.append(lineIcon('more'));
         const secondaryActions = document.createElement('div');
-        secondaryActions.className = 'action-row';
+        secondaryActions.className = 'task-row-menu-panel';
+        secondaryActions.setAttribute('role', 'menu');
         secondary.append(summary, secondaryActions);
         if (!done) {
-            const dateButton = iconButton(t('Due date'), lineIcon('calendar'), (event) =>
+            const dateButton = menuItem(t('Due date'), lineIcon('calendar'), (event) =>
                 openScheduleMenu(event.currentTarget, 'date', {
                     today,
                     value: task.deadline,
@@ -519,7 +553,7 @@ export function initTasksPage(root) {
                 }),
             );
             dateButton.dataset.scheduleOpen = 'date';
-            const reminderButton = iconButton(t('Remind me'), lineIcon('clock'), (event) =>
+            const reminderButton = menuItem(t('Remind me'), lineIcon('clock'), (event) =>
                 openScheduleMenu(event.currentTarget, 'reminder', {
                     today,
                     value: task.reminder_at ? localDateTime(new Date(task.reminder_at)) : null,
@@ -533,7 +567,7 @@ export function initTasksPage(root) {
                 }),
             );
             reminderButton.dataset.scheduleOpen = 'reminder';
-            const repeatButton = iconButton(t('Repeat'), lineIcon('repeat'), (event) =>
+            const repeatButton = menuItem(t('Repeat'), lineIcon('repeat'), (event) =>
                 openScheduleMenu(event.currentTarget, 'repeat', {
                     today,
                     onSelect: (choice) => {
@@ -572,8 +606,7 @@ export function initTasksPage(root) {
             planToday.type = 'button';
             planToday.className = 'icon-button task-row-icon';
             const planLabel = todayIds.has(task.id) ? t('Added for today') : t('Add for today');
-            if (todayIds.has(task.id)) planToday.append(checkMark());
-            else planToday.textContent = '+';
+            planToday.append(lineIcon('sun', { filled: todayIds.has(task.id) }));
             planToday.title = planLabel;
             planToday.setAttribute(
                 'aria-label',
@@ -592,14 +625,13 @@ export function initTasksPage(root) {
             secondaryActions.append(dateButton, reminderButton, repeatButton);
         }
         const edit = document.createElement('a');
-        edit.className = 'button button-quiet';
+        edit.className = 'menu-item';
         edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
-        edit.textContent = t('Edit');
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'button button-quiet';
-        removeButton.textContent = t('Archive');
-        removeButton.addEventListener('click', () => {
+        edit.append(
+            lineIcon('edit'),
+            Object.assign(document.createElement('span'), { textContent: t('Edit') }),
+        );
+        const removeButton = menuItem(t('Archive'), lineIcon('archive'), () => {
             if (
                 !window.confirm(
                     `${t('Archive')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
@@ -612,7 +644,7 @@ export function initTasksPage(root) {
         });
         const important = iconButton(
             `${t('Mark important')}: ${task.name}`,
-            task.importance === 5 ? '★' : '☆',
+            lineIcon('star', { solid: task.importance === 5 }),
             () =>
                 mutate(important, () =>
                     patch(`/api/v1/tasks/${task.id}`, {
@@ -633,7 +665,9 @@ export function initTasksPage(root) {
             );
             actions.append(reopen);
         }
-        actions.append(edit, important, secondary);
+        actions.append(important, secondary);
+        secondaryActions.prepend(edit);
+        removeButton.classList.add('is-danger');
         secondaryActions.append(removeButton);
         article.append(action, copy, actions);
         return article;
@@ -828,7 +862,7 @@ export function initTasksPage(root) {
             return;
         }
         if (parent.value.startsWith('goal:'))
-            output.textContent = `${selected.name} · ${selected.progress}% ${t('goal progress')}`;
+            output.textContent = `${selected.name} · ${formatPercent(selected.progress)} ${t('goal progress')}`;
         else {
             const goal = parentOptions.get(`goal:${selected.goal_id}`);
             output.textContent = `${goal ? `${goal.name} › ` : ''}${selected.name} · ${selected.progress.completed}/${selected.progress.total} ${t('finite tasks completed')}`;
@@ -1096,7 +1130,7 @@ export function initTaskDetail(root) {
             note = noteResponse.payload.data;
             root.querySelector('[data-task-name]').textContent = task.name;
             root.querySelector('[data-task-meta]').textContent =
-                `${statusLabel(task.status)} · ${t('Importance')} ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}`;
+                `${statusLabel(task.status)} · ${t('Importance')} ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${formatDay(task.deadline)}` : ''}`;
             root.querySelector('[data-task-description]').textContent = task.description || '—';
             root.querySelector('[data-task-result]').textContent = task.expected_result || '—';
             root.querySelector('[data-task-criteria]').textContent =

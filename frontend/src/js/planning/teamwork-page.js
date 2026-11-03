@@ -1,3 +1,4 @@
+import { countLabel, formatDay } from '../lib/format.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { repeatRule } from '../lib/calendar.js';
@@ -160,13 +161,13 @@ export function initTeamworkPage(root) {
             element(
                 'small',
                 '',
-                goal.due_date ? `${t('Due')}: ${goal.due_date}` : t('No due date'),
+                goal.due_date ? `${t('Due')} ${formatDay(goal.due_date)}` : t('No due date'),
             ),
             bar,
             element(
                 'small',
                 '',
-                `${percent}% ${t('complete')} · ${goal.progress.total} ${t('tasks')}`,
+                `${percent}% ${t('complete')} · ${countLabel(goal.progress.total, 'task', 'tasks')}`,
             ),
             avatars,
         );
@@ -362,7 +363,7 @@ export function initTeamworkPage(root) {
         taskDetail.querySelector('[data-team-task-detail-meta]').textContent = [
             t(STATUS_LABELS[task.status]),
             task.assignee?.display_name || t('Unassigned'),
-            task.due_date ? `${overdue ? t('Overdue') : t('Due')}: ${task.due_date}` : '',
+            task.due_date ? `${overdue ? t('Overdue') : t('Due')} ${formatDay(task.due_date)}` : '',
         ]
             .filter(Boolean)
             .join(' · ');
@@ -508,7 +509,8 @@ export function initTeamworkPage(root) {
         copy.append(element('strong', '', task.name));
         if (task.description) copy.append(element('p', 'subtle-copy', task.description));
         const meta = [`${t('Assigned')}: ${task.assignee?.display_name || t('Unassigned')}`];
-        if (task.due_date) meta.push(`${overdue ? t('Overdue') : t('Due')}: ${task.due_date}`);
+        if (task.due_date)
+            meta.push(`${overdue ? t('Overdue') : t('Due')} ${formatDay(task.due_date)}`);
         if (task.reminder_at)
             meta.push(
                 `${t('Reminder')}: ${new Date(task.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}`,
@@ -562,7 +564,7 @@ export function initTeamworkPage(root) {
         root.querySelector('[data-team-description]').textContent =
             goal.description || t('No description.');
         root.querySelector('[data-team-due]').textContent = goal.due_date
-            ? `${t('Due')}: ${goal.due_date}`
+            ? `${t('Due')} ${formatDay(goal.due_date)}`
             : t('No due date');
         const percent = completionPercent(goal.progress.done, goal.progress.total);
         root.querySelector('[data-team-progress-bar]').style.width = `${percent}%`;

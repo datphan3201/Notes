@@ -1,3 +1,4 @@
+import { formatDay, formatMomentRange } from '../lib/format.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { checkMark } from '../lib/check-mark.js';
 import { renderEmptyState } from '../lib/empty-state.js';
@@ -111,23 +112,15 @@ export function renderTaskChecklist(
         name.textContent = task.name;
         const meta = document.createElement('small');
         meta.textContent = [
-            task.status === 'InProgress' ? t('On progress') : statusLabel(task.status),
-            task.deadline ? `${t('Due')} ${task.deadline}` : '',
+            statusLabel(task.status),
+            task.deadline ? `${t('Due')} ${formatDay(task.deadline)}` : '',
         ]
             .filter(Boolean)
             .join(' · ');
         if (task.scheduled_start) {
-            const format = new Intl.DateTimeFormat(
-                window.notesBootstrap.preferences.locale === 'vi' ? 'vi-VN' : 'en-US',
-                {
-                    timeZone: timezone,
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                },
-            );
-            meta.textContent += ` · ${t('Scheduled')} ${format.format(new Date(task.scheduled_start))}${task.scheduled_end ? ` – ${format.format(new Date(task.scheduled_end))}` : ''}`;
+            meta.textContent += ` · ${t('Scheduled')} ${formatMomentRange(task.scheduled_start, task.scheduled_end, { timeZone: timezone })}`;
         } else if (task.start_date || task.occurrence_date) {
-            meta.textContent += ` · ${t('Scheduled')} ${task.start_date || task.occurrence_date}`;
+            meta.textContent += ` · ${t('Scheduled')} ${formatDay(task.start_date || task.occurrence_date)}`;
         }
         copy.append(name, meta);
         if (mode === 'today') {

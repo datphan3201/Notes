@@ -18,7 +18,7 @@ The owned roadmap projection separates finite and recurring Tasks, direct Tasks,
 | --- | --- |
 | UI / DOM | [goal.php · data-roadmap-map](../../../frontend/src/views/planning/goal.php#L27) |
 | CSS | [illustrated.css · Illustrated roadmap base](../../../frontend/src/css/illustrated.css#L87) |
-| Browser logic | [goal-roadmap.js · export function initGoalDetail](../../../frontend/src/js/planning/goal-roadmap.js#L29) |
+| Browser logic | [goal-roadmap.js · export function initGoalDetail](../../../frontend/src/js/planning/goal-roadmap.js#L30) |
 | Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L725)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L733) |
 | Persistence | [PdoPlanningRepository.php · public function roadmapRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L403) |
 | Relevant tests (not a pass claim) | [goal-roadmap.test.js · refresh cannot erase](../../../frontend/tests/js/goal-roadmap.test.js#L20)<br>[PlanningCoreTest.php · public function test_roadmap_groups_only_owned_active_work_and_excludes_occurrences_from_finite_p...](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L257) |
@@ -34,7 +34,7 @@ Goal details and strategy have separate drafts within one dialog. Strategy is pl
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-strategy-form](../../../frontend/src/views/planning/goal.php#L140) |
-| Browser logic | [goal-roadmap.js · data-goal-strategy-form](../../../frontend/src/js/planning/goal-roadmap.js#L36)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1) |
+| Browser logic | [goal-roadmap.js · data-goal-strategy-form](../../../frontend/src/js/planning/goal-roadmap.js#L37)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1) |
 | Controller / service / domain | [PlanningService.php · public function update(](../../../backend/src/Application/Planning/PlanningService.php#L163) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_strategy_notes_are_versioned_without_affecting_progress_or_activity(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L234) |
@@ -64,7 +64,7 @@ Empty-container archive and include_contents=true are different operations. The 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-details-form](../../../frontend/src/views/planning/goal.php#L95) |
-| Browser logic | [goal-roadmap.js · await remove(`/api/v1/goals/](../../../frontend/src/js/planning/goal-roadmap.js#L779) |
+| Browser logic | [goal-roadmap.js · await remove(`/api/v1/goals/](../../../frontend/src/js/planning/goal-roadmap.js#L780) |
 | Controller / service / domain | [PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L228)<br>[PlanningService.php · private function archiveGoalContents(](../../../backend/src/Application/Planning/PlanningService.php#L270) |
 | Persistence | [PdoPlanningRepository.php · public function archiveWhere(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L130)<br>[PdoPlanningRepository.php · public function removeMilestoneDependencies(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L146) |
 | Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_goal_and_milestone_can_be_archived_with_everything_inside(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L123) |

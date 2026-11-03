@@ -23,17 +23,69 @@
     justify-content: flex-end;
     flex-wrap: wrap;
 }
-[data-tasks-page] .task-row-secondary {
-    flex-basis: 100%;
-    text-align: right;
+[data-tasks-page] .task-row-actions {
+    flex-wrap: nowrap;
+    gap: 2px;
 }
-[data-tasks-page] .task-row-secondary summary {
+[data-tasks-page] .task-row-actions .task-row-icon {
+    width: 36px;
+    height: 36px;
+}
+/* ⋯ row menu: a labelled popover instead of an inline disclosure. */
+.task-row-menu {
+    position: relative;
+}
+.task-row-menu > summary {
+    list-style: none;
+}
+.task-row-menu > summary::-webkit-details-marker {
+    display: none;
+}
+.task-row-menu[open] > summary {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.task-row-menu-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    display: grid;
+    min-width: 190px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgb(10 20 40 / 18%);
+}
+.menu-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 10px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    font: inherit;
+    font-size: var(--font-size-ui);
+    text-align: left;
+    text-decoration: none;
     cursor: pointer;
+}
+.menu-item:hover,
+.menu-item:focus-visible {
+    background: var(--surface-soft);
+}
+.menu-item .line-icon {
+    width: 17px;
+    height: 17px;
     color: var(--muted);
 }
-[data-tasks-page] .task-row-secondary .action-row {
-    margin-top: 0.5rem;
-    justify-content: flex-end;
+.menu-item.is-danger,
+.menu-item.is-danger .line-icon {
+    color: var(--danger);
 }
 [data-tasks-page] .collection-controls {
     display: grid;
@@ -62,11 +114,9 @@
         grid-column: 2;
         justify-content: flex-start;
     }
-    [data-tasks-page] .task-row-secondary {
-        text-align: left;
-    }
-    [data-tasks-page] .task-row-secondary .action-row {
-        justify-content: flex-start;
+    .task-row-menu-panel {
+        right: auto;
+        left: 0;
     }
     [data-tasks-page] .collection-controls,
     [data-task-detail] .task-detail-grid {
