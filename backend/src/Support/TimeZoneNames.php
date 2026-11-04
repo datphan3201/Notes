@@ -14,6 +14,21 @@ final class TimeZoneNames
      * databases without legacy links only ship Asia/Ho_Chi_Minh. Map such an
      * alias to an equivalent identifier PHP accepts; null means unknown.
      */
+    /**
+     * A zone for a stored or preferred name. Rows and preferences written before alias
+     * normalization may hold names (Asia/Saigon) that this tz database no longer ships.
+     */
+    public static function zone(string $name): DateTimeZone
+    {
+        try {
+            return new DateTimeZone($name);
+        } catch (\Exception $error) {
+            $canonical = self::canonical($name);
+
+            return $canonical === null ? throw $error : new DateTimeZone($canonical);
+        }
+    }
+
     public static function canonical(string $value): ?string
     {
         $identifiers = DateTimeZone::listIdentifiers();

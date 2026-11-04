@@ -131,7 +131,7 @@ final readonly class TaskSeriesService
                 return $this->serialize($current);
             }
             if ($action === 'end' && ($input['archive_future'] ?? false) !== true) {
-                $future = $this->clock->now()->setTimezone(new DateTimeZone((string) $current['timezone']))->format('Y-m-d');
+                $future = $this->clock->now()->setTimezone(TimeZoneNames::zone((string) $current['timezone']))->format('Y-m-d');
                 if ($this->hasFutureNotStarted($userId, $id, $future)) {
                     throw new ValidationException(['archive_future' => ['Confirm that future Tasks which have not started should be archived.']]);
                 }
@@ -151,7 +151,7 @@ final readonly class TaskSeriesService
         $values = $this->validateCreate($input);
         $rule = $this->rule($values);
         $cursor ??= (new DateTimeImmutable((string) $values['start_date']))->modify('-1 day')->format('Y-m-d');
-        $horizon ??= (new DateTimeImmutable('now', new DateTimeZone((string) $values['timezone'])))->modify('+35 days')->format('Y-m-d');
+        $horizon ??= (new DateTimeImmutable('now', TimeZoneNames::zone((string) $values['timezone'])))->modify('+35 days')->format('Y-m-d');
 
         return $this->calculator->dates($rule, $cursor, $horizon);
     }
@@ -188,7 +188,7 @@ final readonly class TaskSeriesService
             if ($series['state'] !== 'Active') {
                 continue;
             }
-            $soon = $this->clock->now()->setTimezone(new DateTimeZone((string) $series['timezone']))->modify('+28 days')->format('Y-m-d');
+            $soon = $this->clock->now()->setTimezone(TimeZoneNames::zone((string) $series['timezone']))->modify('+28 days')->format('Y-m-d');
             if ((string) $series['cursor_date'] >= $soon || ($series['end_date'] !== null && (string) $series['cursor_date'] >= (string) $series['end_date'])) {
                 continue;
             }
@@ -208,7 +208,7 @@ final readonly class TaskSeriesService
             if ($series['state'] !== 'Active') {
                 return 0;
             }
-            $zone = new DateTimeZone((string) $series['timezone']);
+            $zone = TimeZoneNames::zone((string) $series['timezone']);
             $horizon = $this->clock->now()->setTimezone($zone)->modify('+35 days')->format('Y-m-d');
             if ($series['end_date'] !== null && $series['end_date'] < $horizon) {
                 $horizon = (string) $series['end_date'];
@@ -392,7 +392,7 @@ final readonly class TaskSeriesService
 
     private function resumeCursor(array $row): string
     {
-        $yesterday = $this->clock->now()->setTimezone(new DateTimeZone((string) $row['timezone']))->modify('-1 day')->format('Y-m-d');
+        $yesterday = $this->clock->now()->setTimezone(TimeZoneNames::zone((string) $row['timezone']))->modify('-1 day')->format('Y-m-d');
 
         return max((string) $row['cursor_date'], $yesterday);
     }

@@ -690,7 +690,7 @@ final readonly class TeamService
         }
         $rule = TeamTaskRepeat::normalize(json_decode((string) $task['repeat_rule'], true, 8, JSON_THROW_ON_ERROR));
         $timezone = TimeZoneNames::canonical($this->accounts->preferences($userId)['timezone']) ?? 'UTC';
-        $from = $task['due_date'] ?? $this->clock->now()->setTimezone(new DateTimeZone($timezone))->format('Y-m-d');
+        $from = $task['due_date'] ?? $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone))->format('Y-m-d');
         $next = TeamTaskRepeat::next((string) $from, $rule);
         if ($next === null) {
             return;

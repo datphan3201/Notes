@@ -10,6 +10,7 @@ use Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository;
 use Planner\Support\Clock;
 use Planner\Support\Timestamp;
+use Planner\Support\TimeZoneNames;
 
 /**
  * Applies the user's history retention and the administrator's history limit.
@@ -44,7 +45,7 @@ final readonly class TaskHistoryService
         $userId = (int) $preferences['user_id'];
         $this->history->lockOwner($userId);
         $now = $this->clock->now();
-        $today = $now->setTimezone(new DateTimeZone((string) $preferences['timezone']))->setTime(0, 0);
+        $today = $now->setTimezone(TimeZoneNames::zone((string) $preferences['timezone']))->setTime(0, 0);
         $doneCutoff = $now->modify('-'.(int) $preferences['history_completed_hours'].' hours');
         $overdueCutoff = $today->modify('-'.(int) $preferences['history_overdue_days'].' days');
         $retention = $preferences['history_retention_days'] === null ? null : (int) $preferences['history_retention_days'];

@@ -354,8 +354,8 @@ final readonly class HabitService
 
     private function assertDate(string $date, string $timezone): void
     {
-        $value = $this->assertCalendarDate($date, new DateTimeZone($timezone));
-        if ($value > $this->clock->now()->setTimezone(new DateTimeZone($timezone))->setTime(0, 0)) {
+        $value = $this->assertCalendarDate($date, TimeZoneNames::zone($timezone));
+        if ($value > $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone))->setTime(0, 0)) {
             throw new ValidationException(['date' => ['A future date cannot be checked in.']]);
         }
     }

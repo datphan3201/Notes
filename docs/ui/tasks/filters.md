@@ -51,7 +51,7 @@ Membership is the explicit current Monday-week selection set, including historic
 | UI / DOM | [tasks.php · data-task-view="week"](../../../frontend/src/views/planning/tasks.php#L32) |
 | CSS | [illustrated.css · Time-view controls](../../../frontend/src/css/illustrated.css#L322) |
 | Browser logic | [task-views.js · if (view === 'week')](../../../frontend/src/js/planning/task-views.js#L18)<br>[planning-page.js · const render = () =&gt;](../../../frontend/src/js/planning/planning-page.js#L750) |
-| Controller / service / domain | [DashboardService.php · public function dashboard(](../../../backend/src/Application/Dashboard/DashboardService.php#L73) |
+| Controller / service / domain | [DashboardService.php · public function dashboard(](../../../backend/src/Application/Dashboard/DashboardService.php#L74) |
 | Persistence | [PdoDashboardRepository.php · public function selections(](../../../backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php#L117) |
 | Relevant tests (not a pass claim) | [task-views.test.js · scheduled tasks cross UTC](../../../frontend/tests/js/task-views.test.js#L11) |
 | HTTP | `GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`GET /api/v1/dashboard` (`api.dashboard.show`) → [DashboardController::show](../../../backend/src/Http/Controller/DashboardController.php#L18) |
@@ -129,7 +129,7 @@ Under Open tasks, recently Done Tasks appear in a separate, independently paged 
 | UI / DOM | [tasks.php · data-task-completed hidden](../../../frontend/src/views/planning/tasks.php#L104) |
 | CSS | [feedback.css · Completed section](../../../frontend/src/css/feedback.css#L549) |
 | Browser logic | [tasks-collection.js · export function completedInView](../../../frontend/src/js/planning/tasks-collection.js#L28)<br>[task-views.js · export function taskInHistory](../../../frontend/src/js/planning/task-views.js#L68)<br>[task-views.js · export function historyThresholds](../../../frontend/src/js/planning/task-views.js#L61) |
-| Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L29) |
+| Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L30) |
 | Persistence | [PdoTaskHistoryRepository.php · public function historyTasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L32)<br>[PdoTaskHistoryRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L47) |
 | Relevant tests (not a pass claim) | [task-views.test.js · each view count](../../../frontend/tests/js/task-views.test.js#L59)<br>[task-views.test.js · history uses elapsed](../../../frontend/tests/js/task-views.test.js#L115)<br>[tasks-collection.test.js · test('Completed follows Today/Week/Next/All membership instead of leaking global completions'](../../../frontend/tests/js/tasks-collection.test.js#L12) |
 | HTTP | `GET /settings/history` (`settings.history`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L170) |

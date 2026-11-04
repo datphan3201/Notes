@@ -17,6 +17,7 @@ use Planner\Infrastructure\Persistence\Pdo\Dashboard\PdoDashboardRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Support\Clock;
 use Planner\Support\Timestamp;
+use Planner\Support\TimeZoneNames;
 
 final readonly class DashboardService
 {
@@ -40,7 +41,7 @@ final readonly class DashboardService
     public function yearActivity(int $userId, mixed $year): array
     {
         $timezone = $this->planning->ownerTimezone($userId);
-        $now = $this->clock->now()->setTimezone(new DateTimeZone($timezone));
+        $now = $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone));
         $currentYear = (int) $now->format('Y');
         $year ??= (string) $currentYear;
         if (! is_string($year) || preg_match('/^\d{4}$/D', $year) !== 1 || (int) $year > $currentYear || (int) $year < 2000) {
@@ -73,7 +74,7 @@ final readonly class DashboardService
     public function dashboard(int $userId, ?string $month): array
     {
         $timezone = $this->planning->ownerTimezone($userId);
-        $zone = new DateTimeZone($timezone);
+        $zone = TimeZoneNames::zone($timezone);
         $now = $this->clock->now()->setTimezone($zone);
         $month ??= $now->format('Y-m');
         if (preg_match('/^\d{4}-(?:0[1-9]|1[0-2])$/D', $month) !== 1) {
@@ -275,7 +276,7 @@ final readonly class DashboardService
     /** @return list<array<string, mixed>> */
     public function dailySelections(int $userId): array
     {
-        $today = $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
+        $today = $this->clock->now()->setTimezone(TimeZoneNames::zone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
 
         return $this->serializeRows($this->dashboard->dailySelections($userId, $today));
     }
@@ -298,7 +299,7 @@ final readonly class DashboardService
                 throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
             }
             $now = $this->clock->now();
-            $local = $now->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)));
+            $local = $now->setTimezone(TimeZoneNames::zone($this->planning->ownerTimezone($userId)));
             $date = $local->format('Y-m-d');
             $week = $local->modify('monday this week')->format('Y-m-d');
             // Daily and weekly membership are one atomic intent, not Task date/status edits.
@@ -318,14 +319,14 @@ final readonly class DashboardService
             if ($this->planning->find('task', $userId, $id, true) === null) {
                 throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
             }
-            $date = $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
+            $date = $this->clock->now()->setTimezone(TimeZoneNames::zone($this->planning->ownerTimezone($userId)))->format('Y-m-d');
             $this->dashboard->removeDailySelection($userId, $date, $id);
         });
     }
 
     private function weekStart(int $userId): string
     {
-        return $this->clock->now()->setTimezone(new DateTimeZone($this->planning->ownerTimezone($userId)))->modify('monday this week')->format('Y-m-d');
+        return $this->clock->now()->setTimezone(TimeZoneNames::zone($this->planning->ownerTimezone($userId)))->modify('monday this week')->format('Y-m-d');
     }
     private function assertType(string $type): void
     {

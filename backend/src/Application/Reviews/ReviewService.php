@@ -16,6 +16,7 @@ use Planner\Support\Clock;
 use Planner\Support\TextNormalizer;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
+use Planner\Support\TimeZoneNames;
 
 final readonly class ReviewService
 {
@@ -43,7 +44,7 @@ final readonly class ReviewService
         $kind = $input['kind'] ?? null;
         if (!in_array($kind, ['Daily', 'Weekly', 'Monthly'], true)) throw new ValidationException(['kind' => ['The Review type is invalid.']]);
         $timezone = $this->planning->ownerTimezone($userId);
-        $date = $this->date($input['date'] ?? $this->clock->now()->setTimezone(new DateTimeZone($timezone))->format('Y-m-d'));
+        $date = $this->date($input['date'] ?? $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone))->format('Y-m-d'));
         [$start, $end] = $this->period($kind, $date, $timezone);
         try {
             return $this->transactions->run(function () use ($userId, $kind, $timezone, $start, $end): array {
@@ -125,7 +126,7 @@ final readonly class ReviewService
     }
     private function period(string $kind, string $date, string $timezone): array
     {
-        $value = new DateTimeImmutable($date, new DateTimeZone($timezone));
+        $value = new DateTimeImmutable($date, TimeZoneNames::zone($timezone));
         return match ($kind) {
             'Daily' => [$date, $date], 'Weekly' => [$value->modify('monday this week')->format('Y-m-d'), $value->modify('sunday this week')->format('Y-m-d')], 'Monthly' => [$value->modify('first day of this month')->format('Y-m-d'), $value->modify('last day of this month')->format('Y-m-d')]
         };

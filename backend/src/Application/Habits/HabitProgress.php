@@ -9,6 +9,7 @@ use DateTimeZone;
 use Planner\Domain\Habits\HabitStreak;
 use Planner\Infrastructure\Persistence\Pdo\Habits\PdoHabitRepository;
 use Planner\Support\Clock;
+use Planner\Support\TimeZoneNames;
 
 /** Per-Habit streak and Rest Day facts, computed in each Habit's own time zone. */
 final readonly class HabitProgress
@@ -23,7 +24,7 @@ final readonly class HabitProgress
     /** @param array<string, mixed> $habit */
     public function today(array $habit): string
     {
-        return $this->clock->now()->setTimezone(new DateTimeZone((string) $habit['timezone']))->format('Y-m-d');
+        return $this->clock->now()->setTimezone(TimeZoneNames::zone((string) $habit['timezone']))->format('Y-m-d');
     }
 
     /**
@@ -34,7 +35,7 @@ final readonly class HabitProgress
     public function since(array $habit, array $done): string
     {
         $created = (new DateTimeImmutable((string) $habit['created_at'], new DateTimeZone('UTC')))
-            ->setTimezone(new DateTimeZone((string) $habit['timezone']))->format('Y-m-d');
+            ->setTimezone(TimeZoneNames::zone((string) $habit['timezone']))->format('Y-m-d');
 
         return $done === [] ? $created : min($created, min(array_map('strval', array_keys($done))));
     }
