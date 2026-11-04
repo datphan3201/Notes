@@ -242,6 +242,17 @@ final readonly class DashboardService
     }
 
     /** @param array<string, mixed> $input @return array{goal_id:?string} */
+    /**
+     * The user's chosen focus Goal: the Dashboard roadmap and the Goals page "Main goal" are the
+     * same explicit choice. Archived or unset selections read as null (no automatic fallback).
+     *
+     * @return array{goal_id:?string}
+     */
+    public function roadmap(int $userId): array
+    {
+        return ['goal_id' => $this->dashboard->roadmapGoalId($userId)];
+    }
+
     public function updateRoadmap(int $userId, array $input): array
     {
         $this->keys($input, ['goal_id']);

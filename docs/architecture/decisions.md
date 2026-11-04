@@ -16,7 +16,7 @@
 | Area / Goal | Configurable Areas and arbitrary-depth, single-parent Goal hierarchy |
 | Milestone | Goal checkpoint; prerequisites are a separate acyclic relation |
 | Task | Optional one primary Goal/Milestone, or Inbox; plain-text criteria, dates/schedule, optional estimate, independent Checklist and working Note |
-| Dashboard roadmap | Explicit account-level Goal selection, shown below the header; no automatic highest-importance fallback. Archived/cleared/unset selections invite a new choice. |
+| Dashboard roadmap / Main goal | One explicit account-level focus Goal, shown as the Dashboard roadmap and as the Goals page Main goal and changeable from both; no automatic highest-importance fallback. Archived/cleared/unset selections invite a new choice. |
 | Daily/weekly plan | Explicit daily selection also selects the current Monday week, without changing Task dates/status. Today includes date/schedule matches; manual choices do not carry forward automatically. Dashboard Today and This week are separate tabs with the same layout (insight cards above one full-width checklist); Today never shows week content, and Habits can be checked in from Today. Overdue reminders stop at History boundaries. |
 | Progress | Finite primary children only; exclude Habits, contributions, occurrences and Tasks already represented through Milestones |
 | Contributions | Many-to-many related work; no movement, progress weight or prerequisite meaning |

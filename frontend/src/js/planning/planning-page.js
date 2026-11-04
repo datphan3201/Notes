@@ -70,7 +70,7 @@ function linkForGoal(goal) {
     if (goal.deadline) {
         const due = document.createElement('small');
         due.className = 'goal-tree-deadline';
-        due.textContent = goal.deadline;
+        due.textContent = formatDay(goal.deadline);
         meta.append(due);
     }
     const miniTrack = document.createElement('span');
@@ -173,11 +173,91 @@ export function initGoalsPage(root) {
     let renamingArea = false;
     guardWorkspaceLeave(() => areaDrafts.size > 0 || renamingArea);
 
+    // "Main goal" is the user's explicit focus Goal, shared with the Dashboard roadmap
+    // (PATCH /api/v1/dashboard/roadmap): no importance-based guess, and changeable right here.
+    const renderMainGoal = (goals, focusId) => {
+        const main = root.querySelector('[data-main-goal]');
+        main.replaceChildren();
+        const candidates = goals.filter(
+            (goal) => goal.status !== 'Completed' || goal.id === focusId,
+        );
+        if (!candidates.length) return;
+        const byId = new Map(goals.map((goal) => [goal.id, goal]));
+        const primary = byId.get(focusId) || null;
+        const card = document.createElement('div');
+        card.className = 'main-goal-card scene-card';
+        card.append(referenceDecoration('summit'));
+        const label = document.createElement('span');
+        label.className = 'context-chip';
+        label.textContent = `★ ${t('Main goal')}`;
+        const picker = document.createElement('span');
+        picker.className = 'roadmap-title-picker main-goal-picker';
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', t('Choose your main goal'));
+        select.add(new Option(t('Choose your main goal'), ''));
+        for (const goal of candidates
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))) {
+            const parent = byId.get(goal.parent_goal_id);
+            select.add(new Option(`${parent ? `${parent.name} › ` : ''}${goal.name}`, goal.id));
+        }
+        select.value = primary ? primary.id : '';
+        select.addEventListener('change', async () => {
+            select.disabled = true;
+            try {
+                const saved = (
+                    await patch('/api/v1/dashboard/roadmap', { goal_id: select.value || null })
+                ).payload.data.goal_id;
+                renderMainGoal(goals, saved);
+            } catch (error) {
+                showError(root, error);
+                select.value = primary ? primary.id : '';
+                select.disabled = false;
+            }
+        });
+        picker.append(select);
+        const description = document.createElement('p');
+        card.append(label, picker, description);
+        if (!primary) {
+            description.className = 'subtle-copy';
+            description.textContent = t(
+                'Pick the goal you are focusing on. It also becomes the roadmap on your Dashboard.',
+            );
+            main.append(card);
+            return;
+        }
+        // Only the Goal's own words are shown; an empty Goal gets a prompt.
+        description.textContent =
+            primary.expected_result ||
+            primary.description ||
+            t('Open this goal to describe the outcome you want.');
+        description.classList.toggle(
+            'subtle-copy',
+            !primary.expected_result && !primary.description,
+        );
+        const footer = document.createElement('div');
+        footer.className = 'main-goal-footer';
+        const progress = document.createElement('strong');
+        progress.textContent = `${statusLabel(primary.status)} · ${formatPercent(primary.progress)}`;
+        const track = document.createElement('span');
+        track.className = 'progress-track';
+        const fill = document.createElement('i');
+        fill.style.setProperty('--progress', `${primary.progress}%`);
+        track.append(fill);
+        const open = document.createElement('a');
+        open.className = 'section-link';
+        open.href = `/goals/${encodeURIComponent(primary.id)}`;
+        open.textContent = `${t('Open roadmap')} →`;
+        footer.append(progress, track, open);
+        card.append(footer);
+        main.append(card);
+    };
     const load = async () => {
         try {
-            const [areaResponse, goalResponse] = await Promise.all([
+            const [areaResponse, goalResponse, focusResponse] = await Promise.all([
                 get('/api/v1/areas'),
                 get('/api/v1/goals'),
+                get('/api/v1/dashboard/roadmap'),
             ]);
             areas = areaResponse.payload.data;
             const selectedArea = areaSelect.value;
@@ -249,41 +329,7 @@ export function initGoalsPage(root) {
             if (!hadDraft) creationState(form).markSaved();
             const goals = goalResponse.payload.data;
             renderGoalTree(tree, areas, goals);
-            const main = root.querySelector('[data-main-goal]');
-            main.replaceChildren();
-            const primary = goals
-                .filter((goal) => !goal.parent_goal_id && goal.status !== 'Completed')
-                .sort((a, b) => b.importance - a.importance)[0];
-            if (primary) {
-                const card = document.createElement('a');
-                card.className = 'main-goal-card scene-card';
-                card.href = `/goals/${primary.id}`;
-                card.append(referenceDecoration('summit'));
-                const label = document.createElement('span');
-                label.className = 'context-chip';
-                label.textContent = `★ ${t('Main goal')}`;
-                const name = document.createElement('h2');
-                name.textContent = primary.name;
-                const description = document.createElement('p');
-                // Only the Goal's own words are shown; an empty Goal gets a prompt.
-                description.textContent =
-                    primary.expected_result ||
-                    primary.description ||
-                    t('Open this goal to describe the outcome you want.');
-                description.classList.toggle(
-                    'subtle-copy',
-                    !primary.expected_result && !primary.description,
-                );
-                const progress = document.createElement('strong');
-                progress.textContent = `${statusLabel(primary.status)} · ${formatPercent(primary.progress)}`;
-                const track = document.createElement('span');
-                track.className = 'progress-track';
-                const fill = document.createElement('i');
-                fill.style.setProperty('--progress', `${primary.progress}%`);
-                track.append(fill);
-                card.append(label, name, description, progress, track);
-                main.append(card);
-            }
+            renderMainGoal(goals, focusResponse.payload.data.goal_id);
             const timeline = root.querySelector('[data-goal-timeline]');
             timeline.replaceChildren();
             for (const goal of goals
@@ -298,7 +344,8 @@ export function initGoalsPage(root) {
                 dot.className = 'goal-timeline-dot';
                 dot.setAttribute('aria-hidden', 'true');
                 const date = document.createElement('time');
-                date.textContent = goal.deadline || t('No deadline');
+                if (goal.deadline) date.dateTime = goal.deadline;
+                date.textContent = goal.deadline ? formatDay(goal.deadline) : t('No deadline');
                 if (goal.deadline) date.dateTime = goal.deadline;
                 row.append(dot, date, linkForGoal(goal));
                 timeline.append(row);

@@ -54,6 +54,12 @@ final readonly class DashboardController
         $this->dashboard->removeDailySelection($this->userId(), $parameters['id']);
         return new Response(204);
     }
+    /** GET /api/v1/dashboard/roadmap */
+    public function roadmap(Request $request, array $parameters = []): Response
+    {
+        return Response::json(['data' => $this->dashboard->roadmap($this->userId())]);
+    }
+
     public function updateRoadmap(Request $request, array $parameters = []): Response
     {
         return Response::json(['data' => $this->dashboard->updateRoadmap($this->userId(), $request->input())]);

@@ -136,10 +136,13 @@ body:has(.workspace-dialog:modal) {
 .goal-area-group > h3 {
     margin-top: 0;
 }
+/* The expand caret lives in a gutter left of the row, so a Goal with sub-Goals lines up with its
+   siblings; only real children are indented. */
 .goal-tree details > summary {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-left: -22px;
     cursor: pointer;
 }
 .goal-tree details > summary .planning-item-link {
@@ -147,7 +150,9 @@ body:has(.workspace-dialog:modal) {
 }
 .goal-tree details > summary::before {
     content: '›';
+    flex: 0 0 12px;
     color: var(--muted);
+    text-align: center;
 }
 .goal-tree details[open] > summary::before {
     content: '⌄';

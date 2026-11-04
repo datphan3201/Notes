@@ -232,6 +232,9 @@ final class PlanningHttpTest extends TestCase
         self::assertSame(200, $response->status);
         self::assertSame(['goal_id' => $goal['id']], $this->json($response)['data']);
         self::assertSame($goal['id'], $dashboard()['roadmap_goal_id']);
+        // The light read used by the Goals page "Main goal" agrees with the Dashboard.
+        self::assertSame(['goal_id' => $goal['id']], $this->json($this->request('GET', $path, cookie: $cookie))['data']);
+        self::assertSame(401, $this->request('GET', $path)->status);
         self::assertSame($goal['version'], $this->json($this->request('GET', '/api/v1/goals/'.$goal['id'], cookie: $cookie))['data']['version']);
         $other = $this->runtime['account_repository']->insertUser('roadmap-other@example.test', 'Other', password_hash('long test password', PASSWORD_BCRYPT), '2026-11-02 00:00:00.000000');
         $area = $this->runtime['planning_service']->create('area', $other->id, ['name' => 'Private']);

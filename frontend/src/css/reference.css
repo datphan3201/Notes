@@ -1311,3 +1311,38 @@ body:not(:has(.settings-page)) .account-nav,
         height: 86px;
     }
 }
+/* Goals page Main goal: the focus picker is the card title, as on the Dashboard roadmap card. */
+.main-goal-card > .context-chip {
+    display: block;
+    width: fit-content;
+}
+.main-goal-card .main-goal-picker {
+    display: flex;
+    width: fit-content;
+    margin: 0 0 8px -10px;
+}
+.main-goal-card .main-goal-picker select {
+    font-size: 1.5rem;
+}
+.main-goal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: center;
+}
+.main-goal-footer .section-link {
+    margin-left: auto;
+}
+@media (max-width: 600px) {
+    /* Header buttons wrap as whole buttons, never mid-label. */
+    .scene-header :is(.action-row, .workspace-header-actions),
+    [data-goals-page] .workspace-header > .action-row {
+        flex-wrap: wrap;
+    }
+    .scene-header :is(.action-row, .workspace-header-actions) .button {
+        white-space: nowrap;
+    }
+    .main-goal-card .main-goal-picker select {
+        font-size: 1.2rem;
+    }
+}

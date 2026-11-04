@@ -25,15 +25,15 @@ Accounts start with localized placeholder Areas. Rename/reorder uses owner/versi
 
 **Trace ID:** `goals.collection`
 
-Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.
+Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it: expand carets sit in a gutter so sibling Goals stay aligned and only sub-Goals are indented; deadlines read as localized dates. The Main goal card is the account's explicit focus Goal, the same choice as the Dashboard roadmap; its title is a picker that changes both, and with no choice it invites one instead of guessing by importance. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.
 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goals.php · data-goal-tree](../../../frontend/src/views/planning/goals.php#L31) |
-| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L166) |
+| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L166)<br>[planning-page.js · const renderMainGoal = (goals, focusId) =&gt;](../../../frontend/src/js/planning/planning-page.js#L178) |
 | Controller / service / domain | [PlanningService.php · public function moveGoal(](../../../backend/src/Application/Planning/PlanningService.php#L311)<br>[GraphGuard.php · public function wouldCycle(](../../../backend/src/Domain/Planning/GraphGuard.php#L14) |
 | Persistence | [PdoPlanningRepository.php · public function goalHierarchyEdges(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L170)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningDomainTest.php · public function test_graph_guard_handles_deep_graphs_without_recursion(](../../../backend/tests/Plain/Unit/PlanningDomainTest.php#L14) |
-| HTTP | `GET /api/v1/goals` (`api.goals.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`POST /api/v1/goals` (`api.goals.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/goals/{id}/move` (`api.goals.move`) → [PlanningController::moveGoal](../../../backend/src/Http/Controller/PlanningController.php#L76)<br>`GET /goals/{id}` (`planning.goal`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L185) |
+| HTTP | `GET /api/v1/goals` (`api.goals.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23)<br>`POST /api/v1/goals` (`api.goals.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/goals/{id}/move` (`api.goals.move`) → [PlanningController::moveGoal](../../../backend/src/Http/Controller/PlanningController.php#L76)<br>`GET /goals/{id}` (`planning.goal`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L185)<br>`GET /api/v1/dashboard/roadmap` (`api.dashboard.roadmap.show`) → [DashboardController::roadmap](../../../backend/src/Http/Controller/DashboardController.php#L58)<br>`PATCH /api/v1/dashboard/roadmap` (`api.dashboard.roadmap.update`) → [DashboardController::updateRoadmap](../../../backend/src/Http/Controller/DashboardController.php#L63) |
 
 <!-- END GENERATED TRACE -->

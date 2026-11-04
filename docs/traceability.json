@@ -1408,7 +1408,7 @@
         {
           "id": "goals.collection",
           "label": "Goal tree, timeline and main Goal",
-          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
+          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it: expand carets sit in a gutter so sibling Goals stay aligned and only sub-Goals are indented; deadlines read as localized dates. The Main goal card is the account's explicit focus Goal, the same choice as the Dashboard roadmap; its title is a picker that changes both, and with no choice it invites one instead of guessing by importance. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1419,6 +1419,10 @@
             {
               "path": "frontend/src/js/planning/planning-page.js",
               "symbol": "export function initGoalsPage"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const renderMainGoal = (goals, focusId) =>"
             }
           ],
           "server": [
@@ -1451,7 +1455,9 @@
             "api.goals.index",
             "api.goals.store",
             "api.goals.move",
-            "planning.goal"
+            "planning.goal",
+            "api.dashboard.roadmap.show",
+            "api.dashboard.roadmap.update"
           ]
         }
       ]
@@ -2318,7 +2324,7 @@
         {
           "id": "dashboard.roadmap",
           "label": "Roadmap below the header and account selection",
-          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. The connector after each node fills green in proportion to that Milestone's own progress (Completed is 100%, otherwise finished Tasks over its Tasks); a node is solid when complete and outlined green when partly done. Progress is a factual Task ratio, not a prediction. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice.",
+          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. The connector after each node fills green in proportion to that Milestone's own progress (Completed is 100%, otherwise finished Tasks over its Tasks); a node is solid when complete and outlined green when partly done. Progress is a factual Task ratio, not a prediction. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice. The same selection is the Goals page Main goal (GET /api/v1/dashboard/roadmap reads it).",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -5682,6 +5688,7 @@
     "api.notes.link": "docs/ui/notes/README.md",
     "api.goals.notes": "docs/ui/notes/README.md",
     "api.tasks.notes": "docs/ui/notes/README.md",
-    "api.team-tasks.assigned": "docs/ui/dashboard/README.md"
+    "api.team-tasks.assigned": "docs/ui/dashboard/README.md",
+    "api.dashboard.roadmap.show": "docs/ui/dashboard/README.md"
   }
 }

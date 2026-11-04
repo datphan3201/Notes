@@ -45,7 +45,7 @@
     list-style: none;
 }
 .goal-tree {
-    padding-left: 0;
+    padding-left: 22px;
 }
 .planning-item-link,
 .planning-list-item {
@@ -917,8 +917,9 @@
     .inline-form input {
         flex-basis: 140px;
     }
+    /* Keeps room for the caret gutter (see .goal-tree details > summary). */
     .goal-tree ul {
-        padding-left: 12px;
+        padding-left: 22px;
     }
 }
 

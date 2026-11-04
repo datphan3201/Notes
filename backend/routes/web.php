@@ -248,6 +248,7 @@ return static function (
         new Route(['PATCH'], '/api/v1/task-series/{id}', 'api.task-series.update', $handler([$series, 'update']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['POST'], '/api/v1/task-series/{id}/{action}', 'api.task-series.transition', $handler([$series, 'transition']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/dashboard', 'api.dashboard.show', $handler([$dashboard, 'show']), auth: true),
+        new Route(['GET'], '/api/v1/dashboard/roadmap', 'api.dashboard.roadmap.show', $handler([$dashboard, 'roadmap']), auth: true),
         new Route(['PATCH'], '/api/v1/dashboard/roadmap', 'api.dashboard.roadmap.update', $handler([$dashboard, 'updateRoadmap']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/daily-selections/task', 'api.daily-selections.index', $handler([$dashboard, 'dailySelections']), auth: true),
         new Route(['POST'], '/api/v1/daily-selections/task', 'api.daily-selections.store', $handler([$dashboard, 'addDailySelection']), auth: true, csrf: true, rateLimit: 'mutations'),
