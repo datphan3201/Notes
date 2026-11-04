@@ -95,6 +95,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/goals/{id}` | `planning.goal` | yes | no | — | [roadmap.md](../ui/goals/roadmap.md) |
 | GET | `/tasks` | `planning.tasks` | yes | no | — | [README.md](../ui/tasks/README.md) |
 | GET | `/tasks/{id}` | `planning.task` | yes | no | — | [detail.md](../ui/tasks/detail.md) |
+| GET | `/calendar` | `planning.calendar` | yes | no | — | [README.md](../ui/calendar/README.md) |
 | GET | `/habits` | `planning.habits` | yes | no | — | [README.md](../ui/habits/README.md) |
 | GET | `/dashboard` | `planning.dashboard` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | GET | `/reviews` | `planning.reviews` | yes | no | — | [README.md](../ui/reviews/README.md) |

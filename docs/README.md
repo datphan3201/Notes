@@ -15,6 +15,7 @@ Start with the URL or visible label, not a historical implementation phase. Ever
 | `/tasks` | New task, due/reminder/repeat | [Task capture](ui/tasks/capture.md) |
 | `/tasks` | Repeating, Pause/Resume/End | [TaskSeries](ui/tasks/repeating.md) |
 | `/tasks/{id}` | Edit, Checklist, working note, Related | [Task details](ui/tasks/detail.md) |
+| `/calendar` | Month/week dates, drag to reschedule, Unscheduled | [Calendar](ui/calendar/README.md) |
 | `/habits` | Check-ins, streaks, missed/rest dates | [Habits](ui/habits/README.md) |
 | `/reviews` | Daily/Weekly/Monthly collection and editor | [Reviews](ui/reviews/README.md) |
 | `/teamwork` | Team Goals, members, assignments, chat | [Teamwork](ui/teamwork/README.md) |

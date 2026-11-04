@@ -12,8 +12,8 @@ export const walkthroughSteps = [
         },
         instructions: [
             {
-                en: 'The sidebar opens Dashboard, Goals, Tasks, Habits, Notes, Reviews and Teamwork. On a small screen, open the menu button first.',
-                vi: 'Thanh bên mở Dashboard, Mục tiêu, Công việc, Thói quen, Ghi chú, Nhìn lại và Làm việc nhóm. Trên màn hình nhỏ, hãy mở nút menu trước.',
+                en: 'The sidebar opens Dashboard, Goals, Tasks, Calendar, Habits, Notes, Reviews and Teamwork. On a small screen, open the menu button first.',
+                vi: 'Thanh bên mở Dashboard, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú, Nhìn lại và Làm việc nhóm. Trên màn hình nhỏ, hãy mở nút menu trước.',
             },
             {
                 en: 'The bell shows invitations and due reminders. The ? button opens this guide at any time.',
@@ -229,6 +229,30 @@ export const walkthroughSteps = [
             {
                 en: 'Tasks → Repeating lists every series. Pause, Resume or End it there.',
                 vi: 'Công việc → Lặp lại liệt kê mọi chuỗi. Tạm dừng, Tiếp tục hoặc Kết thúc tại đó.',
+            },
+        ],
+    },
+    {
+        id: 'calendar',
+        theme: 'mountain',
+        group: { en: 'Calendar', vi: 'Lịch' },
+        title: { en: 'Plan on the calendar', vi: 'Lên kế hoạch trên lịch' },
+        intro: {
+            en: 'See every Task date and every Milestone and Goal deadline by month or week.',
+            vi: 'Xem mọi ngày của công việc và mọi hạn chót của cột mốc, mục tiêu theo tháng hoặc tuần.',
+        },
+        instructions: [
+            {
+                en: 'Drag an item to another day. With the keyboard, focus it and press Alt with an arrow key; on a phone, use the calendar button beside it in the day list.',
+                vi: 'Kéo một mục sang ngày khác. Với bàn phím, chọn mục đó rồi nhấn Alt cùng phím mũi tên; trên điện thoại, dùng nút lịch bên cạnh mục trong danh sách của ngày.',
+            },
+            {
+                en: 'Moving a day moves every date of that item on it; a scheduled block keeps its times.',
+                vi: 'Dời một ngày sẽ dời mọi mốc của mục đó trong ngày ấy; khối giờ đã lên lịch giữ nguyên giờ.',
+            },
+            {
+                en: 'Double-click a day, or use Add task, to create a Task due that day. Drag a Task from Unscheduled to give it a due date.',
+                vi: 'Nhấp đúp vào một ngày, hoặc dùng Thêm công việc, để tạo công việc có hạn ngày đó. Kéo công việc từ Chưa có lịch để đặt hạn.',
             },
         ],
     },

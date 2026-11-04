@@ -48,6 +48,9 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `dashboard.overdue.reminder` | [Overdue reminder and encouragement](../ui/dashboard/README.md#overdue-reminder-and-encouragement) | /dashboard — Today, This week and Activity |
 | `dashboard.roadmap` | [Roadmap below the header and account selection](../ui/dashboard/README.md#roadmap-below-the-header-and-account-selection) | /dashboard — Today, This week and Activity |
 | `dashboard.team` | [Team tasks assigned to you](../ui/dashboard/README.md#team-tasks-assigned-to-you) | /dashboard — Today, This week and Activity |
+| `calendar.grid` | [Month and week grid](../ui/calendar/README.md#month-and-week-grid) | /calendar — Calendar of planning dates |
+| `calendar.move` | [Move by drag, keyboard or Move to…](../ui/calendar/README.md#move-by-drag-keyboard-or-move-to) | /calendar — Calendar of planning dates |
+| `calendar.capture` | [Selected day, New task and Unscheduled](../ui/calendar/README.md#selected-day-new-task-and-unscheduled) | /calendar — Calendar of planning dates |
 | `habits.collection` | [Habit cards and New/Edit dialog](../ui/habits/README.md#habit-cards-and-newedit-dialog) | /habits — Habits, streaks and Rest Days |
 | `habits.checkins` | [Check-in, undo and streak](../ui/habits/README.md#check-in-undo-and-streak) | /habits — Habits, streaks and Rest Days |
 | `habits.rest` | [More options and Rest Day window](../ui/habits/README.md#more-options-and-rest-day-window) | /habits — Habits, streaks and Rest Days |

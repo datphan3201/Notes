@@ -2523,6 +2523,175 @@
       ]
     },
     {
+      "document": "docs/ui/calendar/README.md",
+      "title": "/calendar — Calendar of planning dates",
+      "components": [
+        {
+          "id": "calendar.grid",
+          "label": "Month and week grid",
+          "behavior": "Month (Monday-first weeks, no trailing empty week) and Week views with previous/next, Today and a Goal filter (All goals, one Goal, or Inbox). Each day lists Goal and Milestone deadlines first, then timed blocks by start time, then other Task dates; month cells show three items and +N more, which selects the day. Overdue due dates and deadlines are red; completed items are faded and struck through. Below 600px the month shows one dot per item and the selected day's list carries the detail; a week reads as a list of days. The view and date are kept in the address (view, date) and the view is remembered per browser.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/calendar.php",
+              "symbol": "data-calendar-grid"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/calendar-page.js",
+              "symbol": "export function initCalendarPage("
+            },
+            {
+              "path": "frontend/src/js/planning/calendar-model.js",
+              "symbol": "export function calendarEntries("
+            },
+            {
+              "path": "frontend/src/js/planning/calendar-model.js",
+              "symbol": "export function monthWeeks("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function list(string $type, int $userId): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function list(string $type, int $userId, bool $includeArchived = false): array"
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/calendar-model.test.js",
+              "symbol": "test('weeks start on Monday and a month never ends with an empty week'"
+            },
+            {
+              "path": "frontend/tests/js/calendar-model.test.js",
+              "symbol": "test('a Task appears once per day, with the most specific date kind'"
+            },
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_changed_pages_render_their_new_controls("
+            }
+          ],
+          "routes": [
+            "planning.calendar",
+            "api.tasks.index",
+            "api.milestones.index",
+            "api.goals.index"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/calendar.css",
+              "symbol": "/* Calendar: month/week grid of planning dates beside the selected day and the Unscheduled tray. */",
+              "label": "Calendar layout"
+            }
+          ]
+        },
+        {
+          "id": "calendar.move",
+          "label": "Move by drag, keyboard or Move to…",
+          "behavior": "An item moves by drag and drop onto a day or the selected-day panel, by Alt with an arrow key (one day left/right, one week up/down; focus follows the item), or with Move to… beside it in the day list, which opens the native date picker (the touch path). Each move sends one PATCH with the item's base_version and only the dates the move rule changes (see Move rule), then reloads; a stale version or invalid date range shows the server's message and the reloaded state. Moves are announced to screen readers.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/calendar.php",
+              "symbol": "data-calendar-day-list"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/calendar-model.js",
+              "symbol": "export function moveChanges("
+            },
+            {
+              "path": "frontend/src/js/planning/calendar-model.js",
+              "symbol": "export function shiftInstant("
+            },
+            {
+              "path": "frontend/src/js/planning/calendar-page.js",
+              "symbol": "async function move("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function update(string $type, int $userId, string $id, array $input): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/calendar-model.test.js",
+              "symbol": "test('moving shifts every date on the source day and keeps scheduled clock times'"
+            },
+            {
+              "path": "frontend/tests/js/calendar-model.test.js",
+              "symbol": "test('daylight saving never moves the wall-clock time of a scheduled block'"
+            }
+          ],
+          "routes": [
+            "api.tasks.update",
+            "api.milestones.update",
+            "api.goals.update"
+          ],
+          "test_scope": "Move rules are unit-tested; drag and drop, Alt+arrow focus and the native picker need a browser check."
+        },
+        {
+          "id": "calendar.capture",
+          "label": "Selected day, New task and Unscheduled",
+          "behavior": "The side panel lists everything on the selected day with its kind, time and Goal or Milestone, and Add task. New task, Add task and double-clicking a day open one dialog with the name, an Add to choice (Inbox, a Goal or one of its open Milestones; preset from the Goal filter) and the due date preset to that day; it posts an ordinary Task. Unscheduled lists open one-off Tasks with no date at all, by importance; dragging one onto a day, or Set due date, gives it that due date.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/calendar.php",
+              "symbol": "data-calendar-unscheduled aria-labelledby"
+            },
+            {
+              "path": "frontend/src/views/planning/calendar.php",
+              "symbol": "id=\"calendar-task-dialog\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/calendar-model.js",
+              "symbol": "export function unscheduledTasks("
+            },
+            {
+              "path": "frontend/src/js/planning/calendar-page.js",
+              "symbol": "function openCreate("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function create(string $type, int $userId, array $input): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function insert("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/calendar-model.test.js",
+              "symbol": "test('occurrences and completed work stay put; the tray lists only undated open one-offs'"
+            }
+          ],
+          "routes": [
+            "api.tasks.store"
+          ]
+        }
+      ]
+    },
+    {
       "document": "docs/ui/habits/README.md",
       "title": "/habits — Habits, streaks and Rest Days",
       "components": [
@@ -5762,6 +5931,7 @@
     "api.goals.notes": "docs/ui/notes/README.md",
     "api.tasks.notes": "docs/ui/notes/README.md",
     "api.team-tasks.assigned": "docs/ui/dashboard/README.md",
-    "api.dashboard.roadmap.show": "docs/ui/dashboard/README.md"
+    "api.dashboard.roadmap.show": "docs/ui/dashboard/README.md",
+    "planning.calendar": "docs/ui/calendar/README.md"
   }
 }
