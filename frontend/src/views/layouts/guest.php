@@ -5,6 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="<?= $view->e($csrf_token) ?>">
         <title><?= $view->e($view->t($title ?? 'Planner')) ?> · Planner</title>
+        <link rel="manifest" href="/manifest.webmanifest">
+        <meta name="theme-color" content="#216e80">
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
         <?= $view->assets() ?>
     </head>
     <body class="guest-page">

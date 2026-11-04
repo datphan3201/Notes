@@ -368,9 +368,15 @@ export class SummaryPanel {
         this.text.replaceChildren(this.skeleton());
         this.meta.textContent = t('Reading your note…');
         try {
-            const data = (
-                await post(`/api/v1/notes/${encodeURIComponent(this.noteId)}/summary`, {})
-            ).payload.data;
+            const data =
+                // Generation can take a while; the provider itself retries for up to ~90 s.
+                (
+                    await post(
+                        `/api/v1/notes/${encodeURIComponent(this.noteId)}/summary`,
+                        {},
+                        { timeout: 90000 },
+                    )
+                ).payload.data;
             if (generation === this.generation) this.render(data);
         } catch (error) {
             if (generation !== this.generation) return;
@@ -505,7 +511,8 @@ export class AskAIDialog {
         thinking.append(dots, document.createTextNode(t('Searching your notes…')));
         this.result.replaceChildren(thinking);
         try {
-            const data = (await post('/api/v1/notes/ask', { question })).payload.data;
+            const data = (await post('/api/v1/notes/ask', { question }, { timeout: 90000 })).payload
+                .data;
             this.render(question, data);
         } catch (error) {
             this.message(

@@ -4,13 +4,13 @@ import { initTaskCapturePresets } from './planning/task-capture.js';
 import { initNotifications } from './lib/notifications.js';
 import { initAssistant } from './planning/assistant.js';
 import { initPasswordVisibility } from './lib/password-visibility.js';
+import { clearOfflineData, initPwa } from './lib/pwa.js';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/500.css';
 import '@fontsource/be-vietnam-pro/600.css';
 import '@fontsource/be-vietnam-pro/700.css';
 import './lib/normalization';
 import { RecoveryStore } from './lib/recovery-store';
-import { NotesPage } from './notes/notes-page';
 import { initPassword } from './settings/password';
 import { initPreferences } from './settings/preferences';
 import { initProfile } from './settings/profile';
@@ -68,16 +68,28 @@ window.notesSessionChannel?.addEventListener('message', (event) => {
 // still needs to erase this tab's account-scoped recovery record.
 document.addEventListener('submit', (event) => {
     const form = event.target.closest('form[data-leave-guard-form]');
-    if (!form || document.querySelector('[data-notes-workspace]')) return;
+    if (
+        !form ||
+        form.dataset.submitted === 'true' ||
+        document.querySelector('[data-notes-workspace]')
+    )
+        return;
+    event.preventDefault();
     RecoveryStore.clearAll();
     window.notesSessionChannel?.postMessage({
         userId: String(window.notesBootstrap?.user?.id),
         type: 'logout',
     });
+    // Offline copies of this account's notes and pages must not outlive the session.
+    clearOfflineData().finally(() => {
+        form.dataset.submitted = 'true';
+        HTMLFormElement.prototype.submit.call(form);
+    });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     initPasswordVisibility();
+    initPwa();
     const delivery = document.querySelector('[data-notification-settings]');
     if (delivery) initDeliveryPreferences(delivery);
     const notePreferences = document.querySelector('[data-note-preferences]');
@@ -114,7 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         )
         .forEach(initWorkspaceUI);
     const notes = document.querySelector('[data-notes-workspace]');
-    const notesReady = notes ? new NotesPage(notes).init() : Promise.resolve();
+    // The Notes workspace (editor, live collaboration, offline sync, AI) is its own chunk.
+    const notesReady = notes
+        ? import('./notes/notes-page').then(({ NotesPage }) => new NotesPage(notes).init())
+        : Promise.resolve();
     const profile = document.querySelector('[data-profile-settings]');
     if (profile) initProfile(profile);
     const preferences = document.querySelector('[data-preference-settings]');

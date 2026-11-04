@@ -62,7 +62,9 @@ final readonly class NoteAIService
         }
         $system = implode("\n", [
             'You summarize one personal note for its owner.',
-            'Write in the same language as the note (Vietnamese notes get Vietnamese summaries).',
+            'Write the summary in the language most of the note body is written in, and never translate it:',
+            'an English note gets an English summary even if it mentions Vietnamese names or places,',
+            'and a Vietnamese note gets a Vietnamese summary.',
             'Capture the main ideas and key information: decisions, facts, numbers, dates, names and action items.',
             'Preserve the meaning; never add facts that are not in the note.',
             'Use 2 to 6 short bullet points starting with "- ", or one short paragraph for very short notes.',

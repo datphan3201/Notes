@@ -4,6 +4,10 @@ import { lineIcon, spriteIcon } from '../lib/line-icons.js';
 import { pageWindow } from '../lib/pagination.js';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
+import { clearOfflineData } from '../lib/pwa.js';
+import { OfflineStore } from '../lib/offline-store.js';
+import { filterAndSort, withPendingSnapshot } from '../lib/offline-outbox.js';
+import { OfflineSync } from './offline-sync.js';
 import { NoteEditor } from './note-editor';
 import { AskAIDialog, NoteLockUI, promptText, relativeTime } from './note-dialogs.js';
 import {
@@ -32,6 +36,10 @@ export class NotesPage {
         this.noteRequests = new LatestRequest();
         this.searchDebounce = new DebouncedAction({ delay: 300 });
         this.editor = null;
+        // The device copy for offline reading and editing (IndexedDB, per account).
+        this.offlineStore = OfflineStore.supported() ? new OfflineStore(this.user.id) : null;
+        this.offlineSync = this.offlineStore ? new OfflineSync(this.offlineStore) : null;
+        this.offline = false;
         // Preferences saved elsewhere on the page (Note preferences) apply immediately.
         document.addEventListener('notes:preferences-changed', (event) => {
             Object.assign(this.preferences, event.detail);
@@ -47,6 +55,11 @@ export class NotesPage {
             lockUI: this.lockUI,
             offlineStore: this.offlineStore,
             getNoteSummary: (id) => this.notes.find((note) => note.id === id) || null,
+            requestSync: async () => {
+                await this.offlineSync?.syncNow();
+                // A change queued while that run was already in progress goes in a second pass.
+                if (await this.offlineSync?.pending()) await this.offlineSync.syncNow();
+            },
             root: document.querySelector('[data-editor-dialog]'),
             userId: this.user.id,
             preferences: this.preferences,
@@ -69,6 +82,7 @@ export class NotesPage {
         this.sharing.init();
         await this.loadLabels();
         await this.loadNotes();
+        this.startOffline();
         this.checkRecovery();
         // Recovery must inspect the previous page's draft before a new editor
         // can write its first account-scoped recovery record.
@@ -162,21 +176,20 @@ export class NotesPage {
         });
         document.addEventListener('submit', (event) => {
             const form = event.target.closest('form[data-leave-guard-form]');
-            if (
-                !form ||
-                form.dataset.submitted === 'true' ||
-                !this.editor?.machine ||
-                this.editor.root.classList.contains('is-hidden')
-            )
-                return;
+            if (!form || form.dataset.submitted === 'true') return;
             event.preventDefault();
-            this.editor.requestClose().then((canLeave) => {
-                if (!canLeave) return;
-                RecoveryStore.clearAll();
-                this.broadcastSessionEvent();
-                form.dataset.submitted = 'true';
-                HTMLFormElement.prototype.submit.call(form);
-            });
+            const editorOpen =
+                this.editor?.machine && !this.editor.root.classList.contains('is-hidden');
+            (editorOpen ? this.editor.requestClose() : Promise.resolve(true)).then(
+                async (canLeave) => {
+                    if (!canLeave) return;
+                    RecoveryStore.clearAll();
+                    this.broadcastSessionEvent();
+                    await clearOfflineData();
+                    form.dataset.submitted = 'true';
+                    HTMLFormElement.prototype.submit.call(form);
+                },
+            );
         });
     }
 
@@ -248,11 +261,98 @@ export class NotesPage {
         try {
             const result = await get('/api/v1/labels');
             this.labels = result.payload.data || [];
+            this.offlineStore?.setMeta('labels', this.labels);
             this.renderLabelFilters();
             this.editor?.renderLabels(this.editor.machine?.state.draftSnapshot.label_ids || []);
         } catch (error) {
+            const cached = error.status === 0 ? await this.offlineStore?.getMeta('labels') : null;
+            if (cached) {
+                this.labels = cached;
+                this.renderLabelFilters();
+                return;
+            }
             this.toast(error.message || 'Unable to load tags.', true);
         }
+    }
+
+    /** Offline banner, background sync and the reactions to its results. */
+    startOffline() {
+        const banner = this.root.querySelector('[data-offline-banner]');
+        const update = () => banner?.classList.toggle('is-hidden', navigator.onLine !== false);
+        window.addEventListener('offline', () => {
+            update();
+            this.loadNotes();
+        });
+        window.addEventListener('online', async () => {
+            update();
+            const pending = (await this.offlineSync?.pending()) || 0;
+            await this.offlineSync?.syncNow();
+            if (pending) this.toast('Back online. Your offline changes are synced.');
+            this.loadNotes();
+            this.sharing?.load();
+        });
+        update();
+        if (!this.offlineSync) return;
+        this.offlineSync.addEventListener('synced', (event) => this.editor?.onSynced(event.detail));
+        this.offlineSync.addEventListener('conflict', (event) =>
+            this.toast(
+                `${t('This note changed elsewhere while you were offline. Your version was saved as')} “${event.detail.copy.title}”.`,
+                true,
+            ),
+        );
+        this.offlineSync.addEventListener('dropped', () =>
+            this.toast(
+                'An offline change could not be synced because the note no longer exists.',
+                true,
+            ),
+        );
+        this.offlineSync.start();
+    }
+
+    /** The list from the device copy, with changes still waiting to sync applied on top. */
+    async renderOffline() {
+        this.offline = true;
+        const [notes, outbox] = await Promise.all([
+            this.offlineStore.allNotes(),
+            this.offlineStore.outbox(),
+        ]);
+        const byId = new Map(
+            notes.map((note) => [
+                note.id,
+                {
+                    ...note,
+                    content_preview: note.is_locked ? '' : (note.content || '').slice(0, 240),
+                },
+            ]),
+        );
+        for (const entry of outbox) {
+            if (entry.kind === 'delete') {
+                byId.delete(entry.noteId);
+                continue;
+            }
+            const queuedAt = new Date(entry.queuedAt || Date.now()).toISOString();
+            const pending = withPendingSnapshot(
+                byId.get(entry.noteId) || { created_at: queuedAt },
+                entry,
+            );
+            pending.updated_at = queuedAt;
+            pending.labels = (entry.snapshot.label_ids || [])
+                .map((id) => this.labels.find((label) => String(label.id) === String(id)))
+                .filter(Boolean);
+            byId.set(entry.noteId, pending);
+        }
+        this.notes = filterAndSort([...byId.values()], this.query);
+        this.meta = { current_page: 1, last_page: 1, total: this.notes.length };
+        this.query.page = 1;
+        this.renderNotes();
+        this.total.textContent = String(byId.size);
+        this.renderActiveFilter();
+        this.setFeedback(
+            byId.size
+                ? ''
+                : 'No notes are saved on this device yet. Connect once to download them.',
+        );
+        this.root.querySelector('[data-offline-banner]')?.classList.remove('is-hidden');
     }
 
     checkRecovery() {
@@ -306,12 +406,19 @@ export class NotesPage {
                 this.query.page = this.meta.last_page;
                 return this.loadNotes();
             }
+            this.offline = false;
             this.renderNotes();
             this.setFeedback('');
             this.total.textContent = String(this.meta.total || 0);
             this.renderActiveFilter();
+            // Keep the device copy current in the background.
+            this.offlineSync?.syncSoon();
         } catch (error) {
             if (this.noteRequests.shouldIgnore(ticket, error)) return;
+            if (error.status === 0 && this.offlineStore) {
+                await this.renderOffline();
+                return;
+            }
             this.setFeedback(error.message || 'Unable to load notes. Try again.', true);
         }
     }

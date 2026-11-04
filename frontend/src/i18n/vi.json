@@ -1256,5 +1256,14 @@
     "The notes with this tag are kept; only the tag is removed from them.": "Các ghi chú có thẻ này vẫn được giữ; chỉ thẻ bị gỡ khỏi chúng.",
     "Delete tag": "Xóa thẻ",
     "In the title": "Trong tiêu đề",
-    "In the content": "Trong nội dung"
+    "In the content": "Trong nội dung",
+    "Offline": "Ngoại tuyến",
+    "This note changed elsewhere while you were offline. Your version was saved as": "Ghi chú này đã thay đổi ở nơi khác khi bạn ngoại tuyến. Phiên bản của bạn được lưu thành",
+    "Back online. Your offline changes are synced.": "Đã có mạng trở lại. Các thay đổi ngoại tuyến đã được đồng bộ.",
+    "An offline change could not be synced because the note no longer exists.": "Không thể đồng bộ một thay đổi ngoại tuyến vì ghi chú không còn tồn tại.",
+    "No notes are saved on this device yet. Connect once to download them.": "Chưa có ghi chú nào được lưu trên thiết bị này. Hãy kết nối mạng một lần để tải về.",
+    "Saved on this device · will sync": "Đã lưu trên thiết bị · sẽ đồng bộ",
+    "Password-protected notes need a connection to open.": "Ghi chú có mật khẩu cần kết nối mạng để mở.",
+    "Note deleted on this device. The deletion syncs when you reconnect.": "Đã xóa ghi chú trên thiết bị. Thao tác xóa sẽ đồng bộ khi có mạng.",
+    "Adding files needs a connection.": "Thêm tệp cần kết nối mạng."
 }

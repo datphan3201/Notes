@@ -68,7 +68,7 @@ final class NoteAIServiceTest extends TestCase
         self::assertSame("Summary\n- Ship on Friday\n- Lan owns the release notes", $summary['summary']);
         self::assertFalse($summary['is_stale']);
         self::assertStringContainsString('We agreed to ship on Friday.', $provider->prompts[0]);
-        self::assertStringContainsString('same language', $provider->systems[0]);
+        self::assertStringContainsString('never translate', $provider->systems[0]);
 
         $this->pdo->exec("UPDATE notes SET pinned_at = UTC_TIMESTAMP(6), version = version + 1 WHERE id = '$id'");
         self::assertFalse($service->summary($this->owner, $id)['is_stale']);

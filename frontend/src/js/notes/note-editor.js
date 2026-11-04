@@ -13,6 +13,7 @@ import { AutosaveMachine } from './autosave-machine';
 import { NoteContentEditor } from './note-content-editor.js';
 import { CollabBinding } from './collab-binding.js';
 import { SummaryPanel } from './note-dialogs.js';
+import { withPendingSnapshot } from '../lib/offline-outbox.js';
 
 export class NoteEditor {
     constructor({
@@ -27,6 +28,7 @@ export class NoteEditor {
         lockUI,
         offlineStore = null,
         getNoteSummary = () => null,
+        requestSync = () => {},
     }) {
         this.root = root;
         this.userId = String(userId);
@@ -39,6 +41,7 @@ export class NoteEditor {
         this.lockUI = lockUI;
         this.offlineStore = offlineStore;
         this.getNoteSummary = getNoteSummary;
+        this.requestSync = requestSync;
         this.collab = null;
         this.generation = 0;
         this.machine = null;
@@ -163,7 +166,8 @@ export class NoteEditor {
         this.dispose();
         this.note = null;
         this.savedNoteId = null;
-        this.linkSelect.disabled = false;
+        this.offlineQueued = false;
+        this.linkSelect.disabled = navigator.onLine === false;
         this.show();
         this.loadLinkOptions(this.pendingLink);
         this.heading.textContent = t('Write down what matters');
@@ -212,6 +216,7 @@ export class NoteEditor {
                 return;
             }
             this.note = result.payload.data;
+            this.offlineQueued = false;
             this.savedNoteId = this.note.id;
             this.pendingLink = '';
             this.linkSelect.disabled = false;
@@ -232,10 +237,27 @@ export class NoteEditor {
         } catch (error) {
             if (generation !== this.generation) return;
             // Offline: open the copy saved on this device.
-            const cached = error.status === 0 ? await this.offlineStore?.getNote(noteId) : null;
-            if (cached && !cached.is_locked) {
-                this.openOffline(cached);
-                return;
+            if (error.status === 0 && this.offlineStore) {
+                const [cached, entry] = await Promise.all([
+                    this.offlineStore.getNote(noteId),
+                    this.offlineStore.outboxEntry(noteId),
+                ]);
+                if (generation !== this.generation) return;
+                if (cached?.is_locked) {
+                    this.hide();
+                    this.toast('Password-protected notes need a connection to open.', true);
+                    return;
+                }
+                if (cached || entry) {
+                    const note = withPendingSnapshot(cached || { id: noteId }, entry);
+                    this.offlineQueued = Boolean(entry);
+                    this.openOffline({
+                        ...note,
+                        content: note.content ?? '',
+                        version: entry?.baseVersion ?? note.version ?? 1,
+                    });
+                    return;
+                }
             }
             this.hide();
             this.toast(error.message || 'Unable to open the note.', true);
@@ -401,7 +423,75 @@ export class NoteEditor {
         return machine;
     }
 
+    /**
+     * Saves through the API; when there is no connection the change is queued
+     * on this device (IndexedDB) and acknowledged locally, then synced later.
+     */
     async send(request) {
+        if (this.offlineStore && navigator.onLine === false) return this.queueOffline(request);
+        // A change of this note is still queued: keep the order by queueing this one too,
+        // then sync now; onSynced moves the editor to the server's new version.
+        if (this.offlineStore && this.offlineQueued) {
+            const ack = await this.queueOffline(request);
+            this.requestSync();
+            return ack;
+        }
+        try {
+            return await this.sendOnline(request);
+        } catch (error) {
+            // Creates are idempotent and updates carry their base version, so replaying is safe.
+            if (error.status === 0 && this.offlineStore) return this.queueOffline(request);
+            throw error;
+        }
+    }
+
+    async queueOffline(request) {
+        const snapshot = request.sentSnapshot;
+        await this.offlineStore.queue(
+            request.kind === 'create'
+                ? { noteId: request.noteId, kind: 'create', snapshot }
+                : {
+                      noteId: request.noteId,
+                      kind: 'update',
+                      snapshot,
+                      baseVersion: request.baseVersion,
+                  },
+        );
+        this.savedNoteId = request.noteId;
+        const base = this.note || (await this.offlineStore.getNote(request.noteId)) || {};
+        const now = new Date().toISOString();
+        const note = {
+            ...base,
+            id: request.noteId,
+            title: snapshot.title,
+            content: snapshot.content,
+            color: snapshot.color,
+            is_pinned: snapshot.is_pinned,
+            labels: snapshot.label_ids.map(
+                (id) => this.getLabels().find((label) => String(label.id) === String(id)) || { id },
+            ),
+            version: request.baseVersion ?? 1,
+            attachments: base.attachments || [],
+            created_at: base.created_at || now,
+            updated_at: now,
+            pending_sync: true,
+        };
+        this.offlineQueued = true;
+        return { data: note };
+    }
+
+    /** A queued offline change reached the server: continue from the server's version. */
+    onSynced({ noteId, note }) {
+        if (!this.machine || String(this.machine.noteId) !== String(noteId) || !note) return;
+        const draft = this.machine.state.draftSnapshot;
+        const dirty = this.machine.isDirty();
+        this.note = { ...this.note, ...note, pending_sync: false };
+        this.offlineQueued = false;
+        this.machine.adopt(note);
+        if (dirty) this.machine.input(draft);
+    }
+
+    async sendOnline(request) {
         if (request.kind === 'create') {
             const result = await post('/api/v1/notes', {
                 id: request.noteId,
@@ -646,7 +736,10 @@ export class NoteEditor {
                 auth_expired: 'Session expired',
                 unavailable: 'Note is no longer available',
             }[state.phase] || '';
-        if (this.collab?.active && state.phase === 'saved') {
+        if (state.phase === 'saved' && this.offlineQueued) {
+            this.setStatus('Saved on this device · will sync');
+            this.status.classList.remove('is-live');
+        } else if (this.collab?.active && state.phase === 'saved') {
             this.renderCollabStatus(this.collab.session.status, this.collab.session.saveState);
         } else {
             this.setStatus(
@@ -900,6 +993,10 @@ export class NoteEditor {
     }
 
     async uploadFiles(fileList) {
+        if (navigator.onLine === false) {
+            this.toast('Adding files needs a connection.', true);
+            return;
+        }
         if (!this.machine?.state.persisted) {
             this.toast('Wait for the note to be saved before adding files.', true);
             return;
@@ -1134,6 +1231,18 @@ export class NoteEditor {
             this.onChanged?.();
             this.toast('Note deleted.');
         } catch (error) {
+            if (error.status === 0 && this.offlineStore) {
+                await this.offlineStore.queue({
+                    noteId: this.machine.noteId,
+                    kind: 'delete',
+                    baseVersion: this.machine.baseVersion,
+                });
+                this.machine.discard();
+                this.hide();
+                this.onChanged?.();
+                this.toast('Note deleted on this device. The deletion syncs when you reconnect.');
+                return;
+            }
             if (error.status === 409 && error.payload?.current) {
                 this.machine.conflictCurrent = error.payload.current;
                 this.machine.phase = 'conflict';
