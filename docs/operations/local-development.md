@@ -17,6 +17,14 @@ In a second terminal from frontend:
 npm run dev
 ```
 
+For live collaboration on shared Notes, a third terminal from backend runs the WebSocket server. Without a proxy, set `REALTIME_PUBLIC_URL=ws://localhost:8090` in the ignored backend environment so browsers connect to it directly (the CSP allows that origin):
+
+```bash
+php bin/realtime.php
+```
+
+Without it, shared Notes still autosave; only live updates are missing. The service worker registers only for production builds (not under `npm run dev`); to test offline mode, build the frontend and use the built assets.
+
 Set VITE_DEV_URL=http://127.0.0.1:5173 in the ignored backend environment first; APP_ENV must be local. Open **http://localhost:8000**, matching APP_URL, not the Vite asset server. PHP reads source on each request with opcode caching disabled. Vite updates CSS/JS and emits full reloads for PHP views/backend source/bootstrap/routes. Save unfinished forms before editing files that trigger a reload. Schema changes still need an explicit migration.
 
 [The Vite config](../../frontend/vite.config.js) fixes port 5173 with strictPort and server.origin. [AssetManifest](../../backend/src/Http/View/AssetManifest.php) emits development entries. [The local CSP](../../backend/src/Http/Security/ContentSecurityPolicy.php) allows the validated dev origin; production keeps its same-origin policy. In VS Code Remote, forward both 8000 and 5173 to the same local port numbers.

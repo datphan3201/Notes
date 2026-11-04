@@ -2,6 +2,15 @@
 
 [Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
+## Rubric refinement (refine/ten-point-polish) — 2026-11-04
+
+Branch refine/ten-point-polish from 17692d4 in a separate worktree; the owner checkout and its uncommitted files were not touched. Manual runs used an isolated server on 8100 plus bin/realtime.php on 8190 against goals_test (APP_ENV=testing, file mail outbox); goals_dev and the owner's port 8000 were not used.
+
+- `php vendor/bin/phpunit -c phpunit.xml`: **185 tests / 3669 assertions passed**, PHP 8.5.0, 6m 20s. New: NoteRubricHttpTest (7), NoteAIServiceTest (3), CollaborationHubTest (4), RealtimeSocketTest (spawns the real WebSocket process over TCP), TextOperationTest (400-round convergence), NoteRetrievalTest, reset-code and CSP cases. AI providers are scripted fakes.
+- `npm run test:unit`: **121 passed** (text-operation incl. 3-client convergence simulation, offline-outbox). Format check, production build (no chunk-size warning after lazy-loading Notes), docs sync/check, 17 documentation-tool cases, deploy fixtures (8) and `git diff --check` passed.
+- Playwright (headless Chromium) flows: password enable with mismatch error, locked card/preview, unlock prompt with wrong-password error, title-only search, pin asks for password; two users editing a shared Note at once converged and saved (version 3 in MySQL) with presence; one live Gemini run: English summary of an English note, Vietnamese answer citing and opening the source Note; offline reload served by the service worker, IndexedDB list/search, offline edit and create synced on reconnect; register → auto-login → activation banner → resend → activation; forgot password → code → new password → login; 390/820 px without horizontal overflow; dark mode.
+- Not claimed: real-host Nginx/systemd release, wss through a tunnel, live SMTP, Safari/Firefox, long-running realtime soak.
+
 ## Existing tunnel and CI/CD integration — 2026-11-04
 
 Reused the owner-managed PHP server at 8000 and its running Cloudflare Tunnel. Confirmed only selected non-secret settings: the PHP launch overrides APP_URL/VITE_DEV_URL/Secure cookies relative to backend/.env. No additional app server was started and no environment secrets were copied into CI.

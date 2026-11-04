@@ -7,6 +7,10 @@ Start with the URL or visible label, not a historical implementation phase. Ever
 | Browser route | Visible feature | Documentation |
 | --- | --- | --- |
 | `/` | Notes, search, grid/list, editor | [Notes](ui/notes/README.md) |
+| `/` | Password, Unlock | [Note passwords](ui/notes/locks.md) |
+| `/` | Live editing of shared Notes, presence | [Live collaboration](ui/notes/collaboration.md) |
+| `/` | AI summary, Ask AI | [AI summary and questions](ui/notes/ai.md) |
+| `/` | Offline banner, waiting to sync | [Offline use and sync](ui/notes/offline.md) |
 | `/dashboard` | Today, This week, Activity | [Dashboard](ui/dashboard/README.md) |
 | `/goals` | Areas, Goal tree/timeline | [Goals](ui/goals/README.md) |
 | `/goals/{id}` | Fishbone, Goal information, Strategy | [Roadmap](ui/goals/roadmap.md) |

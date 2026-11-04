@@ -56,6 +56,11 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-028](#issue-028--diagram-navigation-and-evidence-notes-lag-the-current-branch) | Diagram navigation and evidence notes lag the current branch | Low | Resolved | All nine maps repinned/regenerated at 45ed896; navigation includes Calendar |
 | [ISSUE-029](#issue-029--goals-controls-and-dialogs-diverge-from-shared-editing-patterns) | Goals controls and dialogs diverge from shared editing patterns | Low | Resolved | Shared creator/editor, Task rows, Area controls and Archive wording implemented and verified |
 | [ISSUE-030](#issue-030--continuous-deployment-assumes-a-provisioned-host-instead-of-the-existing-tunnel-runtime) | Continuous deployment assumes a provisioned host instead of the existing tunnel runtime | Low | Resolved | Existing-runtime CD timer, CI fixtures and live public-origin smoke verified |
+| [ISSUE-031](#issue-031--graded-note-features-were-missing-or-excluded) | Graded Note features were missing or excluded | High | Resolved | Passwords, live co-editing, AI summary/Q&A and offline sync implemented; PHPUnit, Node and real-browser flows pass |
+| [ISSUE-032](#issue-032--sharing-silently-accepted-unknown-recipients-and-recipients-saved-manually) | Sharing silently accepted unknown recipients and recipients saved manually | Medium | Resolved | Validated multi-recipient invites; recipient autosave/live editing; HTTP and browser checks |
+| [ISSUE-033](#issue-033--unverified-accounts-had-no-prominent-notice-and-recovery-had-no-code-option) | Unverified accounts had no prominent notice and recovery had no code option | Medium | Resolved | Banner with Resend; 6-digit recovery code; integration and browser checks |
+| [ISSUE-034](#issue-034--login-lands-on-dashboard-while-the-assignment-describes-a-notes-homepage) | Login lands on Dashboard while the assignment describes a notes homepage | Low | Needs decision | Source-inspected; behavior unchanged |
+| [ISSUE-035](#issue-035--live-collaboration-needs-a-websocket-proxy-that-the-existing-runtime-lacks) | Live collaboration needs a WebSocket proxy that the existing runtime lacks | Low | Open | Nginx/systemd setup added; php -S runtime falls back to autosave |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -416,6 +421,56 @@ The severity assessments below describe observed impact, not a completed securit
 - **Verification:** Eight deploy tests passed using real temporary Git history and fake php/npm/gh/curl commands; bash syntax and ShellCheck warning-level checks passed. User service/timer installation and systemd verification passed; the enabled active timer and explicit service run preserve the current feature branch (Result=success, ExecMainStatus=0). A real-browser read-only smoke through the running public HTTPS tunnel passed /up, login, owned Goals and shared creator/Cancel, without application record changes. Existing server/tunnel PIDs and backend/.env were preserved. Prior PR CI passed before this CI extension; updated CI results belong to the new pushed revision.
 - **Evidence limits:** Fixture publication is not a live host release, backup/restore or reboot-persistence test. The active timer deliberately waits while this checkout remains on a feature branch or has local changes. Schema/dependency changes and a changed quick-tunnel URL still require the documented operator release/startup steps. Live SMTP/AI were not exercised.
 - **Resolution criteria:** Current runtime is usable for browser checks, CI exercises deploy guards, and opt-in CD can publish a green schema/dependency-compatible main while preserving credentials, data and owner work.
+
+## ISSUE-031 — Graded Note features were missing or excluded
+
+- **Status:** Resolved on branch refine/ten-point-polish (owner approved the full rubric scope on 2026-11-04).
+- **Severity / impact:** High; the course rubric (503073 final project) awards 2.5 of 10 points to per-Note passwords (enable/disable, change), real-time WebSocket collaboration, AI summary, AI Q&A with note references and offline PWA sync. Earlier decisions explicitly excluded passwords, WebSocket collaboration and offline sync, and the AI chat had no Note summary or cited answers.
+- **Recorded:** 2026-11-04 (Asia/Saigon), from feat/goals-ui-unification 17692d4; source and rubric inspected.
+- **Affected UI/source:** [Note passwords](ui/notes/locks.md), [live collaboration](ui/notes/collaboration.md), [AI summary and questions](ui/notes/ai.md), [offline](ui/notes/offline.md), [decisions](architecture/decisions.md).
+- **Resolution:** Migration 0030 (lock columns, summaries, embeddings, sync index). NoteLockService/NoteLockGate enforce passwords on every Note read/write path, cards, search, AI and sync. bin/realtime.php is a pure-PHP RFC 6455 server with a server-sequenced OT hub saving through NoteService; browsers use an ot.js-style client with presence, reconnect/rebase and autosave fallback. NoteAIService adds stored summaries (content-hash staleness) and BM25 + embedding retrieval with validated citations. A service worker, manifest, IndexedDB copy, cursor sync feed and outbox provide offline reading/editing. Decisions updated accordingly.
+- **Verification:** New PHPUnit suites (NoteRubricHttpTest, NoteAIServiceTest, CollaborationHubTest, RealtimeSocketTest spawning the real server, TextOperation/NoteRetrieval units) and Node suites (text-operation incl. 3-client convergence simulation, offline-outbox). Real-browser runs on an isolated goals_test server (ports 8100/8190): password enable/mismatch/unlock/wrong password/search/pin prompt; two users typing concurrently converged and saved; live Gemini summary and Vietnamese Q&A with a clickable source; offline reload from the service worker, offline search/edit/create and sync on reconnect.
+- **Evidence limits:** One live AI run (a few requests); no multi-hour realtime soak, no proxy deployment on a real host, no Safari/Firefox runs. OT is plain text; there is no cross-device presence of carets beyond initials.
+- **Resolution criteria:** Each rubric item works end to end with error handling and is documented with traces.
+
+## ISSUE-032 — Sharing silently accepted unknown recipients and recipients saved manually
+
+- **Status:** Resolved (approved behavior change).
+- **Severity / impact:** Medium; the assignment's grading notes call silent acceptance of unknown emails the subpar approach and ask for validation of registered accounts, several recipients and visible share details. Recipients edited with a manual Save button.
+- **Recorded:** 2026-11-04, source-inspected and reproduced by FullFeedbackHttpTest (201 for nobody@example.test).
+- **Affected UI/source:** [Sharing](ui/notes/sharing.md); NoteShareService::shareMany, NoteShareController::store, note-sharing.js.
+- **Resolution:** Every address must belong to an account (422 naming the unknown ones, nothing written); several comma-separated recipients per invite; invitations notify in-app and by email. Shared with me shows owner, permission, share time and lock state; recipients autosave (live when connected). window.prompt/confirm in Notes replaced by accessible dialogs. The existing test now asserts 422.
+- **Verification:** NoteRubricHttpTest sharing case; FullFeedbackHttpTest; browser share dialog and collaboration flows.
+- **Evidence limits:** Account existence is now observable to signed-in users who share a Note; rate limits (mutations bucket) bound probing.
+- **Resolution criteria:** Owner sees which addresses failed; recipients never need a Save button.
+
+## ISSUE-033 — Unverified accounts had no prominent notice and recovery had no code option
+
+- **Status:** Resolved.
+- **Severity / impact:** Medium; the assignment asks for a prominent unverified-account notice and recovery by link or OTP. Only a small sidebar caption existed and recovery was link-only.
+- **Recorded:** 2026-11-04, source-inspected.
+- **Affected UI/source:** [app layout](../frontend/src/views/layouts/app.php), [Recovery](ui/auth/recovery.md), PasswordResetService::verifyCode, migration 0031.
+- **Resolution:** A banner with **Resend email** on every app page until activation. Recovery emails include a 6-digit code (hash stored, 5 attempts, 30 minutes, single use) that is exchanged for the usual one-time token.
+- **Verification:** FeedbackMaintenanceTest reset-code case; browser: register → banner → resend → activation removes banner; forgot password → code → new password → login.
+- **Evidence limits:** Local file outbox only; no live SMTP delivery.
+- **Resolution criteria:** Unverified users cannot miss the notice; code path reaches the new-password form.
+
+## ISSUE-034 — Login lands on Dashboard while the assignment describes a notes homepage
+
+- **Status:** Needs decision.
+- **Severity / impact:** Low; the assignment says users land on a homepage where they can view their notes. AccountController redirects to /dashboard after login/registration; Notes is one click away at /.
+- **Recorded:** 2026-11-04, source-inspected ([AccountController](../backend/src/Http/Controller/AccountController.php)).
+- **Pending decision:** keep Dashboard as the planner homepage, redirect to / (Notes), or add a recent-notes card to the Dashboard.
+- **Evidence limits:** Behavior intentionally unchanged.
+- **Resolution criteria:** The owner chooses the landing page.
+
+## ISSUE-035 — Live collaboration needs a WebSocket proxy that the existing runtime lacks
+
+- **Status:** Open (limitation).
+- **Severity / impact:** Low; setup.sh now installs planner-realtime and an Nginx /realtime location, but the existing-runtime mode (php -S behind a quick tunnel) cannot upgrade /realtime. There, shared Notes still autosave, without live updates.
+- **Recorded:** 2026-11-04, source-inspected; fallback verified in code paths (ticket → connect failure → unavailable → autosave).
+- **Proposed next step:** run bin/realtime.php and point REALTIME_PUBLIC_URL at a second tunnel hostname, or move the runtime to the Nginx setup.
+- **Resolution criteria:** The graded deployment serves /realtime over wss.
 
 ## New issue template
 

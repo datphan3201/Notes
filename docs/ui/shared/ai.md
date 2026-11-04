@@ -24,7 +24,7 @@ The chat sends the recent conversation as real turns. AIChatService runs up to s
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L136) |
+| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L150) |
 | Browser logic | [assistant.js · export function initAssistant](../../../frontend/src/js/planning/assistant.js#L131) |
 | Controller / service / domain | [AIChatService.php · public function ask(](../../../backend/src/Application/AI/AIChatService.php#L64) |
 | Persistence | [PdoAIActionRepository.php · public function assistantSummary(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L87) |
@@ -39,12 +39,12 @@ The chat card previews queued supported create/update/transition/archive operati
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L142) |
+| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L156) |
 | CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L298) |
 | Browser logic | [assistant.js · const renderProposal = (message) =&gt;](../../../frontend/src/js/planning/assistant.js#L152) |
 | Controller / service / domain | [AIActionService.php · public function apply(](../../../backend/src/Application/AI/AIActionService.php#L108)<br>[ProposalValidator.php · public function validate(](../../../backend/src/Application/AI/ProposalValidator.php#L28) |
 | Persistence | [PdoAIActionRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L38)<br>[PdoAIActionRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L52)<br>[PdoAIActionRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L64) |
-| Relevant tests (not a pass claim) | [AIActionTest.php · public function test_generation_writes_no_domain_data_and_apply_uses_normal_task_validation_idemp...](../../../backend/tests/Plain/Integration/AIActionTest.php#L50)<br>[AIActionTest.php · public function test_apply_rejects_context_changed_after_generation(](../../../backend/tests/Plain/Integration/AIActionTest.php#L423)<br>[AIActionTest.php · public function test_chat_agent_queues_goal_and_habit_changes_applied_only_on_confirmation(](../../../backend/tests/Plain/Integration/AIActionTest.php#L143)<br>[AIActionTest.php · public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal(](../../../backend/tests/Plain/Integration/AIActionTest.php#L186)<br>[AIActionTest.php · public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal(](../../../backend/tests/Plain/Integration/AIActionTest.php#L206) |
+| Relevant tests (not a pass claim) | [AIActionTest.php · public function test_generation_writes_no_domain_data_and_apply_uses_normal_task_validation_idemp...](../../../backend/tests/Plain/Integration/AIActionTest.php#L50)<br>[AIActionTest.php · public function test_apply_rejects_context_changed_after_generation(](../../../backend/tests/Plain/Integration/AIActionTest.php#L435)<br>[AIActionTest.php · public function test_chat_agent_queues_goal_and_habit_changes_applied_only_on_confirmation(](../../../backend/tests/Plain/Integration/AIActionTest.php#L143)<br>[AIActionTest.php · public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal(](../../../backend/tests/Plain/Integration/AIActionTest.php#L186)<br>[AIActionTest.php · public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal(](../../../backend/tests/Plain/Integration/AIActionTest.php#L206) |
 | HTTP | `POST /api/v1/ai/actions` (`api.ai.actions.store`) → [AIActionController::store](../../../backend/src/Http/Controller/AIActionController.php#L17)<br>`GET /api/v1/ai/actions/{id}` (`api.ai.actions.show`) → [AIActionController::show](../../../backend/src/Http/Controller/AIActionController.php#L21)<br>`POST /api/v1/ai/actions/{id}/apply` (`api.ai.actions.apply`) → [AIActionController::apply](../../../backend/src/Http/Controller/AIActionController.php#L25)<br>`POST /api/v1/ai/actions/{id}/reject` (`api.ai.actions.reject`) → [AIActionController::reject](../../../backend/src/Http/Controller/AIActionController.php#L29) |
 
 <!-- END GENERATED TRACE -->

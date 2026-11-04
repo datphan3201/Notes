@@ -133,7 +133,7 @@ The Daily tab lists open team Tasks assigned to the user across every active tea
 | Browser logic | [dashboard-page.js · const loadTeamTasks = async () =&gt;](../../../frontend/src/js/planning/dashboard-page.js#L486) |
 | Controller / service / domain | [TeamService.php · public function assigned(](../../../backend/src/Application/Teamwork/TeamService.php#L68)<br>[TeamController.php · public function assigned(](../../../backend/src/Http/Controller/TeamController.php#L26) |
 | Persistence | [PdoTeamRepository.php · public function assignedTo(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L142) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_teamwork_roles_tasks_chat_and_member_isolation(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L158) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_teamwork_roles_tasks_chat_and_member_isolation(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L161) |
 | HTTP | `GET /api/v1/team-tasks/assigned` (`api.team-tasks.assigned`) → [TeamController::assigned](../../../backend/src/Http/Controller/TeamController.php#L26) |
 
 <!-- END GENERATED TRACE -->

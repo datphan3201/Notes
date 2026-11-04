@@ -3206,7 +3206,7 @@
         {
           "id": "notes.editor",
           "label": "New note, title/content, color, pin and Save and close",
-          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row.",
+          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row. Card pin and live-collaboration color/pin/tag changes use the attribute endpoint, which never touches title/content. Cards show status icons for pinned, password-protected and shared Notes in grid and list views.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
@@ -3267,7 +3267,8 @@
           ],
           "routes": [
             "api.notes.store",
-            "api.notes.update"
+            "api.notes.update",
+            "api.notes.attributes"
           ],
           "styles": [
             {
@@ -3553,7 +3554,7 @@
         {
           "id": "notes.sharing.owner",
           "label": "Share dialog: invite, permission and remove",
-          "behavior": "Unknown emails return the same success shape but create no invitation. Owner can change view/edit or revoke access. A deleted Note ends shares.",
+          "behavior": "Owner invites one or several registered accounts at once (comma-separated). Every address must belong to an account, otherwise nothing is written and the unknown addresses are named (422). New recipients get an in-app invitation and, when they allow it, an email. Owner can change view/edit or revoke access at any time; the list shows each recipient's email, permission and invited/accepted state. A deleted Note ends shares.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
@@ -3569,7 +3570,7 @@
           "server": [
             {
               "path": "backend/src/Application/Notes/NoteShareService.php",
-              "symbol": "public function share("
+              "symbol": "public function shareMany("
             },
             {
               "path": "backend/src/Application/Notes/NoteShareService.php",
@@ -3594,6 +3595,11 @@
             {
               "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
               "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            },
+            {
+              "path": "backend/tests/Plain/Http/NoteRubricHttpTest.php",
+              "symbol": "public function test_sharing_validates_registered_recipients_and_locked_notes_need_the_password(",
+              "label": "registered recipients"
             }
           ],
           "routes": [
@@ -3606,7 +3612,7 @@
         {
           "id": "notes.sharing.recipient",
           "label": "Shared with me, accept/decline, edit and leave",
-          "behavior": "Acceptance is required before access. Edit uses the Note version and explicit Save; 409 preserves conflict handling. Shared changes notify other accepted participants, never the actor. Missing/revoked memberships return 404.",
+          "behavior": "Shared with me lists accepted Notes with owner, permission (view only / can edit), share time and lock state; invitations can be accepted or declined. Edit recipients change title/content only: live over the realtime socket when available, otherwise by debounced autosave with base_version (a 409 retries on the newer version). View-only recipients see live updates read-only.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
@@ -4944,11 +4950,15 @@
         {
           "id": "auth.recovery",
           "label": "Forgot password and reset form",
-          "behavior": "Known/unknown valid emails receive the same response. A reset has a hashed token, 30-minute expiry and single-use semantics. Reset changes password, auth_version and sessions atomically; it does not automatically log in.",
+          "behavior": "Known/unknown valid emails receive the same response. The email carries a link and a 6-digit code; either leads to the new-password form. Tokens and codes are stored hashed, expire after 30 minutes and are single-use; a code dies after five wrong guesses. Reset changes password, auth_version and sessions atomically; it does not automatically log in.",
           "ui": [
             {
               "path": "frontend/src/views/auth/recovery.php",
-              "symbol": "<form"
+              "symbol": "action=\"<?= $reset ? '/reset-password' : '/forgot-password' ?>\""
+            },
+            {
+              "path": "frontend/src/views/auth/recovery.php",
+              "symbol": "action=\"/forgot-password/code\""
             }
           ],
           "client": [
@@ -4965,6 +4975,10 @@
             {
               "path": "backend/src/Application/Account/PasswordResetService.php",
               "symbol": "public function reset("
+            },
+            {
+              "path": "backend/src/Application/Account/PasswordResetService.php",
+              "symbol": "public function verifyCode("
             }
           ],
           "storage": [
@@ -4985,13 +4999,19 @@
             {
               "path": "backend/tests/Plain/Integration/FeedbackMaintenanceTest.php",
               "symbol": "public function test_reset_replaces_token_expires_and_invalidates_sessions("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/FeedbackMaintenanceTest.php",
+              "symbol": "public function test_reset_code_is_exchanged_for_a_token_and_dies_after_five_wrong_guesses(",
+              "label": "reset code"
             }
           ],
           "routes": [
             "password.forgot",
             "password.forgot.store",
             "password.reset",
-            "password.reset.store"
+            "password.reset.store",
+            "password.forgot.code"
           ]
         }
       ]
@@ -5820,6 +5840,335 @@
           ]
         }
       ]
+    },
+    {
+      "document": "docs/ui/notes/locks.md",
+      "title": "/ — Note passwords",
+      "components": [
+        {
+          "id": "notes.locks",
+          "label": "Password: turn on, change, remove and unlock",
+          "behavior": "Owner turns on a per-Note password by typing it twice (4+ characters, bcrypt). Changing needs the current password plus the new one twice; removing needs the current password. Opening, editing, deleting, pinning, sharing, attachments, AI summary and realtime tickets of a locked Note answer 423 until this session enters its password; the unlock is remembered for 15 idle minutes and dropped when the editor closes or the password changes. Cards, search, linked lists, AI questions and the offline copy never contain locked text. Wrong guesses are limited per account and Note.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-lock"
+            },
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-unlock-dialog"
+            },
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-lock-dialog"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-dialogs.js",
+              "symbol": "export class NoteLockUI"
+            },
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "async manageLock()"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteLockService.php",
+              "symbol": "final readonly class NoteLockService"
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteLockGate.php",
+              "symbol": "public function assertUnlocked("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function setLock("
+            },
+            {
+              "path": "backend/database/plain-migrations/0030_add_note_locks_ai_and_sync.php",
+              "symbol": "ADD COLUMN lock_hash"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NoteRubricHttpTest.php",
+              "symbol": "public function test_note_password_enable_unlock_change_and_disable_protect_every_action(",
+              "label": "lifecycle"
+            },
+            {
+              "path": "backend/tests/Plain/Http/NoteRubricHttpTest.php",
+              "symbol": "public function test_note_password_guesses_are_throttled_and_strangers_see_nothing(",
+              "label": "throttling"
+            }
+          ],
+          "routes": [
+            "api.notes.lock.enable",
+            "api.notes.lock.change",
+            "api.notes.lock.disable",
+            "api.notes.unlock",
+            "api.notes.relock"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/collaboration.md",
+      "title": "/ — Live collaboration",
+      "components": [
+        {
+          "id": "notes.collaboration",
+          "label": "Live co-editing of shared Notes",
+          "behavior": "Opening a shared Note (owner or accepted recipient) requests a 60-second HMAC ticket and connects to bin/realtime.php over WebSocket. Title and content are separate OT documents: the server sequences operations, transforms concurrent ones, acknowledges and broadcasts them, shows who is present and saves the merged text through NoteService after typing pauses (at most every 3 s and when the last person leaves). Reconnects rebase unsent edits; access is re-checked every few seconds. If the server cannot be reached, editing continues with normal autosave.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-editor-presence"
+            },
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-shared-presence"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/collaboration.js",
+              "symbol": "export class CollaborationSession"
+            },
+            {
+              "path": "frontend/src/js/notes/collab-binding.js",
+              "symbol": "export class CollabBinding"
+            },
+            {
+              "path": "frontend/src/js/lib/ot-client.js",
+              "symbol": "export class OTClient"
+            },
+            {
+              "path": "frontend/src/js/lib/text-operation.js",
+              "symbol": "export function transform("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/RealtimeController.php",
+              "symbol": "public function ticket("
+            },
+            {
+              "path": "backend/src/Infrastructure/Realtime/CollaborationHub.php",
+              "symbol": "final class CollaborationHub"
+            },
+            {
+              "path": "backend/src/Infrastructure/Realtime/WebSocketServer.php",
+              "symbol": "final class WebSocketServer"
+            },
+            {
+              "path": "backend/src/Domain/Realtime/TextOperation.php",
+              "symbol": "public static function transform("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteService.php",
+              "symbol": "public function writeCollaborativeText("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function updateSnapshot("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/CollaborationHubTest.php",
+              "symbol": "public function test_concurrent_edits_converge_and_are_saved_after_typing_pauses(",
+              "label": "hub convergence"
+            },
+            {
+              "path": "backend/tests/Plain/Http/RealtimeSocketTest.php",
+              "symbol": "public function test_handshake_auth_operation_and_broadcast_over_tcp(",
+              "label": "socket"
+            },
+            {
+              "path": "frontend/tests/js/text-operation.test.js",
+              "symbol": "test('several clients editing concurrently converge with the server'",
+              "label": "client convergence"
+            }
+          ],
+          "routes": [
+            "api.notes.realtime"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/ai.md",
+      "title": "/ — AI summary and questions",
+      "components": [
+        {
+          "id": "notes.ai.summary",
+          "label": "AI summary of one Note",
+          "behavior": "The editor (and the shared-note dialog) shows the stored summary and generates or regenerates it with the configured LLM in the Note's own language. The summary is shared by everyone who can read the Note and is marked out of date when the title or content changed since (pin/color do not count). Locked Notes need their password first.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "class=\"ai-summary is-hidden\" data-ai-summary"
+            },
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-shared-ai-summary"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-dialogs.js",
+              "symbol": "export class SummaryPanel"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteAIService.php",
+              "symbol": "public function summarize("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteAIRepository.php",
+              "symbol": "public function saveSummary("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/NoteAIServiceTest.php",
+              "symbol": "public function test_summary_is_cleaned_stored_and_goes_stale_only_when_text_changes(",
+              "label": "summary"
+            }
+          ],
+          "routes": [
+            "api.notes.summary.show",
+            "api.notes.summary.generate"
+          ]
+        },
+        {
+          "id": "notes.ai.ask",
+          "label": "Ask AI about your Notes",
+          "behavior": "A question searches the user's unlocked Notes and accepted shared Notes by meaning (embeddings, cached per text) and keywords (accent-insensitive BM25), sends the best eight to the LLM and shows a synthesized answer with clickable source Notes. Only Notes actually given to the model can be cited; locked Notes are never read. Without embeddings it falls back to keywords.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-ask-dialog"
+            },
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-open-ask-ai"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-dialogs.js",
+              "symbol": "export class AskAIDialog"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteAIService.php",
+              "symbol": "public function ask("
+            },
+            {
+              "path": "backend/src/Domain/Notes/NoteRetrieval.php",
+              "symbol": "public static function rank("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteAIRepository.php",
+              "symbol": "public function saveEmbedding("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function retrievable("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/NoteAIServiceTest.php",
+              "symbol": "public function test_answers_cite_only_retrieved_notes_and_skip_locked_ones(",
+              "label": "citations"
+            },
+            {
+              "path": "backend/tests/Plain/Unit/NoteRetrievalTest.php",
+              "symbol": "public function test_semantic_scores_find_a_note_without_shared_keywords(",
+              "label": "retrieval"
+            }
+          ],
+          "routes": [
+            "api.notes.ask"
+          ]
+        }
+      ]
+    },
+    {
+      "document": "docs/ui/notes/offline.md",
+      "title": "/ — Offline and sync",
+      "components": [
+        {
+          "id": "notes.offline",
+          "label": "Offline Notes, queued changes and sync",
+          "behavior": "A service worker caches built assets and recent pages; the Notes page keeps an IndexedDB copy per account filled from the cursor-based sync feed. Offline, the list (search, tags, order) and editor work from that copy; creates, edits and deletes are queued, one entry per Note, and replayed on reconnect. A version conflict saves the offline text as an “(offline copy)”. Locked text and files are not stored offline. Logout clears caches and the local copy.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-offline-banner"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/offline-sync.js",
+              "symbol": "export class OfflineSync"
+            },
+            {
+              "path": "frontend/src/js/lib/offline-store.js",
+              "symbol": "export class OfflineStore"
+            },
+            {
+              "path": "frontend/src/js/lib/offline-outbox.js",
+              "symbol": "export function coalesce("
+            },
+            {
+              "path": "backend/public/sw.js",
+              "symbol": "self.addEventListener('fetch'"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteSync.php",
+              "symbol": "public function changes("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php",
+              "symbol": "public function changedSince("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NoteRubricHttpTest.php",
+              "symbol": "public function test_offline_sync_feed_pages_changes_and_reports_deletions(",
+              "label": "sync feed"
+            },
+            {
+              "path": "frontend/tests/js/offline-outbox.test.js",
+              "symbol": "test('offline edits of one note become a single request'",
+              "label": "outbox"
+            }
+          ],
+          "routes": [
+            "api.notes.sync"
+          ]
+        }
+      ]
     }
   ],
   "route_documents": {
@@ -6035,6 +6384,18 @@
     "api.tasks.notes": "docs/ui/notes/README.md",
     "api.team-tasks.assigned": "docs/ui/dashboard/README.md",
     "api.dashboard.roadmap.show": "docs/ui/dashboard/README.md",
-    "planning.calendar": "docs/ui/calendar/README.md"
+    "planning.calendar": "docs/ui/calendar/README.md",
+    "password.forgot.code": "docs/ui/auth/recovery.md",
+    "api.notes.lock.enable": "docs/ui/notes/locks.md",
+    "api.notes.lock.change": "docs/ui/notes/locks.md",
+    "api.notes.lock.disable": "docs/ui/notes/locks.md",
+    "api.notes.unlock": "docs/ui/notes/locks.md",
+    "api.notes.relock": "docs/ui/notes/locks.md",
+    "api.notes.realtime": "docs/ui/notes/collaboration.md",
+    "api.notes.summary.show": "docs/ui/notes/ai.md",
+    "api.notes.summary.generate": "docs/ui/notes/ai.md",
+    "api.notes.ask": "docs/ui/notes/ai.md",
+    "api.notes.sync": "docs/ui/notes/offline.md",
+    "api.notes.attributes": "docs/ui/notes/README.md"
   }
 }

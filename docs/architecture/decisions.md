@@ -24,9 +24,9 @@
 | Contributions | Many-to-many related work; no movement, progress weight or prerequisite meaning |
 | Recurrence | Personal daily/weekly/monthly/yearly TaskSeries; Ended is terminal and future work requires a new series. Teamwork uses its separate completion-driven repeat path |
 | Habit | Dedicated check-ins, fixed timezone after first check-in, streak/rest history; no Goal percentage contribution |
-| Notes | Plain-text snapshot, autosave/recovery, checkable lines, Tags, private attachments; explicit permission for shared title/content edits; optional link to one owned Goal or Task (note_links), kept outside the autosave snapshot |
+| Notes | Plain-text snapshot, autosave/recovery, checkable lines, Tags, private attachments; optional link to one owned Goal or Task (note_links), kept outside the autosave snapshot. Optional per-Note password (bcrypt, session unlock, enforced server-side). Sharing with registered accounts only; edit recipients co-edit title/content live over the realtime WebSocket server (OT, server-sequenced), falling back to autosave. AI summary per Note and AI questions with cited Notes (read-only). Offline: service worker + IndexedDB copy with a queued outbox; conflicts become an “(offline copy)” Note |
 | Reviews / Activity | Persisted snapshot/reflection versus append-only completion/reversal facts; never fabricated scoring |
-| Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration. Open team Tasks assigned to the user also appear on the personal Dashboard; the sidebar and breadcrumb mark it as the team space |
+| Teamwork | Membership roles, assignment, Goal chat; same-origin polling (live WebSocket editing is used for shared Notes only). Open team Tasks assigned to the user also appear on the personal Dashboard; the sidebar and breadcrumb mark it as the team space |
 | Accounts | User/admin roles, locking, email verification/change, recovery, optional email/TOTP 2FA |
 | AI | Chat agent with owner-scoped read tools (Areas, Goals, Milestones, Tasks, Habits, Notes). Its Goal/Milestone/Task create, edit, complete, reopen and archive, roadmap creation and Task moves, Habit create, edit, archive and check-in, and Note create, edit and delete are only queued into one validated proposal; nothing changes until the user confirms the chat card, and Apply runs ordinary services against the versions read (any change since → 409, nothing applied) |
 
@@ -40,7 +40,7 @@ The named fishbone head is the Goal and opens Goal information with Edit, Strate
 
 ## Deferred / excluded
 
-No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, mobile app, per-Note passwords, PWA/offline sync, time-entry/timer subsystem, gamification, or autonomous AI mutation (every AI change needs the user's confirmation; AI changes beyond Goals, Milestones, Tasks, Habits and Notes are not yet supported). Existing retry/recovery handling is not offline synchronization. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
+No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, native mobile app, offline editing outside Notes, time-entry/timer subsystem, gamification, or autonomous AI mutation (every AI change needs the user's confirmation; AI changes beyond Goals, Milestones, Tasks, Habits and Notes are not yet supported). Notes offline sync (2026-11-04, approved to meet the course rubric) covers Notes only; other pages show their last cached copy offline. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
 
 ## Updating decisions
 

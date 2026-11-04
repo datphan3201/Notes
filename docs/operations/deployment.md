@@ -69,6 +69,10 @@ Re-run setup with another `--ingress` to switch; MySQL data, /etc/planner creden
 
 Writable directories (private storage and the log directory) are setgid www-data with default ACLs so files stay writable by both PHP-FPM and the deploy user; source files stay deploy-owned. The deploy user may only reload php8.5-fpm and run the backup helper through sudo.
 
+### Live collaboration (realtime server)
+
+setup.sh installs `planner-realtime.service`, which runs `php backend/bin/realtime.php` as the PHP-FPM user on `REALTIME_LISTEN` (default 127.0.0.1:8090) and restarts it after a crash or a lost database link, plus an Nginx `location = /realtime` that upgrades WebSocket requests to it. Every ingress therefore serves live editing at `wss://<APP_URL host>/realtime` with no extra settings; release.sh restarts the service on new code. Check it with `systemctl status planner-realtime` and `journalctl -u planner-realtime`. The [reused existing runtime](#reuse-an-already-running-php-server-and-cloudflare-tunnel) has no proxy for /realtime, so shared Notes fall back to autosave there ([ISSUE-035](../issues.md#issue-035--live-collaboration-needs-a-websocket-proxy-that-the-existing-runtime-lacks)).
+
 ### Releases
 
 `bash tools/deploy/release.sh [--build-frontend]` ([source](../../tools/deploy/release.sh)) installs production dependencies, prepares writable directories, takes a verified pre-release backup and only then runs migrate, migrate:status and migrate:check before reloading PHP-FPM. One release runs at a time. It refuses to migrate when the backup helper is missing or fails; `--skip-backup` exists only for non-production hosts. Exit status 3 means it failed before the database was touched; 4 means another release holds the lock. Releases update the checkout in place.

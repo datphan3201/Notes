@@ -18,7 +18,7 @@ List report snapshots, reason, reporter/owner and date. Resolve/dismiss with res
 | Browser logic | [admin-page.js · export function initAdminPage](../../../frontend/src/js/admin/admin-page.js#L11) |
 | Controller / service / domain | [ReportService.php · public function list(](../../../backend/src/Application/Admin/ReportService.php#L65)<br>[ReportService.php · public function resolve(](../../../backend/src/Application/Admin/ReportService.php#L80) |
 | Persistence | [PdoReportRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php#L23)<br>[PdoReportRepository.php · public function resolve(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php#L51) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L98) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L101) |
 | HTTP | `GET /api/v1/admin/reports` (`api.admin.reports`) → [AdminController::reports](../../../backend/src/Http/Controller/AdminController.php#L31)<br>`POST /api/v1/admin/reports/{id}/resolve` (`api.admin.reports.resolve`) → [AdminController::resolve](../../../backend/src/Http/Controller/AdminController.php#L43) |
 
 ### User reports with image evidence
@@ -48,7 +48,7 @@ Locking bumps auth_version and deletes sessions; locked users cannot sign in or 
 | Browser logic | [admin-page.js · data-admin-user-search](../../../frontend/src/js/admin/admin-page.js#L17) |
 | Controller / service / domain | [ReportService.php · public function setLocked(](../../../backend/src/Application/Admin/ReportService.php#L99) |
 | Persistence | [PdoAccountRepository.php · public function adminUserList(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L327)<br>[PdoAccountRepository.php · public function setLocked(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L278)<br>[PdoAccountRepository.php · public function deleteSessions(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L336) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L98) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L101) |
 | HTTP | `GET /api/v1/admin/users` (`api.admin.users`) → [AdminController::users](../../../backend/src/Http/Controller/AdminController.php#L64)<br>`POST /api/v1/admin/users/{id}/{action}` (`api.admin.users.lock`) → [AdminController::lock](../../../backend/src/Http/Controller/AdminController.php#L73) |
 
 ### System Task history limit
@@ -63,7 +63,7 @@ The admin can set the history cap (100–10000, default 1000). The history maint
 | Browser logic | [admin-page.js · data-admin-settings](../../../frontend/src/js/admin/admin-page.js#L19) |
 | Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L30) |
 | Persistence | [PdoSystemSettingRepository.php · public function historyLimit(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php#L18)<br>[PdoSystemSettingRepository.php · public function setHistoryLimit(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php#L27) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L98) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L101) |
 | HTTP | `GET /api/v1/admin/settings` (`api.admin.settings`) → [AdminController::settings](../../../backend/src/Http/Controller/AdminController.php#L88)<br>`PATCH /api/v1/admin/settings` (`api.admin.settings.update`) → [AdminController::updateSettings](../../../backend/src/Http/Controller/AdminController.php#L95) |
 
 <!-- END GENERATED TRACE -->

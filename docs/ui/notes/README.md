@@ -8,6 +8,10 @@ Notes lives at `/`, not `/notes`. The workspace supports owned Notes and a separ
 - [Sharing and reports](sharing.md)
 - [Private attachments and Note backgrounds](files.md)
 - [Tags and labels](../shared/tags.md)
+- [Note passwords](locks.md)
+- [Live collaboration](collaboration.md)
+- [AI summary and questions](ai.md)
+- [Offline use and sync](offline.md)
 
 ## Pending interface review
 
@@ -24,27 +28,27 @@ NotesPage owns loading, selection and read coordination. Browser layout preferen
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [index.php · data-notes-workspace](../../../frontend/src/views/notes/index.php#L1) |
-| Browser logic | [notes-page.js · export class NotesPage](../../../frontend/src/js/notes/notes-page.js#L15)<br>[read-coordinator.js · export class LatestRequest](../../../frontend/src/js/lib/read-coordinator.js#L1) |
+| Browser logic | [notes-page.js · export class NotesPage](../../../frontend/src/js/notes/notes-page.js#L20)<br>[read-coordinator.js · export class LatestRequest](../../../frontend/src/js/lib/read-coordinator.js#L1) |
 | Controller / service / domain | [NoteListQuery.php · public function paginate(](../../../backend/src/Application/Notes/NoteListQuery.php#L24) |
 | Persistence | [PdoNoteRepository.php · public function paginate(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L48) |
 | Relevant tests (not a pass claim) | [read-coordinator.test.js · Q01](../../../frontend/tests/js/read-coordinator.test.js#L13)<br>[read-coordinator.test.js · Q02](../../../frontend/tests/js/read-coordinator.test.js#L24)<br>[read-coordinator.test.js · Q03](../../../frontend/tests/js/read-coordinator.test.js#L50) |
-| HTTP | `GET /api/v1/notes` (`api.notes.index`) → [NoteController::index](../../../backend/src/Http/Controller/NoteController.php#L37) |
+| HTTP | `GET /api/v1/notes` (`api.notes.index`) → [NoteController::index](../../../backend/src/Http/Controller/NoteController.php#L40) |
 
 ### New note, title/content, color, pin and Save and close
 
 **Trace ID:** `notes.editor`
 
-NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row.
+NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row. Card pin and live-collaboration color/pin/tag changes use the attribute endpoint, which never touches title/content. Cards show status icons for pinned, password-protected and shared Notes in grid and list views.
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L124) |
+| UI / DOM | [index.php · data-editor-form](../../../frontend/src/views/notes/index.php#L133) |
 | CSS | [notes.css · Note editor dialog](../../../frontend/src/css/notes.css#L481) |
-| Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L15)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L15) |
-| Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L37)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L111) |
-| Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L124)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L151) |
+| Browser logic | [note-editor.js · export class NoteEditor](../../../frontend/src/js/notes/note-editor.js#L18)<br>[note-content-editor.js · export class NoteContentEditor](../../../frontend/src/js/notes/note-content-editor.js#L16) |
+| Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L38)<br>[NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L125) |
+| Persistence | [PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L125)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L152) |
 | Relevant tests (not a pass claim) | [autosave-machine.test.js · debounces valid edits](../../../frontend/tests/js/autosave-machine.test.js#L89)<br>[autosave-machine.test.js · J14 IME](../../../frontend/tests/js/autosave-machine.test.js#L315)<br>[autosave-machine.test.js · J01 a new note](../../../frontend/tests/js/autosave-machine.test.js#L336)<br>[note-checkbox-text.test.js · projection preserves](../../../frontend/tests/js/note-checkbox-text.test.js#L15) |
-| HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L57)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L79) |
+| HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L61)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L83)<br>`PATCH /api/v1/notes/{note}/attributes` (`api.notes.attributes`) → [NoteController::attributes](../../../backend/src/Http/Controller/NoteController.php#L134) |
 
 ### Note links to a Goal or Task
 
@@ -54,12 +58,12 @@ A Note can belong to one active Goal or Task of the same owner. The editor's Lin
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L151)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L140)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
-| Browser logic | [note-editor.js · async setLink(](../../../frontend/src/js/notes/note-editor.js#L297)<br>[linked-notes.js · export async function renderLinkedNotes](../../../frontend/src/js/notes/linked-notes.js#L8)<br>[notes-page.js · openFromLocation() {](../../../frontend/src/js/notes/notes-page.js#L71) |
-| Controller / service / domain | [NoteLinkService.php · public function link(](../../../backend/src/Application/Notes/NoteLinkService.php#L38)<br>[NoteController.php · public function link(](../../../backend/src/Http/Controller/NoteController.php#L92) |
+| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L169)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L140)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
+| Browser logic | [note-editor.js · async setLink(](../../../frontend/src/js/notes/note-editor.js#L600)<br>[linked-notes.js · export async function renderLinkedNotes](../../../frontend/src/js/notes/linked-notes.js#L8)<br>[notes-page.js · openFromLocation() {](../../../frontend/src/js/notes/notes-page.js#L98) |
+| Controller / service / domain | [NoteLinkService.php · public function link(](../../../backend/src/Application/Notes/NoteLinkService.php#L38)<br>[NoteController.php · public function link(](../../../backend/src/Http/Controller/NoteController.php#L96) |
 | Persistence | [PdoNoteLinkRepository.php · public function save(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteLinkRepository.php#L17)<br>[0028_create_note_links.php · CREATE TABLE note_links](../../../backend/database/plain-migrations/0028_create_note_links.php#L19) |
 | Relevant tests (not a pass claim) | [NotesHttpTest.php · public function test_note_links_to_one_goal_or_task_with_owner_isolation(](../../../backend/tests/Plain/Http/NotesHttpTest.php#L336) |
-| HTTP | `PUT /api/v1/notes/{note}/link` (`api.notes.link`) → [NoteController::link](../../../backend/src/Http/Controller/NoteController.php#L92)<br>`GET /api/v1/goals/{id}/notes` (`api.goals.notes`) → [NoteController::goalNotes](../../../backend/src/Http/Controller/NoteController.php#L100)<br>`GET /api/v1/tasks/{id}/notes` (`api.tasks.notes`) → [NoteController::taskNotes](../../../backend/src/Http/Controller/NoteController.php#L108) |
+| HTTP | `PUT /api/v1/notes/{note}/link` (`api.notes.link`) → [NoteController::link](../../../backend/src/Http/Controller/NoteController.php#L96)<br>`GET /api/v1/goals/{id}/notes` (`api.goals.notes`) → [NoteController::goalNotes](../../../backend/src/Http/Controller/NoteController.php#L104)<br>`GET /api/v1/tasks/{id}/notes` (`api.tasks.notes`) → [NoteController::taskNotes](../../../backend/src/Http/Controller/NoteController.php#L112) |
 
 ### Delete and tombstones
 
@@ -69,11 +73,11 @@ Deleting an owned Note also unlinks its Task. A retried create with a tombstoned
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-delete](../../../frontend/src/views/notes/index.php#L175) |
-| Browser logic | [note-editor.js · async deleteNote()](../../../frontend/src/js/notes/note-editor.js#L882) |
-| Controller / service / domain | [NoteService.php · public function delete(](../../../backend/src/Application/Notes/NoteService.php#L197) |
-| Persistence | [PdoNoteRepository.php · public function tombstone(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L197) |
+| UI / DOM | [index.php · data-editor-delete](../../../frontend/src/views/notes/index.php#L197) |
+| Browser logic | [note-editor.js · async deleteNote()](../../../frontend/src/js/notes/note-editor.js#L1218) |
+| Controller / service / domain | [NoteService.php · public function delete(](../../../backend/src/Application/Notes/NoteService.php#L213) |
+| Persistence | [PdoNoteRepository.php · public function tombstone(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L198) |
 | Relevant tests (not a pass claim) | [NotesHttpTest.php · public function test_create_replay_update_conflict_noop_search_and_tombstone_contract(](../../../backend/tests/Plain/Http/NotesHttpTest.php#L55) |
-| HTTP | `DELETE /api/v1/notes/{note}` (`api.notes.destroy`) → [NoteController::destroy](../../../backend/src/Http/Controller/NoteController.php#L130) |
+| HTTP | `DELETE /api/v1/notes/{note}` (`api.notes.destroy`) → [NoteController::destroy](../../../backend/src/Http/Controller/NoteController.php#L155) |
 
 <!-- END GENERATED TRACE -->

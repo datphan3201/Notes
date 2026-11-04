@@ -72,6 +72,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/up` | `up` | no | no | — | [local-development.md](../operations/local-development.md) |
 | GET | `/forgot-password` | `password.forgot` | no | no | — | [recovery.md](../ui/auth/recovery.md) |
 | POST | `/forgot-password` | `password.forgot.store` | no | yes | — | [recovery.md](../ui/auth/recovery.md) |
+| POST | `/forgot-password/code` | `password.forgot.code` | no | yes | — | [recovery.md](../ui/auth/recovery.md) |
 | GET | `/reset-password` | `password.reset` | no | no | — | [recovery.md](../ui/auth/recovery.md) |
 | POST | `/reset-password` | `password.reset.store` | no | yes | — | [recovery.md](../ui/auth/recovery.md) |
 | GET | `/login` | `login` | no | no | — | [README.md](../ui/auth/README.md) |
@@ -107,6 +108,17 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | PATCH | `/api/v1/preferences` | `api.preferences.update` | yes | yes | mutations | [preferences.md](../ui/settings/preferences.md) |
 | POST | `/api/v1/password` | `api.password.update` | yes | yes | password-change | [password.md](../ui/settings/password.md) |
 | GET | `/api/v1/notes` | `api.notes.index` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
+| GET | `/api/v1/notes/sync` | `api.notes.sync` | yes | no | note-reads | [offline.md](../ui/notes/offline.md) |
+| POST | `/api/v1/notes/ask` | `api.notes.ask` | yes | yes | ai-notes | [ai.md](../ui/notes/ai.md) |
+| PATCH | `/api/v1/notes/{note}/attributes` | `api.notes.attributes` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
+| PUT | `/api/v1/notes/{note}/lock` | `api.notes.lock.enable` | yes | yes | mutations | [locks.md](../ui/notes/locks.md) |
+| PATCH | `/api/v1/notes/{note}/lock` | `api.notes.lock.change` | yes | yes | mutations | [locks.md](../ui/notes/locks.md) |
+| DELETE | `/api/v1/notes/{note}/lock` | `api.notes.lock.disable` | yes | yes | mutations | [locks.md](../ui/notes/locks.md) |
+| POST | `/api/v1/notes/{note}/unlock` | `api.notes.unlock` | yes | yes | two-factor | [locks.md](../ui/notes/locks.md) |
+| POST | `/api/v1/notes/{note}/relock` | `api.notes.relock` | yes | yes | mutations | [locks.md](../ui/notes/locks.md) |
+| GET | `/api/v1/notes/{note}/summary` | `api.notes.summary.show` | yes | no | note-reads | [ai.md](../ui/notes/ai.md) |
+| POST | `/api/v1/notes/{note}/summary` | `api.notes.summary.generate` | yes | yes | ai-notes | [ai.md](../ui/notes/ai.md) |
+| POST | `/api/v1/notes/{note}/realtime` | `api.notes.realtime` | yes | yes | mutations | [collaboration.md](../ui/notes/collaboration.md) |
 | POST | `/api/v1/notes` | `api.notes.store` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
 | GET | `/api/v1/notes/{note}` | `api.notes.show` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
 | PATCH | `/api/v1/notes/{note}` | `api.notes.update` | yes | yes | mutations | [README.md](../ui/notes/README.md) |

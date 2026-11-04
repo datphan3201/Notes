@@ -18,7 +18,7 @@ Preferences control new in-app rows and opted-in email delivery. Admin report no
 | Browser logic | [delivery-preferences.js · export function initDeliveryPreferences](../../../frontend/src/js/settings/delivery-preferences.js#L4) |
 | Controller / service / domain | [AccountService.php · public function updatePreferences(](../../../backend/src/Application/Account/AccountService.php#L44)<br>[NotificationService.php · public function notify(](../../../backend/src/Application/Notifications/NotificationService.php#L40)<br>[TaskReminderService.php · public function send(](../../../backend/src/Application/Planning/TaskReminderService.php#L39) |
 | Persistence | [PdoNotificationRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php#L16)<br>[PdoAccountRepository.php · public function updatePreferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L133) |
-| Relevant tests (not a pass claim) | [FeedbackMaintenanceTest.php · public function test_recurring_capture_and_reminders_are_owned_and_settings_stay_isolated(](../../../backend/tests/Plain/Integration/FeedbackMaintenanceTest.php#L70) |
+| Relevant tests (not a pass claim) | [FeedbackMaintenanceTest.php · public function test_recurring_capture_and_reminders_are_owned_and_settings_stay_isolated(](../../../backend/tests/Plain/Integration/FeedbackMaintenanceTest.php#L107) |
 | HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L139) |
 
 <!-- END GENERATED TRACE -->
