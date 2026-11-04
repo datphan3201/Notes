@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md) · [Sharing](sharing.md)
 
-When the owner or an accepted recipient opens a shared Note, the editor joins a live session: changes from other people appear as they type, their initials show beside the save status, and the status reads **Saved · live**. View-only recipients see the updates read-only.
+When the owner or an accepted recipient opens a shared Note, the editor joins a live session: changes from other people appear as they type, their initials show beside the save status, a coloured caret with their name shows where each of them is typing in the content, and the status reads **Saved · live**. View-only recipients see the updates read-only.
 
 Runtime: `php backend/bin/realtime.php` (WebSocket, RFC 6455, no extensions). The browser asks the app for a 60-second ticket (`POST /api/v1/notes/{note}/realtime`), then connects to `REALTIME_PUBLIC_URL` or `/realtime` on the app origin, which Nginx forwards to `REALTIME_LISTEN` ([deployment](../../operations/deployment.md)). Title and content are independent operational-transformation documents measured in UTF-16 units; the server is the single sequencer per Note and saves merged text through `NoteService` (version bump, notifications) after typing pauses, at most every 3 seconds and when the last participant leaves.
 
@@ -14,7 +14,7 @@ Without the realtime server (for example `php -S` without a proxy) the session r
 
 **Trace ID:** `notes.collaboration`
 
-Opening a shared Note (owner or accepted recipient) requests a 60-second HMAC ticket and connects to bin/realtime.php over WebSocket. Title and content are separate OT documents: the server sequences operations, transforms concurrent ones, acknowledges and broadcasts them, shows who is present and saves the merged text through NoteService after typing pauses (at most every 3 s and when the last person leaves). Reconnects rebase unsent edits; access is re-checked every few seconds. If the server cannot be reached, editing continues with normal autosave.
+Opening a shared Note (owner or accepted recipient) requests a 60-second HMAC ticket and connects to bin/realtime.php over WebSocket. Title and content are separate OT documents: the server sequences operations, transforms concurrent ones, acknowledges and broadcasts them, shows who is present and a named caret where each collaborator types in the content and saves the merged text through NoteService after typing pauses (at most every 3 s and when the last person leaves). Reconnects rebase unsent edits; access is re-checked every few seconds. If the server cannot be reached, editing continues with normal autosave.
 
 | Layer | Entry point |
 | --- | --- |

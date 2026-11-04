@@ -5922,7 +5922,7 @@
         {
           "id": "notes.collaboration",
           "label": "Live co-editing of shared Notes",
-          "behavior": "Opening a shared Note (owner or accepted recipient) requests a 60-second HMAC ticket and connects to bin/realtime.php over WebSocket. Title and content are separate OT documents: the server sequences operations, transforms concurrent ones, acknowledges and broadcasts them, shows who is present and saves the merged text through NoteService after typing pauses (at most every 3 s and when the last person leaves). Reconnects rebase unsent edits; access is re-checked every few seconds. If the server cannot be reached, editing continues with normal autosave.",
+          "behavior": "Opening a shared Note (owner or accepted recipient) requests a 60-second HMAC ticket and connects to bin/realtime.php over WebSocket. Title and content are separate OT documents: the server sequences operations, transforms concurrent ones, acknowledges and broadcasts them, shows who is present and a named caret where each collaborator types in the content and saves the merged text through NoteService after typing pauses (at most every 3 s and when the last person leaves). Reconnects rebase unsent edits; access is re-checked every few seconds. If the server cannot be reached, editing continues with normal autosave.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",

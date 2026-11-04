@@ -662,3 +662,41 @@
 .note-card .note-card-owner {
     color: color-mix(in srgb, var(--muted) 82%, var(--text));
 }
+
+/* Where other collaborators are typing. */
+.note-document {
+    position: relative;
+}
+.remote-caret-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+.remote-caret {
+    position: absolute;
+    width: 2px;
+    background: var(--presence-color);
+    border-radius: 1px;
+    transition:
+        left 80ms linear,
+        top 80ms linear;
+}
+.remote-caret-name {
+    position: absolute;
+    bottom: 100%;
+    left: -1px;
+    padding: 1px 5px;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    background: var(--presence-color);
+    border-radius: 4px 4px 4px 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .remote-caret {
+        transition: none;
+    }
+}

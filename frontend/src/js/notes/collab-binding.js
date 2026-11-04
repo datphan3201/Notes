@@ -1,5 +1,5 @@
 import { t } from '../lib/i18n.js';
-import { transformIndex } from '../lib/text-operation.js';
+import { fromDiff, transformIndex } from '../lib/text-operation.js';
 import { CollaborationSession } from './collaboration.js';
 
 const initials = (name) =>
@@ -22,7 +22,9 @@ export class CollabBinding {
         this.presence = presence;
         this.callbacks = callbacks;
         this.peers = [];
+        this.cursors = new Map();
         this.cursorTimer = null;
+        this.caretLayer = null;
         this.initialized = false;
         this.session = new CollaborationSession({
             noteId,
@@ -46,6 +48,9 @@ export class CollabBinding {
         });
         this.onSelection = () => this.scheduleCursor();
         document.addEventListener('selectionchange', this.onSelection);
+        this.onScroll = () => this.renderCarets();
+        this.content.root.addEventListener('scroll', this.onScroll, { passive: true });
+        window.addEventListener('resize', this.onScroll);
     }
 
     /** True once the server has sent the shared text (even while reconnecting). */
@@ -63,6 +68,11 @@ export class CollabBinding {
 
     stop() {
         document.removeEventListener('selectionchange', this.onSelection);
+        this.content.root.removeEventListener('scroll', this.onScroll);
+        window.removeEventListener('resize', this.onScroll);
+        this.cursors.clear();
+        this.caretLayer?.remove();
+        this.caretLayer = null;
         window.clearTimeout(this.cursorTimer);
         this.session.stop();
         this.renderPeers([]);
@@ -80,8 +90,16 @@ export class CollabBinding {
     /** Call after any local edit to either field. */
     localInput() {
         if (!this.active) return;
+        const before = this.session.text('content');
         this.session.localChange('title', this.title.value);
         this.session.localChange('content', this.content.value);
+        if (before !== null && before !== this.content.value) {
+            const ops = fromDiff(before, this.content.value);
+            for (const cursor of this.cursors.values())
+                if (cursor.field === 'content')
+                    cursor.sel = cursor.sel.map((index) => transformIndex(ops, index));
+            this.renderCarets();
+        }
     }
 
     hasPending() {
@@ -106,7 +124,13 @@ export class CollabBinding {
             if (focused) input.setSelectionRange(start, end);
         } else {
             this.content.applyRemote(text, ops);
+            // Other people's carets move with the text they are standing in.
+            for (const cursor of this.cursors.values()) {
+                if (cursor.field !== 'content') continue;
+                cursor.sel = cursor.sel.map((index) => transformIndex(ops, index));
+            }
         }
+        this.renderCarets();
         this.callbacks.onRemote?.(field, text);
     }
 
@@ -129,6 +153,10 @@ export class CollabBinding {
 
     renderPeers(peers) {
         this.peers = peers;
+        for (const client of this.cursors.keys())
+            if (!peers.some((peer) => peer.client === client)) this.cursors.delete(client);
+        for (const peer of peers) if (peer.cursor) this.cursors.set(peer.client, peer.cursor);
+        this.renderCarets();
         if (!this.presence) return;
         this.presence.replaceChildren();
         this.presence.classList.toggle('is-hidden', !this.initialized || !peers.length);
@@ -152,11 +180,46 @@ export class CollabBinding {
     }
 
     cursor(client, cursor) {
+        if (cursor) this.cursors.set(client, { field: cursor.field, sel: [...cursor.sel] });
+        else this.cursors.delete(client);
+        this.renderCarets();
         const chip = this.presence?.querySelector(`[data-client="${client}"]`);
         const peer = this.peers.find((entry) => entry.client === client);
         if (!chip || !peer) return;
         const where = cursor ? t(cursor.field === 'title' ? 'In the title' : 'In the content') : '';
         chip.title = [peer.name, where].filter(Boolean).join(' · ');
+    }
+
+    /** Coloured carets with names for everyone else typing in the content. */
+    renderCarets() {
+        const frame = this.content.frame;
+        if (!frame) return;
+        if (!this.caretLayer) {
+            this.caretLayer = document.createElement('div');
+            this.caretLayer.className = 'remote-caret-layer';
+            this.caretLayer.setAttribute('aria-hidden', 'true');
+            frame.append(this.caretLayer);
+        }
+        this.caretLayer.replaceChildren();
+        const box = frame.getBoundingClientRect();
+        const editor = this.content.root.getBoundingClientRect();
+        for (const [client, cursor] of this.cursors) {
+            if (cursor.field !== 'content') continue;
+            const peer = this.peers.find((entry) => entry.client === client);
+            const rect = peer && this.content.caretRect(cursor.sel[1]);
+            if (!rect || rect.top < editor.top - 2 || rect.bottom > editor.bottom + 2) continue;
+            const caret = document.createElement('span');
+            caret.className = 'remote-caret';
+            caret.style.setProperty('--presence-color', peer.color);
+            caret.style.left = `${rect.left - box.left}px`;
+            caret.style.top = `${rect.top - box.top}px`;
+            caret.style.height = `${rect.height}px`;
+            const name = document.createElement('span');
+            name.className = 'remote-caret-name';
+            name.textContent = peer.name.split(/\s+/)[0];
+            caret.append(name);
+            this.caretLayer.append(caret);
+        }
     }
 
     activity(client) {

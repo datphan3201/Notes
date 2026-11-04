@@ -396,6 +396,34 @@ export class NoteContentEditor {
         return this.selection;
     }
 
+    /** DOM node/offset for a text offset (shared by focus and caret overlays). */
+    domPoint(offset) {
+        const lines = noteLines(this.value);
+        const line = lines.findLast((entry) => entry.start <= offset) || lines[0];
+        const row = this.root.children[lines.indexOf(line)];
+        if (!row) return null;
+        if (offset < line.start + line.prefix.length) return [row, 0];
+        const text = row.querySelector('[data-note-line-text]');
+        const node = text.firstChild;
+        return node?.nodeType === Node.TEXT_NODE
+            ? [node, Math.min(node.length, Math.max(0, offset - line.start - line.prefix.length))]
+            : [text, 0];
+    }
+
+    /** Viewport rectangle of a caret at `offset`, for showing where others are typing. */
+    caretRect(offset) {
+        const point = this.domPoint(Math.min(Math.max(0, offset), this.value.length));
+        if (!point) return null;
+        const range = document.createRange();
+        range.setStart(...point);
+        range.collapse(true);
+        const rect = range.getClientRects()[0] || range.getBoundingClientRect();
+        if (rect && rect.height) return rect;
+        // An empty line has no text box; use the row itself.
+        const row = point[0].nodeType === Node.ELEMENT_NODE ? point[0] : point[0].parentElement;
+        return row?.closest('[data-note-line]')?.getBoundingClientRect() || null;
+    }
+
     focus(selection = this.selection) {
         this.root.focus({ preventScroll: true });
         this.selection = selection;
