@@ -40,7 +40,8 @@ import {
     formatMomentRange,
     formatPercent,
 } from '../lib/format.js';
-import { quickEditLink } from './quick-editor.js';
+import { taskRowShell } from './task-row.js';
+import { openQuickCreator, openQuickEditor, quickEditLink } from './quick-editor.js';
 export { initGoalDetail } from './goal-roadmap.js';
 
 export function buildGoalForest(goals) {
@@ -89,7 +90,21 @@ function linkForGoal(goal) {
     progress.textContent = formatPercent(goal.progress);
     meta.append(miniTrack, progress);
     link.append(name, meta);
-    return link;
+    const row = document.createElement('span');
+    row.className = 'goal-tree-row';
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.dataset.goalEditId = goal.id;
+    edit.className = 'icon-button';
+    edit.title = t('Edit goal');
+    edit.setAttribute('aria-label', `${t('Edit goal')}: ${goal.name}`);
+    edit.append(lineIcon('edit'));
+    edit.addEventListener('click', (event) => {
+        event.preventDefault();
+        openQuickEditor('goal', goal.id);
+    });
+    row.append(link, edit);
+    return row;
 }
 
 // `saveArea(area, changes)` persists an Area's icon or importance chosen in its heading.
@@ -174,9 +189,8 @@ function renderGoalTree(container, areas, goals, saveArea) {
 export function initGoalsPage(root) {
     const areaList = root.querySelector('[data-area-list]');
     const tree = root.querySelector('[data-goal-tree]');
-    const areaSelect = root.querySelector('[data-goal-area]');
-    const form = root.querySelector('[data-goal-create-form]');
     let areas = [];
+    let loadVersion = 0;
     const areaDrafts = new Map();
     let renamingArea = false;
     guardWorkspaceLeave(() => areaDrafts.size > 0 || renamingArea);
@@ -261,25 +275,31 @@ export function initGoalsPage(root) {
         open.className = 'section-link';
         open.href = `/goals/${encodeURIComponent(primary.id)}`;
         open.textContent = `${t('Open roadmap')} →`;
-        footer.append(progress, track, open);
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.dataset.goalEditId = primary.id;
+        edit.className = 'button button-quiet';
+        edit.append(lineIcon('edit'), document.createTextNode(t('Edit goal')));
+        edit.addEventListener('click', () => openQuickEditor('goal', primary.id));
+        footer.append(progress, track, edit, open);
         card.append(footer);
         main.append(card);
     };
     const load = async () => {
+        const request = ++loadVersion;
         try {
             const [areaResponse, goalResponse, focusResponse] = await Promise.all([
                 get('/api/v1/areas'),
                 get('/api/v1/goals'),
                 get('/api/v1/dashboard/roadmap'),
             ]);
+            if (request !== loadVersion) return;
             areas = areaResponse.payload.data;
-            const selectedArea = areaSelect.value;
-            const hadDraft = creationState(form).dirty;
             areaList.replaceChildren();
-            areaSelect.replaceChildren();
             for (const area of areas) {
                 const row = document.createElement('form');
                 row.className = 'area-rename-row';
+                row.dataset.areaId = area.id;
                 const input = document.createElement('input');
                 input.value = areaDrafts.get(area.id) ?? area.name;
                 input.addEventListener('input', () => {
@@ -291,15 +311,16 @@ export function initGoalsPage(root) {
                 const button = document.createElement('button');
                 button.type = 'submit';
                 button.className = 'button button-quiet';
-                button.textContent = t('Save name');
+                button.append(spriteIcon('check'), document.createTextNode(t('Rename')));
                 // An Area can be removed once its Goals have moved or been removed.
                 const archive = document.createElement('button');
                 archive.type = 'button';
-                archive.className = 'button button-quiet';
-                archive.textContent = t('Remove');
-                archive.setAttribute('aria-label', `${t('Remove')} ${area.name}`);
+                archive.className = 'icon-button button-danger-quiet';
+                archive.append(lineIcon('archive'));
+                archive.title = t('Archive');
+                archive.setAttribute('aria-label', `${t('Archive')} ${area.name}`);
                 archive.addEventListener('click', async () => {
-                    if (!window.confirm(`${t('Remove this area?')} “${area.name}”`)) return;
+                    if (!window.confirm(`${t('Archive this area?')} “${area.name}”`)) return;
                     archive.disabled = true;
                     try {
                         await remove(`/api/v1/areas/${area.id}`, { base_version: area.version });
@@ -309,7 +330,15 @@ export function initGoalsPage(root) {
                         archive.disabled = false;
                     }
                 });
-                row.append(input, button, archive);
+                const icon = entityIconButton(area, {
+                    label: area.name,
+                    save: (choice) => saveArea(area, choice),
+                });
+                const stars = starRating(area.importance, {
+                    label: `${t('Importance')}: ${area.name}`,
+                    onChange: (importance) => saveArea(area, { importance }),
+                });
+                row.append(icon, input, stars, button, archive);
                 row.addEventListener('submit', async (event) => {
                     event.preventDefault();
                     if (renamingArea) return;
@@ -333,26 +362,12 @@ export function initGoalsPage(root) {
                     }
                 });
                 areaList.append(row);
-                const option = document.createElement('option');
-                option.value = area.id;
-                option.textContent = area.name;
-                areaSelect.append(option);
             }
-            if (areas.some((area) => area.id === selectedArea)) areaSelect.value = selectedArea;
-            if (!hadDraft) creationState(form).markSaved();
+            const focusedGoal = document.activeElement?.dataset.goalEditId;
             const goals = goalResponse.payload.data;
-            renderGoalTree(tree, areas, goals, async (area, changes) => {
-                try {
-                    await patch(`/api/v1/areas/${encodeURIComponent(area.id)}`, {
-                        base_version: area.version,
-                        ...changes,
-                    });
-                    await load();
-                } catch (error) {
-                    showError(root, error);
-                }
-            });
+            renderGoalTree(tree, areas, goals, saveArea);
             renderMainGoal(goals, focusResponse.payload.data.goal_id);
+            if (focusedGoal) root.querySelector(`[data-goal-edit-id="${focusedGoal}"]`)?.focus();
             const timeline = root.querySelector('[data-goal-timeline]');
             timeline.replaceChildren();
             for (const goal of goals
@@ -380,31 +395,41 @@ export function initGoalsPage(root) {
             errorOutput.classList.add('is-hidden');
         } catch (error) {
             showError(root, error);
-            tree.textContent = t('Unable to load your goals.');
+            if (request === loadVersion) tree.textContent = t('Unable to load your goals.');
         }
     };
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const data = new FormData(form);
-        createWithForm(form, async () => {
-            try {
-                await post('/api/v1/goals', {
-                    area_id: data.get('area_id'),
-                    parent_goal_id: null,
-                    name: data.get('name'),
-                    expected_result: data.get('expected_result'),
-                    completion_criteria: data.get('completion_criteria'),
-                });
-                form.reset();
-                areaSelect.value = data.get('area_id');
-                finishCreation(form);
-                load();
-            } catch (error) {
-                showError(root, error);
+    const saveArea = async (area, changes) => {
+        const active = document.activeElement;
+        const star =
+            active?.getAttribute('role') === 'radio' ? active.getAttribute('aria-label') : null;
+        if (renamingArea) return;
+        renamingArea = true;
+        try {
+            await patch(`/api/v1/areas/${encodeURIComponent(area.id)}`, {
+                base_version: area.version,
+                ...changes,
+            });
+            await load();
+        } catch (error) {
+            showError(root, error);
+        } finally {
+            renamingArea = false;
+            const row = areaList.querySelector(`[data-area-id="${area.id}"]`);
+            if (row && active?.closest('[data-area-id]')) {
+                const next = star
+                    ? [...row.querySelectorAll('[role="radio"]')].find(
+                          (node) => node.getAttribute('aria-label') === star,
+                      )
+                    : row.querySelector('input');
+                next?.focus();
             }
-        });
-    });
+        }
+    };
+    root.querySelector('[data-goal-new]').addEventListener('click', () =>
+        openQuickCreator('goal', { area_id: areas[0]?.id }),
+    );
+    document.addEventListener('planner:changed', load);
     const areaForm = root.querySelector('[data-area-create-form]');
     areaForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -555,16 +580,8 @@ export function initTasksPage(root) {
     // Primary planning stays inline; less frequent controls use native disclosure.
     // showContext=false: a grouped list already names the Goal and Milestone above the row.
     const taskRow = (task, { showContext = true } = {}) => {
-        const article = document.createElement('article');
         const overdue = taskIsOverdue(task, today);
         const done = task.status === 'Done';
-        article.className = `planning-list-item task-row${overdue ? ' is-overdue' : ''}${done ? ' is-done' : ''}`;
-        const copy = document.createElement('div');
-        copy.className = 'task-row-copy';
-        const name = document.createElement('a');
-        name.href = `/tasks/${encodeURIComponent(task.id)}`;
-        quickEditLink(name, 'task', task.id);
-        name.textContent = task.name;
         const facts = document.createElement('small');
         const timezone = window.notesBootstrap.preferences.timezone;
         facts.textContent = [
@@ -592,24 +609,14 @@ export function initTasksPage(root) {
         const context =
             parentOptions.get(`milestone:${task.milestone_id}`) ||
             parentOptions.get(`goal:${task.goal_id}`);
-        if (context && showContext) {
-            const chip = document.createElement('span');
-            chip.className = 'context-chip';
-            chip.textContent = context.name;
-            copy.append(chip);
-        }
-        copy.append(name, facts, ...tagChips(task.tag_ids, tags));
-        const action = document.createElement('button');
-        action.className = 'task-completion-button';
-        action.setAttribute('aria-label', `${done ? t('Reopen') : t('Complete')} ${task.name}`);
-        action.setAttribute('aria-pressed', String(done));
-        action.type = 'button';
-        if (done) action.append(checkMark());
-        action.addEventListener('click', () =>
-            mutate(action, () => transitionEntity('task', task, done ? 'reopen' : 'complete')),
-        );
-        const actions = document.createElement('div');
-        actions.className = 'action-row task-row-actions';
+        const { article, actions } = taskRowShell(task, {
+            facts: facts.textContent,
+            overdue,
+            context: context && showContext ? context.name : null,
+            tags: tagChips(task.tag_ids, tags),
+            onToggle: (button) =>
+                mutate(button, () => transitionEntity('task', task, done ? 'reopen' : 'complete')),
+        });
         // Frequent planning toggles stay inline as icons; everything else lives in one labelled menu.
         const secondary = document.createElement('details');
         secondary.className = 'task-row-menu';
@@ -749,7 +756,6 @@ export function initTasksPage(root) {
         secondaryActions.prepend(edit);
         removeButton.classList.add('is-danger');
         secondaryActions.append(removeButton);
-        article.append(action, copy, actions);
         return article;
     };
     const render = () => {

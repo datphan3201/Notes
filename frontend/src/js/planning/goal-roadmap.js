@@ -1,10 +1,8 @@
 import { COLORS, cycleHue, entityIcon, iconButton } from '../lib/entity-icons.js';
 import { starRating } from '../lib/star-rating.js';
 
-const MILESTONE_ICONS = ['target', 'activity', 'flag', 'book'];
 import { renderLinkedNotes } from '../notes/linked-notes.js';
 import { formatDay, formatPercent } from '../lib/format.js';
-import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { renderContributions } from './contributions-ui.js';
@@ -14,16 +12,12 @@ import { transitionEntity } from './transitions.js';
 import { reportWorkspaceError } from '../lib/workspace-ui.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
 import { checkMark } from '../lib/check-mark.js';
-import { quickEditLink } from './quick-editor.js';
+import { taskRowShell } from './task-row.js';
+import { actionMenu, initActionMenus } from './action-menu.js';
+import { lineIcon, spriteIcon } from '../lib/line-icons.js';
+import { taskIsOverdue, localDate } from './task-views.js';
+import { openQuickEditor, openQuickCreator } from './quick-editor.js';
 
-const detailFields = [
-    'name',
-    'description',
-    'expected_result',
-    'completion_criteria',
-    'importance',
-    'deadline',
-];
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 function element(tag, text, className) {
@@ -42,30 +36,12 @@ export function initGoalDetail(root) {
     const overview = find('[data-roadmap-overview]');
     const focus = find('[data-milestone-focus]');
     const strategyForm = find('[data-goal-strategy-form]');
-    const detailsForm = find('[data-goal-details-form]');
     const informationDialog = find('#goal-information-dialog');
     const conflictDialog = find('[data-goal-conflict]');
     let conflictReturnControl = null;
     const strategy = new DraftBuffer();
-    const details = new DraftBuffer();
-    const milestoneTaskDrafts = new Map();
-    const milestoneTaskForm = find('[data-milestone-task-create-form]');
-    let draftMilestone = null;
-    root.querySelectorAll('[data-capture-suggestions] button').forEach((button) =>
-        button.addEventListener('click', () => {
-            const control =
-                milestoneTaskForm.elements[button.parentElement.dataset.captureSuggestions];
-            control.value = control.value
-                ? `${control.value}${control.tagName === 'TEXTAREA' ? '\n' : ' · '}${button.textContent}`
-                : button.textContent;
-            control.dispatchEvent(new Event('input', { bubbles: true }));
-            control.focus();
-        }),
-    );
-    for (const control of detailsForm.elements) control.disabled = true;
     const strategyValues = (goal) => ({ strategy_notes: goal.strategy_notes });
-    const detailsValues = (goal) =>
-        Object.fromEntries(detailFields.map((field) => [field, goal[field]]));
+    initActionMenus(root);
     let data = null;
     let selected = null;
     let page = 0;
@@ -73,7 +49,7 @@ export function initGoalDetail(root) {
     let loading = false;
     let conflict = null;
     let selectedMilestones = new Set();
-    // Goal tags save immediately; the details form keeps its own draft.
+    // Goal tags save immediately; Strategy keeps its independent draft.
     const goalTags = createTagPicker({
         onChange: (ids) =>
             mutation(async () => {
@@ -99,36 +75,13 @@ export function initGoalDetail(root) {
             output.textContent = '';
         }
     }
-    // Capture forms start with non-empty defaults (repeat interval 1, Normal
-    // importance); only values the user actually entered count as a draft.
-    const captureDefaults = { repeat_interval: '1', importance: '3' };
-    const entered = (name, value) => {
-        const text = String(value ?? '').trim();
-        return text !== '' && text !== (captureDefaults[name] ?? '');
-    };
     function dirty() {
-        return (
-            strategy.dirty ||
-            details.dirty ||
-            [...milestoneTaskDrafts.values()].some((draft) =>
-                Object.entries(draft).some(([name, value]) => entered(name, value)),
-            ) ||
-            [
-                ...root.querySelectorAll(
-                    '[data-milestone-create-form] :is(input, textarea, select), [data-milestone-task-create-form] :is(input, textarea, select), [data-goal-task-create-form] :is(input, textarea, select), [data-goal-child-create-form] input',
-                ),
-            ].some((control) => entered(control.name, control.value))
-        );
+        return strategy.dirty;
     }
     function status() {
         find('[data-strategy-state]').textContent = strategy.dirty
             ? t('Unsaved changes')
             : strategy.version
-              ? t('Saved')
-              : '';
-        find('[data-details-state]').textContent = details.dirty
-            ? t('Unsaved changes')
-            : details.version
               ? t('Saved')
               : '';
     }
@@ -172,6 +125,7 @@ export function initGoalDetail(root) {
             `${t('View goal information')}: ${goal.name}`,
         );
         find('[data-goal-information-name]').textContent = goal.name;
+        find('[data-goal-information-icon]').replaceChildren(entityIcon(goal));
         find('[data-goal-information-meta]').textContent =
             `${statusLabel(goal.status)} · ${formatPercent(goal.progress ?? data.progress)} ${t('progress')} · ${t('Importance')} ${'★'.repeat(goal.importance)}${'☆'.repeat(5 - goal.importance)}${goal.deadline ? ` · ${t('Due')} ${formatDay(goal.deadline)}` : ''}`;
         find('[data-goal-information-description]').textContent =
@@ -188,12 +142,13 @@ export function initGoalDetail(root) {
         requestAnimationFrame(drawConnections);
         if (strategy.receive(strategyValues(goal), goal.version))
             writeForm(strategyForm, strategy.values);
-        if (details.receive(detailsValues(goal), goal.version))
-            writeForm(detailsForm, details.values);
         strategyForm.elements.strategy_notes.disabled = false;
-        for (const control of detailsForm.elements) control.disabled = false;
-        find('[data-goal-transition]').textContent =
-            goal.status === 'Completed' ? t('Reopen goal') : t('Complete goal');
+        find('[data-goal-transition]').replaceChildren(
+            spriteIcon(goal.status === 'Completed' ? 'refresh' : 'check'),
+            document.createTextNode(
+                goal.status === 'Completed' ? t('Reopen goal') : t('Complete goal'),
+            ),
+        );
         if (!sameTagIds(goalTags.value, goal.tag_ids)) goalTags.value = goal.tag_ids;
         status();
     }
@@ -204,25 +159,15 @@ export function initGoalDetail(root) {
         )) {
             button.disabled = busy;
         }
-        if (data?.goal.status === 'Completed') {
-            for (const form of root.querySelectorAll(
-                '[data-milestone-create-form], [data-milestone-task-create-form], [data-goal-task-create-form]',
-            ))
-                form.querySelector('button[type="submit"]').disabled = true;
-            for (const button of root.querySelectorAll(
-                '[data-open-dialog]:not([data-open-goal-information])',
-            ))
-                button.disabled = true;
-        }
-        for (const form of root.querySelectorAll(
-            '[data-milestone-create-form], [data-milestone-task-create-form], [data-goal-task-create-form]',
-        )) {
-            form.setAttribute('aria-busy', String(pending || loading));
-            for (const control of form.elements)
-                control.disabled = busy || data?.goal.status === 'Completed';
-        }
-        for (const form of [strategyForm, detailsForm])
-            form.setAttribute('aria-busy', String(pending || loading));
+        for (const button of root.querySelectorAll(
+            '[data-goal-edit], [data-goal-child-new], [data-goal-task-new], [data-milestone-task-new], [data-milestone-menu] button',
+        ))
+            button.disabled = busy;
+        for (const button of root.querySelectorAll(
+            '[data-open-milestone-create], [data-goal-child-new], [data-goal-task-new], [data-milestone-task-new]',
+        ))
+            button.disabled = busy || data?.goal.status === 'Completed';
+        strategyForm.setAttribute('aria-busy', String(pending || loading));
         const goalTransition = find('[data-goal-transition]');
         const hasFiniteSteps =
             data && (data.child_goals.length || data.milestones.length || data.direct_tasks.length);
@@ -233,12 +178,6 @@ export function initGoalDetail(root) {
             ? t('Complete the finite goal steps before completing this goal.')
             : '';
         const milestone = data?.milestones.find((item) => item.id === selected);
-        const taskDialogTitle = find('#new-milestone-task-title');
-        if (milestone && taskDialogTitle) {
-            taskDialogTitle.textContent = t('Create new task');
-            find('[data-milestone-task-context]').textContent =
-                `${data.goal.name} › ${milestone.name} · ${milestone.progress.completed}/${milestone.progress.total} ${t('tasks completed')}`;
-        }
         if (milestone?.completion_locked && milestone.status !== 'Completed')
             find('[data-milestone-transition]').disabled = true;
         find('[data-goal-refresh]').disabled = busy;
@@ -372,7 +311,7 @@ export function initGoalDetail(root) {
         center.setAttribute('aria-controls', 'goal-information-dialog');
         center.setAttribute('aria-label', `${t('View goal information')}: ${data.goal.name}`);
         center.dataset.roadmapCenter = '';
-        center.append(referenceDecoration('anchor'));
+        center.append(entityIcon(data.goal, { size: 'lg' }));
         const headName = element('span', data.goal.name, 'roadmap-goal-name');
         headName.dataset.roadmapGoalName = '';
         const headState = element(
@@ -412,7 +351,7 @@ export function initGoalDetail(root) {
             branch.append(
                 entityIcon(milestone, {
                     size: 'sm',
-                    fallbackIcon: MILESTONE_ICONS[index % MILESTONE_ICONS.length],
+                    fallbackIcon: 'flag',
                     fallbackHue: cycleHue(index),
                 }),
             );
@@ -493,26 +432,26 @@ export function initGoalDetail(root) {
         }
         requestAnimationFrame(drawConnections);
     }
-    function taskRows(container, tasks, withActions = true) {
+    function taskRows(container, tasks) {
+        const activeTask = container.contains(document.activeElement)
+            ? document.activeElement.closest('[data-task-id]')?.dataset.taskId
+            : null;
+        const wasLink = document.activeElement?.matches('a[data-quick-edit]');
         container.replaceChildren();
         if (!tasks.length) container.append(element('p', t('No tasks here yet.'), 'subtle-copy'));
+        const timezone = window.notesBootstrap.preferences.timezone;
+        const today = localDate(new Date().toISOString(), timezone);
         for (const task of tasks) {
-            const row = element('article', undefined, 'planning-list-item');
-            const copy = element('div');
-            const link = element('a', task.name);
-            link.href = `/tasks/${encodeURIComponent(task.id)}`;
-            quickEditLink(link, 'task', task.id);
-            copy.append(link, element('small', statusLabel(task.status)));
-            row.append(copy);
-            if (withActions) {
-                const button = element(
-                    'button',
-                    task.status === 'Done' ? t('Reopen') : t('Complete'),
-                    'button button-quiet',
-                );
-                button.type = 'button';
-                button.dataset.taskTransition = '';
-                button.addEventListener('click', () =>
+            const { article, actions, completion } = taskRowShell(task, {
+                facts: [
+                    statusLabel(task.status),
+                    task.deadline ? `${t('Due')} ${formatDay(task.deadline)}` : '',
+                    task.series_id ? t('Repeats') : '',
+                ]
+                    .filter(Boolean)
+                    .join(' · '),
+                overdue: taskIsOverdue(task, today),
+                onToggle: () =>
                     mutation(async () => {
                         if (
                             await transitionEntity(
@@ -520,14 +459,25 @@ export function initGoalDetail(root) {
                                 task,
                                 task.status === 'Done' ? 'reopen' : 'complete',
                             )
-                        )
+                        ) {
                             await load();
+                            container
+                                .querySelector(`[data-task-id="${task.id}"] [data-task-transition]`)
+                                ?.focus();
+                        }
                     }),
-                );
-                row.append(button);
-            }
-            container.append(row);
+            });
+            article.dataset.taskId = task.id;
+            completion.dataset.taskTransition = '';
+            actions.append(starRating(task.importance));
+            container.append(article);
         }
+        if (activeTask)
+            container
+                .querySelector(
+                    `[data-task-id="${activeTask}"] ${wasLink ? 'a[data-quick-edit]' : '[data-task-transition]'}`,
+                )
+                ?.focus();
     }
     function renderMilestone() {
         const milestone = data.milestones.find((item) => item.id === selected);
@@ -543,8 +493,7 @@ export function initGoalDetail(root) {
         find('[data-milestone-icon]').replaceChildren(
             iconButton(milestone, {
                 label: milestone.name,
-                fallbackIcon:
-                    MILESTONE_ICONS[data.milestones.indexOf(milestone) % MILESTONE_ICONS.length],
+                fallbackIcon: 'flag',
                 fallbackHue: cycleHue(data.milestones.indexOf(milestone)),
                 save: (choice) => saveEntity('milestones', milestone, choice),
             }),
@@ -564,13 +513,38 @@ export function initGoalDetail(root) {
             t(
                 'Define success by completing the finite tasks or explicitly acknowledging unfinished work.',
             );
-        find('[data-milestone-transition]').textContent =
-            milestone.status === 'Completed' ? t('Reopen milestone') : t('Complete milestone');
+        find('[data-milestone-transition]').replaceChildren(
+            spriteIcon(milestone.status === 'Completed' ? 'refresh' : 'check'),
+            document.createTextNode(
+                milestone.status === 'Completed' ? t('Reopen milestone') : t('Complete milestone'),
+            ),
+        );
         const week = find('[data-milestone-week]');
-        week.textContent = selectedMilestones.has(milestone.id)
+        const weekLabel = selectedMilestones.has(milestone.id)
             ? t('Remove from this week')
-            : t('Select for week');
+            : t('Select for this week');
+        week.replaceChildren(lineIcon('pin', { filled: selectedMilestones.has(milestone.id) }));
+        week.title = weekLabel;
+        week.setAttribute('aria-label', weekLabel);
         week.setAttribute('aria-pressed', String(selectedMilestones.has(milestone.id)));
+        find('[data-milestone-menu]').replaceChildren(
+            actionMenu(milestone.name, [
+                {
+                    label: t('Edit'),
+                    icon: 'edit',
+                    action: () =>
+                        openQuickEditor('milestone', milestone.id, {
+                            trigger: find('[data-milestone-title]'),
+                        }),
+                },
+                {
+                    label: t('Archive'),
+                    icon: 'archive',
+                    danger: true,
+                    action: () => archiveMilestone(milestone),
+                },
+            ]),
+        );
         taskRows(find('[data-milestone-tasks]'), milestone.tasks);
         taskRows(find('[data-milestone-recurring]'), milestone.recurring_tasks);
         renderPrerequisites(milestone);
@@ -579,26 +553,6 @@ export function initGoalDetail(root) {
     }
     function openMilestone(milestoneId) {
         selected = milestoneId;
-        draftMilestone = milestoneId;
-        writeForm(
-            milestoneTaskForm,
-            milestoneTaskDrafts.get(milestoneId) || {
-                name: '',
-                completion_criteria: '',
-                description: '',
-                start_date: '',
-                deadline: '',
-                estimated_minutes: '',
-                importance: '3',
-                reminder_at: '',
-                repeat_frequency: '',
-                repeat_interval: '1',
-                repeat_end: '',
-                repeat_days: '',
-                repeat_unit: '',
-            },
-        );
-        milestoneTaskForm.dispatchEvent(new Event('schedule:refresh'));
         switchTabs(
             '[data-milestone-task-tab]',
             '[data-milestone-task-panel]',
@@ -608,14 +562,6 @@ export function initGoalDetail(root) {
         renderMilestone();
         find('[data-milestone-title]').focus();
     }
-    milestoneTaskForm.addEventListener('input', () => {
-        if (draftMilestone)
-            milestoneTaskDrafts.set(draftMilestone, {
-                name: milestoneTaskForm.elements.name.value,
-                completion_criteria: milestoneTaskForm.elements.completion_criteria.value,
-                ...Object.fromEntries(new FormData(milestoneTaskForm)),
-            });
-    });
     find('[data-roadmap-back]').addEventListener('click', () => {
         const previous = selected;
         selected = null;
@@ -696,8 +642,8 @@ export function initGoalDetail(root) {
         if (!data) return;
         const kind = find('[data-goal-related-kind]').value;
         const list = find('[data-goal-related-list]');
-        find('[data-goal-task-create-form]').hidden = kind !== 'direct_tasks';
-        find('[data-goal-child-create-form]').hidden = kind !== 'child_goals';
+        find('[data-goal-task-new]').hidden = kind !== 'direct_tasks';
+        find('[data-goal-child-new]').hidden = kind !== 'child_goals';
         if (kind === 'direct_tasks' || kind === 'recurring_tasks') taskRows(list, data[kind]);
         else if (kind === 'contributions')
             renderContributions(list, { type: 'goal', id, onError: report });
@@ -774,36 +720,11 @@ export function initGoalDetail(root) {
             await load();
         }),
     );
-    const milestoneEditForm = find('[data-milestone-edit-form]');
-    find('[data-milestone-edit]').addEventListener('click', () => {
-        const milestone = data?.milestones.find((item) => item.id === selected);
-        if (!milestone) return;
-        milestoneEditForm.elements.name.value = milestone.name;
-        milestoneEditForm.elements.completion_criteria.value = milestone.completion_criteria || '';
-        milestoneEditForm.elements.deadline.value = milestone.deadline || '';
-    });
-    milestoneEditForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const milestone = data?.milestones.find((item) => item.id === selected);
-        if (!milestone) return;
-        mutation(async () => {
-            await patch(`/api/v1/milestones/${encodeURIComponent(milestone.id)}`, {
-                base_version: milestone.version,
-                name: milestoneEditForm.elements.name.value,
-                completion_criteria: milestoneEditForm.elements.completion_criteria.value,
-                deadline: milestoneEditForm.elements.deadline.value || null,
-            });
-            milestoneEditForm.closest('dialog').close();
-            await load();
-        });
-    });
-    find('[data-milestone-archive]').addEventListener('click', () => {
-        const milestone = data?.milestones.find((item) => item.id === selected);
-        if (!milestone) return;
+    function archiveMilestone(milestone) {
         const count = milestone.tasks.length + milestone.recurring_tasks.length;
         if (
             !window.confirm(
-                `${t('Remove milestone')} “${milestone.name}”?${count ? ` ${t('Its tasks are removed too:')} ${count}.` : ''}`,
+                `${t('Archive milestone')} “${milestone.name}”?${count ? ` ${t('Its tasks are archived too:')} ${count}.` : ''}`,
             )
         )
             return;
@@ -817,7 +738,7 @@ export function initGoalDetail(root) {
             overview.hidden = false;
             await load();
         });
-    });
+    }
     find('[data-goal-archive]').addEventListener('click', () => {
         if (!data) return;
         const parts = [
@@ -833,7 +754,7 @@ export function initGoalDetail(root) {
             .map(([count, label]) => `${count} ${label}`);
         if (
             !window.confirm(
-                `${t('Remove goal')} “${data.goal.name}”?${parts.length ? ` ${t('This also removes')} ${parts.join(', ')}.` : ''}`,
+                `${t('Archive goal')} “${data.goal.name}”?${parts.length ? ` ${t('This also archives')} ${parts.join(', ')}.` : ''}`,
             )
         )
             return;
@@ -846,68 +767,23 @@ export function initGoalDetail(root) {
             window.location.href = '/goals';
         });
     });
-    const childForm = find('[data-goal-child-create-form]');
-    childForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        mutation(async () => {
-            await post('/api/v1/goals', {
-                area_id: null,
-                parent_goal_id: id,
-                name: childForm.elements.name.value,
-            });
-            childForm.reset();
-            await load();
-        });
+    find('[data-goal-edit]').addEventListener('click', () => openQuickEditor('goal', id));
+    find('[data-open-milestone-create]').addEventListener('click', () =>
+        openQuickCreator('milestone', { goal_id: id, position: data.milestones.length }),
+    );
+    find('[data-milestone-task-new]').addEventListener('click', () => {
+        const milestone = data.milestones.find((item) => item.id === selected);
+        if (milestone)
+            openQuickCreator('task', { milestone_id: selected, position: milestone.tasks.length });
     });
-    const milestoneForm = find('[data-milestone-create-form]');
-    milestoneForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const fields = new FormData(milestoneForm);
-        mutation(async () => {
-            const response = await post('/api/v1/milestones', {
-                goal_id: id,
-                name: fields.get('name'),
-                completion_criteria: fields.get('completion_criteria'),
-                position: data.milestones.length,
-            });
-            milestoneForm.reset();
-            milestoneForm.closest('dialog').close();
-            await load();
-            openMilestone(response.payload.data.id);
-        });
-    });
-    for (const [selector, parent] of [
-        ['[data-milestone-task-create-form]', 'milestone'],
-        ['[data-goal-task-create-form]', 'goal'],
-    ]) {
-        const form = find(selector);
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const fields = new FormData(form);
-            const parentId = parent === 'goal' ? id : selected;
-            mutation(async () => {
-                const taskCount =
-                    parent === 'goal'
-                        ? data.direct_tasks.length
-                        : data.milestones.find((item) => item.id === parentId).tasks.length;
-                await createCapturedTask(fields, {
-                    name: fields.get('name'),
-                    completion_criteria: fields.get('completion_criteria') || '',
-                    ...taskCaptureValues(fields),
-                    goal_id: parent === 'goal' ? id : null,
-                    milestone_id: parent === 'milestone' ? parentId : null,
-                    position: taskCount,
-                });
-                if (parent === 'milestone') milestoneTaskDrafts.delete(parentId);
-                if (parent === 'goal' || draftMilestone === parentId) form.reset();
-                form.closest('dialog')?.close();
-                await load();
-            });
-        });
-    }
+    find('[data-goal-child-new]').addEventListener('click', () =>
+        openQuickCreator('goal', { parent_goal_id: id }),
+    );
+    find('[data-goal-task-new]').addEventListener('click', () =>
+        openQuickCreator('task', { goal_id: id, position: data.direct_tasks.length }),
+    );
     for (const [form, buffer, extract, marker] of [
         [strategyForm, strategy, strategyValues, '[data-strategy-state]'],
-        [detailsForm, details, detailsValues, '[data-details-state]'],
     ]) {
         form.addEventListener('input', () => {
             const values = new FormData(form);
@@ -1054,7 +930,14 @@ export function initGoalDetail(root) {
     }
     window.addEventListener('hashchange', openHashInformation);
     // Edits saved from the floating editor refresh the roadmap in place.
-    document.addEventListener('planner:changed', () => load());
+    document.addEventListener('planner:changed', async (event) => {
+        const created =
+            event.detail?.type === 'milestone' &&
+            !data?.milestones.some((item) => item.id === event.detail.id);
+        await load();
+        if (created && data?.milestones.some((item) => item.id === event.detail.id))
+            openMilestone(event.detail.id);
+    });
     load().then(() => {
         openHashInformation();
         const milestoneId = new URLSearchParams(location.hash.slice(1)).get('milestone');

@@ -3,6 +3,7 @@ import { t } from '../lib/i18n.js';
 import { localDateTime } from '../lib/calendar.js';
 import { iconButton } from '../lib/entity-icons.js';
 import { starRating } from '../lib/star-rating.js';
+import { spriteIcon } from '../lib/line-icons.js';
 import { transitionEntity } from './transitions.js';
 
 // One floating editor for Tasks, Goals and Milestones on any page: a side sheet that edits or
@@ -78,6 +79,7 @@ export function formValues(type, entity) {
         else if (kind === 'stars') values[field] = String(entity[field] ?? 3);
         else values[field] = entity[field] == null ? '' : String(entity[field]);
     }
+    if (type === 'goal' && entity.parent_goal_id) values.parent_goal_id = entity.parent_goal_id;
     values.icon = entity.icon ?? null;
     values.icon_color = entity.icon_color ?? null;
     return values;
@@ -102,6 +104,10 @@ export function changedFields(type, values, initial = null) {
         else if (kind === 'stars') body[field] = Number(value);
         else if (field === 'icon' || field === 'icon_color') body[field] = value;
         else body[field] = field === 'name' ? String(value).trim() : value;
+    }
+    if (type === 'goal' && !initial && values.parent_goal_id) {
+        body.area_id = null;
+        body.parent_goal_id = values.parent_goal_id;
     }
     return body;
 }
@@ -366,12 +372,18 @@ class QuickEditor {
         const form = element('form', 'stack-form quick-editor-form');
         form.noValidate = false;
         if (this.conflict) form.append(this.conflictNotice());
+        if (this.mode === 'create' && this.type === 'goal' && this.entity.parent_goal_id) {
+            const parent = this.lists.goals.find((goal) => goal.id === this.entity.parent_goal_id);
+            form.append(element('p', 'context-chip', `${t('Child goals')}: ${parent?.name || ''}`));
+        }
         for (const [section, heading] of SECTIONS) {
             const fields = FIELDS[this.type].filter(([field, , , where]) => {
                 if (where !== section) return false;
                 // Moving a Goal or Milestone has its own guarded flows on the roadmap.
                 if (this.mode === 'edit' && ['area_id', 'goal_id'].includes(field)) return false;
                 if (this.mode === 'create' && field === 'status') return false;
+                if (this.mode === 'create' && field === 'area_id' && this.entity.parent_goal_id)
+                    return false;
                 return true;
             });
             const nodes = fields.map(([field, label, kind]) => this.field(field, label, kind));
@@ -415,6 +427,7 @@ class QuickEditor {
             'button button-primary',
             this.mode === 'edit' ? t('Save changes') : t(`Create ${this.type}`),
         );
+        save.prepend(spriteIcon(this.mode === 'edit' ? 'check' : 'plus'));
         save.type = 'submit';
         footer.append(cancel, save);
         form.append(error, footer);
@@ -509,6 +522,7 @@ class QuickEditor {
             } else {
                 // New work always starts Not started; status is not a create field.
                 delete body.status;
+                if (Number.isInteger(this.entity.position)) body.position = this.entity.position;
                 const response = await post(`/api/v1/${this.type}s`, body);
                 this.entity = response.payload.data;
             }

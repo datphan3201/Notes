@@ -1,11 +1,11 @@
-/* Tasks catalogue and editor only; use the established theme and controls. */
-[data-tasks-page] .task-row {
+/* Shared Task row structure, plus Tasks catalogue/editor controls. */
+.task-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: start;
     gap: 1rem;
 }
-[data-tasks-page] .task-row-copy {
+.task-row-copy {
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -13,7 +13,7 @@
     gap: 0.35rem;
     overflow-wrap: anywhere;
 }
-[data-tasks-page] .task-row-copy .context-chip {
+.task-row-copy .context-chip {
     align-self: flex-start;
     width: auto;
     max-width: 100%;
@@ -107,7 +107,7 @@
     padding: 0;
 }
 @media (max-width: 800px) {
-    [data-tasks-page] .task-row {
+    .task-row {
         grid-template-columns: auto minmax(0, 1fr);
     }
     [data-tasks-page] .task-row-actions {

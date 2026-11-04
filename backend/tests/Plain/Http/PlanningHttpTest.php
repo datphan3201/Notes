@@ -97,7 +97,9 @@ final class PlanningHttpTest extends TestCase
         self::assertStringContainsString('data-goal-information-description', $page->body);
         self::assertStringContainsString('name="goal-information-sections"', $page->body);
         self::assertStringContainsString('data-goal-strategy-form', $page->body);
-        self::assertStringContainsString('data-goal-details-form', $page->body);
+        self::assertStringContainsString('data-goal-edit', $page->body);
+        self::assertStringNotContainsString('data-goal-details-form', $page->body);
+        self::assertStringNotContainsString('id="edit-milestone-dialog"', $page->body);
         self::assertStringNotContainsString('data-goal-tab', $page->body);
     }
 

@@ -65,18 +65,18 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 [Behavior and source trace](../ui/goals/README.md)
 
-- [ ] GOAL01 — Create/rename/reorder Areas; normalized duplicate names, fifth active Area and removing the last active Area are rejected.
+- [ ] GOAL01 — Manage areas exposes icon/stars, compact Rename/Archive and a Cancel-first Add footer; create/rename/reorder Areas; normalized duplicate names, fifth active Area and removing the last active Area are rejected.
 - [ ] GOAL02 — An Area with active root Goals cannot be archived without reorganizing those Goals.
-- [ ] GOAL03 — Create Goal under an Area with optional description/outcome/criteria/importance/deadline.
+- [ ] GOAL03 — New goal opens the shared floating creator with an Area preset, icon/stars and optional description/outcome/criteria/deadline. Tree/timeline/Main goal edit controls open the shared editor; Goal names still navigate to the roadmap.
 - [ ] GOAL04 — Create nested Goals and navigate tree/timeline without losing IDs or primary location.
 - [ ] GOAL05 — Move a Goal to a valid owned destination; self/descendant/foreign destinations fail.
-- [ ] GOAL06 — Fishbone uses the real Goal name; paging and narrow-screen layout keep Milestones usable.
+- [ ] GOAL06 — Fishbone uses the real Goal name and chosen icon; paging and narrow-screen layout keep Milestones usable.
 - [ ] GOAL07 — Selecting the named head opens one information dialog with Edit, Strategy and Related work.
 - [ ] GOAL08 — Save Goal fields/Strategy; refresh/reopen retains saved data and newer unsaved typing.
-- [ ] GOAL09 — Create/edit Milestone under the selected Goal; creation drafts stay associated with the correct branch.
+- [ ] GOAL09 — Create/edit Milestone through the shared floating editor under the selected Goal; new Milestones append in order. The pin toggles this week; the Edit/Archive menu supports keyboard, Escape and outside clicks.
 - [ ] GOAL10 — Select a Milestone to focus finite/recurring Tasks and return without losing context.
 - [ ] GOAL11 — Prerequisite edge requires completion of the referenced Milestone before dependent completion.
-- [ ] GOAL12 — Tasks beneath a locked Milestone remain editable and completable.
+- [ ] GOAL12 — Tasks beneath a locked Milestone remain editable and completable through shared tick/name/facts/read-only-stars rows. Plain name clicks open the floating editor; Add task preserves the Milestone and append position.
 - [ ] GOAL13 — Completing a Milestone with open Tasks asks for explicit acknowledgement; cancel changes nothing.
 - [ ] GOAL14 — Reopening a prerequisite with a completed dependent is rejected until dependents are reopened.
 - [ ] GOAL15 — Self/cyclic/foreign prerequisite and contribution edges fail without partial writes.

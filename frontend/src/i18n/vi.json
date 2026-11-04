@@ -1140,5 +1140,12 @@
     "Description and criteria": "Mô tả và tiêu chí",
     "Discard your unsaved changes?": "Bỏ các thay đổi chưa lưu?",
     "Open full page": "Mở trang đầy đủ",
-    "This item changed elsewhere. Your edits are preserved.": "Mục này vừa được thay đổi ở nơi khác. Các chỉnh sửa của bạn vẫn được giữ."
+    "This item changed elsewhere. Your edits are preserved.": "Mục này vừa được thay đổi ở nơi khác. Các chỉnh sửa của bạn vẫn được giữ.",
+    "Archive milestone": "Lưu trữ cột mốc",
+    "Its tasks are archived too:": "Các công việc bên trong cũng được lưu trữ:",
+    "Archive goal": "Lưu trữ mục tiêu",
+    "This also archives": "Thao tác này cũng lưu trữ",
+    "Archive this area?": "Lưu trữ lĩnh vực này?",
+    "Back to roadmap": "Quay lại lộ trình",
+    "Archiving a goal also archives its sub-goals, milestones and tasks. Their data is retained.": "Lưu trữ mục tiêu cũng lưu trữ các mục tiêu con, cột mốc và công việc bên trong. Dữ liệu vẫn được giữ lại."
 }

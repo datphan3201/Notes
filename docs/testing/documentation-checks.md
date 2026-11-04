@@ -2,6 +2,18 @@
 
 [Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
+## Goals UI unification — 2026-11-04
+
+Branch feat/goals-ui-unification from main 52cb745. Frontend/views only, plus the HTTP shell marker and one meaningful sub-Goal payload regression; no backend runtime, API, route or schema change. Full required checks were run against the candidate; source traces were regenerated after dead duplicate form hooks were removed.
+
+- `php vendor/bin/phpunit -c phpunit.xml` from backend: **159 tests / 1414 assertions passed**, PHP 8.5.0, 6m 17.761s. Integration/HTTP setup verifies actual goals_test before cleanup; the app database was not a cleanup target. Providers use fakes.
+- `npm run test:unit`: **112 passed**. Full `npm run format:check`, production Vite build and changed PHP lint passed. An initial translation completeness failure exposed missing new Archive wording; added the Vietnamese keys and reran successfully.
+- Documentation sync/check and `php tools/docs/tests/run.php`: all **17 isolated scenarios passed**. Generated source links include the new shared task-row/action-menu modules and floating editor ownership.
+- Real browser on a dedicated 8002 server (8001 already occupied; 8000/8001 preserved), using the supplied demo account: created a throwaway Goal/Milestone/Task hierarchy; exercised Task tick/editor, Goal/Milestone Complete/Reopen, new sub-Goal parent and Milestone append context, Milestone Edit/Archive/pin, Area Rename/icon/stars and Escape inside its picker. Restored the original Area values. Strategy edits survived an intentionally induced 409 and explicit Keep my draft. Archived only the QA hierarchy.
+- Captured 12 route/dialog states at 1440 and 390 widths in light and dark, with no horizontal page overflow. Representative desktop/mobile images were inspected and remain ignored local screenshots. No JavaScript errors; the only failing HTTP response was the intentional Strategy 409.
+
+Limits: local supported-flow/browser evidence, not exhaustive lost-response/concurrency testing, every visual theme/browser, live SMTP/AI or production deployment. Archive tests use retained data through the ordinary APIs, not hard deletion. Diagram provenance and automation are separately recorded in the canonical receipts/index.
+
 ## Archify source refresh — 2026-11-04
 
 Refreshed all nine maintained candidates against committed 45ed89671e5dcfb04cbebfd805c63219428c202e. Reviewed changed cited paths from b1b5f976 and inspected the committed snapshot independently of current quick-edit worktree changes. The former contract-only Task classification, daily/weekly and TaskSeries maps now include committed source citations. The diagram index declares current coverage and the pending quick-edit boundary; ISSUE-027/028 are resolved.

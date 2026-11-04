@@ -73,3 +73,14 @@ test('Open full page goes to the Task page or the Milestone on its roadmap', () 
     assert.equal(fullPageHref('goal', { id: 'g1' }), '/goals/g1');
     assert.equal(fullPageHref('milestone', { id: 'm1', goal_id: 'g1' }), '/goals/g1#milestone=m1');
 });
+
+test('a sub-goal creator preserves its parent instead of assigning an Area', () => {
+    const values = formValues('goal', { name: 'Child', parent_goal_id: 'parent', importance: 4 });
+    const body = changedFields('goal', values);
+    assert.equal(body.parent_goal_id, 'parent');
+    assert.equal(body.area_id, null);
+    const initial = formValues('goal', { name: 'Child', parent_goal_id: 'parent', importance: 4 });
+    assert.deepEqual(changedFields('goal', { ...initial, name: 'Renamed' }, initial), {
+        name: 'Renamed',
+    });
+});

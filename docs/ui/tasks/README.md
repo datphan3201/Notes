@@ -28,7 +28,7 @@ Tasks defaults to All unless a valid view query is supplied. Visible search, Sta
 | --- | --- |
 | UI / DOM | [tasks.php · data-tasks-page](../../../frontend/src/views/planning/tasks.php#L1)<br>[tasks.php · data-task-sort](../../../frontend/src/views/planning/tasks.php#L68)<br>[tasks.php · data-task-create-status](../../../frontend/src/views/planning/tasks.php#L99) |
 | CSS | [tasks.css · &#91;data-tasks-page&#93; .collection-controls {](../../../frontend/src/css/tasks.css#L90) |
-| Browser logic | [planning-page.js · export function initTasksPage](../../../frontend/src/js/planning/planning-page.js#L448)<br>[collection-page.js · export function collectionPage](../../../frontend/src/js/planning/collection-page.js#L4)<br>[tasks-collection.js · export function sortTasks](../../../frontend/src/js/planning/tasks-collection.js#L5) |
+| Browser logic | [planning-page.js · export function initTasksPage](../../../frontend/src/js/planning/planning-page.js#L473)<br>[collection-page.js · export function collectionPage](../../../frontend/src/js/planning/collection-page.js#L4)<br>[tasks-collection.js · export function sortTasks](../../../frontend/src/js/planning/tasks-collection.js#L5)<br>[task-row.js · export function taskRowShell(](../../../frontend/src/js/planning/task-row.js#L7) |
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [collection-page.test.js · task filtering](../../../frontend/tests/js/collection-page.test.js#L10)<br>[collection-page.test.js · page shrinks](../../../frontend/tests/js/collection-page.test.js#L21)<br>[tasks-collection.test.js · test('sorting uses account-local scheduled time, keeps undated work last and is independent of filtering'](../../../frontend/tests/js/tasks-collection.test.js#L30) |
@@ -44,7 +44,7 @@ Aligned checkbox/content/actions keep the task name primary and parent chips siz
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-list](../../../frontend/src/views/planning/tasks.php#L100) |
 | CSS | [tasks.css · Aligned task row grid](../../../frontend/src/css/tasks.css#L4) |
-| Browser logic | [planning-page.js · const taskRow = (task, { showContext = true } = {}) =&gt;](../../../frontend/src/js/planning/planning-page.js#L557)<br>[transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7) |
+| Browser logic | [planning-page.js · const taskRow = (task, { showContext = true } = {}) =&gt;](../../../frontend/src/js/planning/planning-page.js#L582)<br>[transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7)<br>[task-row.js · export function taskRowShell(](../../../frontend/src/js/planning/task-row.js#L7) |
 | Controller / service / domain | [PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L346) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94)<br>[PdoPlanningRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L116) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L135) |
@@ -59,7 +59,7 @@ Tasks stays the execution view: the time filters (Today, This week…) and Statu
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-group](../../../frontend/src/views/planning/tasks.php#L75) |
-| Browser logic | [tasks-collection.js · export function groupTasksByGoal(](../../../frontend/src/js/planning/tasks-collection.js#L57)<br>[planning-page.js · const GROUPING_KEY = 'planner.tasks.group';](../../../frontend/src/js/planning/planning-page.js#L474) |
+| Browser logic | [tasks-collection.js · export function groupTasksByGoal(](../../../frontend/src/js/planning/tasks-collection.js#L57)<br>[planning-page.js · const GROUPING_KEY = 'planner.tasks.group';](../../../frontend/src/js/planning/planning-page.js#L499) |
 | Relevant tests (not a pass claim) | [tasks-collection.test.js · tasks group by their goal](../../../frontend/tests/js/tasks-collection.test.js#L102) |
 
 <!-- END GENERATED TRACE -->

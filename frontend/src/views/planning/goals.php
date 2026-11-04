@@ -9,8 +9,8 @@
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
                 <?= $view->e($view->t('Refresh')) ?>
             </button>
-            <button class="button button-quiet" type="button" data-open-dialog="areas-dialog"><?= $view->e($view->t('Manage areas')) ?></button>
-            <button class="button button-primary" type="button" data-open-dialog="new-goal-dialog">
+            <button class="button button-quiet" type="button" data-open-dialog="areas-dialog"><svg class="ui-icon" aria-hidden="true"><use href="#icon-settings"/></svg><?= $view->e($view->t('Manage areas')) ?></button>
+            <button class="button button-primary" type="button" data-goal-new>
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <?= $view->e($view->t('New goal')) ?>
             </button>
@@ -38,38 +38,6 @@
         <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
         <?= $view->e($view->t('Add another life area')) ?>
     </button>
-    <dialog id="new-goal-dialog" class="workspace-dialog" aria-labelledby="new-goal-dialog-title" data-workspace-dialog>
-        <header class="section-heading">
-            <h2 id="new-goal-dialog-title"><?= $view->e($view->t('New goal')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close new goal')) ?>">×</button>
-        </header>
-        <form class="stack-form" data-goal-create-form>
-            <div class="field">
-                <label for="goal-name"><?= $view->e($view->t('Goal name')) ?></label>
-                <input id="goal-name" name="name" maxlength="200" placeholder="<?= $view->e($view->t('Something worth working toward')) ?>" required>
-            </div>
-            <div class="field">
-                <label for="goal-area"><?= $view->e($view->t('Area')) ?></label>
-                <select id="goal-area" name="area_id" required data-goal-area></select>
-            </div>
-            <details class="capture-details">
-                <summary><?= $view->e($view->t('Add details (optional)')) ?></summary>
-                <div class="field">
-                    <label for="goal-result"><?= $view->e($view->t('Desired outcome')) ?></label>
-                    <textarea id="goal-result" name="expected_result" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('What will be different?')) ?>"></textarea>
-                </div>
-                <div class="field">
-                    <label for="goal-criteria"><?= $view->e($view->t('Completion criteria')) ?></label>
-                    <textarea id="goal-criteria" name="completion_criteria" rows="3" maxlength="10000" placeholder="<?= $view->e($view->t('How will you know you\'ve succeeded?')) ?>"></textarea>
-                </div>
-            </details>
-            <button class="button button-primary" type="submit">
-                <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
-                <?= $view->e($view->t('Create goal')) ?>
-            </button>
-        </form>
-        <p class="field-error is-hidden" data-dialog-error role="alert"></p>
-    </dialog>
     <dialog id="areas-dialog" class="workspace-dialog" aria-labelledby="areas-dialog-title" data-workspace-dialog>
         <header class="section-heading">
             <h2 id="areas-dialog-title"><?= $view->e($view->t('Manage areas')) ?></h2>
@@ -79,10 +47,13 @@
         <div data-area-list aria-live="polite">
             <p class="loading-copy"><?= $view->e($view->t('Loading areas…')) ?></p>
         </div>
-        <form class="inline-form" data-area-create-form>
+        <form class="stack-form" data-area-create-form>
             <label class="sr-only" for="area-name"><?= $view->e($view->t('New area name')) ?></label>
             <input id="area-name" name="name" maxlength="80" placeholder="<?= $view->e($view->t('Another life area')) ?>" required>
-            <button class="button button-primary" type="submit"><?= $view->e($view->t('Add area')) ?></button>
+            <div class="dialog-footer">
+                <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
+                <button class="button button-primary" type="submit"><svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg><?= $view->e($view->t('Add area')) ?></button>
+            </div>
         </form>
         <p class="field-error is-hidden" data-dialog-error role="alert"></p>
     </dialog>

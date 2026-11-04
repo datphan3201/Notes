@@ -1189,3 +1189,81 @@
         grid-column: 2;
     }
 }
+
+/* Goals reuse the established row, icon and dialog controls. */
+.goal-tree-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+}
+.goal-tree-row > .goal-tree-link {
+    flex: 1;
+    min-width: 0;
+}
+.goal-tree-row > .icon-button {
+    flex: none;
+}
+[data-goals-page] .area-rename-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    gap: 8px;
+    align-items: center;
+}
+[data-goals-page] .area-rename-row input {
+    width: 100%;
+}
+[data-goals-page] .area-rename-row .button {
+    white-space: nowrap;
+}
+[data-area-create-form] {
+    margin-top: 20px;
+}
+[data-goal-detail] .task-row-actions {
+    justify-content: flex-end;
+}
+.milestone-add-task {
+    margin-top: 16px;
+}
+.roadmap-center > .entity-icon {
+    margin-inline: auto;
+}
+@media (max-width: 600px) {
+    [data-goals-page] .area-rename-row {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    [data-goals-page] .area-rename-row .star-rating {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    [data-goals-page] .area-rename-row .button {
+        grid-column: 2;
+        grid-row: 3;
+        justify-self: start;
+    }
+    [data-goals-page] .area-rename-row > .button-danger-quiet {
+        grid-column: 3;
+        grid-row: 1;
+    }
+    .goal-tree-row {
+        align-items: start;
+    }
+    .goal-tree-row .goal-tree-link {
+        flex-wrap: wrap;
+    }
+    .goal-tree-row .goal-tree-meta {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .goal-timeline-item > .goal-tree-row {
+        grid-column: 2 / -1;
+    }
+}
+
+@media (max-width: 800px) {
+    [data-goal-detail] .task-row-actions {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+}

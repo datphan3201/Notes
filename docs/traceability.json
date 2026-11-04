@@ -35,6 +35,10 @@
             {
               "path": "frontend/src/js/planning/tasks-collection.js",
               "symbol": "export function sortTasks"
+            },
+            {
+              "path": "frontend/src/js/planning/task-row.js",
+              "symbol": "export function taskRowShell("
             }
           ],
           "server": [
@@ -94,6 +98,10 @@
             {
               "path": "frontend/src/js/planning/transitions.js",
               "symbol": "export async function transitionEntity"
+            },
+            {
+              "path": "frontend/src/js/planning/task-row.js",
+              "symbol": "export function taskRowShell("
             }
           ],
           "server": [
@@ -1350,7 +1358,7 @@
         {
           "id": "goals.areas",
           "label": "Manage Areas",
-          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived. Each Area has an importance of 1–5 (default 3), set with the stars beside its name in the Goal tree.",
+          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived. Each Area has an importance of 1–5 (default 3), set with the stars beside its name in the Goal tree. Manage areas also exposes versioned icon/importance controls, compact Rename and Archive actions, and a Cancel-first Add area footer.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1408,7 +1416,7 @@
         {
           "id": "goals.collection",
           "label": "Goal tree, timeline and main Goal",
-          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it: expand carets sit in a gutter so sibling Goals stay aligned and only sub-Goals are indented; deadlines read as localized dates. The Main goal card is the account's explicit focus Goal, the same choice as the Dashboard roadmap; its title is a picker that changes both, and with no choice it invites one instead of guessing by importance. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
+          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it: expand carets sit in a gutter so sibling Goals stay aligned and only sub-Goals are indented; deadlines read as localized dates. The Main goal card is the account's explicit focus Goal, the same choice as the Dashboard roadmap; its title is a picker that changes both, and with no choice it invites one instead of guessing by importance. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone. New goal uses the shared floating creator with an Area preset; edit buttons on the Main goal card, tree and timeline open the same floating editor without changing roadmap navigation.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1423,6 +1431,10 @@
             {
               "path": "frontend/src/js/planning/planning-page.js",
               "symbol": "const renderMainGoal = (goals, focusId) =>"
+            },
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function openQuickCreator("
             }
           ],
           "server": [
@@ -1542,7 +1554,7 @@
         {
           "id": "goal.roadmap",
           "label": "Fishbone, paging and Milestone focus",
-          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens. The Goal header carries its icon (click to change) and editable importance stars; each Milestone branch shows its icon, accent and stars, and the Milestone focus header edits both.",
+          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens. The Goal header carries its icon (click to change) and editable importance stars; each Milestone branch shows its icon, accent and stars, and the Milestone focus header edits both. Add milestone is the single primary header action and opens the shared creator with Goal/order presets. The fishbone head uses the chosen Goal icon.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
@@ -1598,7 +1610,7 @@
         {
           "id": "goal.information",
           "label": "Goal information: Edit, Strategy and Related work",
-          "behavior": "Goal details and strategy have separate drafts within one dialog. Strategy is plain text up to 20,000 code points; it does not emit Activity or change progress. Saved-version/draft choices preserve concurrent edits.",
+          "behavior": "Goal information keeps Strategy, Related work/notes and Tags in-page. Edit goal and all Goal/Milestone/Task creation use the shared floating editor, including parent-preserving sub-Goal creation; the old duplicate forms and capture suggestions are removed. Strategy retains its independent DraftBuffer, explicit Save, dirty-navigation guard and saved-version/draft conflict choices; it is plain text up to 20,000 code points and does not emit Activity or change progress.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
@@ -1613,6 +1625,10 @@
             {
               "path": "frontend/src/js/planning/draft-buffer.js",
               "symbol": "export class DraftBuffer"
+            },
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function openQuickEditor("
             }
           ],
           "server": [
@@ -1689,7 +1705,7 @@
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
-              "symbol": "data-goal-details-form"
+              "symbol": "data-goal-archive"
             }
           ],
           "client": [
@@ -1793,7 +1809,7 @@
         {
           "id": "milestone.tasks",
           "label": "Finite/recurring Tasks, weekly selection and Complete",
-          "behavior": "Tasks under a locked Milestone are usable and completable. Completing a Milestone with unfinished Tasks requires acknowledge_open_tasks=true. Recurring occurrences do not enter finite completion denominators.",
+          "behavior": "Tasks under a locked Milestone are usable and completable. Completing a Milestone with unfinished Tasks requires acknowledge_open_tasks=true. Recurring occurrences do not enter finite completion denominators. Task rows share taskRowShell with Tasks: round completion tick, floating-editor name, status/due/repeat facts and read-only stars. Add task opens the shared creator with Milestone/order presets, replacing the duplicate capture dialog and suggestions.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
@@ -1803,11 +1819,11 @@
           "client": [
             {
               "path": "frontend/src/js/planning/goal-roadmap.js",
-              "symbol": "data-milestone-tasks"
+              "symbol": "function taskRows("
             },
             {
-              "path": "frontend/src/js/planning/task-capture.js",
-              "symbol": "export async function createCapturedTask"
+              "path": "frontend/src/js/planning/task-row.js",
+              "symbol": "export function taskRowShell("
             }
           ],
           "server": [
@@ -1841,17 +1857,25 @@
         {
           "id": "milestone.edit",
           "label": "Edit, contributions and archive",
-          "behavior": "Milestone edits and contribution changes use aggregate versions. Archiving with include_contents is an explicit bulk action. Contributions never act as prerequisites or progress weights.",
+          "behavior": "Milestone edits and contribution changes use aggregate versions. Archiving with include_contents is an explicit bulk action. Contributions never act as prerequisites or progress weights. Edit/Archive live in a keyboard-accessible disclosure menu; editing uses the shared floating editor. Week selection is an accessible pin toggle labelled Select for this week; Complete/Reopen is the primary panel action. Archive wording describes retained data and preserves include_contents confirmation.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
-              "symbol": "data-milestone-edit data-open-dialog"
+              "symbol": "data-milestone-menu"
             }
           ],
           "client": [
             {
               "path": "frontend/src/js/planning/goal-roadmap.js",
-              "symbol": "find('[data-milestone-edit]').addEventListener"
+              "symbol": "function archiveMilestone("
+            },
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function openQuickEditor("
+            },
+            {
+              "path": "frontend/src/js/planning/action-menu.js",
+              "symbol": "export function actionMenu("
             }
           ],
           "server": [
@@ -5264,7 +5288,7 @@
         {
           "id": "shell.quick-editor",
           "label": "Floating editor for Tasks, Goals and Milestones",
-          "behavior": "One side sheet (full screen below 600px) edits or creates a Task, Goal or Milestone on the current page. Calendar items, Tasks rows and their Edit item, Dashboard task rows and the roadmap's Milestone task list open it on a plain click; a modified click (Ctrl, Cmd, Shift, middle button) keeps the full page, and Open full page leads there for working notes, Related work and history. Task: name, Add to (Inbox, Goal or open Milestone), status, importance stars, start/due dates, scheduled start/end, reminder, estimate, description, criteria and the completion checklist (tick or add). Goal and Milestone: icon, name, importance, deadline, description and criteria; a new Goal picks its Area and a new Milestone its Goal, while moving them stays on the roadmap. Save sends only the changed fields with base_version; Complete/Reopen use the ordinary transitions and their confirmations. A version conflict keeps the draft and offers Use saved version or Keep my draft, which lays only the fields edited here over the latest version. Closing with unsaved changes asks first; Escape inside the icon picker closes only the picker. Every save dispatches planner:changed, which refreshes the Calendar, Tasks, Goals, Dashboard and roadmap in place.",
+          "behavior": "One side sheet (full screen below 600px) edits or creates a Task, Goal or Milestone on the current page. Calendar items, Tasks rows and their Edit item, Dashboard task rows and the roadmap's Milestone task list open it on a plain click; a modified click (Ctrl, Cmd, Shift, middle button) keeps the full page, and Open full page leads there for working notes, Related work and history. Task: name, Add to (Inbox, Goal or open Milestone), status, importance stars, start/due dates, scheduled start/end, reminder, estimate, description, criteria and the completion checklist (tick or add). Goal and Milestone: icon, name, importance, deadline, description and criteria; a new Goal picks its Area and a new Milestone its Goal, while moving them stays on the roadmap. Save sends only the changed fields with base_version; Complete/Reopen use the ordinary transitions and their confirmations. A version conflict keeps the draft and offers Use saved version or Keep my draft, which lays only the fields edited here over the latest version. Closing with unsaved changes asks first; Escape inside the icon picker closes only the picker. Every save dispatches planner:changed, which refreshes the Calendar, Tasks, Goals, Dashboard and roadmap in place. Goals and roadmap creation also use this sheet; sub-Goals retain parent_goal_id rather than selecting an Area, and roadmap Milestone/Task creations preserve their append-position presets.",
           "ui": [
             {
               "path": "frontend/src/js/planning/quick-editor.js",
