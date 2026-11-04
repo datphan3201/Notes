@@ -533,6 +533,39 @@
     margin-top: 18px;
 }
 
+/* ---- Unverified account ---- */
+.verify-banner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 12px 32px 0;
+    padding: 12px 16px;
+    color: #7a4b00;
+    background: #fff3d6;
+    border: 1px solid #f3d38c;
+    border-radius: var(--radius-control);
+}
+.verify-banner p {
+    display: grid;
+    flex: 1 1 260px;
+    margin: 0;
+    font-size: var(--font-size-ui);
+}
+.verify-banner .ui-icon {
+    flex: 0 0 auto;
+}
+[data-theme='dark'] .verify-banner {
+    color: #ffd27a;
+    background: #3b2f14;
+    border-color: #6b5422;
+}
+@media (max-width: 700px) {
+    .verify-banner {
+        margin: 12px 16px 0;
+    }
+}
+
 /* ---- Offline ---- */
 .offline-banner {
     display: flex;
@@ -594,4 +627,25 @@
     .typing-dots i {
         animation: none;
     }
+}
+
+/* ---- Password recovery by code ---- */
+.auth-divider {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 20px 0 8px;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+}
+.auth-divider::before,
+.auth-divider::after {
+    flex: 1;
+    height: 1px;
+    content: '';
+    background: var(--border);
+}
+.auth-subtitle {
+    margin: 0;
+    font-size: var(--font-size-section);
 }

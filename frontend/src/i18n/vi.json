@@ -1265,5 +1265,16 @@
     "Saved on this device · will sync": "Đã lưu trên thiết bị · sẽ đồng bộ",
     "Password-protected notes need a connection to open.": "Ghi chú có mật khẩu cần kết nối mạng để mở.",
     "Note deleted on this device. The deletion syncs when you reconnect.": "Đã xóa ghi chú trên thiết bị. Thao tác xóa sẽ đồng bộ khi có mạng.",
-    "Adding files needs a connection.": "Thêm tệp cần kết nối mạng."
+    "Adding files needs a connection.": "Thêm tệp cần kết nối mạng.",
+    "Your account is not verified yet.": "Tài khoản của bạn chưa được xác minh.",
+    "Check your email and open the activation link to finish setting up your account.": "Hãy kiểm tra email và mở liên kết kích hoạt để hoàn tất tài khoản.",
+    "Resend email": "Gửi lại email",
+    "Email sent": "Đã gửi email",
+    "Try again in a minute": "Thử lại sau một phút",
+    "or": "hoặc",
+    "Have a code from the email?": "Đã có mã trong email?",
+    "6-digit code": "Mã 6 chữ số",
+    "Continue with code": "Tiếp tục với mã",
+    "If that account exists, we sent a reset link and a 6-digit code. Check your inbox.": "Nếu tài khoản tồn tại, chúng tôi đã gửi liên kết đặt lại và mã 6 chữ số. Hãy kiểm tra hộp thư.",
+    "This code is invalid or has expired. Request a new one.": "Mã không hợp lệ hoặc đã hết hạn. Hãy yêu cầu mã mới."
 }

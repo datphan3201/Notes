@@ -4,7 +4,7 @@ import { initTaskCapturePresets } from './planning/task-capture.js';
 import { initNotifications } from './lib/notifications.js';
 import { initAssistant } from './planning/assistant.js';
 import { initPasswordVisibility } from './lib/password-visibility.js';
-import { clearOfflineData, initPwa } from './lib/pwa.js';
+import { clearOfflineData, initPwa, initVerifyBanner } from './lib/pwa.js';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/500.css';
 import '@fontsource/be-vietnam-pro/600.css';
@@ -90,6 +90,7 @@ document.addEventListener('submit', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
     initPasswordVisibility();
     initPwa();
+    initVerifyBanner();
     const delivery = document.querySelector('[data-notification-settings]');
     if (delivery) initDeliveryPreferences(delivery);
     const notePreferences = document.querySelector('[data-note-preferences]');

@@ -28,6 +28,7 @@ final readonly class PasswordResetController
             'token' => is_string($request->query['token'] ?? null) ? $request->query['token'] : '',
             'csrf_token' => $this->session->csrfToken(),
             'errors' => $this->session->pullFlash('errors', []),
+            'code_email' => (string) $this->session->pullFlash('code_email', ''),
             'notice' => $this->session->pullFlash('notice', ''),
             'locale' => \Planner\Http\GuestLocale::resolve($request, $this->session),
         // same-origin keeps the reset token out of other sites' Referer while the
@@ -41,11 +42,31 @@ final readonly class PasswordResetController
         try {
             $email = $this->validator->recoveryEmail($request->input());
             $this->resets->request($email, $request->clientIp());
-            $this->session->flash('notice', 'If that account exists, a password reset link has been sent. Check your inbox.');
+            $this->session->flash('notice', 'If that account exists, we sent a reset link and a 6-digit code. Check your inbox.');
+            $this->session->flash('code_email', $email);
         } catch (ValidationException $error) {
             $this->session->flash('errors', $error->errors);
         }
         return Response::redirect('/forgot-password');
+    }
+
+    /** POST /forgot-password/code {email, code}: a valid code continues to the new-password form. */
+    public function verifyCode(Request $request): Response
+    {
+        $input = $request->input();
+        $email = is_string($input['email'] ?? null) ? strtolower(trim($input['email'])) : '';
+        try {
+            $email = $this->validator->recoveryEmail(['email' => $email]);
+            $code = is_string($input['code'] ?? null) ? preg_replace('/\s+/', '', $input['code']) : '';
+            $token = $this->resets->verifyCode($email, (string) $code, $request->clientIp());
+        } catch (ValidationException $error) {
+            $this->session->flash('errors', $error->errors);
+            $this->session->flash('code_email', $email);
+
+            return Response::redirect('/forgot-password');
+        }
+
+        return Response::redirect('/reset-password?'.http_build_query(['email' => $email, 'token' => $token]));
     }
 
     public function reset(Request $request): Response

@@ -173,6 +173,7 @@ return static function (
         new Route(['GET'], '/up', 'up', static fn (Request $request, array $parameters): Response => Response::json(['data' => ['status' => 'ok']])),
         new Route(['GET'], '/forgot-password', 'password.forgot', $handler([$passwordReset, 'page'])),
         new Route(['POST'], '/forgot-password', 'password.forgot.store', $handler([$passwordReset, 'request']), csrf: true),
+        new Route(['POST'], '/forgot-password/code', 'password.forgot.code', $handler([$passwordReset, 'verifyCode']), csrf: true),
         new Route(['GET'], '/reset-password', 'password.reset', $handler([$passwordReset, 'page'])),
         new Route(['POST'], '/reset-password', 'password.reset.store', $handler([$passwordReset, 'reset']), csrf: true),
         new Route(['GET'], '/login', 'login', $handler([$account, 'loginPage'])),

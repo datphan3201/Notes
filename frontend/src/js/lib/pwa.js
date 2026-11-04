@@ -1,3 +1,4 @@
+import { post } from './http.js';
 import { t } from './i18n.js';
 import { OfflineStore } from './offline-store.js';
 
@@ -55,4 +56,20 @@ export async function clearOfflineData() {
     navigator.serviceWorker?.controller?.postMessage({ type: 'clear' });
     // Never let cleanup block logout for long.
     await Promise.race([Promise.all(tasks), new Promise((resolve) => setTimeout(resolve, 1500))]);
+}
+
+/** The unverified-account banner's "Resend email" button. */
+export function initVerifyBanner() {
+    const button = document.querySelector('[data-resend-verification]');
+    button?.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+            await post('/api/v1/email/verification', {});
+            button.textContent = t('Email sent');
+        } catch (error) {
+            button.disabled = false;
+            button.textContent =
+                error.status === 429 ? t('Try again in a minute') : t('Resend email');
+        }
+    });
 }

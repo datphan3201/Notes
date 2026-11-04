@@ -129,6 +129,16 @@ $accountNavigation = [
                         </button>
                     </div>
                 </header>
+                <?php if (! $user['email_verified']): ?>
+                <div class="verify-banner" role="status" data-verify-banner>
+                    <svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16v12H4Z M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                    <p>
+                        <strong><?= $view->e($view->t('Your account is not verified yet.')) ?></strong>
+                        <span><?= $view->e($view->t('Check your email and open the activation link to finish setting up your account.')) ?></span>
+                    </p>
+                    <button class="button button-quiet button-small" type="button" data-resend-verification><?= $view->e($view->t('Resend email')) ?></button>
+                </div>
+                <?php endif; ?>
                 <main class="app-main" id="main-content" tabindex="-1">
                     <?= $content ?>
                 </main>

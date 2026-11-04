@@ -24,9 +24,11 @@ final readonly class PasswordResetMailer implements PasswordResetDelivery, Messa
     ) {
     }
 
-    public function send(string $email, string $url): void
+    public function send(string $email, string $url, string $code = ''): void
     {
-        $body = "Reset your Planner password using this link within 30 minutes:\n\n".$url."\n\nIf you did not request this, ignore this message.\n";
+        $body = "Reset your Planner password within 30 minutes.\n\nOpen this link:\n".$url."\n"
+            .($code === '' ? '' : "\nOr enter this code on the password reset page: ".$code."\n")
+            ."\nIf you did not request this, ignore this message.\n";
         $this->sendMessage($email, 'Reset your Planner password', $body);
     }
 

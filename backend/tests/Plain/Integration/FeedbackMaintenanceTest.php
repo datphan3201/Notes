@@ -41,7 +41,8 @@ final class FeedbackMaintenanceTest extends TestCase
         };
         $delivery = new class implements PasswordResetDelivery {
             public array $urls = [];
-            public function send(string $email, string $url): void { $this->urls[] = $url; }
+            public array $codes = [];
+            public function send(string $email, string $url, string $code = ''): void { $this->urls[] = $url; $this->codes[] = $code; }
         };
         $accounts = $this->app['account_repository'];
         $owner = $accounts->insertUser('reset@example.test', 'Reset', password_hash('original password', PASSWORD_BCRYPT), '2026-10-19 12:00:00.000000');
@@ -66,6 +67,42 @@ final class FeedbackMaintenanceTest extends TestCase
         $clock->time = $clock->time->modify('+30 minutes');
         $this->expectException(ValidationException::class);
         $service->reset($owner->email, $third['token'], 'expired password value', '127.0.0.1');
+    }
+    public function test_reset_code_is_exchanged_for_a_token_and_dies_after_five_wrong_guesses(): void
+    {
+        $clock = new class implements Clock {
+            public DateTimeImmutable $time;
+            public function __construct() { $this->time = new DateTimeImmutable('2026-10-19T12:00:00Z'); }
+            public function now(): DateTimeImmutable { return $this->time; }
+        };
+        $delivery = new class implements PasswordResetDelivery {
+            public array $urls = [];
+            public array $codes = [];
+            public function send(string $email, string $url, string $code = ''): void { $this->urls[] = $url; $this->codes[] = $code; }
+        };
+        $accounts = $this->app['account_repository'];
+        $owner = $accounts->insertUser('reset@example.test', 'Reset', password_hash('original password', PASSWORD_BCRYPT), '2026-10-19 12:00:00.000000');
+        $service = new PasswordResetService($accounts, new PdoPasswordResetRepository($this->pdo), $this->app['transactions'], new RateLimiter($this->pdo), $clock, $delivery, new NullLogger, 'http://localhost:8000');
+        $service->request($owner->email, '127.0.0.1');
+        self::assertMatchesRegularExpression('/^\d{6}$/', $delivery->codes[0]);
+        self::assertNotSame($delivery->codes[0], $this->pdo->query('SELECT otp_hash FROM password_resets')->fetchColumn(), 'only a hash is stored');
+        try { $service->verifyCode('unknown@example.test', $delivery->codes[0], '127.0.0.1'); self::fail('Unknown email must fail'); }
+        catch (ValidationException $error) { self::assertArrayHasKey('code', $error->errors); }
+        $token = $service->verifyCode($owner->email, $delivery->codes[0], '127.0.0.1');
+        try { $service->verifyCode($owner->email, $delivery->codes[0], '127.0.0.1'); self::fail('A code works once'); }
+        catch (ValidationException) { self::assertTrue(true); }
+        $service->reset($owner->email, $token, 'code password value', '127.0.0.1');
+        self::assertTrue(password_verify('code password value', $accounts->findById($owner->id)->passwordHash));
+
+        $service->request($owner->email, '127.0.0.1');
+        $code = $delivery->codes[1];
+        $wrong = $code === '000000' ? '111111' : '000000';
+        for ($guess = 0; $guess < 5; $guess++) {
+            try { $service->verifyCode($owner->email, $wrong, '127.0.0.1'); self::fail('Wrong code must fail'); }
+            catch (ValidationException) { self::assertTrue(true); }
+        }
+        $this->expectException(ValidationException::class);
+        $service->verifyCode($owner->email, $code, '127.0.0.1');
     }
     public function test_recurring_capture_and_reminders_are_owned_and_settings_stay_isolated(): void
     {
