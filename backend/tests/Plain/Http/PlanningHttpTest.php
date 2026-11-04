@@ -243,6 +243,23 @@ final class PlanningHttpTest extends TestCase
         self::assertSame(422, $json('POST', '/api/v1/tasks', ['name' => 'No task icons yet', 'icon' => 'star'])->status);
     }
 
+    public function test_reusing_an_archived_area_name_is_a_validation_error_not_a_service_failure(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $json = fn (string $method, string $path, array $input = []) => $this->request($method, $path, $input, $cookie, $csrf, true);
+        $side = $this->json($json('POST', '/api/v1/areas', ['name' => 'Side']))['data'];
+        self::assertSame(200, $json('DELETE', '/api/v1/areas/'.$side['id'], ['base_version' => $side['version']])->status);
+
+        $created = $json('POST', '/api/v1/areas', ['name' => 'Side']);
+        self::assertSame(422, $created->status);
+        self::assertArrayHasKey('name', $this->json($created)['errors']);
+
+        $other = $this->json($this->request('GET', '/api/v1/areas', cookie: $cookie))['data'][0];
+        $renamed = $json('PATCH', '/api/v1/areas/'.$other['id'], ['base_version' => $other['version'], 'name' => 'Side']);
+        self::assertSame(422, $renamed->status);
+        self::assertArrayHasKey('name', $this->json($renamed)['errors']);
+    }
+
     public function test_dashboard_roadmap_choice_is_persisted_owner_scoped_and_explicitly_cleared(): void
     {
         [$cookie, $csrf] = $this->register();

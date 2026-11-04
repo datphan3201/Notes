@@ -144,7 +144,7 @@ final readonly class PlanningService
                 throw new ValidationException(['name' => ['Each account can have at most four active Areas.']]);
             }
 
-            $row = $this->repository->insert($type, $userId, $this->uuid->generate(), $values, $this->now());
+            $row = $this->uniqueAreaName($type, fn (): array => $this->repository->insert($type, $userId, $this->uuid->generate(), $values, $this->now()));
 
             if ($tagIds !== []) {
                 $this->repository->syncTags($type, $userId, (string) $row['id'], $tagIds);
@@ -158,6 +158,24 @@ final readonly class PlanningService
 
             return $result;
         });
+    }
+
+    /**
+     * Area names are unique per owner, archived Areas included (areas_owner_name_unique).
+     *
+     * @param callable(): array<string, mixed> $write
+     * @return array<string, mixed>
+     */
+    private function uniqueAreaName(string $type, callable $write): array
+    {
+        try {
+            return $write();
+        } catch (\PDOException $exception) {
+            if ($type === 'area' && (string) $exception->getCode() === '23000') {
+                throw new ValidationException(['name' => ['An Area with this name already exists, including archived Areas. Choose another name.']]);
+            }
+            throw $exception;
+        }
     }
 
     /** @param array<string, mixed> $input @return array<string, mixed> */
@@ -215,7 +233,7 @@ final readonly class PlanningService
                 $this->repository->syncTags($type, $userId, $id, $tagIds);
             }
 
-            $result = $this->serialize($this->repository->update($type, $userId, $id, $changes, $this->now()));
+            $result = $this->serialize($this->uniqueAreaName($type, fn (): array => $this->repository->update($type, $userId, $id, $changes, $this->now())));
 
             if (in_array($type, ['goal', 'milestone', 'task'], true)) {
                 $result['tag_ids'] = array_map('strval', $tagIds ?? $currentTags);
