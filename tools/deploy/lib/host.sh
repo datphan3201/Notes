@@ -192,7 +192,7 @@ install_root_helpers() {
     local sudoers_tmp
     sudoers_tmp="$(mktemp)"
     cat >"${sudoers_tmp}" <<EOF
-${DEPLOY_USER} ALL=(root) NOPASSWD: /usr/bin/systemctl reload php${PHP_VERSION}-fpm, /usr/local/sbin/planner-backup
+${DEPLOY_USER} ALL=(root) NOPASSWD: /usr/bin/systemctl reload php${PHP_VERSION}-fpm, /usr/bin/systemctl restart planner-realtime, /usr/local/sbin/planner-backup
 EOF
     visudo -cf "${sudoers_tmp}" >/dev/null
     install -m 440 -o root -g root "${sudoers_tmp}" /etc/sudoers.d/planner-deploy
@@ -213,8 +213,31 @@ INI
 CRON
     chmod 644 /etc/cron.d/planner
 
+    # Live collaboration WebSocket server (bin/realtime.php), reached through Nginx at /realtime.
+    cat >/etc/systemd/system/planner-realtime.service <<UNIT
+[Unit]
+Description=Planner live collaboration (WebSocket)
+After=network-online.target docker.service php${PHP_VERSION}-fpm.service
+
+[Service]
+User=${WEB_GROUP}
+Group=${WEB_GROUP}
+WorkingDirectory=${DEPLOY_PATH}/backend
+Environment=REALTIME_LISTEN=127.0.0.1:${REALTIME_PORT:-8090}
+ExecStart=/usr/bin/php ${DEPLOY_PATH}/backend/bin/realtime.php
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+    systemctl daemon-reload
     systemctl enable --now cron "php${PHP_VERSION}-fpm" nginx
     systemctl restart "php${PHP_VERSION}-fpm"
+    systemctl enable planner-realtime
+    systemctl restart planner-realtime || log "planner-realtime will start after the first release."
 }
 
 # Every ingress shares the same application server on 127.0.0.1:LOCAL_APP_PORT (tunnels connect
@@ -245,6 +268,16 @@ location = /index.php {
     include fastcgi_params;
     fastcgi_param SCRIPT_FILENAME \$document_root/index.php;
     fastcgi_pass unix:/run/php/php${PHP_VERSION}-fpm.sock;
+}
+# Live collaboration: WebSocket upgrade to bin/realtime.php (systemd planner-realtime).
+location = /realtime {
+    proxy_pass http://127.0.0.1:${REALTIME_PORT:-8090};
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host \$host;
+    proxy_read_timeout 120s;
+    proxy_send_timeout 120s;
 }
 location ~ \.php\$ { return 404; }
 location ~ /\. { deny all; }

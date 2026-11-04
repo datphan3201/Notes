@@ -138,4 +138,9 @@ if command -v systemctl >/dev/null 2>&1 && systemctl cat "${PHP_FPM_SERVICE}.ser
     sudo -n /usr/bin/systemctl reload "${PHP_FPM_SERVICE}"
 fi
 
+if command -v systemctl >/dev/null 2>&1 && systemctl cat planner-realtime.service >/dev/null 2>&1; then
+    log "Restarting planner-realtime (live collaboration) on the new code..."
+    sudo -n /usr/bin/systemctl restart planner-realtime
+fi
+
 log "Release completed successfully."
