@@ -9,6 +9,7 @@ import {
     toggleNoteCheckbox,
 } from '../lib/note-checkbox-text.js';
 import { setCheckedLabel } from '../lib/check-mark.js';
+import { transformIndex } from '../lib/text-operation.js';
 
 // Keep the textarea as the canonical form/snapshot value. The DOM is only a
 // safe text-and-checkbox projection, shared by Notes autosave and Task Note Save.
@@ -265,6 +266,35 @@ export class NoteContentEditor {
         this.redoStates = [];
         this.lastEdit = null;
         this.render();
+    }
+
+    /**
+     * Shows text changed by someone else (live collaboration). The caret and
+     * selection move with the remote operation instead of jumping, and undo
+     * history is cleared because it described the previous text.
+     */
+    applyRemote(value, ops) {
+        const next = bodyText(value);
+        if (next === this.value) return;
+        const focused = this.root.contains(document.activeElement);
+        const selection = focused ? this.getSelection() : this.selection;
+        const moved = ops
+            ? {
+                  start: transformIndex(ops, selection.start),
+                  end: transformIndex(ops, selection.end),
+              }
+            : {
+                  start: Math.min(selection.start, next.length),
+                  end: Math.min(selection.end, next.length),
+              };
+        this.value = next;
+        this.textarea.value = next;
+        this.undoStates = [];
+        this.redoStates = [];
+        this.lastEdit = null;
+        this.render();
+        if (focused && !this.composing) this.focus(moved);
+        else this.selection = moved;
     }
 
     setReadOnly(readOnly) {

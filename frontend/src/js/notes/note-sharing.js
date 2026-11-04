@@ -2,6 +2,9 @@ import { get, patch, post, put, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { checkMark } from '../lib/check-mark.js';
 import { noteLines } from '../lib/note-checkbox-text.js';
+import { CollabBinding } from './collab-binding.js';
+import { NoteContentEditor } from './note-content-editor.js';
+import { SummaryPanel, promptText, relativeTime } from './note-dialogs.js';
 
 const element = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -9,6 +12,9 @@ const element = (tag, className, text) => {
     if (text !== undefined) node.textContent = text;
     return node;
 };
+
+const firstError = (error) =>
+    Object.values(error?.payload?.errors || {})[0]?.[0] || error?.message || '';
 
 /** Applies a preset name or #rrggbb color plus an optional background image to a card. */
 export function applyNoteStyle(node, color, backgroundUrl = null) {
@@ -91,9 +97,21 @@ export function appendNotePreview(container, text, query) {
     });
 }
 
+/** Splits "a@x.com, b@y.com c@z.com" into unique lowercase addresses. */
+export function parseEmails(text) {
+    return [
+        ...new Set(
+            String(text || '')
+                .split(/[\s,;]+/)
+                .map((part) => part.trim().toLowerCase())
+                .filter(Boolean),
+        ),
+    ];
+}
+
 /**
  * Owner sharing controls, the "Shared with me" scope, invitations and the
- * recipient's view/edit dialog for a shared Note.
+ * recipient's live editor for a shared Note.
  */
 export class NoteSharing {
     constructor(page) {
@@ -106,6 +124,9 @@ export class NoteSharing {
         this.invitations = page.root.querySelector('[data-share-invitations]');
         this.ownerNoteId = null;
         this.openShared = null;
+        this.collab = null;
+        this.saveTimer = null;
+        this.saving = null;
     }
 
     init() {
@@ -119,15 +140,35 @@ export class NoteSharing {
         this.shareDialog
             .querySelector('[data-share-close]')
             .addEventListener('click', () => this.shareDialog.close());
+        this.shareDialog.addEventListener('close', () => {
+            this.page.loadNotes();
+            if (this.page.editor?.note?.id === this.ownerNoteId)
+                this.page.editor.refreshSharing?.();
+        });
         this.shareDialog
             .querySelector('[data-share-form]')
             .addEventListener('submit', (event) => this.invite(event));
-        this.sharedDialog
-            .querySelector('[data-shared-note-close]')
-            .addEventListener('click', () => this.sharedDialog.close());
-        this.sharedDialog
-            .querySelector('[data-shared-note-form]')
-            .addEventListener('submit', (event) => this.saveShared(event));
+        this.shareDialog
+            .querySelector('#share-email')
+            .addEventListener('input', () => this.shareError(''));
+
+        const form = this.sharedDialog.querySelector('[data-shared-note-form]');
+        this.sharedTitle = form.elements.title;
+        this.sharedContent = new NoteContentEditor(form.elements.content);
+        this.sharedSummary = new SummaryPanel(
+            this.sharedDialog.querySelector('[data-shared-ai-summary]'),
+        );
+        this.sharedTitle.addEventListener('input', () => this.sharedInput());
+        form.elements.content.addEventListener('input', () => this.sharedInput());
+        form.addEventListener('submit', (event) => event.preventDefault());
+        for (const selector of ['[data-shared-note-close]', '[data-shared-note-done]'])
+            this.sharedDialog
+                .querySelector(selector)
+                .addEventListener('click', () => this.closeShared());
+        this.sharedDialog.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            this.closeShared();
+        });
         this.sharedDialog
             .querySelector('[data-shared-note-leave]')
             .addEventListener('click', () => this.leave());
@@ -154,8 +195,11 @@ export class NoteSharing {
     async load() {
         try {
             this.received = (await get('/api/v1/shared-notes')).payload.data;
+            this.page.offlineStore?.putShared(this.received);
         } catch {
-            return;
+            const cached = await this.page.offlineStore?.getShared();
+            if (!cached) return;
+            this.received = cached;
         }
         this.page.root.querySelector('[data-shared-total]').textContent = String(
             this.received.notes.length,
@@ -169,6 +213,7 @@ export class NoteSharing {
         this.filter.classList.add('is-active');
         this.filter.setAttribute('aria-pressed', 'true');
         this.page.root.querySelector('[data-filter-all]').classList.remove('is-active');
+        this.page.root.querySelector('[data-active-filter-row]')?.classList.add('is-hidden');
         this.render();
     }
 
@@ -189,27 +234,7 @@ export class NoteSharing {
         this.page.list.replaceChildren();
         for (const note of notes) {
             for (const container of [this.page.grid, this.page.list]) {
-                const card = element('article', 'note-card note-card-shared');
-                card.dataset.sharedNoteId = note.note_id;
-                card.tabIndex = 0;
-                applyNoteStyle(card, note.color);
-                const title = element('h2', 'note-card-title');
-                appendHighlightedText(title, note.title, needle);
-                const preview = element('p', 'note-card-preview');
-                appendHighlightedText(preview, note.excerpt, needle);
-                card.append(
-                    title,
-                    preview,
-                    element(
-                        'small',
-                        'note-card-meta',
-                        `${note.owner.display_name} · ${t(note.permission === 'edit' ? 'Can edit' : 'View only')}`,
-                    ),
-                );
-                card.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter') this.openSharedNote(note.note_id);
-                });
-                container.append(card);
+                container.append(this.sharedCard(note, needle));
             }
         }
         if (!notes.length) {
@@ -218,32 +243,91 @@ export class NoteSharing {
             icon.setAttribute('aria-hidden', 'true');
             empty.append(
                 icon,
-                element('h2', '', t('Nothing shared with you yet')),
+                element('h2', '', t(needle ? 'No matching notes' : 'Nothing shared with you yet')),
                 element(
                     'p',
                     '',
-                    t('Notes other people share with you appear here after you accept.'),
+                    t(
+                        needle
+                            ? 'Clear some filters or try another search term.'
+                            : 'Notes other people share with you appear here after you accept.',
+                    ),
                 ),
             );
             this.page.grid.append(empty.cloneNode(true));
             this.page.list.append(empty);
         }
         this.page.root.querySelector('[data-pagination]')?.replaceChildren();
+        this.page.setFeedback('');
+    }
+
+    sharedCard(note, needle) {
+        const card = element('article', 'note-card note-card-shared');
+        card.dataset.sharedNoteId = note.note_id;
+        applyNoteStyle(card, note.color);
+        const head = element('div', 'note-card-head');
+        const title = element('h2', 'note-card-title');
+        const open = element('button', 'note-card-open');
+        open.type = 'button';
+        appendHighlightedText(open, note.title, needle);
+        open.append(
+            element(
+                'span',
+                'sr-only',
+                ` (${t('Shared by')} ${note.owner.display_name}, ${t(note.permission === 'edit' ? 'Can edit' : 'View only')}${note.is_locked ? ', ' + t('Password protected') : ''})`,
+            ),
+        );
+        open.addEventListener('click', () => this.openSharedNote(note.note_id));
+        title.append(open);
+        const badges = element('div', 'note-card-badges');
+        if (note.is_locked) badges.append(this.page.statusBadge('lock', t('Password protected')));
+        badges.append(
+            this.page.statusBadge(
+                note.permission === 'edit' ? 'edit' : 'eye',
+                t(note.permission === 'edit' ? 'Can edit' : 'View only'),
+                true,
+            ),
+        );
+        head.append(title, badges);
+        const preview = element('p', 'note-card-preview');
+        if (note.is_locked) preview.append(this.page.lockedPreview());
+        else appendHighlightedText(preview, note.excerpt, needle);
+        const footer = element('div', 'note-card-footer');
+        const owner = element('span', 'note-card-owner');
+        owner.append(
+            this.page.avatar(note.owner.display_name),
+            document.createTextNode(note.owner.display_name),
+        );
+        const when = element('span', 'note-card-date', relativeTime(note.shared_at));
+        when.title = `${t('Shared')} ${new Date(note.shared_at).toLocaleString()}`;
+        footer.append(owner, when);
+        card.append(head, preview, footer);
+        return card;
     }
 
     renderInvitations() {
         this.invitations.replaceChildren();
         this.invitations.classList.toggle('is-hidden', !this.received.invitations.length);
+        if (this.received.invitations.length) {
+            this.invitations.append(element('h2', 'invitations-heading', t('Invitations')));
+        }
         for (const invitation of this.received.invitations) {
             const row = element('div', 'share-invitation');
-            row.append(
+            const copy = element('div', 'share-invitation-copy');
+            copy.append(
                 element(
-                    'span',
+                    'strong',
                     '',
-                    `${invitation.owner.display_name} ${t('shared')} “${invitation.title}” (${t(invitation.permission === 'edit' ? 'Can edit' : 'View only')})`,
+                    `${invitation.owner.display_name} ${t('shared')} “${invitation.title}”`,
+                ),
+                element(
+                    'small',
+                    '',
+                    `${t(invitation.permission === 'edit' ? 'Can edit' : 'View only')} · ${relativeTime(invitation.shared_at)}`,
                 ),
             );
-            for (const action of ['accept', 'decline']) {
+            row.append(this.page.avatar(invitation.owner.display_name), copy);
+            for (const action of ['decline', 'accept']) {
                 const button = element(
                     'button',
                     action === 'accept' ? 'button button-primary' : 'button button-quiet',
@@ -264,6 +348,11 @@ export class NoteSharing {
                         );
                         this.renderInvitations();
                         if (this.active) this.render();
+                        this.page.toast(
+                            action === 'accept'
+                                ? 'Invitation accepted. Find the note in Shared with me.'
+                                : 'Invitation declined.',
+                        );
                     } catch (error) {
                         this.page.toast(error.message, true);
                         button.disabled = false;
@@ -277,12 +366,26 @@ export class NoteSharing {
 
     async openShareDialog(noteId) {
         this.ownerNoteId = noteId;
-        this.shareDialog.querySelector('[data-share-status]').textContent = '';
+        this.shareError('');
+        this.shareStatus('');
+        this.shareDialog.querySelector('[data-share-form]').reset();
+        this.shareDialog
+            .querySelector('[data-share-list]')
+            .replaceChildren(element('p', 'subtle-copy', t('Loading…')));
         this.shareDialog.showModal();
+        this.shareDialog.querySelector('#share-email').focus();
         try {
-            this.renderShares((await get(`/api/v1/notes/${noteId}/shares`)).payload.data);
+            const known = this.page.notes.find((note) => note.id === noteId);
+            const shares = await this.page.lockUI.withUnlock(
+                noteId,
+                () => get(`/api/v1/notes/${noteId}/shares`),
+                known?.title || '',
+                { locked: Boolean(known?.is_locked) && !this.page.editor?.machine },
+            );
+            if (shares) this.renderShares(shares.payload.data);
+            else this.shareDialog.close();
         } catch (error) {
-            this.shareDialog.querySelector('[data-share-status]').textContent = error.message;
+            this.shareStatus(error.message, true);
         }
     }
 
@@ -293,12 +396,17 @@ export class NoteSharing {
             list.append(element('p', 'subtle-copy', t('Not shared with anyone yet.')));
         for (const share of shares) {
             const row = element('div', 'share-row');
-            row.append(
-                element(
-                    'span',
-                    '',
-                    `${share.recipient.display_name} (${share.recipient.email})${share.status === 'pending' ? ` · ${t('invited')}` : ''}`,
-                ),
+            const person = element('div', 'share-person');
+            const copy = element('div', 'share-person-copy');
+            copy.append(
+                element('strong', '', share.recipient.display_name),
+                element('small', '', share.recipient.email),
+            );
+            person.append(this.page.avatar(share.recipient.display_name), copy);
+            const status = element(
+                'span',
+                'status-badge' + (share.status === 'pending' ? ' is-warning' : ' is-success'),
+                t(share.status === 'pending' ? 'Invited' : 'Has access'),
             );
             const permission = element('select');
             permission.setAttribute(
@@ -310,137 +418,335 @@ export class NoteSharing {
                 new Option(t('Can view and edit'), 'edit', false, share.permission === 'edit'),
             );
             permission.addEventListener('change', () =>
-                this.updateShares(() =>
-                    patch(`/api/v1/notes/${this.ownerNoteId}/shares/${share.id}`, {
-                        permission: permission.value,
-                    }),
+                this.updateShares(
+                    () =>
+                        patch(`/api/v1/notes/${this.ownerNoteId}/shares/${share.id}`, {
+                            permission: permission.value,
+                        }),
+                    'Permission updated.',
                 ),
             );
-            const kick = element('button', 'text-button', t('Remove'));
+            const kick = element('button', 'text-button text-danger', t('Remove'));
             kick.type = 'button';
-            kick.addEventListener('click', () =>
-                this.updateShares(() =>
-                    remove(`/api/v1/notes/${this.ownerNoteId}/shares/${share.id}`),
-                ),
-            );
-            row.append(permission, kick);
+            kick.setAttribute('aria-label', `${t('Remove')} ${share.recipient.display_name}`);
+            kick.addEventListener('click', async () => {
+                if (
+                    !(await this.page.confirm(
+                        'Remove access?',
+                        `${share.recipient.display_name} ${t('will no longer see this note.')}`,
+                        { accept: 'Remove' },
+                    ))
+                )
+                    return;
+                this.updateShares(
+                    () => remove(`/api/v1/notes/${this.ownerNoteId}/shares/${share.id}`),
+                    'Access removed.',
+                );
+            });
+            const controls = element('div', 'share-controls');
+            controls.append(status, permission, kick);
+            row.append(person, controls);
             list.append(row);
         }
     }
 
-    async updateShares(operation) {
-        const status = this.shareDialog.querySelector('[data-share-status]');
+    async updateShares(operation, success) {
         try {
             this.renderShares((await operation()).payload.data);
-            status.textContent = t('Saved.');
+            this.shareStatus(t(success));
         } catch (error) {
-            status.textContent =
-                Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+            this.shareStatus(firstError(error), true);
         }
+    }
+
+    shareStatus(message, error = false) {
+        const status = this.shareDialog.querySelector('[data-share-status]');
+        status.textContent = message;
+        status.classList.toggle('is-error', error);
+        status.classList.toggle('is-success', Boolean(message) && !error);
+    }
+
+    shareError(message) {
+        const node = this.shareDialog.querySelector('[data-share-error]');
+        node.textContent = message;
+        node.classList.toggle('is-hidden', !message);
+        this.shareDialog
+            .querySelector('#share-email')
+            .setAttribute('aria-invalid', message ? 'true' : 'false');
     }
 
     async invite(event) {
         event.preventDefault();
         const form = event.currentTarget;
-        await this.updateShares(() =>
-            post(`/api/v1/notes/${this.ownerNoteId}/shares`, {
-                email: form.elements.email.value,
+        const emails = parseEmails(form.elements.emails.value);
+        const invalid = emails.filter((email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+        if (!emails.length) return this.shareError(t('Enter at least one email address.'));
+        if (invalid.length)
+            return this.shareError(`${t('Check these addresses:')} ${invalid.join(', ')}`);
+        const submit = form.querySelector('[type="submit"]');
+        submit.disabled = true;
+        try {
+            const response = await post(`/api/v1/notes/${this.ownerNoteId}/shares`, {
+                emails,
                 permission: form.elements.permission.value,
-            }),
-        );
-        // Unknown addresses succeed silently so sharing never reveals who has an account.
-        this.shareDialog.querySelector('[data-share-status]').textContent = t(
-            t('If that email belongs to a Planner account, they will receive an invitation.'),
-        );
-        form.reset();
+            });
+            this.renderShares(response.payload.data);
+            this.shareStatus(
+                emails.length === 1
+                    ? t('Invitation sent.')
+                    : `${t('Invitations sent to')} ${emails.length} ${t('people')}.`,
+            );
+            form.elements.emails.value = '';
+        } catch (error) {
+            this.shareError(firstError(error));
+        } finally {
+            submit.disabled = false;
+        }
     }
 
+    /** Opens a shared Note: asks for its password first when it is locked. */
     async openSharedNote(noteId) {
-        const status = this.sharedDialog.querySelector('[data-shared-note-status]');
-        status.textContent = '';
+        if (this.sharedDialog.open) await this.closeShared();
+        let response;
         try {
-            this.showShared((await get(`/api/v1/shared-notes/${noteId}`)).payload.data);
-            this.sharedDialog.showModal();
+            const known = this.received.notes.find((note) => note.note_id === noteId);
+            response = await this.page.lockUI.withUnlock(
+                noteId,
+                () => get(`/api/v1/shared-notes/${noteId}`),
+                known?.title || '',
+                { locked: Boolean(known?.is_locked) },
+            );
         } catch (error) {
             this.page.toast(error.message, true);
             this.load();
+            return;
         }
+        if (!response) return;
+        this.showShared(response.payload.data);
+        this.sharedDialog.showModal();
+        if (this.openShared.permission === 'edit') this.sharedTitle.focus();
+        this.sharedSummary.load(noteId);
+        this.startSharedCollaboration();
     }
 
     showShared(note) {
         this.openShared = note;
-        const form = this.sharedDialog.querySelector('[data-shared-note-form]');
         const editable = note.permission === 'edit';
-        form.elements.title.value = note.title;
-        form.elements.content.value = note.content;
-        form.elements.title.readOnly = form.elements.content.readOnly = !editable;
-        this.sharedDialog.querySelector('[data-shared-note-save]').hidden = !editable;
+        this.sharedTitle.value = note.title;
+        this.sharedContent.setValue(note.content, { reset: true });
+        this.setSharedEditable(editable);
+        this.sharedDialog.querySelector('[data-shared-note-heading]').textContent =
+            note.title || t('Shared note');
         this.sharedDialog.querySelector('[data-shared-note-owner]').textContent =
-            `${t('Shared by')} ${note.owner?.display_name || ''} · ${t(editable ? 'Can edit' : 'View only')}`;
+            `${t('Shared by')} ${note.owner?.display_name || ''}`;
+        this.sharedDialog.querySelector('[data-shared-note-meta]').textContent = [
+            t(editable ? 'You can edit' : 'View only'),
+            note.shared_at ? `${t('shared')} ${relativeTime(note.shared_at)}` : '',
+            note.is_locked ? t('Password protected') : '',
+        ]
+            .filter(Boolean)
+            .join(' · ');
         applyNoteStyle(this.sharedDialog, note.color);
+        this.sharedStatus(editable ? '' : 'Read only', false);
     }
 
-    async saveShared(event) {
-        event.preventDefault();
-        const form = event.currentTarget;
+    setSharedEditable(editable) {
+        this.sharedTitle.readOnly = !editable;
+        this.sharedContent.setReadOnly(!editable);
+    }
+
+    startSharedCollaboration() {
+        this.collab?.stop();
+        const noteId = this.openShared.id;
+        const binding = new CollabBinding({
+            noteId,
+            title: this.sharedTitle,
+            content: this.sharedContent,
+            presence: this.sharedDialog.querySelector('[data-shared-presence]'),
+            onInit: () =>
+                this.renderSharedCollabStatus(binding.session.status, binding.session.saveState),
+            onStatus: (status, saveState, message) =>
+                this.renderSharedCollabStatus(status, saveState, message),
+            onSaved: (message) => {
+                if (this.openShared?.id === noteId) this.openShared.version = message.version;
+            },
+            onRemote: () => {
+                this.sharedDialog.querySelector('[data-shared-note-heading]').textContent =
+                    this.sharedTitle.value || t('Shared note');
+            },
+            onPermission: (permission) => {
+                if (!this.openShared) return;
+                this.openShared.permission = permission;
+                this.setSharedEditable(permission === 'edit');
+                this.page.toast(
+                    permission === 'edit'
+                        ? 'You can now edit this note.'
+                        : 'The owner changed your access to view only.',
+                );
+            },
+            onEnded: (reason, message) => {
+                this.collab = null;
+                this.page.toast(
+                    message ||
+                        (reason === 'gone'
+                            ? 'This note was deleted.'
+                            : 'This note is no longer shared with you.'),
+                    true,
+                );
+                this.sharedDialog.close();
+                this.load();
+            },
+            onUnavailable: () => {
+                this.collab = null;
+                this.sharedStatus(
+                    this.openShared?.permission === 'edit'
+                        ? 'Changes save automatically'
+                        : 'Read only',
+                );
+            },
+        });
+        this.collab = binding;
+        binding.start();
+    }
+
+    renderSharedCollabStatus(status, saveState, message) {
+        const editable = this.openShared?.permission === 'edit';
+        if (status === 'connecting') return this.sharedStatus('Connecting…');
+        if (status === 'reconnecting')
+            return this.sharedStatus('Reconnecting… your edits are kept');
+        if (status !== 'live') return undefined;
+        if (!editable) return this.sharedStatus('Read only · live updates', false, true);
+        if (saveState === 'pending') return this.sharedStatus('Saving…');
+        if (saveState === 'invalid')
+            return this.sharedStatus(message || 'Add a title and content to save', true);
+        if (saveState === 'error') return this.sharedStatus('Saving is delayed · retrying', true);
+        return this.sharedStatus('Saved · live', false, true);
+    }
+
+    sharedStatus(message, error = false, live = false) {
         const status = this.sharedDialog.querySelector('[data-shared-note-status]');
+        status.textContent = t(message);
+        status.classList.toggle('is-error', error);
+        status.classList.toggle('is-live', live);
+        status.classList.toggle('is-success', message === 'Saved');
+    }
+
+    /** Edits by a recipient: live when connected, otherwise debounced autosave over HTTP. */
+    sharedInput() {
+        if (!this.openShared || this.openShared.permission !== 'edit') return;
+        this.sharedDialog.querySelector('[data-shared-note-heading]').textContent =
+            this.sharedTitle.value || t('Shared note');
+        if (this.collab?.active) {
+            this.collab.localInput();
+            return;
+        }
+        this.sharedStatus('Waiting to save…');
+        window.clearTimeout(this.saveTimer);
+        this.saveTimer = window.setTimeout(() => this.saveSharedNow(), 800);
+    }
+
+    async saveSharedNow() {
+        window.clearTimeout(this.saveTimer);
+        const note = this.openShared;
+        if (!note || note.permission !== 'edit' || this.collab?.active) return true;
+        const title = this.sharedTitle.value.trim();
+        const content = this.sharedContent.value;
+        if (title === note.title && content === note.content) return true;
+        if (!title || !content.trim()) {
+            this.sharedStatus('Add a title and content to save', true);
+            return false;
+        }
+        this.sharedStatus('Saving…');
+        this.saving = patch(`/api/v1/shared-notes/${note.id}`, {
+            base_version: note.version,
+            title,
+            content,
+        });
         try {
-            this.showShared(
-                (
-                    await patch(`/api/v1/shared-notes/${this.openShared.id}`, {
-                        base_version: this.openShared.version,
-                        title: form.elements.title.value,
-                        content: form.elements.content.value,
-                    })
-                ).payload.data,
-            );
-            status.textContent = t('Saved.');
-            this.load();
+            const saved = (await this.saving).payload.data;
+            if (this.openShared?.id === note.id) {
+                this.openShared = { ...this.openShared, ...saved };
+                this.sharedStatus('Saved');
+            }
+            return true;
         } catch (error) {
             if (error.status === 409 && error.payload?.current) {
-                status.textContent = t(
-                    t(
-                        'Someone else changed this note. Copy your text, then reload the latest version.',
-                    ),
-                );
+                // Someone else saved first: keep our text and save it on top of theirs.
                 this.openShared.version = error.payload.current.version;
-                return;
+                this.openShared.title = error.payload.current.title;
+                this.openShared.content = error.payload.current.content;
+                return this.saveSharedNow();
             }
-            status.textContent =
-                Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+            this.sharedStatus(firstError(error) || 'Not saved · retry', true);
+            return false;
+        } finally {
+            this.saving = null;
         }
+    }
+
+    async closeShared() {
+        if (!this.openShared) {
+            if (this.sharedDialog.open) this.sharedDialog.close();
+            return;
+        }
+        if (this.collab?.active && this.collab.hasPending()) {
+            this.sharedStatus('Finishing the save before closing…');
+            await this.collab.settle();
+        } else if (!this.collab?.active && !(await this.saveSharedNow())) {
+            const leave = await this.page.confirm(
+                'Leave this note?',
+                'Your latest changes could not be saved. Leave anyway?',
+                { accept: 'Leave' },
+            );
+            if (!leave) return;
+        }
+        this.collab?.stop();
+        this.collab = null;
+        this.sharedSummary.hide();
+        const note = this.openShared;
+        this.openShared = null;
+        if (note?.is_locked)
+            post(`/api/v1/notes/${encodeURIComponent(note.id)}/relock`, {}).catch(() => {});
+        if (this.sharedDialog.open) this.sharedDialog.close();
+        this.load();
     }
 
     async leave() {
         if (
-            !window.confirm(
-                t('Leave this shared note? You will need a new invitation to see it again.'),
-            )
+            !(await this.page.confirm(
+                'Leave this shared note?',
+                'You will need a new invitation to see it again.',
+                { accept: 'Leave' },
+            ))
         )
             return;
         try {
             await remove(`/api/v1/shared-notes/memberships/${this.openShared.share_id}`);
+            this.collab?.stop();
+            this.collab = null;
+            this.openShared = null;
             this.sharedDialog.close();
+            this.page.toast('You left the shared note.');
             this.load();
         } catch (error) {
-            this.sharedDialog.querySelector('[data-shared-note-status]').textContent =
-                error.message;
+            this.sharedStatus(error.message, true);
         }
     }
 
     async report() {
-        const reason = window.prompt(
-            t('Tell the administrators what is wrong with this note.'),
-            '',
-        );
+        const reason = await promptText({
+            title: 'Report this note',
+            label: 'Tell the administrators what is wrong with this note.',
+            multiline: true,
+            maxLength: 1000,
+            submit: 'Send report',
+        });
         if (!reason) return;
-        const status = this.sharedDialog.querySelector('[data-shared-note-status]');
         try {
             await post(`/api/v1/shared-notes/${this.openShared.id}/report`, { reason });
-            status.textContent = t('Thank you. An administrator will review this note.');
+            this.sharedStatus('Thank you. An administrator will review this note.');
         } catch (error) {
-            status.textContent =
-                Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+            this.sharedStatus(firstError(error), true);
         }
     }
 

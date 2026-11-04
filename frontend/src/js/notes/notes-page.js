@@ -5,6 +5,7 @@ import { pageWindow } from '../lib/pagination.js';
 import { DebouncedAction, LatestRequest } from '../lib/read-coordinator';
 import { RecoveryStore } from '../lib/recovery-store';
 import { NoteEditor } from './note-editor';
+import { AskAIDialog, NoteLockUI, promptText, relativeTime } from './note-dialogs.js';
 import {
     NoteSharing,
     appendHighlightedText,
@@ -41,7 +42,11 @@ export class NotesPage {
     }
 
     async init() {
+        this.lockUI = new NoteLockUI();
         this.editor = new NoteEditor({
+            lockUI: this.lockUI,
+            offlineStore: this.offlineStore,
+            getNoteSummary: (id) => this.notes.find((note) => note.id === id) || null,
             root: document.querySelector('[data-editor-dialog]'),
             userId: this.user.id,
             preferences: this.preferences,
@@ -52,6 +57,14 @@ export class NotesPage {
             onConflict: (machine) => this.openConflict(machine),
         });
         this.applyView(this.preferences.notes_view, false);
+        this.askAI = new AskAIDialog(document.querySelector('[data-ask-dialog]'), {
+            openNote: (id) => this.editor.requestOpen(id),
+            openShared: (id) => this.sharing.openSharedNote(id),
+            offline: () => navigator.onLine === false,
+        });
+        this.root
+            .querySelector('[data-open-ask-ai]')
+            ?.addEventListener('click', () => this.askAI.open());
         this.sharing = new NoteSharing(this);
         this.sharing.init();
         await this.loadLabels();
@@ -178,9 +191,13 @@ export class NotesPage {
             .addEventListener('submit', (event) => this.createLabel(event));
         document.addEventListener('notes:open-labels', () => this.openLabelManager());
 
+        // A native <dialog> so confirmations appear above other open dialogs too.
         this.confirmDialog = document.querySelector('[data-confirm-dialog]');
-        this.confirmBackdrop = document.querySelector('[data-confirm-dialog-backdrop]');
         this.confirmResolve = null;
+        this.confirmDialog.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            this.resolveConfirm(false);
+        });
         this.confirmDialog
             .querySelector('[data-confirm-cancel]')
             .addEventListener('click', () => this.resolveConfirm(false));
@@ -219,11 +236,10 @@ export class NotesPage {
                 this.closeRecovery();
                 if (record) await this.editor.recover(record);
             });
-        [this.labelDialog, this.confirmDialog, this.conflictDialog].forEach((dialog) => {
+        [this.labelDialog, this.conflictDialog].forEach((dialog) => {
             dialog?.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && dialog === this.confirmDialog)
-                    this.resolveConfirm(false);
                 if (event.key === 'Escape' && dialog === this.conflictDialog) this.closeConflict();
+                if (event.key === 'Escape' && dialog === this.labelDialog) this.closeLabelManager();
             });
         });
     }
@@ -365,23 +381,57 @@ export class NotesPage {
 
     createCard(note) {
         const card = document.createElement('article');
-        card.className = 'note-card' + (note.is_pinned ? ' is-pinned' : '');
+        card.className =
+            'note-card' +
+            (note.is_pinned ? ' is-pinned' : '') +
+            (note.is_locked ? ' is-locked' : '');
         card.dataset.noteId = note.id;
+        const states = [
+            note.is_pinned ? t('Pinned') : '',
+            note.is_locked ? t('Password protected') : '',
+            note.is_shared ? t('Shared') : '',
+            note.pending_sync ? t('Waiting to sync') : '',
+        ].filter(Boolean);
         applyNoteStyle(card, note.color, note.background_url);
         const head = document.createElement('div');
         head.className = 'note-card-head';
         const title = document.createElement('h2');
         title.className = 'note-card-title';
-        appendHighlightedText(title, note.title, this.query.q);
+        // The title is the card's keyboard target; a click anywhere on the card opens it too.
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'note-card-open';
+        appendHighlightedText(open, note.title, this.query.q);
+        if (states.length) {
+            const hidden = document.createElement('span');
+            hidden.className = 'sr-only';
+            hidden.textContent = ` (${states.join(', ')})`;
+            open.append(hidden);
+        }
+        open.addEventListener('click', () => this.editor.requestOpen(note.id));
+        title.append(open);
         const actions = document.createElement('div');
         actions.className = 'note-card-actions';
-        if (this.sharing) {
+        // Status icons are visible in both grid and list layouts.
+        const badges = document.createElement('div');
+        badges.className = 'note-card-badges';
+        if (note.is_locked) badges.append(this.statusBadge('lock', t('Password protected')));
+        if (note.is_shared)
+            badges.append(
+                this.statusBadge(
+                    'users',
+                    `${t('Shared with')} ${note.share_count} ${t(note.share_count === 1 ? 'person' : 'people')}`,
+                ),
+            );
+        if (note.pending_sync)
+            badges.append(this.statusBadge('clock', t('Waiting to sync'), false, 'is-pending'));
+        if (this.sharing && !note.pending_sync) {
             const share = document.createElement('button');
             share.className = 'icon-button note-card-action';
             share.type = 'button';
             share.append(spriteIcon('share'));
             share.title = t('Share');
-            share.setAttribute('aria-label', t('Share'));
+            share.setAttribute('aria-label', `${t('Share')} ${note.title}`);
             share.addEventListener('click', (event) => {
                 event.stopPropagation();
                 this.sharing.openShareDialog(note.id);
@@ -394,17 +444,19 @@ export class NotesPage {
         pin.append(lineIcon('pin', { filled: note.is_pinned }));
         const pinLabel = t(note.is_pinned ? 'Unpin note' : 'Pin note');
         pin.title = pinLabel;
-        pin.setAttribute('aria-label', pinLabel);
+        pin.setAttribute('aria-label', `${pinLabel}: ${note.title}`);
         pin.setAttribute('aria-pressed', note.is_pinned ? 'true' : 'false');
+        pin.disabled = Boolean(note.pending_sync);
         pin.addEventListener('click', (event) => {
             event.stopPropagation();
-            this.togglePin(note.id);
+            this.togglePin(note);
         });
         actions.append(pin);
-        head.append(title, actions);
+        head.append(title, badges, actions);
         const preview = document.createElement('p');
         preview.className = 'note-card-preview';
-        appendNotePreview(preview, note.content_preview, this.query.q);
+        if (note.is_locked) preview.append(this.lockedPreview());
+        else appendNotePreview(preview, note.content_preview, this.query.q);
         const footer = document.createElement('div');
         footer.className = 'note-card-footer';
         const labels = document.createElement('div');
@@ -430,11 +482,17 @@ export class NotesPage {
                 lineIcon('paperclip'),
                 document.createTextNode(String(note.attachment_count)),
             );
-            attachmentMark.setAttribute('aria-label', note.attachment_count + ' attachments');
+            attachmentMark.setAttribute(
+                'aria-label',
+                `${note.attachment_count} ${t('attachments')}`,
+            );
+            attachmentMark.setAttribute('role', 'img');
             metaGroup.append(attachmentMark);
         }
-        const meta = document.createElement('span');
+        const meta = document.createElement('time');
+        meta.dateTime = note.updated_at || '';
         meta.textContent = this.formatDate(note.updated_at);
+        meta.title = `${t('Updated')} ${relativeTime(note.updated_at)}`;
         metaGroup.append(meta);
         footer.append(labels, metaGroup);
         card.append(head, preview);
@@ -452,6 +510,49 @@ export class NotesPage {
         }
         card.append(footer);
         return card;
+    }
+
+    /** A small labelled status icon (lock, shared, permission) for cards. */
+    statusBadge(icon, label, withText = false, extraClass = '') {
+        const badge = document.createElement('span');
+        badge.className = `note-status-badge ${extraClass}`.trim();
+        badge.title = label;
+        badge.append(lineIcon(icon));
+        if (withText) {
+            const text = document.createElement('span');
+            text.textContent = label;
+            badge.append(text);
+        } else {
+            badge.setAttribute('role', 'img');
+            badge.setAttribute('aria-label', label);
+        }
+        return badge;
+    }
+
+    lockedPreview() {
+        const wrap = document.createElement('span');
+        wrap.className = 'note-locked-preview';
+        wrap.append(
+            lineIcon('lock'),
+            document.createTextNode(t('Locked. Enter the password to read it.')),
+        );
+        return wrap;
+    }
+
+    avatar(name) {
+        const avatar = document.createElement('span');
+        avatar.className = 'mini-avatar';
+        avatar.setAttribute('aria-hidden', 'true');
+        avatar.textContent = String(name || '?')
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0].toUpperCase())
+            .join('');
+        let hash = 0;
+        for (const char of String(name)) hash = (hash * 31 + char.charCodeAt(0)) % 360;
+        avatar.style.setProperty('--avatar-hue', String(hash));
+        return avatar;
     }
 
     renderPagination() {
@@ -539,7 +640,8 @@ export class NotesPage {
         const copy = this.root.querySelector('[data-active-filter-copy]');
         const parts = [];
         if (this.query.q) parts.push(t('Search') + ' “' + this.query.q + '”');
-        if (this.query.labelIds.length) parts.push(this.query.labelIds.length + ' selected tags');
+        if (this.query.labelIds.length)
+            parts.push(`${this.query.labelIds.length} ${t('selected tags')}`);
         row.classList.toggle('is-hidden', parts.length === 0);
         copy.textContent = parts.join(' · ');
         this.root
@@ -562,21 +664,27 @@ export class NotesPage {
         this.loadNotes();
     }
 
-    async togglePin(noteId) {
+    /** Pins without touching the text, so it never conflicts with an open editor. */
+    async togglePin(note) {
         try {
-            const detail = (await get('/api/v1/notes/' + encodeURIComponent(noteId))).payload.data;
-            const result = await patch('/api/v1/notes/' + encodeURIComponent(noteId), {
-                base_version: detail.version,
-                title: detail.title,
-                content: detail.content,
-                color: detail.color,
-                is_pinned: !detail.is_pinned,
-                label_ids: (detail.labels || []).map((label) => label.id),
-            });
+            const result = await this.lockUI.withUnlock(
+                note.id,
+                () =>
+                    patch('/api/v1/notes/' + encodeURIComponent(note.id) + '/attributes', {
+                        is_pinned: !note.is_pinned,
+                    }),
+                note.title,
+                { locked: note.is_locked },
+            );
+            if (!result) return;
             this.toast(result.payload.data.is_pinned ? 'Note pinned.' : 'Note unpinned.');
+            if (note.is_locked)
+                post('/api/v1/notes/' + encodeURIComponent(note.id) + '/relock', {}).catch(
+                    () => {},
+                );
             this.loadNotes();
         } catch (error) {
-            this.toast(error.message || 'The note changed. Try again.', true);
+            this.toast(error.message || 'Unable to pin the note. Try again.', true);
             this.loadNotes();
         }
     }
@@ -631,12 +739,15 @@ export class NotesPage {
             const rename = document.createElement('button');
             rename.className = 'text-button';
             rename.type = 'button';
-            rename.textContent = 'Rename';
+            rename.textContent = t('Rename');
+            rename.setAttribute('aria-label', `${t('Rename')} ${label.name}`);
             rename.addEventListener('click', () => this.renameLabel(label));
             const removeButton = document.createElement('button');
             removeButton.className = 'text-button';
             removeButton.type = 'button';
-            removeButton.textContent = 'Delete';
+            removeButton.textContent = t('Delete');
+            removeButton.className = 'text-button text-danger';
+            removeButton.setAttribute('aria-label', `${t('Delete')} ${label.name}`);
             removeButton.addEventListener('click', () => this.deleteLabel(label));
             actions.append(rename, removeButton);
             row.append(name, actions);
@@ -661,7 +772,13 @@ export class NotesPage {
     }
 
     async renameLabel(label) {
-        const next = window.prompt('New tag name', label.name);
+        const next = await promptText({
+            title: 'Rename tag',
+            label: 'New tag name',
+            value: label.name,
+            maxLength: 40,
+            submit: 'Rename',
+        });
         if (next === null || next === label.name) return;
         try {
             await patch('/api/v1/labels/' + encodeURIComponent(label.id), {
@@ -671,16 +788,21 @@ export class NotesPage {
             await this.loadLabels();
             this.renderManagedLabels();
             this.loadNotes();
+            this.toast('Tag renamed. Every note with it shows the new name.');
         } catch (error) {
-            this.toast(error.message || 'Unable to rename the tag.', true);
+            this.toast(
+                error.payload?.errors?.name?.[0] || error.message || 'Unable to rename the tag.',
+                true,
+            );
         }
     }
 
     async deleteLabel(label) {
         if (
             !(await this.confirm(
-                'Delete the tag “' + label.name + '”?',
-                'Your notes will be kept.',
+                `${t('Delete the tag')} “${label.name}”?`,
+                'The notes with this tag are kept; only the tag is removed from them.',
+                { accept: 'Delete tag' },
             ))
         )
             return;
@@ -724,19 +846,23 @@ export class NotesPage {
         this.conflictBackdrop.classList.add('is-hidden');
     }
 
-    confirm(title, message) {
+    confirm(title, message, { accept = 'Continue', danger = true } = {}) {
         this.confirmDialog.querySelector('[data-confirm-title]').textContent = t(title);
         this.confirmDialog.querySelector('[data-confirm-message]').textContent = t(message);
-        this.confirmDialog.classList.remove('is-hidden');
-        this.confirmBackdrop.classList.remove('is-hidden');
+        const acceptButton = this.confirmDialog.querySelector('[data-confirm-accept]');
+        acceptButton.textContent = t(accept);
+        acceptButton.classList.toggle('button-danger', danger);
+        acceptButton.classList.toggle('button-primary', !danger);
+        this.confirmResolve?.(false);
+        if (!this.confirmDialog.open) this.confirmDialog.showModal();
+        this.confirmDialog.querySelector('[data-confirm-cancel]').focus();
         return new Promise((resolve) => {
             this.confirmResolve = resolve;
         });
     }
 
     resolveConfirm(value) {
-        this.confirmDialog.classList.add('is-hidden');
-        this.confirmBackdrop.classList.add('is-hidden');
+        if (this.confirmDialog.open) this.confirmDialog.close();
         const resolve = this.confirmResolve;
         this.confirmResolve = null;
         resolve?.(value);

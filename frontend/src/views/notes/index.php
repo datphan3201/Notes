@@ -42,6 +42,10 @@
                     <p role="status" data-note-preference-status></p>
                 </div>
             </details>
+            <button class="button button-quiet" type="button" data-open-ask-ai>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-ai"/></svg>
+                <span><?= $view->e($view->t('Ask AI')) ?></span>
+            </button>
             <button class="button button-primary" type="button" data-new-note disabled>
                 <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
                 <span><?= $view->e($view->t('New note')) ?></span>
@@ -90,6 +94,10 @@
                     </select>
                 </label>
             </div>
+            <div class="offline-banner is-hidden" data-offline-banner role="status">
+                <svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8A15 15 0 0 0 10.6 5M5.5 12.4a10 10 0 0 1 3-1.8M18.5 12.4a10 10 0 0 0-3.1-1.9M8.9 15.9a5 5 0 0 1 6.2 0M12 19.5h.01M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span data-offline-message><?= $view->e($view->t('You are offline. Notes saved on this device are shown, and your changes will sync when you reconnect.')) ?></span>
+            </div>
             <section class="shared-invitations is-hidden" data-share-invitations aria-label="<?= $view->e($view->t('Share invitations')) ?>"></section>
             <div class="active-filter-row is-hidden" data-active-filter-row>
                 <span class="active-filter-copy" data-active-filter-copy></span>
@@ -116,6 +124,7 @@
         <span class="save-status" data-editor-status role="status"></span>
         <span class="editor-meta" data-editor-meta></span>
         <button type="button" class="text-button is-hidden" data-retry-save><?= $view->e($view->t('Retry')) ?></button>
+        <div class="presence-strip is-hidden" data-editor-presence aria-label="<?= $view->e($view->t('People editing this note')) ?>"></div>
     </div>
     <div class="is-hidden" data-session-recovery>
         <a href="/login" target="_blank" rel="noopener"><?= $view->e($view->t('Sign in in another window')) ?></a>
@@ -132,6 +141,15 @@
             <textarea id="editor-content" class="editor-content-input" maxlength="50000" placeholder="<?= $view->e($view->t('Start writing…')) ?>" data-editor-content></textarea>
             <p class="field-error is-hidden" data-editor-content-error></p>
         </div>
+        <section class="ai-summary is-hidden" data-ai-summary aria-label="<?= $view->e($view->t('AI summary')) ?>">
+            <div class="ai-summary-head">
+                <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-ai"/></svg> <?= $view->e($view->t('AI summary')) ?></h3>
+                <span class="status-badge is-warning is-hidden" data-ai-summary-stale><?= $view->e($view->t('Out of date')) ?></span>
+                <button class="button button-quiet button-small" type="button" data-ai-summary-run><?= $view->e($view->t('Summarize')) ?></button>
+            </div>
+            <div class="ai-summary-body" data-ai-summary-text aria-live="polite"></div>
+            <p class="subtle-copy ai-summary-meta" data-ai-summary-meta></p>
+        </section>
         <div class="editor-controls">
             <div class="editor-control-group">
                 <span class="control-label"><?= $view->e($view->t('Note color')) ?></span>
@@ -167,6 +185,10 @@
                 <button class="button button-quiet" type="button" data-editor-labels>
                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-tag"/></svg>
                     <?= $view->e($view->t('Tags')) ?>
+                </button>
+                <button class="button button-quiet is-hidden" type="button" data-editor-lock aria-haspopup="dialog">
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg>
+                    <span data-lock-label><?= $view->e($view->t('Password')) ?></span>
                 </button>
                 <button class="button button-quiet is-hidden" type="button" data-editor-share>
                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-share"/></svg>
@@ -244,20 +266,19 @@
         <button class="button button-primary" type="button" data-keep-local><?= $view->e($view->t('Keep my draft')) ?></button>
     </div>
 </section>
-<div class="modal-backdrop is-hidden" data-confirm-dialog-backdrop></div>
-<section class="modal compact-modal confirm-modal is-hidden" data-confirm-dialog role="dialog" aria-modal="true" aria-labelledby="confirm-heading">
+<dialog class="workspace-dialog compact-dialog confirm-dialog" data-confirm-dialog aria-labelledby="confirm-heading" aria-describedby="confirm-message">
     <div class="modal-header">
         <div>
             <p class="eyebrow"><?= $view->e($view->t('Confirm')) ?></p>
             <h2 id="confirm-heading" data-confirm-title><?= $view->e($view->t('Are you sure?')) ?></h2>
         </div>
     </div>
-    <p class="modal-intro" data-confirm-message></p>
+    <p class="modal-intro" id="confirm-message" data-confirm-message></p>
     <div class="modal-actions">
         <button class="button button-quiet" type="button" data-confirm-cancel><?= $view->e($view->t('Cancel')) ?></button>
         <button class="button button-danger" type="button" data-confirm-accept><?= $view->e($view->t('Continue')) ?></button>
     </div>
-</section>
+</dialog>
 <div class="modal-backdrop is-hidden" data-recovery-dialog-backdrop></div>
 <section class="modal compact-modal is-hidden" data-recovery-dialog role="dialog" aria-modal="true" aria-labelledby="recovery-heading">
     <div class="modal-header">
@@ -279,35 +300,152 @@
         <button class="icon-button" type="button" data-share-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
     </header>
     <p class="subtle-copy"><?= $view->e($view->t('People you invite see this note after they accept. You can change their permission or remove them at any time.')) ?></p>
-    <form class="share-form" data-share-form>
-        <label class="sr-only" for="share-email"><?= $view->e($view->t('Email')) ?></label>
-        <input id="share-email" name="email" type="email" required list="share-contacts" placeholder="<?= $view->e($view->t('Email address')) ?>">
+    <form class="share-form" data-share-form novalidate>
+        <label class="sr-only" for="share-email"><?= $view->e($view->t('Email addresses')) ?></label>
+        <input id="share-email" name="emails" type="text" inputmode="email" autocomplete="off" required list="share-contacts" placeholder="<?= $view->e($view->t('Emails, separated by commas')) ?>" aria-describedby="share-email-hint share-error">
         <select name="permission" aria-label="<?= $view->e($view->t('Permission')) ?>">
             <option value="view"><?= $view->e($view->t('Can view')) ?></option>
             <option value="edit"><?= $view->e($view->t('Can view and edit')) ?></option>
         </select>
         <button class="button button-primary" type="submit"><?= $view->e($view->t('Invite')) ?></button>
     </form>
+    <p class="subtle-copy share-hint" id="share-email-hint"><?= $view->e($view->t('Only people with a Planner account can be invited. They get a notification and an email.')) ?></p>
+    <p class="field-error is-hidden" id="share-error" data-share-error role="alert"></p>
+    <h3 class="share-list-heading"><?= $view->e($view->t('People with access')) ?></h3>
     <datalist id="share-contacts" data-share-contacts></datalist>
     <div class="share-list" data-share-list aria-live="polite"></div>
     <p class="save-status" data-share-status role="status"></p>
 </dialog>
-<dialog class="workspace-dialog shared-note-dialog" data-shared-note-dialog aria-labelledby="shared-note-title">
-    <header class="section-heading">
+<dialog class="workspace-dialog shared-note-dialog" data-shared-note-dialog aria-labelledby="shared-note-heading">
+    <header class="section-heading shared-note-header">
         <div>
             <p class="eyebrow" data-shared-note-owner></p>
-            <h2 id="shared-note-title"><?= $view->e($view->t('Shared note')) ?></h2>
+            <h2 id="shared-note-heading" data-shared-note-heading><?= $view->e($view->t('Shared note')) ?></h2>
+            <p class="subtle-copy shared-note-meta" data-shared-note-meta></p>
         </div>
         <button class="icon-button" type="button" data-shared-note-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
     </header>
-    <form class="stack-form" data-shared-note-form>
-        <label><?= $view->e($view->t('Title')) ?> <input name="title" maxlength="200" required></label>
-        <label><?= $view->e($view->t('Content')) ?> <textarea name="content" rows="12" maxlength="50000" required></textarea></label>
-        <div class="action-row">
-            <button class="button button-primary" type="submit" data-shared-note-save><?= $view->e($view->t('Save')) ?></button>
-            <button class="button button-quiet" type="button" data-shared-note-leave><?= $view->e($view->t('Leave shared note')) ?></button>
-            <button class="button button-danger-quiet" type="button" data-shared-note-report><?= $view->e($view->t('Report')) ?></button>
+    <div class="editor-status-row">
+        <span class="save-status" data-shared-note-status role="status"></span>
+        <div class="presence-strip is-hidden" data-shared-presence aria-label="<?= $view->e($view->t('People editing this note')) ?>"></div>
+    </div>
+    <form class="stack-form shared-note-form" data-shared-note-form>
+        <div class="field">
+            <label for="shared-note-title"><?= $view->e($view->t('Title')) ?></label>
+            <input id="shared-note-title" name="title" maxlength="200" autocomplete="off" required>
+        </div>
+        <div class="field editor-body-field">
+            <label for="shared-note-content"><?= $view->e($view->t('Content')) ?></label>
+            <textarea id="shared-note-content" name="content" maxlength="50000" required></textarea>
         </div>
     </form>
-    <p class="save-status" data-shared-note-status role="status"></p>
+    <section class="ai-summary" data-shared-ai-summary aria-label="<?= $view->e($view->t('AI summary')) ?>">
+        <div class="ai-summary-head">
+            <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-ai"/></svg> <?= $view->e($view->t('AI summary')) ?></h3>
+            <span class="status-badge is-warning is-hidden" data-ai-summary-stale><?= $view->e($view->t('Out of date')) ?></span>
+            <button class="button button-quiet button-small" type="button" data-ai-summary-run><?= $view->e($view->t('Summarize')) ?></button>
+        </div>
+        <div class="ai-summary-body" data-ai-summary-text aria-live="polite"></div>
+        <p class="subtle-copy ai-summary-meta" data-ai-summary-meta></p>
+    </section>
+    <div class="action-row shared-note-actions">
+        <button class="button button-danger-quiet" type="button" data-shared-note-report><?= $view->e($view->t('Report')) ?></button>
+        <button class="button button-quiet" type="button" data-shared-note-leave><?= $view->e($view->t('Leave shared note')) ?></button>
+        <button class="button button-primary" type="button" data-shared-note-done><?= $view->e($view->t('Done')) ?></button>
+    </div>
+</dialog>
+<dialog class="workspace-dialog compact-dialog" data-unlock-dialog aria-labelledby="unlock-heading">
+    <form method="dialog" class="stack-form" data-unlock-form novalidate>
+        <header class="section-heading">
+            <div>
+                <p class="eyebrow"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg> <?= $view->e($view->t('Password protected')) ?></p>
+                <h2 id="unlock-heading" data-unlock-title><?= $view->e($view->t('Enter this note\'s password')) ?></h2>
+            </div>
+            <button class="icon-button" type="button" data-unlock-cancel aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <p class="subtle-copy" data-unlock-copy><?= $view->e($view->t('This note is locked. Enter its password to view, edit or delete it.')) ?></p>
+        <div class="field">
+            <label for="unlock-password"><?= $view->e($view->t('Note password')) ?></label>
+            <input id="unlock-password" name="password" type="password" autocomplete="off" required>
+            <p class="field-error is-hidden" data-unlock-error role="alert"></p>
+        </div>
+        <div class="modal-actions">
+            <button class="button button-quiet" type="button" data-unlock-cancel><?= $view->e($view->t('Cancel')) ?></button>
+            <button class="button button-primary" type="submit" data-unlock-submit><?= $view->e($view->t('Unlock')) ?></button>
+        </div>
+    </form>
+</dialog>
+<dialog class="workspace-dialog compact-dialog" data-lock-dialog aria-labelledby="lock-heading">
+    <form method="dialog" class="stack-form" data-lock-form novalidate>
+        <header class="section-heading">
+            <div>
+                <p class="eyebrow"><svg class="ui-icon" aria-hidden="true"><use href="#icon-lock"/></svg> <?= $view->e($view->t('Note password')) ?></p>
+                <h2 id="lock-heading" data-lock-heading><?= $view->e($view->t('Protect this note')) ?></h2>
+            </div>
+            <button class="icon-button" type="button" data-lock-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <p class="subtle-copy" data-lock-copy></p>
+        <div class="segmented-control lock-mode" role="group" aria-label="<?= $view->e($view->t('Choose an action')) ?>" data-lock-modes>
+            <button class="segment-button" type="button" data-lock-mode="change" aria-pressed="true"><?= $view->e($view->t('Change password')) ?></button>
+            <button class="segment-button" type="button" data-lock-mode="disable" aria-pressed="false"><?= $view->e($view->t('Remove password')) ?></button>
+        </div>
+        <div class="field" data-lock-field="current">
+            <label for="lock-current"><?= $view->e($view->t('Current password')) ?></label>
+            <input id="lock-current" name="current_password" type="password" autocomplete="off">
+            <p class="field-error is-hidden" data-lock-error="current_password" role="alert"></p>
+        </div>
+        <div class="field" data-lock-field="password">
+            <label for="lock-password"><?= $view->e($view->t('New password')) ?></label>
+            <input id="lock-password" name="password" type="password" autocomplete="new-password" minlength="4" aria-describedby="lock-password-hint">
+            <p class="subtle-copy" id="lock-password-hint"><?= $view->e($view->t('At least 4 characters. This password is only for this note.')) ?></p>
+            <p class="field-error is-hidden" data-lock-error="password" role="alert"></p>
+        </div>
+        <div class="field" data-lock-field="password_confirmation">
+            <label for="lock-confirmation"><?= $view->e($view->t('Type the new password again')) ?></label>
+            <input id="lock-confirmation" name="password_confirmation" type="password" autocomplete="new-password">
+            <p class="field-error is-hidden" data-lock-error="password_confirmation" role="alert"></p>
+        </div>
+        <div class="modal-actions">
+            <button class="button button-quiet" type="button" data-lock-close><?= $view->e($view->t('Cancel')) ?></button>
+            <button class="button button-primary" type="submit" data-lock-submit><?= $view->e($view->t('Save')) ?></button>
+        </div>
+    </form>
+</dialog>
+<dialog class="workspace-dialog ask-dialog" data-ask-dialog aria-labelledby="ask-heading">
+    <header class="section-heading">
+        <div>
+            <p class="eyebrow"><svg class="ui-icon" aria-hidden="true"><use href="#icon-ai"/></svg> <?= $view->e($view->t('AI questions')) ?></p>
+            <h2 id="ask-heading"><?= $view->e($view->t('Ask about your notes')) ?></h2>
+        </div>
+        <button class="icon-button" type="button" data-ask-close aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+    </header>
+    <form class="ask-form" data-ask-form novalidate>
+        <label class="sr-only" for="ask-question"><?= $view->e($view->t('Question')) ?></label>
+        <textarea id="ask-question" name="question" rows="2" maxlength="500" required placeholder="<?= $view->e($view->t('For example: What did I decide about the trip?')) ?>"></textarea>
+        <button class="button button-primary" type="submit" data-ask-submit><?= $view->e($view->t('Ask')) ?></button>
+    </form>
+    <div class="ask-suggestions" data-ask-suggestions>
+        <button class="chip-button" type="button" data-ask-suggestion><?= $view->e($view->t('Summarize what I wrote this week')) ?></button>
+        <button class="chip-button" type="button" data-ask-suggestion><?= $view->e($view->t('What tasks did I note down?')) ?></button>
+        <button class="chip-button" type="button" data-ask-suggestion><?= $view->e($view->t('Which notes mention a deadline?')) ?></button>
+    </div>
+    <div class="ask-result" data-ask-result aria-live="polite"></div>
+    <p class="subtle-copy ask-footnote"><?= $view->e($view->t('Answers come only from your unlocked notes and notes shared with you. Locked notes are never read.')) ?></p>
+</dialog>
+<dialog class="workspace-dialog compact-dialog" data-prompt-dialog aria-labelledby="prompt-heading">
+    <form method="dialog" class="stack-form" data-prompt-form novalidate>
+        <header class="section-heading">
+            <h2 id="prompt-heading" data-prompt-title></h2>
+            <button class="icon-button" type="button" data-prompt-cancel aria-label="<?= $view->e($view->t('Close')) ?>">×</button>
+        </header>
+        <div class="field">
+            <label for="prompt-input" data-prompt-label></label>
+            <textarea id="prompt-input" rows="1" data-prompt-input></textarea>
+            <p class="field-error is-hidden" data-prompt-error role="alert"></p>
+        </div>
+        <div class="modal-actions">
+            <button class="button button-quiet" type="button" data-prompt-cancel><?= $view->e($view->t('Cancel')) ?></button>
+            <button class="button button-primary" type="submit" data-prompt-submit><?= $view->e($view->t('Save')) ?></button>
+        </div>
+    </form>
 </dialog>

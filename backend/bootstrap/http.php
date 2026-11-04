@@ -383,7 +383,13 @@ $application = new Application(
     new CsrfGuard($session, $config->string('app.url')),
     $rateLimiter,
     new ErrorHandler($logger, $config->bool('app.debug')),
-    new \Planner\Http\Security\ContentSecurityPolicy($config->string('app.env'), $config->nullableString('vite.dev_url')),
+    new \Planner\Http\Security\ContentSecurityPolicy(
+        $config->string('app.env'),
+        $config->nullableString('vite.dev_url'),
+        $config->bool('realtime.enabled')
+            ? ($config->nullableString('realtime.public_url') ?? preg_replace('#^http#', 'ws', $config->string('app.url')))
+            : null,
+    ),
 );
 
 return [

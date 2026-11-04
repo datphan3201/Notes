@@ -388,6 +388,28 @@ export class AutosaveMachine {
         this.emit();
     }
 
+    /**
+     * Accepts a server-confirmed Note as both the saved and the draft state
+     * (for example after a live-collaboration save or an attribute change),
+     * cancelling nothing the user typed into this machine.
+     */
+    adopt(note) {
+        if (this.pendingRequest || this.phase === 'closing') return;
+        const server = snapshotFromNote(note);
+        this.persisted = true;
+        this.noteId = String(note.id);
+        this.baseVersion = note.version;
+        this.acknowledgedNote = note;
+        this.acknowledgedSnapshot = server;
+        this.draftSnapshot = server;
+        this.validationErrors = {};
+        this.clearTimers();
+        this.firstDirtyAt = null;
+        this.phase = 'saved';
+        this.recovery?.remove();
+        this.emit();
+    }
+
     /** Detach callbacks before another editor takes ownership of the UI. */
     dispose() {
         this.clearTimers();

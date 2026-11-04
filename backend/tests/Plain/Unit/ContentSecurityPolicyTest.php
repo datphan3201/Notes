@@ -27,4 +27,16 @@ final class ContentSecurityPolicyTest extends TestCase
         self::assertStringContainsString('ws://127.0.0.1:5173', $local);
         self::assertStringContainsString('wss://localhost:5173', (new ContentSecurityPolicy('local', 'https://localhost:5173'))->value());
     }
+
+    public function test_realtime_origin_is_allowed_for_websockets_only_when_valid(): void
+    {
+        $production = (new ContentSecurityPolicy('production', null, 'wss://notes.example.com'))->value();
+        self::assertStringEndsWith("; connect-src 'self' wss://notes.example.com", $production);
+        $local = (new ContentSecurityPolicy('local', 'http://127.0.0.1:5173', 'ws://localhost:8090/realtime'))->value();
+        self::assertStringContainsString("connect-src 'self' http://127.0.0.1:5173 ws://127.0.0.1:5173 ws://localhost:8090", $local);
+        self::assertSame(1, substr_count($local, 'connect-src'));
+        foreach (['https://notes.example.com', 'javascript:alert(1)', 'ws://user:pass@host', 'ws://bad host'] as $url) {
+            self::assertStringNotContainsString('connect-src', (new ContentSecurityPolicy('production', null, $url))->value(), $url);
+        }
+    }
 }

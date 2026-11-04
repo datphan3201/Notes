@@ -11,9 +11,23 @@ import {
 } from '../lib/normalization';
 import { AutosaveMachine } from './autosave-machine';
 import { NoteContentEditor } from './note-content-editor.js';
+import { CollabBinding } from './collab-binding.js';
+import { SummaryPanel } from './note-dialogs.js';
 
 export class NoteEditor {
-    constructor({ root, userId, preferences, getLabels, onChanged, confirm, toast, onConflict }) {
+    constructor({
+        root,
+        userId,
+        preferences,
+        getLabels,
+        onChanged,
+        confirm,
+        toast,
+        onConflict,
+        lockUI,
+        offlineStore = null,
+        getNoteSummary = () => null,
+    }) {
         this.root = root;
         this.userId = String(userId);
         this.preferences = preferences;
@@ -22,6 +36,10 @@ export class NoteEditor {
         this.confirm = confirm;
         this.toast = toast;
         this.onConflict = onConflict;
+        this.lockUI = lockUI;
+        this.offlineStore = offlineStore;
+        this.getNoteSummary = getNoteSummary;
+        this.collab = null;
         this.generation = 0;
         this.machine = null;
         this.note = null;
@@ -55,6 +73,10 @@ export class NoteEditor {
         this.attachmentsSection = root.querySelector('[data-attachments-section]');
         this.attachmentList = root.querySelector('[data-attachment-list]');
         this.attachmentCount = root.querySelector('[data-attachment-count]');
+        this.lockButton = root.querySelector('[data-editor-lock]');
+        this.lockLabel = root.querySelector('[data-lock-label]');
+        this.presence = root.querySelector('[data-editor-presence]');
+        this.summary = new SummaryPanel(root.querySelector('[data-ai-summary]'));
         this.bind();
     }
 
@@ -65,8 +87,7 @@ export class NoteEditor {
             ?.addEventListener('click', () => this.requestClose());
         // Clicking the dimmed page behind the editor saves and closes, like Save.
         this.backdrop.addEventListener('click', () => {
-            if (!document.querySelector('[data-confirm-dialog]:not(.is-hidden)'))
-                this.requestClose();
+            if (!document.querySelector('[data-confirm-dialog][open]')) this.requestClose();
         });
         this.root
             .querySelector('[data-color-custom]')
@@ -85,6 +106,7 @@ export class NoteEditor {
             .querySelector('[data-close-editor]')
             .addEventListener('click', () => this.requestClose());
         this.pinButton.addEventListener('click', () => this.togglePin());
+        this.lockButton?.addEventListener('click', () => this.manageLock());
         this.deleteButton.addEventListener('click', () => this.deleteNote());
         this.root.querySelector('[data-editor-labels]').addEventListener('click', () => {
             this.labelPopover.classList.toggle('is-hidden');
@@ -167,14 +189,28 @@ export class NoteEditor {
         this.dispose();
         const generation = this.generation;
         this.show();
+        // Never show the previous note's text while this one loads or asks for a password.
+        this.writeFields({ title: '', content: '' });
+        this.summary.hide();
         this.title.readOnly = true;
         this.contentEditor.setReadOnly(true);
         this.heading.textContent = t('Opening note…');
         this.eyebrow.textContent = 'Note';
         this.setStatus('Loading…');
         try {
-            const result = await get('/api/v1/notes/' + encodeURIComponent(noteId));
+            const known = this.getNoteSummary(noteId);
+            const result = await this.lockUI.withUnlock(
+                noteId,
+                () => get('/api/v1/notes/' + encodeURIComponent(noteId)),
+                known?.title || '',
+                { locked: Boolean(known?.is_locked) },
+            );
             if (generation !== this.generation) return;
+            if (!result) {
+                // The password prompt was cancelled.
+                this.hide();
+                return;
+            }
             this.note = result.payload.data;
             this.savedNoteId = this.note.id;
             this.pendingLink = '';
@@ -185,14 +221,162 @@ export class NoteEditor {
             this.writeFields(this.note);
             this.machine = this.createMachine(this.note, true);
             this.heading.textContent = this.note.title || t('Untitled note');
-            this.eyebrow.textContent = 'Editing';
+            this.eyebrow.textContent = t(
+                this.note.is_locked ? 'Password-protected note' : 'Editing',
+            );
             this.renderState(this.machine.state);
+            this.summary.load(this.note.id);
+            this.offlineStore?.putNote(this.note);
+            if (this.note.is_shared) this.startCollaboration();
             this.title.focus();
         } catch (error) {
             if (generation !== this.generation) return;
+            // Offline: open the copy saved on this device.
+            const cached = error.status === 0 ? await this.offlineStore?.getNote(noteId) : null;
+            if (cached && !cached.is_locked) {
+                this.openOffline(cached);
+                return;
+            }
             this.hide();
             this.toast(error.message || 'Unable to open the note.', true);
         }
+    }
+
+    /** Opens the device copy of a Note while offline; edits are queued for sync. */
+    openOffline(note) {
+        this.note = note;
+        this.savedNoteId = note.id;
+        this.linkSelect.disabled = true;
+        this.writeFields(note);
+        this.machine = this.createMachine(note, true);
+        this.heading.textContent = note.title || t('Untitled note');
+        this.eyebrow.textContent = t('Offline copy');
+        this.renderState(this.machine.state);
+        this.summary.hide();
+        this.title.focus();
+    }
+
+    /**
+     * Shared Notes are edited live: title/content changes travel as operations
+     * over the realtime socket and the server saves the merged text. Until the
+     * socket is ready (and whenever it is unavailable) the normal autosave applies.
+     */
+    startCollaboration() {
+        if (!this.note || this.collab) return;
+        const machine = this.machine;
+        const binding = new CollabBinding({
+            noteId: this.note.id,
+            title: this.title,
+            content: this.contentEditor,
+            presence: this.presence,
+            onInit: (message, reconnect) => {
+                if (this.machine !== machine) return;
+                if (!reconnect) {
+                    // The room may already hold text others typed but the server has not saved yet.
+                    machine.adopt({
+                        ...this.note,
+                        title: message.title,
+                        content: message.content,
+                        version: message.version,
+                        labels: this.note.labels,
+                    });
+                }
+                this.renderCollabStatus(binding.session.status, binding.session.saveState);
+            },
+            onStatus: (status, saveState, message) =>
+                this.machine === machine && this.renderCollabStatus(status, saveState, message),
+            onSaved: (message) => {
+                if (this.machine !== machine) return;
+                this.note = {
+                    ...this.note,
+                    version: message.version,
+                    updated_at: message.updated_at,
+                };
+                machine.adopt({
+                    ...this.note,
+                    title: this.title.value.trim(),
+                    content: this.contentEditor.value,
+                    version: message.version,
+                });
+                this.onChanged?.();
+            },
+            onRemote: () => {
+                if (this.machine === machine)
+                    this.heading.textContent = this.title.value || t('Untitled note');
+            },
+            onEnded: (reason, message) => {
+                if (this.machine !== machine) return;
+                this.toast(
+                    message ||
+                        (reason === 'gone'
+                            ? 'This note was deleted.'
+                            : 'Live editing ended. Reopen the note to continue.'),
+                    true,
+                );
+                this.fallBackFromCollaboration();
+            },
+            onUnavailable: () => {
+                if (this.machine === machine) this.fallBackFromCollaboration();
+            },
+        });
+        this.collab = binding;
+        binding.start();
+    }
+
+    /** Continues with HTTP autosave; unsaved live text is kept and saved normally. */
+    async fallBackFromCollaboration() {
+        const binding = this.collab;
+        this.collab = null;
+        binding?.stop();
+        if (!this.machine || !this.note) return;
+        const local = { title: this.title.value, content: this.contentEditor.value };
+        try {
+            const current = (await get('/api/v1/notes/' + encodeURIComponent(this.note.id))).payload
+                .data;
+            this.note = { ...this.note, ...current };
+            this.machine.adopt(current);
+        } catch {
+            // Keep the machine's last known version; the next save reports any conflict.
+        }
+        this.machine.input(local);
+    }
+
+    renderCollabStatus(status, saveState, message) {
+        if (status === 'unavailable' || status === 'ended') return;
+        let text;
+        let error = false;
+        if (status === 'connecting') text = 'Connecting…';
+        else if (status === 'reconnecting') text = 'Reconnecting… your edits are kept';
+        else if (saveState === 'pending') text = 'Saving…';
+        else if (saveState === 'invalid') {
+            text = message || 'Add a title and content to save';
+            error = true;
+        } else if (saveState === 'error') {
+            text = 'Saving is delayed · retrying';
+            error = true;
+        } else text = 'Saved · live';
+        this.setStatus(text, error);
+        this.status.classList.toggle('is-live', status === 'live' && !error);
+    }
+
+    async manageLock() {
+        if (!this.note?.id || !this.machine?.state.persisted) return;
+        const result = await this.lockUI.manage(this.note);
+        if (!result) return;
+        this.note = { ...this.note, is_locked: result.is_locked, version: result.version };
+        this.machine.adopt({
+            ...this.note,
+            title: this.machine.state.draftSnapshot.title,
+            content: this.machine.state.draftSnapshot.content,
+        });
+        this.toast(
+            result.mode === 'enable'
+                ? 'Password turned on. You will be asked for it next time.'
+                : result.mode === 'change'
+                  ? 'Password changed.'
+                  : 'Password removed.',
+        );
+        this.onChanged?.();
     }
 
     createMachine(note, persisted) {
@@ -247,16 +431,45 @@ export class NoteEditor {
 
     input() {
         if (!this.machine) return;
+        if (this.collab?.active) {
+            this.collab.localInput();
+            this.heading.textContent = this.title.value || t('Untitled note');
+            return;
+        }
         this.machine.input({ title: this.title.value, content: this.content.value });
     }
 
     togglePin() {
         if (!this.machine) return;
-        this.machine.input({ is_pinned: !this.machine.state.draftSnapshot.is_pinned });
+        const next = !this.machine.state.draftSnapshot.is_pinned;
+        if (this.collab?.active) return this.setAttributes({ is_pinned: next });
+        this.machine.input({ is_pinned: next });
     }
 
     setColor(color) {
+        if (this.collab?.active) return this.setAttributes({ color });
         this.machine?.input({ color });
+    }
+
+    /** Live-collaboration mode changes color/pin/tags without touching the shared text. */
+    async setAttributes(changes) {
+        try {
+            const note = (
+                await patch(
+                    '/api/v1/notes/' + encodeURIComponent(this.note.id) + '/attributes',
+                    changes,
+                )
+            ).payload.data;
+            this.note = { ...this.note, ...note };
+            this.machine?.adopt({
+                ...note,
+                title: this.title.value.trim(),
+                content: this.contentEditor.value,
+            });
+            this.onChanged?.();
+        } catch (error) {
+            this.toast(error.message || 'Unable to save the change.', true);
+        }
     }
 
     /** Fills the "Linked to" picker with active Goals and open Tasks, then selects `value`. */
@@ -343,6 +556,7 @@ export class NoteEditor {
     }
 
     setLabels(labelIds) {
+        if (this.collab?.active) return this.setAttributes({ label_ids: labelIds.map(Number) });
         this.machine?.input({ label_ids: labelIds });
     }
 
@@ -373,11 +587,17 @@ export class NoteEditor {
             this.root
                 .querySelector('[data-editor-share]')
                 ?.classList.toggle('is-hidden', !state.persisted);
+            this.lockButton?.classList.toggle('is-hidden', !state.persisted);
+            this.lockButton?.setAttribute('aria-pressed', note.is_locked ? 'true' : 'false');
+            this.lockButton?.classList.toggle('is-active', Boolean(note.is_locked));
+            if (this.lockLabel)
+                this.lockLabel.textContent = t(note.is_locked ? 'Locked' : 'Password');
             this.renderBackground(note);
             this.attachmentsSection.classList.toggle('is-hidden', !state.persisted);
             this.renderAttachments(note.attachments || []);
         } else {
             this.deleteButton.classList.add('is-hidden');
+            this.lockButton?.classList.add('is-hidden');
             this.root.querySelector('[data-editor-share]')?.classList.add('is-hidden');
             this.root.querySelector('[data-note-background-field]')?.classList.add('is-hidden');
             this.attachmentsSection.classList.add('is-hidden');
@@ -426,10 +646,15 @@ export class NoteEditor {
                 auth_expired: 'Session expired',
                 unavailable: 'Note is no longer available',
             }[state.phase] || '';
-        this.setStatus(
-            copy,
-            ['error', 'conflict', 'auth_expired', 'unavailable'].includes(state.phase),
-        );
+        if (this.collab?.active && state.phase === 'saved') {
+            this.renderCollabStatus(this.collab.session.status, this.collab.session.saveState);
+        } else {
+            this.setStatus(
+                copy,
+                ['error', 'conflict', 'auth_expired', 'unavailable'].includes(state.phase),
+            );
+            this.status.classList.remove('is-live');
+        }
         if (state.phase === 'conflict') this.onConflict(this.machine);
         this.meta.textContent = state.persisted
             ? t('Version') + ' ' + state.baseVersion
@@ -526,6 +751,20 @@ export class NoteEditor {
 
     async requestClose() {
         if (!this.machine) {
+            this.hide();
+            return true;
+        }
+        if (this.collab?.active) {
+            if (this.collab.hasPending()) {
+                this.setStatus('Finishing the save before closing…');
+                if (!(await this.collab.settle())) {
+                    const leave = await this.confirm(
+                        'Some edits are not saved yet',
+                        'The connection is slow. Leave anyway? Edits the server has not received will be lost.',
+                    );
+                    if (!leave) return false;
+                }
+            }
             this.hide();
             return true;
         }
@@ -910,6 +1149,13 @@ export class NoteEditor {
     }
 
     hide() {
+        const note = this.note;
+        this.collab?.stop();
+        this.collab = null;
+        this.summary.hide();
+        // A locked note asks for its password again the next time it is opened.
+        if (note?.is_locked && navigator.onLine !== false)
+            post('/api/v1/notes/' + encodeURIComponent(note.id) + '/relock', {}).catch(() => {});
         this.dispose();
         this.root.classList.add('is-hidden');
         this.backdrop.classList.add('is-hidden');
@@ -917,6 +1163,8 @@ export class NoteEditor {
     }
 
     dispose() {
+        this.collab?.stop();
+        this.collab = null;
         this.generation += 1;
         this.machine?.dispose();
         this.uploadAbortController?.abort();
