@@ -7,6 +7,7 @@
 | Set up PHP, MySQL, environment, dependencies and schema | [First installation](installation.md) |
 | Run the existing database/app with hot reload | [Local development](local-development.md) |
 | Release, serve with PHP-FPM, back up and restore | [Production](deployment.md) |
+| Reuse an existing tunnel and deploy green main without another host | [Existing runtime](deployment.md#reuse-an-already-running-php-server-and-cloudflare-tunnel) |
 | Recurrence, reminders, snapshots and cleanup | [Jobs and mail](jobs.md) |
 | Console command navigation | [CLI reference](../reference/cli.md) |
 

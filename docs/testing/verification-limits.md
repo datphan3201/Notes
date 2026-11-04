@@ -11,6 +11,7 @@ Record discovered defects and unresolved product decisions in the issue report. 
 | Named PHPUnit/Node test link | The relevant existing case can be inspected at that source location | That the case passed in this environment or exercises a whole browser page |
 | HTTP shell 200 | The shell route rendered successfully | The subsequently fetched object is owned/accessible or the browser applied CSS and initialized controls |
 | Archify final receipts | The listed automated artifact/provenance/browser checks passed for those exact candidate/artifact bytes | Perceptual visual review or application acceptance |
+| Existing-runtime deploy fixtures | Green-main/branch/worktree gates, prepared asset publication and failure paths against temporary Git history with fake external commands | An actual host fast-forward release, real npm installation, live database changes or production rollback |
 | Local/fake provider test | The exercised deterministic protocol/logic path behaves as asserted | Actual SMTP delivery, live AI availability, provider quotas or production configuration |
 
 Main Notes has account-scoped recovery. Explicit-save Task/Review drafts do not promise browser-crash recovery. Check each component's `Coverage limit` note and relevant source when deciding what a test actually exercises.

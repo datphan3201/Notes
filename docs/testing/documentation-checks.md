@@ -2,6 +2,16 @@
 
 [Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
+## Existing tunnel and CI/CD integration — 2026-11-04
+
+Reused the owner-managed PHP server at 8000 and its running Cloudflare Tunnel. Confirmed only selected non-secret settings: the PHP launch overrides APP_URL/VITE_DEV_URL/Secure cookies relative to backend/.env. No additional app server was started and no environment secrets were copied into CI.
+
+- Real public-origin browser smoke passed /up, HTTPS login, owned Goals and opening/cancelling the shared Goal creator, with no JavaScript errors or application record mutations. This uses the running tunnel rather than a second local origin.
+- node --test tools/deploy/tests/existing-runtime.test.mjs: **8 passed**. Actual temporary Git histories plus fake external commands cover branch/dirty-tree preservation, dry-run selection, prepared publication, .env/old-asset preservation, schema/dependency refusal, build failure/retry, concurrent edits and health failure/retry. No app database or host release was used by those fixtures.
+- New shell scripts pass bash -n and ShellCheck 0.11.0 at warning severity; the checker binary was extracted under /tmp without installing a system package. Documentation sync/check and the 17 isolated documentation-tool cases passed.
+- Installed/enabled the owner user timer with the existing quick-tunnel loopback metrics endpoint. systemd-analyze --user verify passed; explicit service run returned success/0 and skipped the active feature checkout. The initial interactive-PATH unit warning was corrected by resolving required executable directories; final unit verification/service logs are clean.
+- No actual main checkout fast-forward, backend dependency replacement, migration, server/tunnel restart or reboot persistence test is claimed. The pre-extension PR CI run passed; CI after pushing this extension is separate evidence. Original Goals PHPUnit/Node/browser results below retain their scope; no backend/frontend suite rerun is needed for these deployment/docs-only changes.
+
 ## Goals UI unification — 2026-11-04
 
 Branch feat/goals-ui-unification from main 52cb745. Frontend/views only, plus the HTTP shell marker and one meaningful sub-Goal payload regression; no backend runtime, API, route or schema change. Full required checks were run against the candidate; source traces were regenerated after dead duplicate form hooks were removed.

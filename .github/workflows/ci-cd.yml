@@ -1,8 +1,8 @@
 name: CI/CD Pipeline
 
-# CI only: deployment is pull-based. Hosts provisioned by tools/deploy/setup.sh poll for the
-# newest push to main whose run of this workflow succeeded (tools/deploy/pull-deploy.sh), so this
-# file must keep its name (ci-cd.yml) and no deployment secrets are stored in GitHub.
+# CI only: deployment is pull-based. Provisioned hosts use pull-deploy.sh; owner-managed
+# servers/tunnels use existing-runtime.sh. Both select successful main push runs of this
+# workflow, so keep its file name (ci-cd.yml). No deployment secrets are stored in GitHub.
 
 on:
   push:
@@ -67,6 +67,7 @@ jobs:
             bash -n "$script"
           done
           shellcheck --severity=warning --external-sources "${scripts[@]}"
+          node --test tools/deploy/tests/*.test.mjs
 
       # The documentation tools read the route table through the backend autoloader.
       - name: Install backend dependencies

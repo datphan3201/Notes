@@ -30,3 +30,9 @@ php tools/docs/tests/run.php
 ```
 
 The first inspects actual route factory declarations using uninitialized controller objects solely for method binding; no controller/request is executed. The second refreshes trace tables/source line links, lookup indexes and blank route inventory/CSV. The third checks coverage, unique references, links and final diagram hashes. The fourth runs documentation-tool regression cases in an isolated fixture without application bootstrap or a database. Neither generator should be used to overwrite filled-in test results: save each executed test run as a separate local report.
+
+## Existing running host
+
+From the repository root, bash tools/deploy/existing-runtime.sh --dry-run previews the existing-server CD path. bash tools/deploy/install-existing-runtime.sh installs a user timer; PLANNER_TUNNEL_METRICS can select the running quick tunnel's loopback metrics endpoint. See [deployment](../operations/deployment.md#reuse-an-already-running-php-server-and-cloudflare-tunnel) for scope, main/clean-tree guards, failure recovery and schema/dependency restrictions. This path does not start another server or copy backend/.env to GitHub.
+
+node --test tools/deploy/tests/*.test.mjs verifies the deployer with temporary Git repositories and fake external commands; it does not connect to the app database or run a host deployment.

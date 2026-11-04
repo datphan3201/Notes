@@ -57,3 +57,9 @@ Health returns data.status=ok; login/register render 200. A protected page redir
 | Email not in inbox | In local/testing without SMTP it is a private .eml outbox file; see jobs/mail |
 
 After a pull, install dependencies only when lockfiles changed, migrate when new migrations exist, and rebuild when using production assets. Existing user data is not automatically reseeded.
+
+## Existing Cloudflare Tunnel session
+
+When the owner is already serving this checkout through a Cloudflare Tunnel, reuse that running origin for browser checks instead of starting another host/port. Keep the server, tunnel, database and startup overrides intact. The PHP process may explicitly override APP_URL, VITE_DEV_URL and SESSION_SECURE_COOKIE from backend/.env; inspect only the needed non-secret keys, never dump the entire environment. Read a quick tunnel's active hostname from its configured loopback metrics /quicktunnel endpoint. Use the public HTTPS origin for login/CSRF checks; a local HTTP check does not establish public-origin correctness.
+
+Use the [existing-runtime CD mode](deployment.md#reuse-an-already-running-php-server-and-cloudflare-tunnel) to connect this checkout to green main CI without provisioning another host. Feature branches and dirty files are preserved, so a development checkout must return to clean main before automatic fast-forward deployment can occur. Test databases remain isolated even when browser checks use the existing app.

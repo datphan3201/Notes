@@ -79,6 +79,29 @@ Writable directories (private storage and the log directory) are setgid www-data
 
 Deployment is pull-based and identical for every ingress. planner-deploy.timer runs [the pull deployer](../../tools/deploy/pull-deploy.sh) as the deploy user every two minutes. It asks the GitHub API for the newest push to the deployed branch whose ci-cd.yml run succeeded, and only fast-forwards to it: it never moves backwards, refuses when tracked files were edited on the host and skips while another release runs. It then runs release.sh with a frontend build and checks /up on 127.0.0.1:8080. When the release fails before migrations it restores and re-releases the previous revision; a failure after migrations started, or an unhealthy /up, leaves the new revision in place for a forward fix or a restore from the pre-release backup. A failed commit is not retried until a newer commit is green or `--force` is given. Logs: `journalctl -u planner-deploy`; preview with `bash tools/deploy/pull-deploy.sh --dry-run`. Public repositories need no credentials (the unauthenticated API limit is 60 requests per hour per IP, above the timer's 30). A private repository needs a read-only deploy key or credential for `git fetch` and a fine-grained token (Actions and Contents: read) in the deploy user's ~/.config/planner/github-token. Use `--no-auto-deploy` to release only by hand.
 
+### Reuse an already running PHP server and Cloudflare Tunnel
+
+Use [existing-runtime.sh](../../tools/deploy/existing-runtime.sh) for a checkout already served by an owner-managed PHP server and tunnel. It does not provision a second host, start another app server, restart PHP/cloudflared, copy secrets into CI, or replace backend/.env. It uses the existing database only for the read-only migrate:check command. GitHub Actions still runs destructive integration tests exclusively against its isolated goals_test service.
+
+```bash
+# On the existing host; gh must already have access to this repository.
+bash tools/deploy/existing-runtime.sh --dry-run
+# Optional quick-tunnel metrics endpoint from the running cloudflared process:
+PLANNER_TUNNEL_METRICS=127.0.0.1:20241 bash tools/deploy/install-existing-runtime.sh
+systemctl --user status planner-existing-runtime.timer
+journalctl --user -u planner-existing-runtime.service
+```
+
+The installer creates a user service/timer under ~/.config/systemd/user and resolves the required Linux executable paths rather than embedding an interactive PATH with Windows/spaced entries. The timer polls every two minutes and uses gh's existing authentication. It stays active with the user manager; this does not enable login linger or certify reboot persistence of the independently managed PHP/tunnel processes.
+
+CD selects only successful **push** runs of ci-cd.yml on main. It preserves feature branches, detached HEADs, uncommitted/untracked work, backend/.env and private data; it never switches a feature checkout onto main. After the PR is merged and the owner returns this checkout to a clean main, it can fast-forward to a newer green main. It prepares frontend assets in a temporary source directory without an .env or listening server, rechecks the live checkout, retains old hashed assets for open tabs and publishes the new manifest last. It then checks /up through the existing URL. A failed build leaves source/manifest unchanged. A failed public health check leaves the new revision in place for inspection/forward repair; --retry explicitly retries a failed revision. This is an in-place source update, not a zero-downtime release guarantee.
+
+Schema/migration or backend Composer changes are rejected before checkout changes; use the backed-up release procedure for those changes. This deliberately bounded mode never silently migrates a live development database or replaces its backend dependency installation. The provisioned-host pull deployer above remains the route for backed-up schema/dependency releases.
+
+For a quick tunnel, PLANNER_TUNNEL_METRICS reads the current hostname from cloudflared's /quicktunnel endpoint. Otherwise the health target is APP_URL in backend/.env. A running PHP process may have explicit APP_URL, VITE_DEV_URL and SESSION_SECURE_COOKIE overrides that differ from that file; use the actual public origin for browser checks and CSRF. Quick-tunnel restarts can require updating the server's APP_URL/startup overrides as well. This helper does not rewrite the owner's startup configuration. Public tunnel browsing needs built same-origin assets (or a separately reachable Vite origin); the current tunnel server uses built assets.
+
+Stop automatic checks with systemctl --user disable --now planner-existing-runtime.timer. The owner-managed PHP server and cloudflared continue running.
+
 ## Back up and restore
 
 Use a protected MySQL option file for mysqldump/mysql authentication, not a password embedded in shell history. Back up goals database plus the configured private storage root and preserve their alignment. Store backups privately; they contain personal data and expiring secret mail links.
