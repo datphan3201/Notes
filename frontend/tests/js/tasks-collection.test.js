@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completedInView, seriesPage, sortTasks } from '../../src/js/planning/tasks-collection.js';
+import {
+    completedInView,
+    groupTasksByGoal,
+    seriesPage,
+    sortTasks,
+} from '../../src/js/planning/tasks-collection.js';
 import { historyPage } from '../../src/js/settings/task-history.js';
 
 const today = '2026-11-02';
@@ -91,5 +96,34 @@ test('History sorts completion/due facts newest first, searches descriptions and
     assert.deepEqual(
         tasks.map((t) => t.id),
         ['older', 'late', 'newer', 'open'],
+    );
+});
+
+test('tasks group by their goal, milestone tasks join the milestone goal, inbox comes last', () => {
+    const goals = new Map([
+        ['g1', { id: 'g1', name: 'Learn Docker' }],
+        ['g2', { id: 'g2', name: 'Gym' }],
+    ]);
+    const milestones = new Map([
+        ['m1', { id: 'm1', goal_id: 'g1', position: 1 }],
+        ['m0', { id: 'm0', goal_id: 'g1', position: 0 }],
+    ]);
+    const tasks = [
+        { id: 'a', goal_id: 'g2', milestone_id: null },
+        { id: 'b', goal_id: null, milestone_id: null },
+        { id: 'c', goal_id: null, milestone_id: 'm1' },
+        { id: 'd', goal_id: 'g1', milestone_id: null },
+        { id: 'e', goal_id: 'gone', milestone_id: null },
+        { id: 'f', goal_id: null, milestone_id: 'm0' },
+    ];
+    const groups = groupTasksByGoal(tasks, { goals, milestones });
+    assert.deepEqual(
+        groups.map((group) => [group.goal?.id ?? null, group.tasks.map((task) => task.id)]),
+        [
+            ['g2', ['a']],
+            // Roadmap order inside the Goal: Milestone 0, Milestone 1, then direct Tasks.
+            ['g1', ['f', 'c', 'd']],
+            [null, ['b', 'e']],
+        ],
     );
 });

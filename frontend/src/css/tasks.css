@@ -89,7 +89,7 @@
 }
 [data-tasks-page] .collection-controls {
     display: grid;
-    grid-template-columns: minmax(12rem, 2fr) repeat(2, minmax(9rem, 1fr));
+    grid-template-columns: minmax(12rem, 2fr) repeat(3, minmax(9rem, 1fr));
 }
 [data-tasks-page] .task-capture-footer {
     position: sticky;
@@ -129,4 +129,110 @@
 }
 [data-tasks-page] .collection-controls > .field {
     min-width: 0;
+}
+/* Group by Goal: one collapsible section per Goal, Inbox last. */
+.task-group + .task-group {
+    margin-top: 14px;
+}
+.task-group-heading {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 2px 10px;
+}
+.task-group-toggle {
+    display: inline-flex;
+    text-align: left;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+    padding: 4px 6px;
+    margin-left: -6px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+}
+.task-group-toggle::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-left: 2px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.15s ease;
+}
+.task-group-toggle[aria-expanded='false']::after {
+    transform: rotate(-45deg);
+}
+.task-group-toggle:hover,
+.task-group-toggle:focus-visible {
+    background: var(--surface-soft);
+}
+.task-group-toggle strong {
+    overflow: hidden;
+    font-size: var(--font-size-section);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.task-group-toggle .ui-icon {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    color: var(--accent);
+}
+.task-group-list {
+    display: grid;
+    gap: 10px;
+}
+.task-group-list[hidden] {
+    display: none;
+}
+@media (max-width: 600px) {
+    .task-group-heading {
+        flex-wrap: wrap;
+        gap: 4px 12px;
+    }
+    .task-group-toggle strong {
+        white-space: normal;
+    }
+    /* Phones: time filters scroll in one row and Status/Sort share a row, so tasks start
+       above the fold. */
+    [data-tasks-page] .task-view-menu {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    [data-tasks-page] .task-view-menu > * {
+        flex: 0 0 auto;
+    }
+    [data-tasks-page] .collection-main .collection-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    [data-tasks-page] .collection-controls > .field:first-child,
+    [data-tasks-page] .collection-controls > .field:has([data-task-group]) {
+        grid-column: 1 / -1;
+    }
+    [data-tasks-page] .collection-controls label {
+        font-size: var(--font-size-caption);
+    }
+    [data-tasks-page] .collection-controls select {
+        min-width: 0;
+        padding-inline: 8px 22px;
+        font-size: var(--font-size-meta);
+    }
+}
+.task-group-milestone {
+    margin: 6px 0 -2px;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+}
+.task-group-milestone:first-child {
+    margin-top: 0;
 }

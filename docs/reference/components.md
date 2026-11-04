@@ -8,6 +8,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | --- | --- | --- |
 | `tasks.collection` | [Collection, refresh, search and pagination](../ui/tasks/README.md#collection-refresh-search-and-pagination) | /tasks — Tasks |
 | `tasks.row` | [Task row: completion, Today, week, Important and the ⋯ menu](../ui/tasks/README.md#task-row-completion-today-week-important-and-the--menu) | /tasks — Tasks |
+| `tasks.group` | [Group by Goal](../ui/tasks/README.md#group-by-goal) | /tasks — Tasks |
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.week` | [This week](../ui/tasks/filters.md#this-week) | /tasks — Time filters, statuses and counts |

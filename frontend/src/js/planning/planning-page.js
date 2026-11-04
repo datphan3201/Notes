@@ -11,7 +11,7 @@ import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { NoteContentEditor } from '../notes/note-content-editor.js';
-import { sortTasks, completedInView, seriesPage } from './tasks-collection.js';
+import { sortTasks, completedInView, groupTasksByGoal, seriesPage } from './tasks-collection.js';
 import { collectionPage, renderPagination } from './collection-page.js';
 import {
     localDate,
@@ -28,7 +28,7 @@ import {
     reportWorkspaceError,
 } from '../lib/workspace-ui.js';
 import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
-import { lineIcon } from '../lib/line-icons.js';
+import { lineIcon, spriteIcon } from '../lib/line-icons.js';
 import { renderContributions } from './contributions-ui.js';
 import { createTagPicker, loadTags, sameTagIds, tagChips } from './tag-picker.js';
 import {
@@ -395,6 +395,14 @@ export function initTasksPage(root) {
     const search = root.querySelector('[data-task-search]');
     const status = root.querySelector('[data-task-status]');
     const sort = root.querySelector('[data-task-sort]');
+    // Tasks is the place to do work; grouping by Goal answers "what is left in each Goal this
+    // week" without repeating the Goals page's structure. The choice is remembered per browser.
+    const grouping = root.querySelector('[data-task-group]');
+    const GROUPING_KEY = 'planner.tasks.group';
+    grouping.value = localStorage.getItem(GROUPING_KEY) === 'goal' ? 'goal' : 'none';
+    const collapsedGroups = new Set();
+    let goalsById = new Map();
+    let milestonesById = new Map();
     const seriesStatus = root.querySelector('[data-series-status]');
     const plan = form.elements.plan;
     const setPlanDefault = () => {
@@ -472,7 +480,8 @@ export function initTasksPage(root) {
         }
     };
     // Primary planning stays inline; less frequent controls use native disclosure.
-    const taskRow = (task) => {
+    // showContext=false: a grouped list already names the Goal and Milestone above the row.
+    const taskRow = (task, { showContext = true } = {}) => {
         const article = document.createElement('article');
         const overdue = taskIsOverdue(task, today);
         const done = task.status === 'Done';
@@ -509,7 +518,7 @@ export function initTasksPage(root) {
         const context =
             parentOptions.get(`milestone:${task.milestone_id}`) ||
             parentOptions.get(`goal:${task.goal_id}`);
-        if (context) {
+        if (context && showContext) {
             const chip = document.createElement('span');
             chip.className = 'context-chip';
             chip.textContent = context.name;
@@ -677,6 +686,7 @@ export function initTasksPage(root) {
         const repeating = taskView === 'repeating';
         status.closest('.field').hidden = repeating;
         sort.closest('.field').hidden = repeating;
+        grouping.closest('.field').hidden = repeating;
         root.querySelector('[data-series-status-field]').hidden = !repeating;
         root.querySelector('.task-filter-details').hidden = repeating || !tags.length;
         const timezone = window.notesBootstrap.preferences.timezone;
@@ -748,7 +758,8 @@ export function initTasksPage(root) {
         );
         completedSection.hidden = !completed.total || status.value !== 'open';
         completedSection.querySelector('[data-task-completed-count]').textContent = completed.total;
-        completedList.replaceChildren(...completed.items.map(taskRow));
+        completedList.replaceChildren(...completed.items.map((task) => taskRow(task)));
+        const grouped = grouping.value === 'goal';
         const result = collectionPage(
             sortTasks(
                 visibleTasks().filter((task) =>
@@ -760,8 +771,9 @@ export function initTasksPage(root) {
             {
                 query: search.value,
                 status: taskViewStatus(taskView, status.value),
-                page,
-                size,
+                // Groups show every matching Task: paging would split a Goal across pages.
+                page: grouped ? 0 : page,
+                size: grouped ? Number.MAX_SAFE_INTEGER : size,
             },
         );
         page = result.page;
@@ -778,7 +790,68 @@ export function initTasksPage(root) {
                     : 'Capture a task now and add details when you need them.',
                 ...(tasks.length ? {} : { href: '#task-name', action: 'Add your first task' }),
             });
-        list.append(...result.items.map(taskRow));
+        if (!grouped) {
+            list.append(...result.items.map((task) => taskRow(task)));
+            return;
+        }
+        for (const { goal, tasks: groupTasks } of groupTasksByGoal(result.items, {
+            goals: goalsById,
+            milestones: milestonesById,
+        })) {
+            const key = goal?.id || 'inbox';
+            const section = document.createElement('section');
+            section.className = 'task-group';
+            const heading = document.createElement('div');
+            heading.className = 'task-group-heading';
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'task-group-toggle';
+            toggle.setAttribute('aria-expanded', String(!collapsedGroups.has(key)));
+            const parentName = goal?.parent_goal_id
+                ? goalsById.get(goal.parent_goal_id)?.name
+                : null;
+            const title = document.createElement('strong');
+            title.textContent = goal
+                ? `${parentName ? `${parentName} › ` : ''}${goal.name}`
+                : t('Inbox');
+            const count = document.createElement('span');
+            count.className = 'count-badge';
+            count.textContent = String(groupTasks.length);
+            toggle.append(spriteIcon(goal ? 'goals' : 'tasks'), title, count);
+            const body = document.createElement('div');
+            body.className = 'task-group-list';
+            body.hidden = collapsedGroups.has(key);
+            let milestone;
+            for (const task of groupTasks) {
+                // One subheading per Milestone instead of the same chip on every row.
+                if (goal && task.milestone_id !== milestone) {
+                    milestone = task.milestone_id;
+                    const label = document.createElement('p');
+                    label.className = 'task-group-milestone';
+                    label.textContent = milestone
+                        ? milestonesById.get(milestone)?.name || ''
+                        : t('Directly in this goal');
+                    body.append(label);
+                }
+                body.append(taskRow(task, { showContext: !goal }));
+            }
+            toggle.addEventListener('click', () => {
+                if (collapsedGroups.has(key)) collapsedGroups.delete(key);
+                else collapsedGroups.add(key);
+                toggle.setAttribute('aria-expanded', String(!collapsedGroups.has(key)));
+                body.hidden = collapsedGroups.has(key);
+            });
+            heading.append(toggle);
+            if (goal) {
+                const open = document.createElement('a');
+                open.className = 'section-link';
+                open.href = `/goals/${encodeURIComponent(goal.id)}`;
+                open.textContent = `${t('Open roadmap')} →`;
+                heading.append(open);
+            }
+            section.append(heading, body);
+            list.append(section);
+        }
     };
     const load = async () => {
         const ticket = reads.begin();
@@ -793,6 +866,8 @@ export function initTasksPage(root) {
             if (!reads.isCurrent(ticket)) return;
             tasks = response.payload.data;
             series = seriesResponse.payload.data;
+            goalsById = new Map(goals.payload.data.map((goal) => [goal.id, goal]));
+            milestonesById = new Map(milestones.payload.data.map((item) => [item.id, item]));
             today = dashboard.payload.data.today;
             selectedIds = new Set(dashboard.payload.data.selected_tasks.map((task) => task.id));
             dailyIds = new Set(dashboard.payload.data.daily_task_ids);
@@ -897,6 +972,11 @@ export function initTasksPage(root) {
             render();
         })
         .catch(() => {});
+    grouping.addEventListener('change', () => {
+        localStorage.setItem(GROUPING_KEY, grouping.value);
+        page = 0;
+        render();
+    });
     for (const control of [sort, seriesStatus])
         control.addEventListener('change', () => {
             page = 0;

@@ -70,6 +70,13 @@
                         <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
                     </select>
                 </div>
+                <div class="field">
+                    <label for="task-group"><?= $view->e($view->t('Group by')) ?></label>
+                    <select id="task-group" data-task-group>
+                        <option value="none"><?= $view->e($view->t('No grouping')) ?></option>
+                        <option value="goal"><?= $view->e($view->t('Goal')) ?></option>
+                    </select>
+                </div>
                 <div class="field" data-series-status-field hidden>
                     <label for="series-status"><?= $view->e($view->t('Series state')) ?></label>
                     <select id="series-status" data-series-status>

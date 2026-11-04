@@ -89,7 +89,7 @@
           "client": [
             {
               "path": "frontend/src/js/planning/planning-page.js",
-              "symbol": "const taskRow = (task) =>"
+              "symbol": "const taskRow = (task, { showContext = true } = {}) =>"
             },
             {
               "path": "frontend/src/js/planning/transitions.js",
@@ -131,6 +131,36 @@
               "label": "Aligned task row grid"
             }
           ]
+        },
+        {
+          "id": "tasks.group",
+          "label": "Group by Goal",
+          "behavior": "Tasks stays the execution view: the time filters (Today, This week…) and Status apply first, then Group by Goal splits the result into one collapsible section per Goal (a Milestone Task belongs to its Milestone's Goal), each with its count and Open roadmap, and a trailing Inbox. Inside a Goal, Tasks follow the roadmap (Milestone position, then Tasks directly in the Goal) under one subheading per Milestone; Sort orders Tasks within a Milestone. Grouped lists are not paged. The choice is remembered per browser.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-group"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/tasks-collection.js",
+              "symbol": "export function groupTasksByGoal("
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const GROUPING_KEY = 'planner.tasks.group';"
+            }
+          ],
+          "server": [],
+          "storage": [],
+          "tests": [
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "tasks group by their goal"
+            }
+          ],
+          "routes": []
         }
       ]
     },

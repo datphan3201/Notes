@@ -114,6 +114,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] TASK21 — Clean Today/Week capture defaults Plan for to that view. Reopening a dirty capture preserves its values. Creating retains search/status/view/page and offers Open task; a failed planning step never creates a duplicate.
 - [ ] TASK22 — Repeat disables Plan for; individual occurrences remain selectable later. Advanced capture fields remain accessible and the Create/Cancel footer stays visible on mobile.
 - [ ] TASK23 — The ⋯ row menu opens by keyboard, exposes labelled Due date/Remind me/Repeat/Edit/Archive and closes on Escape, outside click or a choice. Row names align; context chips fit their text; Today icons expose meaningful hover/accessibility labels.
+- [ ] TASK25 — Group by Goal keeps the active time filter and Status, shows one collapsible section per Goal in roadmap order with Milestone subheadings and Open roadmap, Inbox last, and survives a reload; No grouping restores the paged list.
 - [ ] TASK24 — Today add/remove from detail matches row behavior. Overview contains the completion checklist; Notes/Resources stay in Notes and preserve drafts when changing tabs.
 
 ## Personal repeating work — REPEAT
