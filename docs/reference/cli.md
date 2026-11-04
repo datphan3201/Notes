@@ -17,7 +17,8 @@ Run application commands from backend. [bin/console](../../backend/bin/console) 
 | `php bin/console files:prune` | Process pending/orphan file deletion |
 | `php bin/console sessions:prune` / `rate-limits:prune` | Expired infrastructure cleanup |
 | `php bin/console areas:backfill` | Create default Areas where needed |
-| `php bin/console users:role <email> admin\|user` | Operator-controlled system role change |
+| `php bin/console users:role <email> admin\|user` | Operator-controlled system role change; recorded in Administrator activity |
+| `php bin/console registration:mode [open\|invite\|closed]` | Show or set who may register (default open); recorded in Administrator activity |
 | `php bin/console mail:test <email>` | Deliver a test message through configured transport |
 
 From the repository root, documentation commands work without a database:

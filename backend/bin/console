@@ -198,8 +198,35 @@ try {
                 fwrite(STDERR, "No account uses that email.\n");
                 exit(1);
             }
-            $accounts->setRole($user->id, $role, $application['clock']->now()->format('Y-m-d H:i:s.u'));
+            $now = $application['clock']->now()->format('Y-m-d H:i:s.u');
+            $accounts->setRole($user->id, $role, $now);
+            // The console is the operator; its changes are recorded with no administrator actor.
+            (new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoAdminActionRepository($application['pdo']))
+                ->record(null, 'account.role', 'user', (string) $user->id, sprintf('%s → %s', $email, $role), $now);
             fwrite(STDOUT, sprintf("%s is now %s.\n", $email, $role));
+            break;
+
+        case 'registration:mode':
+            $settings = new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($application['pdo']);
+            $mode = $argv[2] ?? null;
+            if ($mode === null) {
+                fwrite(STDOUT, $settings->registrationMode()."\n");
+                break;
+            }
+            if (!in_array($mode, \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository::REGISTRATION_MODES, true)) {
+                fwrite(STDERR, "Usage: php bin/console registration:mode [open|invite|closed]\n");
+                exit(2);
+            }
+            $now = $application['clock']->now()->format('Y-m-d H:i:s.u');
+            $previous = $settings->registrationMode();
+            if ($previous === $mode) {
+                fwrite(STDOUT, "Registration is already $mode.\n");
+                break;
+            }
+            $settings->setRegistrationMode($mode, $now);
+            (new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoAdminActionRepository($application['pdo']))
+                ->record(null, 'settings.registration_mode', 'setting', 'registration_mode', "$previous → $mode", $now);
+            fwrite(STDOUT, "Registration is now $mode.\n");
             break;
 
         case 'mail:test':
@@ -220,7 +247,7 @@ try {
             break;
 
         case 'help':
-            fwrite(STDOUT, "Available commands:\n  schedule:run    run periodic jobs that are due (call from cron every minute)\n  schedule:work   keep running periodic jobs every minute\n  mail:test <email>\n  users:role <email> admin|user\n  ".implode("\n  ", array_keys($jobs))."\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  areas:backfill\n");
+            fwrite(STDOUT, "Available commands:\n  schedule:run    run periodic jobs that are due (call from cron every minute)\n  schedule:work   keep running periodic jobs every minute\n  mail:test <email>\n  users:role <email> admin|user\n  registration:mode [open|invite|closed]\n  ".implode("\n  ", array_keys($jobs))."\n  migrate\n  migrate:status\n  migrate:check\n  routes\n  areas:backfill\n");
             break;
 
         default:

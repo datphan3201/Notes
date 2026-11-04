@@ -114,7 +114,7 @@ final class FullFeedbackHttpTest extends TestCase
         self::assertSame('Abusive text', $reports[0]['note']['excerpt']);
         self::assertSame('report_new', $this->data($this->api('GET', '/api/v1/notifications', [], $admin))['items'][0]['type']);
 
-        self::assertSame(200, $this->api('POST', '/api/v1/admin/reports/'.$reports[0]['id'].'/resolve', ['status' => 'resolved', 'response' => 'Account locked'], $admin)->status);
+        self::assertSame(200, $this->api('POST', '/api/v1/admin/reports/'.$reports[0]['id'].'/resolve', ['status' => 'resolved', 'response' => 'Sharing stopped', 'actions' => ['revoke_shares']], $admin)->status);
         self::assertSame('report_resolved', $this->data($this->api('GET', '/api/v1/notifications', [], $reader))['items'][0]['type']);
 
         $ownerId = $reports[0]['owner']['id'];
@@ -128,7 +128,7 @@ final class FullFeedbackHttpTest extends TestCase
 
         $this->api('POST', "/api/v1/admin/users/$ownerId/unlock", [], $admin);
         self::assertSame('/dashboard', $this->login('author@example.test')->headers['Location']);
-        self::assertSame(200, $this->data($this->api('PATCH', '/api/v1/admin/settings', ['history_limit' => 100], $admin)) === ['history_limit' => 100] ? 200 : 500);
+        self::assertSame(100, $this->data($this->api('PATCH', '/api/v1/admin/settings', ['history_limit' => 100], $admin))['history_limit']);
     }
 
     public function test_totp_two_factor_login_requires_a_valid_code(): void

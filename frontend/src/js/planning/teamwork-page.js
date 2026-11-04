@@ -260,7 +260,7 @@ export function initTeamworkPage(root) {
             element(
                 'strong',
                 '',
-                `${member.display_name}${member.status === 'pending' ? ` (${t('invited')})` : ''}`,
+                `${member.display_name}${member.status === 'pending' ? ` (${t('invited')})` : ''}${member.locked ? ` · ${t('Locked')}` : ''}`,
             ),
             element(
                 'small',
@@ -407,9 +407,20 @@ export function initTeamworkPage(root) {
         edit.onclick = () => {
             const assignee = taskEditForm.querySelector('[data-team-task-edit-assignee]');
             assignee.replaceChildren(new Option(t('Unassigned'), ''));
+            // A locked account cannot take new work but stays visible on work it already has.
             for (const member of goal.members)
-                if (member.status === 'accepted')
-                    assignee.append(new Option(member.display_name, member.id));
+                if (
+                    member.status === 'accepted' &&
+                    (!member.locked || member.id === task.assignee?.id)
+                )
+                    assignee.append(
+                        new Option(
+                            member.locked
+                                ? `${member.display_name} (${t('Locked')})`
+                                : member.display_name,
+                            member.id,
+                        ),
+                    );
             taskEditForm.elements.name.value = task.name;
             taskEditForm.elements.description.value = task.description || '';
             assignee.value = task.assignee?.id || '';
@@ -586,7 +597,7 @@ export function initTeamworkPage(root) {
             ...goal.members.map((member) => memberRow(goal, member, canManage)),
         );
         for (const member of goal.members)
-            if (member.status === 'accepted')
+            if (member.status === 'accepted' && !member.locked)
                 assignee.append(new Option(member.display_name, member.id));
 
         // Open tasks first, then the Completed list underneath, like the Tasks page.

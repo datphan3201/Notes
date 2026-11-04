@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 final readonly class NotificationService
 {
     /** Types that are also emailed when the recipient allows email notifications. */
-    private const EMAILED = ['share_invite', 'team_invite', 'report_resolved', 'team_task_assigned'];
+    private const EMAILED = ['share_invite', 'team_invite', 'report_resolved', 'team_task_assigned', 'admin_warning'];
 
     public function __construct(
         private PdoNotificationRepository $notifications,

@@ -9,6 +9,7 @@ use Planner\Application\Account\AccountService;
 use Planner\Application\Account\AccountValidator;
 use Planner\Application\Account\AuthService;
 use Planner\Application\Account\EmailVerificationService;
+use Planner\Application\Account\RegistrationPolicy;
 use Planner\Http\GuestLocale;
 use Planner\Http\Request;
 use Planner\Http\Response;
@@ -28,6 +29,7 @@ final readonly class AccountController
         private SessionManager $session,
         private ViewRenderer $views,
         private EmailVerificationService $emailVerification,
+        private RegistrationPolicy $registration,
     ) {
     }
 
@@ -225,6 +227,7 @@ final readonly class AccountController
             'errors' => is_array($errors) ? $errors : [],
             'old' => is_array($old) ? $old : [],
             'locale' => GuestLocale::resolve($request, $this->session),
+            'registration_mode' => $this->registration->mode(),
         ], 'layouts/guest');
     }
 

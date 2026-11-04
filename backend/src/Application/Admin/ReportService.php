@@ -10,20 +10,24 @@ use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
 use Planner\Infrastructure\Database\TransactionManager;
 use Planner\Infrastructure\Persistence\Pdo\Account\PdoAccountRepository;
+use Planner\Infrastructure\Persistence\Pdo\Admin\PdoRegistrationInviteRepository;
 use Planner\Infrastructure\Persistence\Pdo\Admin\PdoReportRepository;
 use Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository;
 use Planner\Support\Clock;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 
-/** Reports on shared Notes, account locking and administrator settings. */
+/** Reports on shared Notes, account locking, registration and administrator settings. */
 final readonly class ReportService
 {
     public function __construct(
         private PdoReportRepository $reports,
         private PdoSystemSettingRepository $settings,
+        private PdoRegistrationInviteRepository $invitations,
         private PdoAccountRepository $accounts,
         private NoteShareService $shares,
+        private AccountLockService $locks,
+        private AdminActionLog $log,
         private NotificationService $notifications,
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
@@ -69,6 +73,7 @@ final readonly class ReportService
             'status' => (string) $row['status'],
             'reason' => (string) $row['reason'],
             'response' => $row['response'] === null ? null : (string) $row['response'],
+            'actions' => ReportOutcome::decode($row['actions'] ?? null),
             'note' => ['id' => (string) $row['note_id'], 'title' => (string) $row['note_title'], 'excerpt' => (string) $row['note_excerpt']],
             'reporter' => ['id' => (string) $row['reporter_id'], 'display_name' => (string) $row['reporter_name'], 'email' => (string) $row['reporter_email']],
             'owner' => ['id' => (string) $row['note_owner_id'], 'display_name' => (string) $row['owner_name'], 'email' => (string) $row['owner_email'], 'locked' => $row['owner_locked_at'] !== null],
@@ -77,19 +82,48 @@ final readonly class ReportService
         ], $this->reports->list($status));
     }
 
-    public function resolve(int $adminId, string $reportId, string $status, ?string $response): void
+    /**
+     * Resolving means acting: revoke the Note's shares and/or lock its owner, or confirm that
+     * the owner is already locked. Dismissing takes no action. The reporter is told which.
+     *
+     * @param list<string> $actions revoke_shares, warn_owner, lock_owner
+     */
+    public function resolve(int $adminId, string $reportId, string $status, ?string $response, array $actions = []): void
     {
-        $this->transactions->run(function () use ($adminId, $reportId, $status, $response): void {
+        $this->transactions->run(function () use ($adminId, $reportId, $status, $response, $actions): void {
             $report = $this->reports->find($reportId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
             if ($report['status'] !== 'open') {
                 throw new ValidationException(['status' => ['This report was already handled.']]);
             }
-            $this->reports->resolve($reportId, $status, $response, $adminId, $this->now());
+            $ownerId = (int) $report['note_owner_id'];
+            ReportOutcome::assertConsistent($status, $actions, $this->locks->isLocked($ownerId));
+            $taken = [];
+            if (in_array('revoke_shares', $actions, true)) {
+                $removed = $this->shares->revokeAll($ownerId, (string) $report['note_id']);
+                $taken[] = 'revoke_shares';
+                $this->log->record($adminId, 'note.revoke_shares', 'note', (string) $report['note_id'], $report['note_title'].' — '.count($removed).' recipient(s)');
+            }
+            if (in_array('warn_owner', $actions, true)) {
+                // The warning never names the reporter.
+                $this->notifications->notify($ownerId, 'admin_warning', $reportId, [
+                    'title' => 'An administrator reviewed a report about your shared note',
+                    'body' => (string) $report['note_title'].' — please follow the community rules when sharing.',
+                    'url' => '/',
+                ], always: true);
+                $taken[] = 'warn_owner';
+                $this->log->record($adminId, 'account.warn', 'user', (string) $ownerId, (string) $report['note_title']);
+            }
+            if (in_array('lock_owner', $actions, true)) {
+                $this->locks->lock($adminId, $ownerId, 'Note report: '.mb_substr((string) $report['reason'], 0, 200, 'UTF-8'));
+                $taken[] = 'lock_owner';
+            }
+            $this->reports->resolve($reportId, $status, $response, $adminId, $this->now(), $taken);
+            $this->log->record($adminId, 'report.'.$status, 'note_report', $reportId, $report['note_title'].($taken === [] ? '' : ' — '.ReportOutcome::describe($taken)));
             foreach ($this->accounts->adminIds() as $otherAdmin) {
                 $this->notifications->resolveSubject($otherAdmin, 'report_new', $reportId);
             }
             $this->notifications->notify((int) $report['reporter_id'], 'report_resolved', $reportId, [
-                'title' => $status === 'resolved' ? 'Your report was reviewed and action was taken' : 'Your report was reviewed',
+                'title' => ReportOutcome::title($status),
                 'body' => $response ?? (string) $report['note_title'],
                 'url' => '/',
             ]);
@@ -98,17 +132,7 @@ final readonly class ReportService
 
     public function setLocked(int $adminId, int $userId, bool $locked, ?string $reason): void
     {
-        if ($adminId === $userId) {
-            throw new ValidationException(['user' => ['You cannot lock your own account.']]);
-        }
-        $this->transactions->run(function () use ($userId, $locked, $reason): void {
-            $this->accounts->findById($userId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
-            $now = $this->now();
-            $this->accounts->setLocked($userId, $locked ? $now : null, $locked ? $reason : null, $now);
-            if ($locked) {
-                $this->accounts->deleteSessions($userId);
-            }
-        });
+        $locked ? $this->locks->lock($adminId, $userId, $reason) : $this->locks->unlock($adminId, $userId);
     }
 
     /** @return list<array<string, mixed>> */
@@ -121,22 +145,78 @@ final readonly class ReportService
             'role' => (string) $row['role'],
             'locked' => $row['locked_at'] !== null,
             'locked_reason' => $row['locked_reason'] === null ? null : (string) $row['locked_reason'],
+            'locked_by' => $row['locked_at'] === null || $row['locked_by_name'] === null ? null : (string) $row['locked_by_name'],
+            'locked_at' => Timestamp::api($row['locked_at'] === null ? null : (string) $row['locked_at']),
             'created_at' => Timestamp::api((string) $row['created_at']),
         ], $this->accounts->adminUserList($query));
     }
 
-    /** @return array{history_limit:int} */
+    /** @return array{history_limit:int,registration_mode:string} */
     public function settings(): array
     {
-        return ['history_limit' => $this->settings->historyLimit()];
+        return ['history_limit' => $this->settings->historyLimit(), 'registration_mode' => $this->settings->registrationMode()];
     }
 
-    /** @return array{history_limit:int} */
-    public function updateSettings(int $historyLimit): array
+    /**
+     * @param array{history_limit?:int,registration_mode?:string} $changes
+     *
+     * @return array{history_limit:int,registration_mode:string}
+     */
+    public function updateSettings(int $adminId, array $changes): array
     {
-        $this->transactions->run(fn () => $this->settings->setHistoryLimit($historyLimit, $this->now()));
+        $this->transactions->run(function () use ($adminId, $changes): void {
+            $current = $this->settings();
+            $now = $this->now();
+            if (isset($changes['history_limit']) && $changes['history_limit'] !== $current['history_limit']) {
+                $this->settings->setHistoryLimit($changes['history_limit'], $now);
+                $this->log->record($adminId, 'settings.history_limit', 'setting', 'history_limit', $current['history_limit'].' → '.$changes['history_limit']);
+            }
+            if (isset($changes['registration_mode']) && $changes['registration_mode'] !== $current['registration_mode']) {
+                $this->settings->setRegistrationMode($changes['registration_mode'], $now);
+                $this->log->record($adminId, 'settings.registration_mode', 'setting', 'registration_mode', $current['registration_mode'].' → '.$changes['registration_mode']);
+            }
+        });
 
         return $this->settings();
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function invites(): array
+    {
+        return array_map(static fn (array $row): array => [
+            'email' => (string) $row['email'],
+            'used' => $row['used_at'] !== null,
+            'used_by' => $row['used_at'] === null ? null : (string) ($row['used_by_name'] ?? ''),
+            'created_at' => Timestamp::api((string) $row['created_at']),
+            'used_at' => Timestamp::api($row['used_at'] === null ? null : (string) $row['used_at']),
+        ], $this->invitations->list());
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function invite(int $adminId, string $email): array
+    {
+        $this->transactions->run(function () use ($adminId, $email): void {
+            if ($this->accounts->findByEmail($email) !== null) {
+                throw new ValidationException(['email' => ['An account already uses this email.']]);
+            }
+            if ($this->invitations->add($email, $adminId, $this->now())) {
+                $this->log->record($adminId, 'registration.invite', 'email', $email, $email);
+            }
+        });
+
+        return $this->invites();
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function removeInvite(int $adminId, string $email): array
+    {
+        $this->transactions->run(function () use ($adminId, $email): void {
+            if ($this->invitations->remove($email)) {
+                $this->log->record($adminId, 'registration.uninvite', 'email', $email, $email);
+            }
+        });
+
+        return $this->invites();
     }
 
     private function now(): string

@@ -23,7 +23,8 @@ final readonly class PdoNoteShareRepository
     /** @return array<string, mixed>|null */
     public function findForNoteRecipient(string $noteId, int $recipientId, bool $forUpdate = false): ?array
     {
-        $statement = $this->pdo->prepare('SELECT '.self::COLUMNS.' FROM note_shares s WHERE s.note_id = :note AND s.recipient_id = :recipient'.($forUpdate ? ' FOR UPDATE' : ''));
+        // A locked owner's Notes are hidden from recipients until the account is unlocked.
+        $statement = $this->pdo->prepare('SELECT '.self::COLUMNS.' FROM note_shares s JOIN users owner ON owner.id = s.owner_id AND owner.locked_at IS NULL WHERE s.note_id = :note AND s.recipient_id = :recipient'.($forUpdate ? ' FOR UPDATE' : ''));
         $statement->execute(['note' => $noteId, 'recipient' => $recipientId]);
         $row = $statement->fetch();
 
@@ -76,7 +77,7 @@ SELECT s.id AS share_id, s.permission, s.status, n.id, n.title, LEFT(n.content, 
        u.id AS owner_id, u.display_name AS owner_name, u.email AS owner_email
 FROM note_shares s
 JOIN notes n ON n.user_id = s.owner_id AND n.id = s.note_id AND n.deleted_at IS NULL
-JOIN users u ON u.id = s.owner_id
+JOIN users u ON u.id = s.owner_id AND u.locked_at IS NULL
 WHERE s.recipient_id = :recipient AND s.status = :status
 ORDER BY n.updated_at DESC, n.id DESC
 LIMIT 200
@@ -100,6 +101,21 @@ SQL);
         $this->pdo->prepare('UPDATE note_shares SET '.implode(', ', $assignments).', updated_at = :now WHERE id = :id')->execute($bindings);
     }
 
+    /**
+     * Removes every share of one Note (moderation).
+     *
+     * @return list<array{id:string,recipient_id:int}> the shares that were removed
+     */
+    public function deleteForNote(int $ownerId, string $noteId): array
+    {
+        $select = $this->pdo->prepare('SELECT id, recipient_id FROM note_shares WHERE owner_id = :owner AND note_id = :note ORDER BY recipient_id FOR UPDATE');
+        $select->execute(['owner' => $ownerId, 'note' => $noteId]);
+        $removed = array_map(static fn (array $row): array => ['id' => (string) $row['id'], 'recipient_id' => (int) $row['recipient_id']], $select->fetchAll());
+        $this->pdo->prepare('DELETE FROM note_shares WHERE owner_id = :owner AND note_id = :note')->execute(['owner' => $ownerId, 'note' => $noteId]);
+
+        return $removed;
+    }
+
     public function delete(string $shareId): void
     {
         $this->pdo->prepare('DELETE FROM note_shares WHERE id = :id')->execute(['id' => $shareId]);
@@ -110,8 +126,8 @@ SQL);
     {
         $statement = $this->pdo->prepare(<<<'SQL'
 SELECT DISTINCT u.id, u.display_name, u.email FROM users u
-WHERE u.id IN (SELECT recipient_id FROM note_shares WHERE owner_id = :owner AND status = 'accepted')
-   OR u.id IN (SELECT owner_id FROM note_shares WHERE recipient_id = :recipient AND status = 'accepted')
+WHERE u.locked_at IS NULL AND u.id IN (SELECT recipient_id FROM note_shares WHERE owner_id = :owner AND status = 'accepted')
+   OR u.locked_at IS NULL AND u.id IN (SELECT owner_id FROM note_shares WHERE recipient_id = :recipient AND status = 'accepted')
 ORDER BY u.display_name, u.id
 LIMIT 100
 SQL);

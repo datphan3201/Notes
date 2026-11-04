@@ -54,6 +54,7 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-026](#issue-026--ai-assistant-cannot-build-a-goal-roadmap-and-restructures-by-deleting-tasks) | AI assistant cannot build a Goal roadmap and restructures by deleting Tasks | High | Resolved | Integration tests cover roadmap, refs, moves and guards; scripted provider only |
 | [ISSUE-027](#issue-027--ai-decision-boundary-excludes-implemented-milestone-operations) | AI decision boundary excludes implemented Milestone operations | Low | Resolved | Decisions now include Milestones, roadmap creation and Task moves |
 | [ISSUE-028](#issue-028--diagram-navigation-and-evidence-notes-lag-the-current-branch) | Diagram navigation and evidence notes lag the current branch | Low | Resolved | All nine maps repinned/regenerated at 45ed896; navigation includes Calendar |
+| [ISSUE-031](#issue-031--system-administration-cannot-control-registration-or-act-on-reports) | System administration cannot control registration or act on reports | High | Resolved | Registration modes and invitations, report actions with truthful notifications, lock side effects, admin protection and an activity log; HTTP tests |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -390,6 +391,21 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution criteria:** Updated candidates, generated HTML and canonical receipts agree with the declared source revision/scope, and the index accurately describes current coverage and limitations.
 
 - **Resolution / verification (2026-11-04):** All nine candidates now pin 45ed89671e5dcfb04cbebfd805c63219428c202e with reviewed source ranges; the three formerly contract-only diagrams now cite implementation. Navigation includes Calendar; Task classification includes Goal grouping; transitions include overdue deadline acknowledgement and unfinished replanning; scope cards distinguish independent Notes links/Main goal/icons and current AI capabilities. The index removes obsolete local-worktree descriptions and explicitly excludes ongoing uncommitted quick-edit work. All nine Archify finalize runs pass validation, delivery, strict provenance and browser gates; canonical summaries point to fresh review-refresh-20261104-2 browser receipts. Initial browser discovery was resolved by setting ARCHIFY_CHROME to the installed Playwright Chromium executable. No generated HTML or receipts were hand-edited, and failed-run browser-discovery directories were removed. Documentation sync/check passed. This is source and automated artifact verification, not live application acceptance or perceptual review.
+
+## ISSUE-031 — System administration cannot control registration or act on reports
+
+- **Status:** Resolved.
+- **Severity:** High for a self-hosted, publicly reachable instance.
+- **Recorded:** 2026-11-04 (Asia/Saigon), from a review of the system administrator role on main at 52cb745.
+- **Affected UI/source:** [Administration](ui/admin/README.md), [registration](ui/auth/README.md), [ReportService](../backend/src/Application/Admin/ReportService.php), [UserReportService](../backend/src/Application/Admin/UserReportService.php), [PdoNoteShareRepository](../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php), [TeamService](../backend/src/Application/Teamwork/TeamService.php).
+- **Observed versus expected:**
+  1. Anyone with the URL could register, with no way for the administrator to restrict sign-up.
+  2. Resolving a report only changed its status, yet told the reporter "action was taken"; there was no way to withdraw a reported shared Note.
+  3. Locking an account left its shared Notes visible to recipients and its Team assignments open.
+  4. Locks did not record which administrator locked the account, and no administrator action was logged.
+  5. One administrator could lock another, although the role is granted only through the console.
+- **Resolution:** Registration modes (open, invite, closed) with an invitation list, enforced in the registration transaction and settable from the console; report resolution with explicit actions (withdraw shares, warn, lock) that must exist unless the account is already locked, stored with the report and reflected in the reporter's notification; locked owners' shared Notes hidden from recipients and locked members excluded from new Team assignments; locked_by and an append-only admin_actions log including console changes; administrators cannot be locked from the web. Migration 0030.
+- **Verification:** SystemAdminHttpTest (registration modes and invitations; report actions and notifications; lock side effects and admin protection; user-report lock and Team assignment; console commands) plus the updated report tests in FullFeedbackHttpTest and FilesHttpTest.
 
 ## New issue template
 

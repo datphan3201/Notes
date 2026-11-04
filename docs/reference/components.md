@@ -107,3 +107,5 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `admin.user-reports` | [User reports with image evidence](../ui/admin/README.md#user-reports-with-image-evidence) | /admin — System reports, users and settings |
 | `admin.users` | [Search users, lock/unlock](../ui/admin/README.md#search-users-lockunlock) | /admin — System reports, users and settings |
 | `admin.history` | [System Task history limit](../ui/admin/README.md#system-task-history-limit) | /admin — System reports, users and settings |
+| `admin.registration` | [Registration mode and invitations](../ui/admin/README.md#registration-mode-and-invitations) | /admin — System reports, users and settings |
+| `admin.activity` | [Administrator activity](../ui/admin/README.md#administrator-activity) | /admin — System reports, users and settings |
