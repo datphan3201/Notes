@@ -68,6 +68,14 @@ jobs:
           done
           shellcheck --severity=warning --external-sources "${scripts[@]}"
 
+      # The documentation tools read the route table through the backend autoloader.
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          composer validate --strict
+          composer install --prefer-dist --no-interaction
+          composer check-platform-reqs
+
       - name: Verify documentation and traceability
         run: |
           php tools/docs/check.php
@@ -93,8 +101,4 @@ jobs:
           PLANNER_DB_PASSWORD: root
           PLANNER_DB_CHARSET: utf8mb4
           PLANNER_DB_COLLATION: utf8mb4_0900_ai_ci
-        run: |
-          composer validate --strict
-          composer install --prefer-dist --no-interaction
-          composer check-platform-reqs
-          php vendor/bin/phpunit -c phpunit.xml
+        run: php vendor/bin/phpunit -c phpunit.xml
