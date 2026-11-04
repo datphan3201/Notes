@@ -308,9 +308,12 @@ final class AIActionTest extends TestCase
                 // Only the Goal is not a roadmap.
                 ['name'=>'create_roadmap','args'=>['goal'=>['name'=>'Learn Helm','area_id'=>$area['id']]]],
                 ['name'=>'move_tasks','args'=>['task_ids'=>['00000000-0000-0000-0000-000000000000'],'goal_id'=>$goal['id'],'inbox'=>true]],
+                // A second active Goal with an existing name needs the user's say-so.
+                ['name'=>'create_roadmap','args'=>['goal'=>['name'=>'learn docker','area_id'=>$area['id']],'milestones'=>[['name'=>'Basics']]]],
             ]),
             function (array $contents): array {
-                self::assertSame(4,substr_count(json_encode(end($contents),JSON_THROW_ON_ERROR),'"error"'));
+                self::assertSame(5,substr_count(json_encode(end($contents),JSON_THROW_ON_ERROR),'"error"'));
+                self::assertStringContainsString('already exists',json_encode(end($contents),JSON_THROW_ON_ERROR));
                 return $this->step('I need more detail.');
             },
         ]);
