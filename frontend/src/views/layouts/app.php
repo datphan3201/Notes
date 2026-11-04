@@ -3,6 +3,7 @@ $navigation = [
     ['Dashboard', '/dashboard', 'dashboard', ['planning.dashboard']],
     ['Goals', '/goals', 'goals', ['planning.goals', 'planning.goal']],
     ['Tasks', '/tasks', 'tasks', ['planning.tasks', 'planning.task']],
+    ['Calendar', '/calendar', 'calendar', ['planning.calendar']],
     ['Habits', '/habits', 'habits', ['planning.habits']],
     ['Notes', '/', 'notes', ['notes.index']],
     ['Reviews', '/reviews', 'reviews', ['planning.reviews']],

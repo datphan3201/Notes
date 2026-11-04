@@ -21,6 +21,7 @@ import {
     initTasksPage,
 } from './planning/planning-page';
 import { initHabitsPage } from './planning/habits-page';
+import { initCalendarPage } from './planning/calendar-page';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
 import { initTeamworkPage } from './planning/teamwork-page.js';
 import { initAdminPage } from './admin/admin-page.js';
@@ -107,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDialogBackdropClose();
     document
         .querySelectorAll(
-            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings], [data-teamwork-page]',
+            '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-calendar-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings], [data-teamwork-page]',
         )
         .forEach(initWorkspaceUI);
     const notes = document.querySelector('[data-notes-workspace]');
@@ -128,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (task) initTaskDetail(task);
     const habits = document.querySelector('[data-habits-page]');
     if (habits) initHabitsPage(habits);
+    const calendar = document.querySelector('[data-calendar-page]');
+    if (calendar) initCalendarPage(calendar);
     const dashboard = document.querySelector('[data-dashboard-page]');
     if (dashboard) initDashboardPage(dashboard);
     const reviews = document.querySelector('[data-reviews-page]');

@@ -189,6 +189,7 @@ final readonly class AccountController
             str_starts_with($request->path, '/goals/') => ['planning/goal', 'Goal details', 'planning.goals'],
             $request->path === '/tasks' => ['planning/tasks', 'Tasks', 'planning.tasks'],
             str_starts_with($request->path, '/tasks/') => ['planning/task', 'Task details', 'planning.tasks'],
+            $request->path === '/calendar' => ['planning/calendar', 'Calendar', 'planning.calendar'],
             $request->path === '/habits' => ['planning/habits', 'Habits', 'planning.habits'],
             $request->path === '/dashboard' => ['planning/dashboard', 'Dashboard', 'planning.dashboard'],
             $request->path === '/reviews' => ['planning/reviews', 'Reviews', 'planning.reviews'],

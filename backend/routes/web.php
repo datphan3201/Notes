@@ -193,6 +193,7 @@ return static function (
         new Route(['GET'], '/goals/{id}', 'planning.goal', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/tasks', 'planning.tasks', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/tasks/{id}', 'planning.task', $handler([$account, 'planningPage']), auth: true),
+        new Route(['GET'], '/calendar', 'planning.calendar', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/habits', 'planning.habits', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/dashboard', 'planning.dashboard', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/reviews', 'planning.reviews', $handler([$account, 'planningPage']), auth: true),
