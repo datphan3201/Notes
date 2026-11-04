@@ -20,6 +20,9 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 - Accessibility: WCAG AA contrast on pastel notes and sign-in, labelled streak dots, pagination landmarks (axe: no violations on the main pages).
 - Notes workspace JavaScript loads as its own chunk.
 
+### Fixed
+- Creating or renaming an Area to the name of an archived Area showed “service unavailable”; it now explains that names are unique including archived Areas.
+
 ### Database
 - `0030_add_note_locks_ai_and_sync`, `0031_add_password_reset_codes`.
 
