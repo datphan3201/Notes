@@ -93,6 +93,41 @@ final readonly class NoteValidator
         ];
     }
 
+    /**
+     * Partial owner change of color, pin and tags (no title/content, no base version).
+     *
+     * @param array<string, mixed> $input
+     * @return array{color?:string,is_pinned?:bool,label_ids?:list<int>}
+     */
+    public function attributes(array $input): array
+    {
+        $this->input->rejectUnknown($input, ['color', 'is_pinned', 'label_ids']);
+        $result = [];
+        $errors = [];
+        if (array_key_exists('color', $input)) {
+            $color = NoteSnapshot::normalizeColor($input['color']);
+            $color === null ? $errors['color'][] = 'The note color is invalid.' : $result['color'] = $color;
+        }
+        if (array_key_exists('is_pinned', $input)) {
+            $pinned = $this->boolean($input['is_pinned']);
+            $pinned === null ? $errors['is_pinned'][] = 'The pinned state is invalid.' : $result['is_pinned'] = $pinned;
+        }
+        if (array_key_exists('label_ids', $input)) {
+            $labelIds = $this->labelIds($input['label_ids']);
+            if ($labelIds === null || count($labelIds) > 20) {
+                $errors['label_ids'][] = 'The tag list is invalid.';
+            } else {
+                $result['label_ids'] = $labelIds;
+            }
+        }
+        if ($result === [] && $errors === []) {
+            $errors['color'][] = 'Change at least one of color, is_pinned or label_ids.';
+        }
+        $this->input->throwIfErrors($errors);
+
+        return $result;
+    }
+
     /** @param array<string, mixed> $input */
     public function delete(array $input): int
     {
@@ -177,6 +212,25 @@ final readonly class NoteValidator
         $this->input->throwIfErrors($errors);
 
         return ['base_version' => (int) $baseVersion, 'title' => $title, 'content' => $content];
+    }
+
+    /**
+     * Title/content validation shared by collaborative writes.
+     *
+     * @return array{title:string,content:string}
+     */
+    public function text(string $title, string $content): array
+    {
+        $title = TextNormalizer::title($title);
+        $content = TextNormalizer::body($content);
+        $errors = [];
+        $this->validateTitle($title, $errors);
+        $this->validateBody($content, $errors);
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+
+        return ['title' => $title, 'content' => $content];
     }
 
     private function validateTitle(string $title, array &$errors): void

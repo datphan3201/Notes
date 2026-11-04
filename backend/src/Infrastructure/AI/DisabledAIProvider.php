@@ -30,4 +30,16 @@ final readonly class DisabledAIProvider implements AIProviderInterface
     {
         throw new HttpException(503, 'AI_DISABLED', 'The AI assistant is not enabled.');
     }
+    public function complete(string $system, string $prompt, ?array $jsonSchema = null): string
+    {
+        throw new HttpException(503, 'AI_DISABLED', 'The AI assistant is not enabled.');
+    }
+    public function embed(array $texts, string $task): array
+    {
+        throw new HttpException(503, 'AI_DISABLED', 'The AI assistant is not enabled.');
+    }
+    public function embeddingModel(): string
+    {
+        return 'disabled';
+    }
 }

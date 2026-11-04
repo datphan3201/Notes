@@ -74,7 +74,7 @@ final readonly class NoteLinkService
         return $this->links->forNotes($userId, $noteIds);
     }
 
-    /** @return list<array{id:string,title:string,content_preview:string,color:string,updated_at:string}> */
+    /** @return list<array{id:string,title:string,content_preview:string,is_locked:bool,color:string,updated_at:string}> */
     public function notesFor(int $userId, string $type, string $targetId): array
     {
         $this->planning->show($type, $userId, $targetId);
@@ -82,7 +82,8 @@ final readonly class NoteLinkService
         return array_map(static fn (array $row): array => [
             'id' => (string) $row['id'],
             'title' => (string) $row['title'],
-            'content_preview' => mb_substr((string) $row['content'], 0, 240, 'UTF-8'),
+            'content_preview' => $row['lock_hash'] === null ? mb_substr((string) $row['content'], 0, 240, 'UTF-8') : '',
+            'is_locked' => $row['lock_hash'] !== null,
             'color' => (string) $row['color'],
             'updated_at' => (string) Timestamp::api((string) $row['updated_at']),
         ], $this->links->notesFor($userId, $type, $targetId));

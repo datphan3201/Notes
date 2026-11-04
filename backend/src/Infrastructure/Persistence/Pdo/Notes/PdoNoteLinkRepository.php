@@ -72,7 +72,7 @@ SQL);
     {
         $column = $type === 'goal' ? 'goal_id' : 'task_id';
         $statement = $this->pdo->prepare(<<<SQL
-SELECT n.id, n.title, n.content, n.color, n.updated_at
+SELECT n.id, n.title, n.content, n.color, n.updated_at, n.lock_hash
 FROM note_links l
 JOIN notes n ON n.user_id = l.user_id AND n.id = l.note_id AND n.deleted_at IS NULL
 WHERE l.user_id = :user_id AND l.$column = :target_id

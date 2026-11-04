@@ -345,6 +345,9 @@ final readonly class AIActionService
     public function noteData(int $userId, string $id): array
     {
         $note = $this->notes->show($userId, $id);
+        if ($note->isLocked()) {
+            throw new \Planner\Http\ValidationException(['id' => ['This note is password-protected; the assistant cannot read or change it.']]);
+        }
         return ['id' => $note->id, 'title' => $note->title, 'content' => $note->content, 'version' => $note->version];
     }
 

@@ -23,4 +23,24 @@ interface AIProviderInterface
      * @return array{content:array<string,mixed>,text:string,calls:list<array{name:string,args:array<string,mixed>,id?:string}>}
      */
     public function chat(string $system, array $contents, array $tools): array;
+
+    /**
+     * One plain generation. With $jsonSchema the model must return JSON that
+     * matches it; the raw text is returned either way.
+     *
+     * @param array<string, mixed>|null $jsonSchema
+     */
+    public function complete(string $system, string $prompt, ?array $jsonSchema = null): string;
+
+    /**
+     * Embedding vectors for retrieval, one per input text, in input order.
+     * $task is "document" for stored texts and "query" for questions.
+     *
+     * @param list<string> $texts
+     * @return list<list<float>>
+     */
+    public function embed(array $texts, string $task): array;
+
+    /** Identifies the embedding space, so vectors from another model are not compared. */
+    public function embeddingModel(): string;
 }

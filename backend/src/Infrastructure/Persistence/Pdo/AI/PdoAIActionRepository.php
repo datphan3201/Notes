@@ -170,7 +170,8 @@ final readonly class PdoAIActionRepository
     public function searchNotes(int $userId, string $query): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, title, LEFT(content, 200) AS excerpt FROM notes WHERE user_id = :user AND deleted_at IS NULL'
+            // Password-protected Notes are invisible to the assistant.
+            'SELECT id, title, LEFT(content, 200) AS excerpt FROM notes WHERE user_id = :user AND deleted_at IS NULL AND lock_hash IS NULL'
             .($query === '' ? '' : ' AND (title LIKE :title OR content LIKE :content)')
             .' ORDER BY updated_at DESC LIMIT 30',
         );

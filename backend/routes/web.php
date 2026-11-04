@@ -81,6 +81,9 @@ return static function (
     \Planner\Http\Controller\AIChatController $chat,
     \Planner\Http\Controller\EmailController $email,
     \Planner\Http\Controller\UserReportController $userReports,
+    \Planner\Http\Controller\NoteLockController $noteLocks,
+    \Planner\Http\Controller\NoteAIController $noteAi,
+    \Planner\Http\Controller\RealtimeController $realtime,
 ) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
@@ -205,6 +208,17 @@ return static function (
         new Route(['PATCH'], '/api/v1/preferences', 'api.preferences.update', $handler([$account, 'updatePreferences']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['POST'], '/api/v1/password', 'api.password.update', $handler([$account, 'changePassword']), auth: true, csrf: true, rateLimit: 'password-change'),
         new Route(['GET'], '/api/v1/notes', 'api.notes.index', $handler([$notes, 'index']), auth: true, rateLimit: 'note-reads'),
+        new Route(['GET'], '/api/v1/notes/sync', 'api.notes.sync', $handler([$notes, 'sync']), auth: true, rateLimit: 'note-reads'),
+        new Route(['POST'], '/api/v1/notes/ask', 'api.notes.ask', $handler([$noteAi, 'ask']), auth: true, csrf: true, rateLimit: 'ai-notes'),
+        new Route(['PATCH'], '/api/v1/notes/{note}/attributes', 'api.notes.attributes', $handler([$notes, 'attributes']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PUT'], '/api/v1/notes/{note}/lock', 'api.notes.lock.enable', $handler([$noteLocks, 'enable']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['PATCH'], '/api/v1/notes/{note}/lock', 'api.notes.lock.change', $handler([$noteLocks, 'change']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/notes/{note}/lock', 'api.notes.lock.disable', $handler([$noteLocks, 'disable']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/notes/{note}/unlock', 'api.notes.unlock', $handler([$noteLocks, 'unlock']), auth: true, csrf: true, rateLimit: 'two-factor'),
+        new Route(['POST'], '/api/v1/notes/{note}/relock', 'api.notes.relock', $handler([$noteLocks, 'relock']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['GET'], '/api/v1/notes/{note}/summary', 'api.notes.summary.show', $handler([$noteAi, 'summary']), auth: true, rateLimit: 'note-reads'),
+        new Route(['POST'], '/api/v1/notes/{note}/summary', 'api.notes.summary.generate', $handler([$noteAi, 'summarize']), auth: true, csrf: true, rateLimit: 'ai-notes'),
+        new Route(['POST'], '/api/v1/notes/{note}/realtime', 'api.notes.realtime', $handler([$realtime, 'ticket']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['POST'], '/api/v1/notes', 'api.notes.store', $handler([$notes, 'store']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/api/v1/notes/{note}', 'api.notes.show', $handler([$notes, 'show']), auth: true, rateLimit: 'note-reads'),
         new Route(['PATCH'], '/api/v1/notes/{note}', 'api.notes.update', $handler([$notes, 'update']), auth: true, csrf: true, rateLimit: 'mutations'),

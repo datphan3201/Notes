@@ -72,7 +72,7 @@ final readonly class PdoNoteShareRepository
     public function received(int $recipientId, string $status): array
     {
         $statement = $this->pdo->prepare(<<<'SQL'
-SELECT s.id AS share_id, s.permission, s.status, n.id, n.title, LEFT(n.content, 400) AS excerpt, n.color, n.version, n.updated_at, n.created_at,
+SELECT s.id AS share_id, s.permission, s.status, s.created_at AS shared_at, n.id, n.title, LEFT(n.content, 400) AS excerpt, n.lock_hash, n.color, n.version, n.updated_at, n.created_at,
        u.id AS owner_id, u.display_name AS owner_name, u.email AS owner_email
 FROM note_shares s
 JOIN notes n ON n.user_id = s.owner_id AND n.id = s.note_id AND n.deleted_at IS NULL

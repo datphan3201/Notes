@@ -30,39 +30,76 @@ final readonly class NoteShareService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
+        private ?NoteLockGate $lockGate = null,
     ) {
     }
 
-    /** Unknown emails succeed silently so sharing cannot probe for accounts. */
-    public function share(int $ownerId, string $noteId, string $email, string $permission): array
+    /**
+     * Shares one owned Note with one or more registered accounts. Every address
+     * is validated before anything is written: an address without an account,
+     * or the owner's own address, rejects the whole request (422) and names the
+     * offending addresses, so the owner can correct a typo. Existing recipients
+     * get the new permission. Each new recipient receives an in-app invitation
+     * and, when they allow it, an email.
+     *
+     * @param list<string> $emails normalized (lowercase, trimmed) and unique
+     * @return list<array<string, mixed>>
+     */
+    public function shareMany(int $ownerId, string $noteId, array $emails, string $permission): array
     {
-        return $this->transactions->run(function () use ($ownerId, $noteId, $email, $permission): array {
+        return $this->transactions->run(function () use ($ownerId, $noteId, $emails, $permission): array {
             $owner = $this->lockUser($ownerId);
             $note = $this->ownedNote($ownerId, $noteId, true);
-            $recipient = $this->accounts->publicByEmail($email);
-            if ($recipient !== null && (int) $recipient['id'] === $ownerId) {
-                throw new ValidationException(['email' => ['You already own this note.']]);
+            $recipients = [];
+            $unknown = [];
+            foreach ($emails as $email) {
+                $recipient = $this->accounts->publicByEmail($email);
+                if ($recipient === null) {
+                    $unknown[] = $email;
+                    continue;
+                }
+                if ((int) $recipient['id'] === $ownerId) {
+                    throw new ValidationException(['emails' => ['You already own this note.']]);
+                }
+                $recipients[(int) $recipient['id']] = $recipient;
             }
-            if ($recipient !== null) {
-                $recipientId = (int) $recipient['id'];
+            if ($unknown !== []) {
+                throw new ValidationException(['emails' => ['No Planner account uses: '.implode(', ', $unknown).'.']]);
+            }
+            ksort($recipients, SORT_NUMERIC);
+            foreach (array_keys($recipients) as $recipientId) {
                 $existing = $this->shares->findForNoteRecipient($noteId, $recipientId, true);
                 if ($existing !== null) {
                     $this->shares->update((string) $existing['id'], ['permission' => $permission], $this->now());
-                } else {
-                    $shareId = $this->uuid->generate();
-                    $this->shares->insert($shareId, $ownerId, $noteId, $recipientId, $permission, $this->now());
-                    $this->notifications->notify($recipientId, 'share_invite', $shareId, [
-                        'title' => $owner->displayName.' shared a note with you',
-                        'body' => $note->title,
-                        'url' => '/?shared=1',
-                        'share_id' => $shareId,
-                        'permission' => $permission,
-                    ]);
+                    continue;
                 }
+                $shareId = $this->uuid->generate();
+                $this->shares->insert($shareId, $ownerId, $noteId, $recipientId, $permission, $this->now());
+                $this->notifications->notify($recipientId, 'share_invite', $shareId, [
+                    'title' => $owner->displayName.' shared a note with you',
+                    'body' => $note->title.' ('.($permission === 'edit' ? 'can edit' : 'view only').')',
+                    'url' => '/?shared=1',
+                    'share_id' => $shareId,
+                    'permission' => $permission,
+                ]);
             }
 
             return $this->serializeShares($ownerId, $noteId);
         });
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function share(int $ownerId, string $noteId, string $email, string $permission): array
+    {
+        return $this->shareMany($ownerId, $noteId, [$email], $permission);
+    }
+
+    /** 'view' or 'edit' for an accepted recipient of a live Note; null otherwise. */
+    public function permissionFor(int $recipientId, string $noteId): ?string
+    {
+        $share = $this->shares->findForNoteRecipient($noteId, $recipientId);
+
+        return $share !== null && $share['status'] === 'accepted' ? (string) $share['permission'] : null;
     }
 
     /** @return list<array<string, mixed>> */
@@ -145,6 +182,7 @@ final readonly class NoteShareService
     public function showShared(int $recipientId, string $noteId): array
     {
         [$note, $share] = $this->accessible($recipientId, $noteId);
+        $this->lockGate?->assertUnlocked($note);
 
         return $this->serializeSharedNote($note, $share);
     }
@@ -160,6 +198,7 @@ final readonly class NoteShareService
             $this->lockUser($ownerId);
             $actor = $this->accounts->findById($recipientId) ?? $this->notFound();
             [$note, $share] = $this->accessible($recipientId, $noteId, true);
+            $this->lockGate?->assertUnlocked($note);
             if ($share['permission'] !== 'edit') {
                 throw new HttpException(403, 'FORBIDDEN', 'You can view this note but not edit it.');
             }
@@ -182,6 +221,12 @@ final readonly class NoteShareService
     public function noteChangedByOwner(NoteRecord $note, string $ownerName): void
     {
         $this->notifyCollaborators($note, $note->userId, $ownerName);
+    }
+
+    /** Called by collaborative writes, where the actor is the owner or an edit recipient. */
+    public function noteChangedBy(NoteRecord $note, int $actorId, string $actorName): void
+    {
+        $this->notifyCollaborators($note, $actorId, $actorName);
     }
 
     /** @return array{0:NoteRecord,1:array<string,mixed>} */
@@ -236,7 +281,10 @@ final readonly class NoteShareService
             'share_id' => (string) $row['share_id'],
             'note_id' => (string) $row['id'],
             'title' => (string) $row['title'],
-            'excerpt' => (string) $row['excerpt'],
+            // A locked Note's text stays hidden until its password is entered.
+            'excerpt' => $row['lock_hash'] === null ? (string) $row['excerpt'] : '',
+            'is_locked' => $row['lock_hash'] !== null,
+            'shared_at' => Timestamp::api((string) $row['shared_at']),
             'color' => (string) $row['color'],
             'permission' => (string) $row['permission'],
             'status' => (string) $row['status'],
@@ -258,6 +306,8 @@ final readonly class NoteShareService
             'color' => $note->color,
             'version' => $note->version,
             'permission' => (string) $share['permission'],
+            'is_locked' => $note->isLocked(),
+            'shared_at' => Timestamp::api((string) $share['created_at']),
             'owner' => $owner,
             'updated_at' => Timestamp::api($note->updatedAt),
         ];

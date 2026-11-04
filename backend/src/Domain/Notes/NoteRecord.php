@@ -27,6 +27,14 @@ final readonly class NoteRecord
         public array $attachments = [],
         public int $attachmentCount = 0,
         public ?string $backgroundAttachmentId = null,
+        public ?string $lockHash = null,
+        public ?string $lockedAt = null,
+        public int $shareCount = 0,
     ) {
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->lockHash !== null;
     }
 }

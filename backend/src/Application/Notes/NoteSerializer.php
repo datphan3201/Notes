@@ -15,8 +15,9 @@ final readonly class NoteSerializer
     }
 
     /** @return array<string, mixed> */
-    public function full(NoteRecord $note): array
+    public function full(NoteRecord $note, ?int $shareCount = null): array
     {
+        $shareCount ??= $note->shareCount;
         $attachments = array_map(function (array $attachment): array {
             $id = rawurlencode($attachment['id']);
 
@@ -47,25 +48,40 @@ final readonly class NoteSerializer
             'attachment_count' => count($attachments),
             'background_attachment_id' => $note->backgroundAttachmentId,
             'background_url' => $this->backgroundUrl($note),
+            'is_locked' => $note->isLocked(),
+            'locked_at' => Timestamp::api($note->lockedAt),
+            'is_shared' => $shareCount > 0,
+            'share_count' => $shareCount,
             'created_at' => Timestamp::api($note->createdAt),
             'updated_at' => Timestamp::api($note->updatedAt),
         ];
     }
 
-    /** @return array<string, mixed> */
-    public function summary(NoteRecord $note): array
+    /**
+     * Card data. A locked Note shows its title and status only: no text
+     * preview and no background image until its password is entered.
+     *
+     * @return array<string, mixed>
+     */
+    public function summary(NoteRecord $note, ?int $shareCount = null): array
     {
+        $shareCount ??= $note->shareCount;
+        $locked = $note->isLocked();
+
         return [
             'id' => $note->id,
             'title' => $note->title,
-            'content_preview' => mb_substr($note->content, 0, 240, 'UTF-8'),
+            'content_preview' => $locked ? '' : mb_substr($note->content, 0, 240, 'UTF-8'),
             'color' => $note->color,
             'is_pinned' => $note->pinnedAt !== null,
             'pinned_at' => Timestamp::api($note->pinnedAt),
             'version' => $note->version,
             'labels' => array_map($this->labels->one(...), $note->labels),
             'attachment_count' => $note->attachmentCount,
-            'background_url' => $this->backgroundUrl($note),
+            'background_url' => $locked ? null : $this->backgroundUrl($note),
+            'is_locked' => $locked,
+            'is_shared' => $shareCount > 0,
+            'share_count' => $shareCount,
             'created_at' => Timestamp::api($note->createdAt),
             'updated_at' => Timestamp::api($note->updatedAt),
         ];

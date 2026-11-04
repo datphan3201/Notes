@@ -18,8 +18,12 @@ final readonly class GoogleAIProvider implements AIProviderInterface
      * @param (\Closure(string, list<string>, string): array{status:int, body:string|false, error:int})|null $transport
      *        HTTP POST seam for tests; defaults to cURL.
      */
-    public function __construct(private string $apiKey, private string $model, ?\Closure $transport = null)
-    {
+    public function __construct(
+        private string $apiKey,
+        private string $model,
+        ?\Closure $transport = null,
+        private string $embeddingModel = 'gemini-embedding-001',
+    ) {
         $this->transport = $transport ?? static function (string $url, array $headers, string $body): array {
             $curl = curl_init($url);
             curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 30, CURLOPT_HTTPHEADER => $headers, CURLOPT_POSTFIELDS => $body]);
@@ -87,10 +91,75 @@ final readonly class GoogleAIProvider implements AIProviderInterface
         return ['content' => (array) $raw, 'text' => trim(implode('', $text)), 'calls' => $calls];
     }
 
-    /** @param array<string, mixed> $payload */
-    private function post(array $payload): string
+    public function complete(string $system, string $prompt, ?array $jsonSchema = null): string
     {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($this->model).':generateContent';
+        $payload = [
+            'system_instruction' => ['parts' => [['text' => $system]]],
+            'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
+        ];
+        if ($jsonSchema !== null) {
+            $payload['generationConfig'] = ['responseMimeType' => 'application/json', 'responseJsonSchema' => $jsonSchema];
+        }
+        $body = $this->post($payload);
+        try {
+            $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new HttpException(503, 'AI_MALFORMED_RESPONSE', 'AI returned invalid data.');
+        }
+        $text = '';
+        foreach ($decoded['candidates'][0]['content']['parts'] ?? [] as $part) {
+            if (is_string($part['text'] ?? null) && ($part['thought'] ?? false) !== true) {
+                $text .= $part['text'];
+            }
+        }
+        if (trim($text) === '') {
+            throw new HttpException(503, isset($decoded['promptFeedback']['blockReason']) ? 'AI_SAFETY_REFUSAL' : 'AI_MALFORMED_RESPONSE', 'AI did not return an answer.');
+        }
+
+        return trim($text);
+    }
+
+    public function embed(array $texts, string $task): array
+    {
+        if ($texts === []) {
+            return [];
+        }
+        $requests = array_map(fn (string $text): array => [
+            'model' => 'models/'.$this->embeddingModel,
+            'content' => ['parts' => [['text' => mb_substr($text, 0, 6000, 'UTF-8')]]],
+            'taskType' => $task === 'query' ? 'RETRIEVAL_QUERY' : 'RETRIEVAL_DOCUMENT',
+            'outputDimensionality' => 256,
+        ], array_values($texts));
+        $body = $this->post(['requests' => $requests], $this->embeddingModel, 'batchEmbedContents');
+        try {
+            $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new HttpException(503, 'AI_MALFORMED_RESPONSE', 'AI returned invalid data.');
+        }
+        $vectors = [];
+        foreach ($decoded['embeddings'] ?? [] as $embedding) {
+            $values = $embedding['values'] ?? null;
+            if (! is_array($values) || $values === []) {
+                throw new HttpException(503, 'AI_MALFORMED_RESPONSE', 'AI returned invalid data.');
+            }
+            $vectors[] = array_map('floatval', $values);
+        }
+        if (count($vectors) !== count($texts)) {
+            throw new HttpException(503, 'AI_MALFORMED_RESPONSE', 'AI returned invalid data.');
+        }
+
+        return $vectors;
+    }
+
+    public function embeddingModel(): string
+    {
+        return $this->embeddingModel;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function post(array $payload, ?string $model = null, string $method = 'generateContent'): string
+    {
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($model ?? $this->model).':'.$method;
         $lastCode = 'AI_UNAVAILABLE';
         $headers = ['Content-Type: application/json', 'x-goog-api-key: '.$this->apiKey];
         $body = json_encode($payload, JSON_THROW_ON_ERROR);

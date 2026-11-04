@@ -32,15 +32,16 @@ final readonly class FileService
         private ProcessFileDeletion $cleanup,
         private AvatarProcessor $avatars,
         private Clock $clock,
+        private ?\Planner\Application\Notes\NoteLockGate $lockGate = null,
     ) {
     }
 
     /** @return list<AttachmentRecord> */
     public function listAttachments(int $userId, string $noteId): array
     {
-        if ($this->notes->findOwned($userId, $noteId) === null) {
-            throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
-        }
+        $note = $this->notes->findOwned($userId, $noteId)
+            ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+        $this->lockGate?->assertUnlocked($note);
 
         return $this->attachments->listForActiveNote($userId, $noteId);
     }
@@ -70,6 +71,7 @@ final readonly class FileService
                 if ($note === null) {
                     throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
                 }
+                $this->lockGate?->assertUnlocked($note);
 
                 $existing = $this->attachments->findById($attachmentId, true);
 
@@ -139,9 +141,9 @@ final readonly class FileService
         $paths = $this->transactions->run(function () use ($userId, $noteId, $attachmentId): array {
             $this->lockOwner($userId);
 
-            if ($this->notes->findOwned($userId, $noteId, false, true) === null) {
-                throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
-            }
+            $note = $this->notes->findOwned($userId, $noteId, false, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            $this->lockGate?->assertUnlocked($note);
 
             $attachment = $this->attachments->findOwnedForNote($userId, $noteId, $attachmentId, true);
 
@@ -173,6 +175,12 @@ final readonly class FileService
         $attachment = $this->attachments->findAuthorizedActive($userId, $attachmentId);
 
         if ($attachment === null || $attachment->path === null) {
+            throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+        }
+
+        // Files of a locked Note stream only after this session entered its password.
+        $note = $this->notes->findOwned($attachment->userId, $attachment->noteId);
+        if ($note !== null && $this->lockGate !== null && ! $this->lockGate->isUnlocked($note)) {
             throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
         }
 

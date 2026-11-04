@@ -34,16 +34,32 @@ final readonly class NoteShareController
     public function store(Request $request, array $parameters): Response
     {
         $input = $request->input();
-        $this->input->rejectUnknown($input, ['email', 'permission']);
-        $email = is_string($input['email'] ?? null) ? strtolower(trim($input['email'])) : '';
+        $this->input->rejectUnknown($input, ['email', 'emails', 'permission']);
+        // One address ("email") or several ("emails": a list, or text separated by commas/spaces).
+        $raw = $input['emails'] ?? $input['email'] ?? null;
+        $candidates = is_array($raw) ? $raw : (is_string($raw) ? preg_split('/[\s,;]+/', $raw) : []);
+        $emails = [];
         $errors = [];
-        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            $errors['email'][] = 'Enter a valid email address.';
+        foreach ($candidates as $candidate) {
+            $email = is_string($candidate) ? strtolower(trim($candidate)) : '';
+            if ($email === '') {
+                continue;
+            }
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                $errors['emails'][] = 'Enter a valid email address: '.mb_substr($email, 0, 80).'.';
+                continue;
+            }
+            $emails[$email] = $email;
+        }
+        if ($emails === [] && ! isset($errors['emails'])) {
+            $errors['emails'][] = 'Enter at least one email address.';
+        } elseif (count($emails) > 20) {
+            $errors['emails'][] = 'Share with at most 20 people at a time.';
         }
         $permission = $this->permission($input, $errors);
         $this->input->throwIfErrors($errors);
 
-        return Response::json(['data' => $this->shares->share($this->auth->requireUser()->id, $parameters['note'], $email, $permission)], 201);
+        return Response::json(['data' => $this->shares->shareMany($this->auth->requireUser()->id, $parameters['note'], array_values($emails), $permission)], 201);
     }
 
     /** @param array<string, string> $parameters */

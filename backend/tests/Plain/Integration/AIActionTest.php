@@ -356,6 +356,18 @@ final class AIActionTest extends TestCase
             {
                 return (array_shift($this->steps) ?? throw new RuntimeException('Unexpected model call.'))($contents);
             }
+            public function complete(string $system, string $prompt, ?array $jsonSchema = null): string
+            {
+                throw new \LogicException('Not used by these tests.');
+            }
+            public function embed(array $texts, string $task): array
+            {
+                throw new \LogicException('Not used by these tests.');
+            }
+            public function embeddingModel(): string
+            {
+                return 'test';
+            }
         };
     }
 
@@ -555,6 +567,18 @@ final class AIActionTest extends TestCase
             public function generate(GenerationRequest $request): GenerationResult
             {
                 return new GenerationResult($this->proposal);
+            }
+            public function complete(string $system, string $prompt, ?array $jsonSchema = null): string
+            {
+                throw new \LogicException('Not used by these tests.');
+            }
+            public function embed(array $texts, string $task): array
+            {
+                throw new \LogicException('Not used by these tests.');
+            }
+            public function embeddingModel(): string
+            {
+                return 'test';
             }
         };
         return $this->actionService($provider);

@@ -59,7 +59,8 @@ final readonly class PdoNoteRepository
         if ($query !== '') {
             $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $query);
             // Native PDO prepares cannot reuse one named placeholder twice.
-            $where[] = "(n.title LIKE :query_title ESCAPE '!' OR n.content LIKE :query_content ESCAPE '!')";
+            // Locked content is never searchable: a match would reveal what the password protects.
+            $where[] = "(n.title LIKE :query_title ESCAPE '!' OR (n.lock_hash IS NULL AND n.content LIKE :query_content ESCAPE '!'))";
             $bindings['query_title'] = '%'.$escaped.'%';
             $bindings['query_content'] = '%'.$escaped.'%';
         }
@@ -82,7 +83,7 @@ final readonly class PdoNoteRepository
         $total = (int) $count->fetchColumn();
         $offset = ($page - 1) * $perPage;
         $select = $this->pdo->prepare(<<<SQL
-SELECT n.*
+SELECT n.*, (SELECT COUNT(*) FROM note_shares s WHERE s.owner_id = n.user_id AND s.note_id = n.id) AS share_count
 FROM notes n
 WHERE $predicate
 ORDER BY (n.pinned_at IS NULL) ASC, n.pinned_at DESC, $order, n.id DESC
@@ -233,9 +234,13 @@ SQL);
 
         $detach = $this->pdo->prepare('DELETE FROM label_note WHERE user_id = :user_id AND note_id = :note_id');
         $detach->execute(['user_id' => $userId, 'note_id' => $noteId]);
+        foreach (['note_summaries', 'note_embeddings'] as $derived) {
+            $this->pdo->prepare("DELETE FROM $derived WHERE user_id = :user_id AND note_id = :note_id")
+                ->execute(['user_id' => $userId, 'note_id' => $noteId]);
+        }
         $note = $this->pdo->prepare(<<<'SQL'
 UPDATE notes
-SET title = '', content = '', color = 'neutral', pinned_at = NULL,
+SET title = '', content = '', color = 'neutral', pinned_at = NULL, lock_hash = NULL, locked_at = NULL,
     version = :version, deleted_at = :deleted_at, updated_at = :updated_at
 WHERE user_id = :user_id AND id = :id AND deleted_at IS NULL
 SQL);
@@ -248,6 +253,98 @@ SQL);
         ]);
 
         return $paths;
+    }
+
+    /** Sets (hash) or clears (null) the Note's own password. Bumps the version so open editors refresh. */
+    public function setLock(int $userId, string $noteId, ?string $hash, int $version, string $timestamp): void
+    {
+        $statement = $this->pdo->prepare(<<<'SQL'
+UPDATE notes
+SET lock_hash = :hash, locked_at = :locked_at, version = :version, updated_at = :updated_at
+WHERE user_id = :user_id AND id = :id AND deleted_at IS NULL
+SQL);
+        $statement->execute([
+            'hash' => $hash,
+            'locked_at' => $hash === null ? null : $timestamp,
+            'version' => $version,
+            'updated_at' => $timestamp,
+            'user_id' => $userId,
+            'id' => $noteId,
+        ]);
+    }
+
+    /**
+     * Owned Notes changed after the (updated_at, id) cursor, tombstones included,
+     * oldest first, for offline delta sync. The composite cursor never skips rows
+     * that share one updated_at value across a page boundary.
+     *
+     * @return list<NoteRecord>
+     */
+    public function changedSince(int $userId, ?string $afterTime, ?string $afterId, int $limit): array
+    {
+        $sql = 'SELECT n.*, (SELECT COUNT(*) FROM note_shares s WHERE s.owner_id = n.user_id AND s.note_id = n.id) AS share_count FROM notes n WHERE n.user_id = :user_id';
+        if ($afterTime !== null) {
+            $sql .= ' AND (n.updated_at > :after_time OR (n.updated_at = :same_time AND n.id > :after_id))';
+        }
+        $sql .= ' ORDER BY n.updated_at, n.id LIMIT :limit';
+        $statement = $this->pdo->prepare($sql);
+        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        if ($afterTime !== null) {
+            $statement->bindValue(':after_time', $afterTime);
+            $statement->bindValue(':same_time', $afterTime);
+            $statement->bindValue(':after_id', (string) $afterId);
+        }
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+        $rows = $statement->fetchAll();
+        $noteIds = array_map(static fn (array $row): string => (string) $row['id'], $rows);
+        $labels = $this->labelsForNotes($userId, $noteIds);
+        $counts = $this->attachmentCounts($userId, $noteIds);
+
+        return array_map(fn (array $row): NoteRecord => $this->hydrate(
+            $row,
+            $labels[(string) $row['id']] ?? [],
+            [],
+            $counts[(string) $row['id']] ?? 0,
+        ), $rows);
+    }
+
+    /**
+     * Active, unlocked Notes of an owner for AI retrieval, newest first.
+     *
+     * @return list<NoteRecord>
+     */
+    public function retrievable(int $userId, int $limit): array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT * FROM notes WHERE user_id = :user_id AND deleted_at IS NULL AND lock_hash IS NULL ORDER BY updated_at DESC, id DESC LIMIT :limit',
+        );
+        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        return array_map(fn (array $row): NoteRecord => $this->hydrate($row, [], [], 0), $statement->fetchAll());
+    }
+
+    /** @param list<string> $noteIds @return array<string, int> accepted/pending share counts per owned Note */
+    public function shareCounts(int $userId, array $noteIds): array
+    {
+        if ($noteIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($noteIds), '?'));
+        $statement = $this->pdo->prepare(
+            "SELECT note_id, COUNT(*) AS aggregate FROM note_shares WHERE owner_id = ? AND note_id IN ($placeholders) GROUP BY note_id",
+        );
+        $statement->execute([$userId, ...$noteIds]);
+        $counts = [];
+
+        foreach ($statement->fetchAll() as $row) {
+            $counts[(string) $row['note_id']] = (int) $row['aggregate'];
+        }
+
+        return $counts;
     }
 
     public function setBackground(int $userId, string $noteId, ?string $attachmentId): void
@@ -423,6 +520,9 @@ SQL);
             $attachments,
             $attachmentCount,
             isset($row['background_attachment_id']) ? (string) $row['background_attachment_id'] : null,
+            isset($row['lock_hash']) ? (string) $row['lock_hash'] : null,
+            isset($row['locked_at']) ? (string) $row['locked_at'] : null,
+            (int) ($row['share_count'] ?? 0),
         );
     }
 }

@@ -111,6 +111,7 @@ final class ConfigLoader
         $aiProvider = $env('AI_PROVIDER', 'google') ?? 'google';
         $aiModel = $env('AI_MODEL', 'gemini-3.5-flash-lite') ?? '';
         $aiKey = $env('GOOGLE_AI_API_KEY');
+        $aiEmbeddingModel = $env('AI_EMBEDDING_MODEL', 'gemini-embedding-001') ?? 'gemini-embedding-001';
         if (! in_array($aiProvider, ['google'], true)) {
             throw new InvalidArgumentException('AI_PROVIDER must be google.');
         }
@@ -169,10 +170,19 @@ final class ConfigLoader
                 'password' => $env('MAIL_PASSWORD'),
             ],
             'vite' => ['dev_url' => $env('VITE_DEV_URL')],
+            // Live collaboration on shared Notes (bin/realtime.php). public_url is what browsers
+            // open (null = same origin at /realtime, proxied to listen); listen is host:port.
+            'realtime' => [
+                'enabled' => $boolean('REALTIME_ENABLED', true),
+                'public_url' => ($env('REALTIME_PUBLIC_URL', '') ?? '') === '' ? null : $env('REALTIME_PUBLIC_URL'),
+                'listen' => $env('REALTIME_LISTEN', '127.0.0.1:8090') ?? '127.0.0.1:8090',
+                'secret' => ($env('REALTIME_SECRET', '') ?? '') === '' ? null : $env('REALTIME_SECRET'),
+            ],
             'ai' => [
                 'enabled' => $aiEnabled,
                 'provider' => $aiProvider,
                 'model' => $aiModel,
+                'embedding_model' => $aiEmbeddingModel === '' ? 'gemini-embedding-001' : $aiEmbeddingModel,
                 'key' => $aiKey,
             ],
         ]);

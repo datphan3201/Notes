@@ -85,6 +85,8 @@ $sessionHandler = new PdoSessionHandler(
     $config->int('session.lifetime') * 60,
 );
 $session = new SessionManager($sessionHandler, $config->bool('session.secure'), $config->int('session.lifetime'));
+// Per-Note password unlocks live in the session and are checked by every Note read/write path.
+$noteLockGate = new \Planner\Application\Notes\NoteLockGate($session, $services['clock']);
 $accountRepository = new PdoAccountRepository($services['pdo']);
 $planningRepository = new PdoPlanningRepository($services['pdo']);
 $rateLimiter = new RateLimiter($services['pdo']);
@@ -190,6 +192,7 @@ $fileService = new FileService(
     $cleanup,
     new AvatarProcessor,
     $services['clock'],
+    $noteLockGate,
 );
 $attachmentController = new AttachmentController(
     $auth,
@@ -249,7 +252,7 @@ $snapshotService = new GoalSnapshotService($reviewRepository, $planningRepositor
 $dashboardController = new DashboardController($auth, $dashboardService, $taskSeriesService);
 $reviewController = new ReviewController($auth, $reviewService);
 $aiProvider = $config->bool('ai.enabled') && $config->nullableString('ai.key') !== null
-    ? new GoogleAIProvider($config->string('ai.key'), $config->string('ai.model'))
+    ? new GoogleAIProvider($config->string('ai.key'), $config->string('ai.model'), null, $config->string('ai.embedding_model'))
     : new DisabledAIProvider($config->string('ai.model'));
 $aiRepository = new PdoAIActionRepository($services['pdo']);
 $reminderService = new \Planner\Application\Planning\TaskReminderService(
@@ -266,7 +269,7 @@ $notificationService = new \Planner\Application\Notifications\NotificationServic
 );
 $notificationController = new \Planner\Http\Controller\NotificationController($auth, $notificationService, $inputValidator);
 $noteShareRepository = new \Planner\Infrastructure\Persistence\Pdo\Notes\PdoNoteShareRepository($services['pdo']);
-$noteShareService = new \Planner\Application\Notes\NoteShareService($noteRepository, $noteShareRepository, $accountRepository, $notificationService, $services['transactions'], $services['uuid'], $services['clock']);
+$noteShareService = new \Planner\Application\Notes\NoteShareService($noteRepository, $noteShareRepository, $accountRepository, $notificationService, $services['transactions'], $services['uuid'], $services['clock'], $noteLockGate);
 $systemSettings = new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($services['pdo']);
 $reportService = new \Planner\Application\Admin\ReportService(
     new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoReportRepository($services['pdo']),
@@ -285,6 +288,7 @@ $noteService = new NoteService(
     $noteSerializer,
     $services['clock'],
     $noteShareService,
+    $noteLockGate,
 );
 $noteController = new NoteController(
     $auth,
@@ -301,6 +305,7 @@ $noteController = new NoteController(
         $services['clock'],
         $inputValidator,
     ),
+    new \Planner\Application\Notes\NoteSync($noteRepository, $noteSerializer),
 );
 $noteShareController = new \Planner\Http\Controller\NoteShareController($auth, $noteShareService, $reportService, new NoteValidator($inputValidator), $inputValidator);
 $adminController = new \Planner\Http\Controller\AdminController($auth, $reportService, $inputValidator, $accountController);
@@ -324,6 +329,24 @@ $aiChatController = new \Planner\Http\Controller\AIChatController($auth, new \Pl
 $taskHistoryService = new \Planner\Application\Planning\TaskHistoryService(
     new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoTaskHistoryRepository($services['pdo']),
     $systemSettings, $services['transactions'], $services['clock'],
+);
+$noteLockService = new \Planner\Application\Notes\NoteLockService($noteRepository, $noteShareRepository, $accountRepository, $services['transactions'], $noteLockGate, $rateLimiter, $services['clock']);
+$noteLockController = new \Planner\Http\Controller\NoteLockController($auth, $noteLockService);
+$noteAIService = new \Planner\Application\Notes\NoteAIService(
+    $aiProvider,
+    $noteRepository,
+    $noteShareRepository,
+    new \Planner\Infrastructure\Persistence\Pdo\Notes\PdoNoteAIRepository($services['pdo']),
+    $noteLockGate,
+    $services['clock'],
+);
+$noteAIController = new \Planner\Http\Controller\NoteAIController($auth, $noteAIService, $inputValidator);
+$realtimeTickets = $config->bool('realtime.enabled')
+    ? \Planner\Infrastructure\Realtime\RealtimeTicket::fromSessionKey($config->nullableString('session.key'), $config->nullableString('realtime.secret'))
+    : null;
+$realtimeController = new \Planner\Http\Controller\RealtimeController(
+    $auth, $noteRepository, $noteShareRepository, $noteLockGate, $realtimeTickets,
+    $config->nullableString('realtime.public_url'), $services['clock'],
 );
 $routeFactory = require dirname(__DIR__).'/routes/web.php';
 $router = new Router($routeFactory(
@@ -349,6 +372,9 @@ $router = new Router($routeFactory(
     $aiChatController,
     $emailController,
     $userReportController,
+    $noteLockController,
+    $noteAIController,
+    $realtimeController,
 ));
 $application = new Application(
     $router,
@@ -375,6 +401,10 @@ return [
     'team_service' => $teamService,
     'task_history_service' => $taskHistoryService,
     'note_service' => $noteService,
+    'note_lock_gate' => $noteLockGate,
+    'note_lock_service' => $noteLockService,
+    'note_ai_service' => $noteAIService,
+    'realtime_tickets' => $realtimeTickets,
     'router' => $router,
     'session' => $session,
     'auth' => $auth,

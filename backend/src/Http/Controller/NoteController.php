@@ -24,13 +24,16 @@ final readonly class NoteController
         private NoteSerializer $serializer,
         private ProcessFileDeletion $cleanup,
         private NoteLinkService $links,
+        private ?\Planner\Application\Notes\NoteSync $sync = null,
     ) {
     }
 
     /** A Note with its Goal/Task link (null when unlinked). @return array<string, mixed> */
     private function linked(int $userId, \Planner\Domain\Notes\NoteRecord $note): array
     {
-        return [...$this->serializer->full($note), 'link' => $this->links->forNotes($userId, [$note->id])[$note->id] ?? null];
+        $shares = $this->notes->shareCounts($userId, [$note->id]);
+
+        return [...$this->serializer->full($note, $shares[$note->id] ?? 0), 'link' => $this->links->forNotes($userId, [$note->id])[$note->id] ?? null];
     }
 
     /** @param array<string, string> $parameters */
@@ -40,7 +43,8 @@ final readonly class NoteController
         $input = $this->validator->listing($request->query);
         $page = $this->list->paginate($user->id, $input['q'], $input['label_ids'], $input['page'], $input['sort'], $input['direction']);
 
-        $links = $this->links->forNotes($user->id, array_map(static fn ($note): string => $note->id, $page['items']));
+        $ids = array_map(static fn ($note): string => $note->id, $page['items']);
+        $links = $this->links->forNotes($user->id, $ids);
 
         return Response::json([
             'data' => array_map(fn ($note): array => [...$this->serializer->summary($note), 'link' => $links[$note->id] ?? null], $page['items']),
@@ -124,6 +128,27 @@ final readonly class NoteController
         }
 
         return Response::json(['data' => $this->serializer->full($this->notes->setBackground($user->id, $parameters['note'], $attachmentId))]);
+    }
+
+    /** PATCH /api/v1/notes/{note}/attributes {color?, is_pinned?, label_ids?} @param array<string, string> $parameters */
+    public function attributes(Request $request, array $parameters): Response
+    {
+        $user = $this->auth->requireUser();
+        $note = $this->notes->updateAttributes($user->id, $parameters['note'], $this->validator->attributes($request->input()));
+
+        return Response::json(['data' => $this->linked($user->id, $note)]);
+    }
+
+    /** GET /api/v1/notes/sync?cursor= — offline delta feed. @param array<string, string> $parameters */
+    public function sync(Request $request, array $parameters = []): Response
+    {
+        $user = $this->auth->requireUser();
+        $cursor = $request->query['cursor'] ?? null;
+        if ($cursor !== null && ! is_string($cursor)) {
+            throw new \Planner\Http\ValidationException(['cursor' => ['The sync cursor is invalid. Start a full sync.']]);
+        }
+
+        return Response::json(['data' => $this->sync?->changes($user->id, $cursor) ?? throw new \LogicException('Sync is not wired.')]);
     }
 
     /** @param array<string, string> $parameters */

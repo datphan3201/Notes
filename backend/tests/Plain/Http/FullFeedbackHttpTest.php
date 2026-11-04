@@ -59,9 +59,12 @@ final class FullFeedbackHttpTest extends TestCase
         $noteId = '0b9c4b5e-2f3a-4c1d-9e8f-1a2b3c4d5e6f';
         self::assertSame(201, $this->api('POST', '/api/v1/notes', ['id' => $noteId, 'title' => 'Plan', 'content' => 'First draft'], $owner)->status);
 
+        // Sharing validates that every address belongs to a registered account (approved
+        // rubric behavior: the owner learns about a typo instead of a silent no-op).
         $unknown = $this->api('POST', "/api/v1/notes/$noteId/shares", ['email' => 'nobody@example.test', 'permission' => 'view'], $owner);
-        self::assertSame(201, $unknown->status);
-        self::assertSame([], $this->data($unknown));
+        self::assertSame(422, $unknown->status);
+        self::assertStringContainsString('nobody@example.test', json_decode($unknown->body, true)['errors']['emails'][0]);
+        self::assertSame([], $this->data($this->api('GET', "/api/v1/notes/$noteId/shares", [], $owner)));
         self::assertSame(404, $this->api('POST', "/api/v1/notes/$noteId/shares", ['email' => 'owner@example.test'], $stranger)->status);
 
         $shares = $this->data($this->api('POST', "/api/v1/notes/$noteId/shares", ['email' => 'friend@example.test', 'permission' => 'view'], $owner));

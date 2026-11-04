@@ -27,6 +27,7 @@ final readonly class NoteService
         private NoteSerializer $serializer,
         private Clock $clock,
         private ?NoteShareService $shares = null,
+        private ?NoteLockGate $lockGate = null,
     ) {
     }
 
@@ -103,8 +104,21 @@ final readonly class NoteService
         if ($note->deletedAt !== null) {
             throw new HttpException(410, 'NOTE_DELETED', 'The note has been deleted.');
         }
+        $this->lockGate?->assertUnlocked($note);
 
         return $note;
+    }
+
+    /** @param list<string> $noteIds @return array<string, int> */
+    public function shareCounts(int $userId, array $noteIds): array
+    {
+        return $this->notes->shareCounts($userId, $noteIds);
+    }
+
+    /** Whether this session may read the Note's content (always true for unlocked Notes). */
+    public function canRead(NoteRecord $note): bool
+    {
+        return $this->lockGate?->isUnlocked($note) ?? ! $note->isLocked();
     }
 
     /** @param array{base_version:int,title:string,content:string,color:string,is_pinned:bool,label_ids:list<int>} $input */
@@ -123,6 +137,7 @@ final readonly class NoteService
             if ($current->deletedAt !== null) {
                 throw new HttpException(410, 'NOTE_DELETED', 'The note has been deleted.');
             }
+            $this->lockGate?->assertUnlocked($current);
 
             // Lost responses are safe to acknowledge even when the retried
             // base_version is stale, because the complete desired state exists.
@@ -179,6 +194,7 @@ final readonly class NoteService
             $this->lockOwner($userId);
             $note = $this->notes->findOwned($userId, $noteId, false, true)
                 ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            $this->lockGate?->assertUnlocked($note);
 
             if ($attachmentId !== null) {
                 $image = array_filter($note->attachments, static fn (array $attachment): bool => $attachment['id'] === $attachmentId && $attachment['kind'] === 'image');
@@ -207,6 +223,7 @@ final readonly class NoteService
             if ($current->deletedAt !== null) {
                 return [];
             }
+            $this->lockGate?->assertUnlocked($current);
 
             if ($baseVersion !== $current->version) {
                 throw new HttpException(
@@ -223,6 +240,93 @@ final readonly class NoteService
                 $current->version + 1,
                 $this->timestamp(),
             );
+        });
+    }
+
+    /**
+     * Owner-only appearance/organization change (color, pin, tags) that never
+     * touches title/content, so it cannot conflict with concurrent text edits
+     * (for example a live collaboration session). Fields left out keep their value.
+     *
+     * @param array{color?:string,is_pinned?:bool,label_ids?:list<int>} $input
+     */
+    public function updateAttributes(int $userId, string $noteId, array $input): NoteRecord
+    {
+        return $this->transactions->run(function () use ($userId, $noteId, $input): NoteRecord {
+            $this->lockOwner($userId);
+            $current = $this->notes->findOwned($userId, $noteId, false, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            $this->lockGate?->assertUnlocked($current);
+            $currentLabels = array_map(static fn ($label): int => $label->id, $current->labels);
+            sort($currentLabels, SORT_NUMERIC);
+            $desired = NoteSnapshot::fromInput([
+                'title' => $current->title,
+                'content' => $current->content,
+                'color' => $input['color'] ?? $current->color,
+                'is_pinned' => $input['is_pinned'] ?? ($current->pinnedAt !== null),
+                'label_ids' => $input['label_ids'] ?? $currentLabels,
+            ]);
+            if (NoteSnapshot::equals(NoteSnapshot::fromRecord($current), $desired)) {
+                return $current;
+            }
+            if ($this->tags->lockOwnedIds($userId, $desired['label_ids']) !== $desired['label_ids']) {
+                throw new ValidationException(['label_ids' => ['One or more tags do not exist.']]);
+            }
+            $timestamp = $this->timestamp();
+
+            return $this->notes->updateSnapshot(
+                $userId,
+                $noteId,
+                $current->title,
+                $current->content,
+                $desired['color'],
+                $desired['is_pinned'] ? ($current->pinnedAt ?? $timestamp) : null,
+                $current->version + 1,
+                $timestamp,
+                $desired['label_ids'],
+            );
+        });
+    }
+
+    /**
+     * Server-authoritative title/content write from the realtime collaboration
+     * server. The realtime server has already merged concurrent edits, so no
+     * base version is compared; access is re-checked here because a share can
+     * be revoked while a socket is open. Callers validate title/content first
+     * (NoteValidator::text).
+     */
+    public function writeCollaborativeText(int $ownerId, string $noteId, int $actorId, string $title, string $content): NoteRecord
+    {
+        return $this->transactions->run(function () use ($ownerId, $noteId, $actorId, $title, $content): NoteRecord {
+            $owner = $this->lockOwner($ownerId);
+            $current = $this->notes->findOwned($ownerId, $noteId, true, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            if ($current->deletedAt !== null) {
+                throw new HttpException(410, 'NOTE_DELETED', 'The note has been deleted.');
+            }
+            if ($actorId !== $ownerId && ($this->shares?->permissionFor($actorId, $noteId) ?? null) !== 'edit') {
+                throw new HttpException(403, 'FORBIDDEN', 'You can view this note but not edit it.');
+            }
+            if ($current->title === $title && $current->content === $content) {
+                return $current;
+            }
+            $labels = array_map(static fn ($label): int => $label->id, $current->labels);
+            sort($labels, SORT_NUMERIC);
+            $updated = $this->notes->updateSnapshot(
+                $ownerId,
+                $noteId,
+                $title,
+                $content,
+                $current->color,
+                $current->pinnedAt,
+                $current->version + 1,
+                $this->timestamp(),
+                $labels,
+            );
+            $actorName = $actorId === $ownerId ? $owner->displayName : ($this->accounts->findById($actorId)?->displayName ?? '');
+            $this->shares?->noteChangedBy($updated, $actorId, $actorName);
+
+            return $updated;
         });
     }
 
