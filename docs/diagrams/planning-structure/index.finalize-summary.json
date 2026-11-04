@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/candidate.json",
-    "sha256": "7d7736fe23437b7fa397b7d9281cbac38092ea1cc6ccc65a8e2befc3e6aba6bc",
-    "bytes": 4426
+    "sha256": "4e9bfe1545733443e2277b83de4e90c87d109c5427e69d8fd54d195ba115e0f2",
+    "bytes": 5248
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
-    "sha256": "4829c683fbfac9e5d9373e9f4335c966565ea373d6c4cbb1989d149551486a14",
-    "bytes": 842381
+    "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
+    "bytes": 843558
   },
   "gates": {
     "validate": "pass",
@@ -30,20 +30,20 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-refresh-20261104-2/index.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2661,
+  "durationMs": 2256,
   "browserCheck": {
     "requested": true,
     "ran": true

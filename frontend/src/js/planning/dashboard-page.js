@@ -14,6 +14,7 @@ import {
 } from './dashboard-habits.js';
 import { initDashboardRoadmap } from './dashboard-roadmap.js';
 import { renderRecentActivity } from './recent-activity.js';
+import { quickEditLink } from './quick-editor.js';
 
 function message(root, error) {
     const output = root.querySelector('[data-planning-error]');
@@ -31,6 +32,7 @@ function rows(container, items, empty, type = 'task') {
             type === 'milestone'
                 ? `/goals/${encodeURIComponent(item.goal_id)}#milestone=${encodeURIComponent(item.id)}`
                 : `/tasks/${encodeURIComponent(item.id)}`;
+        quickEditLink(row, type === 'milestone' ? 'milestone' : 'task', item.id);
         const marker = document.createElement('span');
         marker.className = 'task-marker';
         marker.setAttribute('aria-hidden', 'true');
@@ -649,6 +651,8 @@ export function initDashboardPage(root) {
     previous?.addEventListener('click', () => moveYear(1));
     next?.addEventListener('click', () => moveYear(-1));
     refresh?.addEventListener('click', () => load());
+    // Edits saved from the floating editor refresh the Dashboard in place.
+    document.addEventListener('planner:changed', () => load());
     load(null);
 }
 

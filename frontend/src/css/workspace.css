@@ -358,3 +358,130 @@ html[data-personal-background='true'] .app-body::before {
     display: block;
     padding: 0.5rem;
 }
+
+/* Floating editor: a side sheet for editing or creating a Task, Goal or Milestone in place. */
+.quick-editor {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(500px, 100vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    color: var(--text);
+    background: var(--surface);
+    border: 0;
+    border-left: 1px solid var(--border);
+    box-shadow: -18px 0 44px rgb(10 20 40 / 22%);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.quick-editor[open] {
+    animation: quick-editor-in 0.18s ease-out;
+}
+@keyframes quick-editor-in {
+    from {
+        opacity: 0;
+        transform: translateX(28px);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .quick-editor[open] {
+        animation: none;
+    }
+}
+.quick-editor::backdrop {
+    background: rgb(15 30 40 / 32%);
+}
+body:has(.quick-editor:modal) {
+    overflow: hidden;
+}
+.quick-editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.quick-editor-header h2 {
+    margin: 0;
+    font-size: var(--font-size-section);
+}
+.quick-editor-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.quick-editor > p {
+    margin: 0;
+    padding: 18px 22px;
+}
+.quick-editor[open] {
+    display: flex;
+    flex-direction: column;
+}
+/* The form fills the sheet so its footer sits at the bottom even when the form is short. */
+.quick-editor-form {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 22px 0;
+}
+.quick-editor-form > .quick-editor-footer {
+    margin-top: auto;
+}
+.quick-editor-title-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+.quick-editor-title-row > .field {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.quick-editor-icon .entity-icon-button {
+    margin-bottom: 2px;
+}
+.quick-editor-section > .field + .field {
+    margin-top: 12px;
+}
+.quick-editor-section > summary + .field {
+    margin-top: 12px;
+}
+.quick-editor-checklist {
+    display: grid;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.quick-editor-checklist h3 {
+    margin: 0;
+    font-size: var(--font-size-ui);
+}
+.quick-editor-checklist-list {
+    display: grid;
+    gap: 4px;
+}
+.quick-editor-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin: 4px -22px 0;
+    padding: 14px 22px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+.quick-editor-transition {
+    margin-right: auto;
+}

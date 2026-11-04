@@ -2,10 +2,15 @@
   "schema_version": 1,
   "diagram_type": "tree",
   "meta": {
-    "title": "Approved contract: Task views, daily plans and statuses",
+    "title": "Tasks: views, daily plans and statuses",
     "output": "docs/diagrams/task-planning/index.html",
     "quality_profile": "showcase",
-    "locale": "en"
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+      "link_mode": "web"
+    }
   },
   "layout": {
     "direction": "right"
@@ -14,105 +19,249 @@
     {
       "id": "task_root",
       "label": "/tasks",
-      "sublabel": "Catalogue; defaults to All"
+      "sublabel": "Catalogue; defaults to All",
+      "sources": [
+        {
+          "path": "frontend/src/views/planning/tasks.php",
+          "line": 1,
+          "end_line": 80
+        }
+      ]
     },
     {
       "id": "time_views",
       "parent": "task_root",
       "label": "Time views",
-      "sublabel": "Derived membership"
+      "sublabel": "Derived membership",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_filter",
       "parent": "task_root",
       "label": "Status filter",
-      "sublabel": "Applied independently"
+      "sublabel": "Applied independently",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "series_view",
       "parent": "task_root",
       "label": "Repeating",
-      "sublabel": "Own search and state filter"
+      "sublabel": "Own search and state filter",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/tasks-collection.js",
+          "line": 36,
+          "end_line": 44
+        }
+      ]
     },
     {
       "id": "history_gate",
       "parent": "task_root",
       "label": "Completed / History",
-      "sublabel": "View-scoped Done; retained History"
+      "sublabel": "View-scoped Done; retained History",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/tasks-collection.js",
+          "line": 28,
+          "end_line": 33
+        },
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 68,
+          "end_line": 79
+        }
+      ]
     },
     {
       "id": "view_today",
       "parent": "time_views",
       "label": "Today",
-      "sublabel": "Daily choices, local dates, recent overdue"
+      "sublabel": "Daily choices, local dates, recent overdue",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "view_next",
       "parent": "time_views",
       "label": "Next",
-      "sublabel": "Any future relevant date"
+      "sublabel": "Any future relevant date",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "view_week",
       "parent": "time_views",
       "label": "This week",
-      "sublabel": "Explicit current-week selection"
+      "sublabel": "Explicit current-week selection",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "view_backlog",
       "parent": "time_views",
       "label": "Backlog",
-      "sublabel": "Undated and not selected"
+      "sublabel": "Undated and not selected",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "view_all",
       "parent": "time_views",
       "label": "All",
-      "sublabel": "Default; non-history plus filters"
+      "sublabel": "Default; non-history plus filters",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_open",
       "parent": "status_filter",
-      "label": "Open tasks (default)"
+      "label": "Open tasks (default)",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_done",
       "parent": "status_filter",
-      "label": "Done"
+      "label": "Done",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_notstarted",
       "parent": "status_filter",
-      "label": "NotStarted"
+      "label": "NotStarted",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_inprogress",
       "parent": "status_filter",
       "label": "On progress",
-      "sublabel": "Stored as InProgress"
+      "sublabel": "Stored as InProgress",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "status_blocked",
       "parent": "status_filter",
-      "label": "Blocked"
+      "label": "Blocked",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "view_overdue",
       "parent": "time_views",
       "label": "Overdue",
-      "sublabel": "Retained unfinished past-deadline work"
+      "sublabel": "Retained unfinished past-deadline work",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/task-views.js",
+          "line": 14,
+          "end_line": 39
+        }
+      ]
     },
     {
       "id": "sort_control",
       "parent": "task_root",
       "label": "Sort",
-      "sublabel": "Importance or scheduled time"
+      "sublabel": "Importance or scheduled time",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/tasks-collection.js",
+          "line": 5,
+          "end_line": 25
+        }
+      ]
     },
     {
       "id": "series_states",
       "parent": "series_view",
       "label": "All / Active / Paused / Ended",
-      "sublabel": "Count and paging match filters"
+      "sublabel": "Count and paging match filters",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/tasks-collection.js",
+          "line": 36,
+          "end_line": 44
+        }
+      ]
+    },
+    {
+      "id": "group_control",
+      "parent": "task_root",
+      "label": "Group by Goal",
+      "sublabel": "Milestone order; Inbox last",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/tasks-collection.js",
+          "line": 47,
+          "end_line": 82
+        }
+      ]
     }
   ],
   "cards": [
@@ -136,10 +285,11 @@
     },
     {
       "dot": "slate",
-      "title": "Approved contract scope",
+      "title": "Committed UI scope",
       "items": [
-        "Describes the approved local planning contract, not a pinned committed-source snapshot.",
-        "Current UI, HTTP, SQL and regression pointers are maintained in docs/ui/tasks/filters.md and docs/ui/dashboard/README.md."
+        "Source snapshot 45ed896: time views, status, sorting and optional Goal grouping are independent projections.",
+        "Within a Goal, Milestone order precedes direct Tasks; chosen sorting orders Tasks within each Milestone. Inbox is last.",
+        "Current Markdown traces may include uncommitted quick-edit controls not represented by this revision."
       ]
     }
   ]

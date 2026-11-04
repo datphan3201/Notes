@@ -28,19 +28,19 @@
 | Reviews / Activity | Persisted snapshot/reflection versus append-only completion/reversal facts; never fabricated scoring |
 | Teamwork | Membership roles, assignment, Goal chat; same-origin polling, not WebSocket collaboration. Open team Tasks assigned to the user also appear on the personal Dashboard; the sidebar and breadcrumb mark it as the team space |
 | Accounts | User/admin roles, locking, email verification/change, recovery, optional email/TOTP 2FA |
-| AI | Chat agent with owner-scoped read tools (Areas, Goals, Tasks, Habits, Notes). Its Goal/Task create, edit, complete, reopen and archive, Habit create, edit, archive and check-in, and Note create, edit and delete are only queued into one validated proposal; nothing changes until the user confirms the chat card, and Apply runs ordinary services against the versions read (any change since → 409, nothing applied) |
+| AI | Chat agent with owner-scoped read tools (Areas, Goals, Milestones, Tasks, Habits, Notes). Its Goal/Milestone/Task create, edit, complete, reopen and archive, roadmap creation and Task moves, Habit create, edit, archive and check-in, and Note create, edit and delete are only queued into one validated proposal; nothing changes until the user confirms the chat card, and Apply runs ordinary services against the versions read (any change since → 409, nothing applied) |
 
 See each [UI route](../README.md#find-the-page-you-see) for current implementation and exceptions. Estimates are not time tracking. History retention archives rather than hard-deletes Tasks. Bulk Goal/Milestone archival requires explicit include_contents confirmation.
 
 ## Interface principles
 
-Use the illustrated five-theme system, independent light/dark, user-controlled scenery/illustrations/quote and private backgrounds/RGB. Keep readable semantic controls and one selected content section at a time. Use short dialogs/drawers for short actions and focused components for longer work. Preserve drafts, focus, keyboard access and context on return. Do not combine unrelated workflows into one scrolling canvas merely to display them together.
+Use the illustrated five-theme system, independent light/dark, user-controlled scenery/illustrations/quote and private backgrounds/RGB. Keep readable semantic controls and one selected content section at a time. Use short dialogs/drawers for short actions and focused components for longer work. Editing or creating a Task, Goal or Milestone from another page happens in the shared floating editor (a side sheet) without leaving the page; the full Task page and roadmap remain for working notes, Related work and moves. Preserve drafts, focus, keyboard access and context on return. Do not combine unrelated workflows into one scrolling canvas merely to display them together.
 
 The named fishbone head is the Goal and opens Goal information with Edit, Strategy and Related work. Milestone branches open Tasks; branch placement never creates dependencies. Help offers the illustrated walkthrough with account-wide first-visit dismissal. UI localization is English/Vietnamese; documentation is English.
 
 ## Deferred / excluded
 
-No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, mobile app, per-Note passwords, PWA/offline sync, time-entry/timer subsystem, gamification, or autonomous AI mutation (every AI change needs the user's confirmation; AI changes beyond Goals, Tasks, Habits and Notes are not yet supported). Existing retry/recovery handling is not offline synchronization. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
+No arbitrary custom fields/formulas, generic graph/database product, Task dependency graph, microservices, mobile app, per-Note passwords, PWA/offline sync, time-entry/timer subsystem, gamification, or autonomous AI mutation (every AI change needs the user's confirmation; AI changes beyond Goals, Milestones, Tasks, Habits and Notes are not yet supported). Existing retry/recovery handling is not offline synchronization. Future changes need explicit requirements and the normal ownership/transaction/verification boundaries.
 
 ## Updating decisions
 

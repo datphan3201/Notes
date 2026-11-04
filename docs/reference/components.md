@@ -98,6 +98,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `shell.styles` | [Typography, themes and component CSS](../ui/shared/shell.md#typography-themes-and-component-css) | Shared — Layout, CSS, navigation and Help |
 | `shell.dialogs` | [Dialogs, sections, Escape, backdrop and leave guards](../ui/shared/shell.md#dialogs-sections-escape-backdrop-and-leave-guards) | Shared — Layout, CSS, navigation and Help |
 | `shell.help` | [Help walkthrough and first-visit dismissal](../ui/shared/shell.md#help-walkthrough-and-first-visit-dismissal) | Shared — Layout, CSS, navigation and Help |
+| `shell.quick-editor` | [Floating editor for Tasks, Goals and Milestones](../ui/shared/shell.md#floating-editor-for-tasks-goals-and-milestones) | Shared — Layout, CSS, navigation and Help |
 | `bell.list` | [Unread count, list, mark read and invitations](../ui/shared/notifications.md#unread-count-list-mark-read-and-invitations) | Shared — Notification bell and reminders |
 | `bell.reminders` | [Due personal/assigned team reminders and dismissal](../ui/shared/notifications.md#due-personalassigned-team-reminders-and-dismissal) | Shared — Notification bell and reminders |
 | `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |

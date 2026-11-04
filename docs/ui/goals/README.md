@@ -15,7 +15,7 @@ Accounts start with localized placeholder Areas. Rename/reorder uses owner/versi
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goals.php · data-area-list](../../../frontend/src/views/planning/goals.php#L79) |
-| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L173) |
+| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L174) |
 | Controller / service / domain | [PlanningService.php · public function reorder(](../../../backend/src/Application/Planning/PlanningService.php#L801)<br>[PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L229) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoPlanningRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L116) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_default_area_backfill_is_idempotent_and_preserves_existing_accounts(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L219)<br>[PlanningCoreTest.php · public function test_empty_planning_objects_and_checklist_can_be_archived_with_native_prepares(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L380) |
@@ -30,7 +30,7 @@ Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/tim
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goals.php · data-goal-tree](../../../frontend/src/views/planning/goals.php#L31) |
-| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L173)<br>[planning-page.js · const renderMainGoal = (goals, focusId) =&gt;](../../../frontend/src/js/planning/planning-page.js#L185) |
+| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L174)<br>[planning-page.js · const renderMainGoal = (goals, focusId) =&gt;](../../../frontend/src/js/planning/planning-page.js#L186) |
 | Controller / service / domain | [PlanningService.php · public function moveGoal(](../../../backend/src/Application/Planning/PlanningService.php#L312)<br>[GraphGuard.php · public function wouldCycle(](../../../backend/src/Domain/Planning/GraphGuard.php#L14) |
 | Persistence | [PdoPlanningRepository.php · public function goalHierarchyEdges(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L170)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningDomainTest.php · public function test_graph_guard_handles_deep_graphs_without_recursion(](../../../backend/tests/Plain/Unit/PlanningDomainTest.php#L14) |
@@ -45,8 +45,8 @@ Areas, Goals, Milestones and Habits each take an optional icon from a fixed 39-s
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-icon](../../../frontend/src/views/planning/goal.php#L9)<br>[goal.php · data-milestone-icon](../../../frontend/src/views/planning/goal.php#L39) |
-| CSS | [components.css · Icon picker](../../../frontend/src/css/components.css#L159)<br>[components.css · Star rating](../../../frontend/src/css/components.css#L229) |
-| Browser logic | [entity-icons.js · export function openIconPicker(](../../../frontend/src/js/lib/entity-icons.js#L159)<br>[entity-icons.js · export function iconButton(](../../../frontend/src/js/lib/entity-icons.js#L234)<br>[star-rating.js · export function starRating(](../../../frontend/src/js/lib/star-rating.js#L27) |
+| CSS | [components.css · Icon picker](../../../frontend/src/css/components.css#L159)<br>[components.css · Star rating](../../../frontend/src/css/components.css#L232) |
+| Browser logic | [entity-icons.js · export function openIconPicker(](../../../frontend/src/js/lib/entity-icons.js#L162)<br>[entity-icons.js · export function iconButton(](../../../frontend/src/js/lib/entity-icons.js#L243)<br>[star-rating.js · export function starRating(](../../../frontend/src/js/lib/star-rating.js#L27) |
 | Controller / service / domain | [EntityIcon.php · final class EntityIcon](../../../backend/src/Domain/Planning/EntityIcon.php#L13)<br>[PlanningService.php · 'icon' =&gt; EntityIcon::icon($value)](../../../backend/src/Application/Planning/PlanningService.php#L973) |
 | Persistence | [0029_add_entity_icons.php · 0029_add_entity_icons](../../../backend/database/plain-migrations/0029_add_entity_icons.php#L10) |
 | Relevant tests (not a pass claim) | [PlanningHttpTest.php · public function test_icons_and_importance_are_chosen_at_every_planning_level(](../../../backend/tests/Plain/Http/PlanningHttpTest.php#L218)<br>[entity-icons.test.js · test('the icon and colour catalogues match what the backend accepts'](../../../frontend/tests/js/entity-icons.test.js#L16) |

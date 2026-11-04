@@ -2,10 +2,15 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Approved contract: Week to Today and checklist completion",
+    "title": "Daily and weekly selection: completion and Reopen",
     "output": "docs/diagrams/daily-weekly-planning/index.html",
     "quality_profile": "showcase",
-    "locale": "en"
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+      "link_mode": "web"
+    }
   },
   "lanes": [
     {
@@ -32,7 +37,14 @@
       "col": 0,
       "type": "frontend",
       "label": "This week",
-      "sublabel": "Sort + status selects"
+      "sublabel": "Sort + status selects",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/dashboard-tasks.js",
+          "line": 35,
+          "end_line": 56
+        }
+      ]
     },
     {
       "id": "choose",
@@ -40,7 +52,14 @@
       "col": 1,
       "type": "frontend",
       "label": "Add for today",
-      "sublabel": "Keep weekly membership"
+      "sublabel": "Keep weekly membership",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/dashboard-tasks.js",
+          "line": 60,
+          "end_line": 175
+        }
+      ]
     },
     {
       "id": "select",
@@ -48,7 +67,19 @@
       "col": 2,
       "type": "database",
       "label": "Day + week",
-      "sublabel": "Atomic owner-scoped write"
+      "sublabel": "Atomic owner-scoped write",
+      "sources": [
+        {
+          "path": "backend/src/Application/Dashboard/DashboardService.php",
+          "line": 285,
+          "end_line": 312
+        },
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+          "line": 159,
+          "end_line": 181
+        }
+      ]
     },
     {
       "id": "today",
@@ -56,7 +87,14 @@
       "col": 3,
       "type": "frontend",
       "label": "Today checklist",
-      "sublabel": "One row per Task"
+      "sublabel": "One row per Task",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/dashboard-tasks.js",
+          "line": 60,
+          "end_line": 175
+        }
+      ]
     },
     {
       "id": "complete",
@@ -64,7 +102,19 @@
       "col": 4,
       "type": "backend",
       "label": "Complete",
-      "sublabel": "Version + acknowledgements"
+      "sublabel": "Version + acknowledgements",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/transitions.js",
+          "line": 7,
+          "end_line": 62
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 346,
+          "end_line": 509
+        }
+      ]
     },
     {
       "id": "done",
@@ -72,7 +122,14 @@
       "col": 5,
       "type": "frontend",
       "label": "Checked in both",
-      "sublabel": "Same Task, same facts"
+      "sublabel": "Same Task, same facts",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/dashboard-tasks.js",
+          "line": 60,
+          "end_line": 175
+        }
+      ]
     },
     {
       "id": "scheduled",
@@ -80,7 +137,14 @@
       "col": 3,
       "type": "backend",
       "label": "Date membership",
-      "sublabel": "Account-local date or interval"
+      "sublabel": "Account-local date or interval",
+      "sources": [
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+          "line": 48,
+          "end_line": 71
+        }
+      ]
     },
     {
       "id": "reopen",
@@ -88,7 +152,19 @@
       "col": 5,
       "type": "backend",
       "label": "Reopen",
-      "sublabel": "Resolve overdue date first"
+      "sublabel": "Resolve overdue date first",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/transitions.js",
+          "line": 7,
+          "end_line": 62
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 346,
+          "end_line": 509
+        }
+      ]
     },
     {
       "id": "updated",
@@ -96,7 +172,19 @@
       "col": 4,
       "type": "backend",
       "label": "Task updated",
-      "sublabel": "New non-past date or no due date"
+      "sublabel": "New non-past date or no due date",
+      "sources": [
+        {
+          "path": "frontend/src/js/planning/transitions.js",
+          "line": 7,
+          "end_line": 62
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 346,
+          "end_line": 509
+        }
+      ]
     }
   ],
   "edges": [
@@ -160,15 +248,16 @@
       "title": "Factual labels and quiet overdue reminders",
       "items": [
         "On progress means InProgress. Scheduled means a work start/occurrence/interval today; a deadline today is Due today.",
-        "Complete/archive/new deadline removes the overdue condition. Reminders stop at History thresholds; retained old work remains in Tasks \u2192 Overdue."
+        "Complete/archive/new deadline removes the overdue condition. Reminders stop at History thresholds; retained old work remains in Tasks → Overdue."
       ]
     },
     {
       "dot": "slate",
-      "title": "Approved contract scope",
+      "title": "Committed interaction scope",
       "items": [
-        "This workflow describes approved local behavior, not a committed-source snapshot. See docs/ui/dashboard/README.md for current code/test traces.",
-        "The illustrated panel/dialog style and four-row previews are retained. Week sort and status filtering do not change membership or summary denominators."
+        "Source snapshot 45ed896: Today and This week are separate tabs; Today has four-row previews while Week lists the full selection.",
+        "Today includes Habits and recent Activity. Week includes Milestones, Habit targets and weekly Activity. Filters do not change summary denominators.",
+        "The roadmap is an explicit saved account selection shared with Goals Main goal."
       ]
     }
   ]

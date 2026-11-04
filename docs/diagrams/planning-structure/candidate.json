@@ -8,7 +8,7 @@
     "locale": "en",
     "repository": {
       "url": "https://github.com/datphan3201/Notes.git",
-      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
       "link_mode": "web"
     }
   },
@@ -22,8 +22,13 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 951,
-          "end_line": 996
+          "line": 992,
+          "end_line": 1037
+        },
+        {
+          "path": "backend/src/Application/Planning/PlanningService.php",
+          "line": 888,
+          "end_line": 916
         }
       ]
     },
@@ -35,13 +40,18 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 951,
-          "end_line": 996
+          "line": 992,
+          "end_line": 1037
         },
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 694,
-          "end_line": 752
+          "line": 726,
+          "end_line": 784
+        },
+        {
+          "path": "backend/src/Infrastructure/Persistence/Pdo/Dashboard/PdoDashboardRepository.php",
+          "line": 83,
+          "end_line": 100
         }
       ]
     },
@@ -58,8 +68,8 @@
         },
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 311,
-          "end_line": 343
+          "line": 312,
+          "end_line": 344
         }
       ]
     },
@@ -71,13 +81,13 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 951,
-          "end_line": 996
+          "line": 992,
+          "end_line": 1037
         },
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 481,
-          "end_line": 493
+          "line": 513,
+          "end_line": 525
         }
       ]
     },
@@ -94,8 +104,8 @@
         },
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 494,
-          "end_line": 511
+          "line": 526,
+          "end_line": 543
         }
       ]
     },
@@ -120,8 +130,8 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 454,
-          "end_line": 477
+          "line": 481,
+          "end_line": 509
         }
       ]
     },
@@ -132,8 +142,8 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 541,
-          "end_line": 560
+          "line": 573,
+          "end_line": 592
         }
       ]
     }
@@ -161,6 +171,15 @@
       "items": [
         "Mean immediate child Goal percentages, completed Milestones and direct one-off Tasks.",
         "Exclude Habits, contributions, recurring occurrences and Tasks already represented through Milestones."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Independent associations and presentation",
+      "items": [
+        "Notes may link to one owned Goal or Task; note_links does not change primary containment or progress.",
+        "Dashboard roadmap and Goals Main goal share one explicit preference; there is no automatic highest-importance fallback.",
+        "Areas, Goals, Milestones and Habits support validated icons/accents; all planning levels use importance 1–5. Tasks have no icon."
       ]
     }
   ]

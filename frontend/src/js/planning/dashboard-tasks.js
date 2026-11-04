@@ -3,6 +3,7 @@ import { t, statusLabel } from '../lib/i18n.js';
 import { checkMark } from '../lib/check-mark.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { localDate, taskIsOverdue } from './task-views.js';
+import { quickEditLink } from './quick-editor.js';
 
 export function taskScheduledOn(task, today, timezone) {
     const start = localDate(task.scheduled_start, timezone);
@@ -108,6 +109,7 @@ export function renderTaskChecklist(
         const copy = document.createElement('a');
         copy.className = 'dashboard-item-copy';
         copy.href = `/tasks/${encodeURIComponent(task.id)}`;
+        quickEditLink(copy, 'task', task.id);
         const name = document.createElement('strong');
         name.textContent = task.name;
         const meta = document.createElement('small');

@@ -2,10 +2,15 @@
   "schema_version": 3,
   "diagram_type": "lifecycle",
   "meta": {
-    "title": "Approved contract: terminal personal TaskSeries",
+    "title": "Personal TaskSeries: terminal lifecycle",
     "output": "docs/diagrams/task-series-lifecycle/index.html",
     "quality_profile": "showcase",
-    "locale": "en"
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/datphan3201/Notes.git",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+      "link_mode": "web"
+    }
   },
   "mainPath": [
     "active",
@@ -16,19 +21,40 @@
       "id": "active",
       "type": "start",
       "label": "Active",
-      "sublabel": "Eligible for materialization"
+      "sublabel": "Eligible for materialization",
+      "sources": [
+        {
+          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+          "line": 110,
+          "end_line": 145
+        }
+      ]
     },
     {
       "id": "ended",
       "type": "neutral",
       "label": "Ended",
-      "sublabel": "Terminal; create new for future work"
+      "sublabel": "Terminal; create new for future work",
+      "sources": [
+        {
+          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+          "line": 110,
+          "end_line": 145
+        }
+      ]
     },
     {
       "id": "paused",
       "type": "waiting",
       "label": "Paused",
-      "sublabel": "Existing occurrences remain"
+      "sublabel": "Existing occurrences remain",
+      "sources": [
+        {
+          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
+          "line": 110,
+          "end_line": 145
+        }
+      ]
     }
   ],
   "transitions": [
@@ -78,11 +104,11 @@
       ]
     },
     {
-      "dot": "cyan",
-      "title": "Approved contract, not a committed-source snapshot",
+      "dot": "slate",
+      "title": "Committed lifecycle scope",
       "items": [
-        "Approved by the user on 2026-11-02. This diagram describes the required and locally implemented lifecycle.",
-        "Current code/test pointers are in docs/ui/tasks/repeating.md. No uncommitted source is attributed to the earlier pinned Git revision."
+        "Source snapshot 45ed896: personal TaskSeries only; Teamwork has a separate completion-driven repeat path.",
+        "Active series materialize on scheduled jobs or due reads. Paused/Ended series do not generate new occurrences."
       ]
     }
   ]

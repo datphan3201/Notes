@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/candidate.json",
-    "sha256": "eb78d2364bb4fd226cd1e03278ddd8b9d8ab8814a5b265a3ba719dcf86d04ab0",
-    "bytes": 4274
+    "sha256": "1faa26d95af906c9e06147ca14531476ac5d1bd5e6c02bf526a9e6af924b469e",
+    "bytes": 6590
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
-    "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
-    "bytes": 842990
+    "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+    "bytes": 846658
   },
   "gates": {
     "validate": "pass",
@@ -30,20 +30,20 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-refresh-20261104-2/index.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2330,
+  "durationMs": 2504,
   "browserCheck": {
     "requested": true,
     "ran": true

@@ -167,6 +167,9 @@
     border-radius: 12px;
     box-shadow: 0 16px 36px rgb(10 20 40 / 22%);
 }
+.icon-picker.is-fixed {
+    position: fixed;
+}
 .icon-picker-colors {
     display: flex;
     flex-wrap: wrap;

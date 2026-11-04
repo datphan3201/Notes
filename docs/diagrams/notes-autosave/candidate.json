@@ -8,7 +8,7 @@
     "locale": "en",
     "repository": {
       "url": "https://github.com/datphan3201/Notes.git",
-      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
       "link_mode": "web"
     }
   },
@@ -145,7 +145,7 @@
       "dot": "cyan",
       "title": "Focused lifecycle",
       "items": [
-        "Acknowledged Note \u2192 valid draft \u2192 frozen save, with bounded retry and explicit conflict choice.",
+        "Acknowledged Note → valid draft → frozen save, with bounded retry and explicit conflict choice.",
         "Validation, session expiry, missing/deleted Notes and recovery exits are in the companion Notes save outcomes map."
       ]
     },
@@ -161,12 +161,20 @@
       "dot": "emerald",
       "title": "Transition conditions",
       "items": [
-        "Dirty \u2192 Saving: 500ms inactivity, max 2s; no dispatch during IME composition.",
-        "Saving \u2192 Saved: Only the current acknowledged draft is Saved.",
-        "Saving \u2192 Retry wait: Network / 429 / 5xx within the retry limit.",
-        "Retry wait \u2192 Saving: Resume when online; preserve request identity.",
-        "Conflict \u2192 Dirty: Adopt the current base, retain local intent; save remains explicit.",
-        "Auth expired \u2192 Conflict: After verifying the authenticated account; compare frozen/current versions."
+        "Dirty → Saving: 500ms inactivity, max 2s; no dispatch during IME composition.",
+        "Saving → Saved: Only the current acknowledged draft is Saved.",
+        "Saving → Retry wait: Network / 429 / 5xx within the retry limit.",
+        "Retry wait → Saving: Resume when online; preserve request identity.",
+        "Conflict → Dirty: Adopt the current base, retain local intent; save remains explicit.",
+        "Auth expired → Conflict: After verifying the authenticated account; compare frozen/current versions."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Committed Notes scope",
+      "items": [
+        "Autosave machine verified by source inspection at 45ed896. Main Notes only; Task and Review editors use explicit Save.",
+        "Goal/Task note links are separate from the autosave snapshot. This focused map does not describe linked-note ownership or attachment lifecycle."
       ]
     }
   ]

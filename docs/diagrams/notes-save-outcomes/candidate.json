@@ -8,7 +8,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/datphan3201/Notes.git",
-      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
       "link_mode": "web"
     }
   },
@@ -113,6 +113,14 @@
       "items": [
         "Each branch groups an actual failure phase and the code owning its recovery decision.",
         "Authenticated reconciliation may restore saved state, request conflict choice, resend an exact frozen request or retain a dirty draft."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Committed Notes scope",
+      "items": [
+        "Autosave machine verified by source inspection at 45ed896. Main Notes only; Task and Review editors use explicit Save.",
+        "Goal/Task note links are separate from the autosave snapshot. This focused map does not describe linked-note ownership or attachment lifecycle."
       ]
     }
   ]
