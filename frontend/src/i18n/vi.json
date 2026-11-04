@@ -1276,5 +1276,6 @@
     "6-digit code": "Mã 6 chữ số",
     "Continue with code": "Tiếp tục với mã",
     "If that account exists, we sent a reset link and a 6-digit code. Check your inbox.": "Nếu tài khoản tồn tại, chúng tôi đã gửi liên kết đặt lại và mã 6 chữ số. Hãy kiểm tra hộp thư.",
-    "This code is invalid or has expired. Request a new one.": "Mã không hợp lệ hoặc đã hết hạn. Hãy yêu cầu mã mới."
+    "This code is invalid or has expired. Request a new one.": "Mã không hợp lệ hoặc đã hết hạn. Hãy yêu cầu mã mới.",
+    "An Area with this name already exists, including archived Areas. Choose another name.": "Đã có Area trùng tên, kể cả Area đã lưu trữ. Hãy chọn tên khác."
 }
