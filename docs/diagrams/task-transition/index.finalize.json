@@ -5,15 +5,15 @@
   "status": "pass",
   "type": "sequence",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:35.733Z",
+  "startedAt": "2026-11-04T03:45:19.029Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/candidate.json",
-    "sha256": "d8f8419ba228218b15fd6cec4c96d225e4b6548023c633fc70498a325b56672a",
+    "sha256": "a6a11733f3d49423c0c2dc991dd9219ae60c8360acbb6bfc3e29bdd708c6ecde",
     "bytes": 6877
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
-    "sha256": "630c30d318e177128596f5baabfd98809d3cb404947df758b77c64b5e0f57cdb",
+    "sha256": "8090693e5bf51f5a60b303fba4084c0b9cbb2d720db3cb4e20748e9d3e81bf2f",
     "bytes": 842826
   },
   "stages": {
@@ -40,7 +40,7 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "d8f8419ba228218b15fd6cec4c96d225e4b6548023c633fc70498a325b56672a",
+          "sha256": "a6a11733f3d49423c0c2dc991dd9219ae60c8360acbb6bfc3e29bdd708c6ecde",
           "bytes": 6877
         },
         "validation": {
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 367,
+      "durationMs": 313,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,18 +72,18 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "2765911f-bd2f-4b9d-a6a4-1dae97aa0bd8",
+        "receiptId": "7d677925-382d-4aff-8d14-093c1bebc8c1",
         "ok": true,
         "command": "deliver",
         "type": "sequence",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
         "specification": {
-          "sha256": "d8f8419ba228218b15fd6cec4c96d225e4b6548023c633fc70498a325b56672a",
+          "sha256": "a6a11733f3d49423c0c2dc991dd9219ae60c8360acbb6bfc3e29bdd708c6ecde",
           "bytes": 6877
         },
         "artifact": {
-          "sha256": "630c30d318e177128596f5baabfd98809d3cb404947df758b77c64b5e0f57cdb",
+          "sha256": "8090693e5bf51f5a60b303fba4084c0b9cbb2d720db3cb4e20748e9d3e81bf2f",
           "bytes": 842826
         },
         "validation": {
@@ -97,7 +97,7 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
           "references": 10
         },
         "update": {
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 148,
+      "durationMs": 135,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,7 +128,7 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
         "artifact": {
-          "sha256": "630c30d318e177128596f5baabfd98809d3cb404947df758b77c64b5e0f57cdb",
+          "sha256": "8090693e5bf51f5a60b303fba4084c0b9cbb2d720db3cb4e20748e9d3e81bf2f",
           "bytes": 842826
         },
         "checks": [
@@ -260,13 +260,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "2765911f-bd2f-4b9d-a6a4-1dae97aa0bd8"
+        "deliveryReceiptId": "7d677925-382d-4aff-8d14-093c1bebc8c1"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1605,
+      "durationMs": 1592,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -275,7 +275,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -286,10 +286,10 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "2765911f-bd2f-4b9d-a6a4-1dae97aa0bd8",
+        "deliveryReceiptId": "7d677925-382d-4aff-8d14-093c1bebc8c1",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
-          "sha256": "630c30d318e177128596f5baabfd98809d3cb404947df758b77c64b5e0f57cdb",
+          "sha256": "8090693e5bf51f5a60b303fba4084c0b9cbb2d720db3cb4e20748e9d3e81bf2f",
           "bytes": 842826
         },
         "state": {
@@ -995,7 +995,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -1010,11 +1010,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:37.968Z",
-  "durationMs": 2235,
+  "finishedAt": "2026-11-04T03:45:21.181Z",
+  "durationMs": 2152,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

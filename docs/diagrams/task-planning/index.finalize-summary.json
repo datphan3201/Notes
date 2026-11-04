@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/candidate.json",
-    "sha256": "f632d76788278d87a53e92d09d3e21598ee08663148939132827fc93245f0760",
-    "bytes": 7608
+    "sha256": "745ff5febea711a86783920c29c27f2ba1aa023134dd1c4361081267d4259665",
+    "bytes": 7658
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/index.html",
-    "sha256": "598a31218fa988839dc321c6fb4725e4668299d14878f98168a701a68bb838b6",
-    "bytes": 861686
+    "sha256": "9b87f75932f91ec8eef626d06fb05846bcadaeeabb5f671f38ce4f04b446a882",
+    "bytes": 861736
   },
   "gates": {
     "validate": "pass",
@@ -30,7 +30,7 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-planning/review-goals-ui-20261104/index.browser-check.json"
   },
   "update": {
     "status": "current",
@@ -43,7 +43,7 @@
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2615,
+  "durationMs": 2283,
   "browserCheck": {
     "requested": true,
     "ran": true

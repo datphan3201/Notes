@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "tree",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:26.291Z",
+  "startedAt": "2026-11-04T03:45:10.530Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/candidate.json",
-    "sha256": "4e9bfe1545733443e2277b83de4e90c87d109c5427e69d8fd54d195ba115e0f2",
-    "bytes": 5248
+    "sha256": "6016d0936405c786e7d96688432a1caa65f29f4836a8f1b538dfc921bba53c86",
+    "bytes": 5379
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
-    "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
-    "bytes": 843558
+    "sha256": "90ec68b705d512f6f627864064d1160e765c6d3f3c42c2939c249c4d47bc2dc4",
+    "bytes": 843776
   },
   "stages": {
     "validate": {
@@ -40,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "4e9bfe1545733443e2277b83de4e90c87d109c5427e69d8fd54d195ba115e0f2",
-          "bytes": 5248
+          "sha256": "6016d0936405c786e7d96688432a1caa65f29f4836a8f1b538dfc921bba53c86",
+          "bytes": 5379
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 286,
+      "durationMs": 305,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,19 +72,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "5fb48673-922f-49c1-b4d9-54fb9d796151",
+        "receiptId": "3522ea55-bc33-4e96-87a8-25c483edcbf3",
         "ok": true,
         "command": "deliver",
         "type": "tree",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
         "specification": {
-          "sha256": "4e9bfe1545733443e2277b83de4e90c87d109c5427e69d8fd54d195ba115e0f2",
-          "bytes": 5248
+          "sha256": "6016d0936405c786e7d96688432a1caa65f29f4836a8f1b538dfc921bba53c86",
+          "bytes": 5379
         },
         "artifact": {
-          "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
-          "bytes": 843558
+          "sha256": "90ec68b705d512f6f627864064d1160e765c6d3f3c42c2939c249c4d47bc2dc4",
+          "bytes": 843776
         },
         "validation": {
           "checksPassed": 9,
@@ -97,8 +97,8 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
-          "references": 14
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
+          "references": 15
         },
         "update": {
           "status": "unavailable",
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 123,
+      "durationMs": 137,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,8 +128,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
         "artifact": {
-          "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
-          "bytes": 843558
+          "sha256": "90ec68b705d512f6f627864064d1160e765c6d3f3c42c2939c249c4d47bc2dc4",
+          "bytes": 843776
         },
         "checks": [
           {
@@ -251,13 +251,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "5fb48673-922f-49c1-b4d9-54fb9d796151"
+        "deliveryReceiptId": "3522ea55-bc33-4e96-87a8-25c483edcbf3"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1743,
+      "durationMs": 1417,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -266,7 +266,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -277,11 +277,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "5fb48673-922f-49c1-b4d9-54fb9d796151",
+        "deliveryReceiptId": "3522ea55-bc33-4e96-87a8-25c483edcbf3",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
-          "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
-          "bytes": 843558
+          "sha256": "90ec68b705d512f6f627864064d1160e765c6d3f3c42c2939c249c4d47bc2dc4",
+          "bytes": 843776
         },
         "state": {
           "detail": "read",
@@ -962,7 +962,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -977,11 +977,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:28.548Z",
-  "durationMs": 2256,
+  "finishedAt": "2026-11-04T03:45:12.505Z",
+  "durationMs": 1975,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

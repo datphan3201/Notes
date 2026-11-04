@@ -5,15 +5,15 @@
   "status": "pass",
   "type": "lifecycle",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:33.610Z",
+  "startedAt": "2026-11-04T03:45:17.063Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
-    "sha256": "4c2735b3747d99766dc5bd6a7746c9cac0b440ec19806364e901eba748551bf7",
+    "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
     "bytes": 3024
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
-    "sha256": "4243782503e83fe59fda94b1146618926cf57cee7a3b02be4fefd9bcebddddcb",
+    "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
     "bytes": 830817
   },
   "stages": {
@@ -40,7 +40,7 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "4c2735b3747d99766dc5bd6a7746c9cac0b440ec19806364e901eba748551bf7",
+          "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
           "bytes": 3024
         },
         "validation": {
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 343,
+      "durationMs": 301,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,18 +72,18 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "daca3849-0569-4411-ba6d-3a89f24fd0c4",
+        "receiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b",
         "ok": true,
         "command": "deliver",
         "type": "lifecycle",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "specification": {
-          "sha256": "4c2735b3747d99766dc5bd6a7746c9cac0b440ec19806364e901eba748551bf7",
+          "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
           "bytes": 3024
         },
         "artifact": {
-          "sha256": "4243782503e83fe59fda94b1146618926cf57cee7a3b02be4fefd9bcebddddcb",
+          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
           "bytes": 830817
         },
         "validation": {
@@ -97,7 +97,7 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
           "references": 3
         },
         "update": {
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 145,
+      "durationMs": 133,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,7 +128,7 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "artifact": {
-          "sha256": "4243782503e83fe59fda94b1146618926cf57cee7a3b02be4fefd9bcebddddcb",
+          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
           "bytes": 830817
         },
         "checks": [
@@ -246,13 +246,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "daca3849-0569-4411-ba6d-3a89f24fd0c4"
+        "deliveryReceiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1409,
+      "durationMs": 1336,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -261,7 +261,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -272,10 +272,10 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "daca3849-0569-4411-ba6d-3a89f24fd0c4",
+        "deliveryReceiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
-          "sha256": "4243782503e83fe59fda94b1146618926cf57cee7a3b02be4fefd9bcebddddcb",
+          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
           "bytes": 830817
         },
         "state": {
@@ -957,7 +957,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -972,11 +972,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:35.634Z",
-  "durationMs": 2024,
+  "finishedAt": "2026-11-04T03:45:18.946Z",
+  "durationMs": 1883,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

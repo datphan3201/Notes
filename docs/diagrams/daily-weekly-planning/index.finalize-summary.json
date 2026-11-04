@@ -7,12 +7,12 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/candidate.json",
-    "sha256": "1faa26d95af906c9e06147ca14531476ac5d1bd5e6c02bf526a9e6af924b469e",
+    "sha256": "bc54edf0af0083fa55594164494987cb674c0567a8cea98625aa749db7764eb2",
     "bytes": 6590
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
-    "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+    "sha256": "aa6ec9fdeefbd5dc98f9c36883d04d55ccf1131bb952709475823f66e9b48928",
     "bytes": 846658
   },
   "gates": {
@@ -30,7 +30,7 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-goals-ui-20261104/index.browser-check.json"
   },
   "update": {
     "status": "current",
@@ -43,7 +43,7 @@
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2504,
+  "durationMs": 2292,
   "browserCheck": {
     "requested": true,
     "ran": true

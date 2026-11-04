@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:28.654Z",
+  "startedAt": "2026-11-04T03:45:12.587Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
-    "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
-    "bytes": 5475
+    "sha256": "43e46959c359bc91b08132eea2f499720d66129cc02bd429662ae0881ce5136e",
+    "bytes": 5622
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
-    "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
-    "bytes": 840874
+    "sha256": "7ccff263bc2c23ebafa09f1771c04ae506effd612701cca7654968656fe39a6e",
+    "bytes": 841109
   },
   "stages": {
     "validate": {
@@ -40,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
-          "bytes": 5475
+          "sha256": "43e46959c359bc91b08132eea2f499720d66129cc02bd429662ae0881ce5136e",
+          "bytes": 5622
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 346,
+      "durationMs": 317,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,19 +72,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "107ead0d-c9de-47a0-932b-413466a3756b",
+        "receiptId": "dbc1d14d-6115-4cec-ac00-1579fafa9c71",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
         "specification": {
-          "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
-          "bytes": 5475
+          "sha256": "43e46959c359bc91b08132eea2f499720d66129cc02bd429662ae0881ce5136e",
+          "bytes": 5622
         },
         "artifact": {
-          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
-          "bytes": 840874
+          "sha256": "7ccff263bc2c23ebafa09f1771c04ae506effd612701cca7654968656fe39a6e",
+          "bytes": 841109
         },
         "validation": {
           "checksPassed": 9,
@@ -97,8 +97,8 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
-          "references": 12
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
+          "references": 13
         },
         "update": {
           "status": "unavailable",
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 155,
+      "durationMs": 131,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,8 +128,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
         "artifact": {
-          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
-          "bytes": 840874
+          "sha256": "7ccff263bc2c23ebafa09f1771c04ae506effd612701cca7654968656fe39a6e",
+          "bytes": 841109
         },
         "checks": [
           {
@@ -257,13 +257,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "107ead0d-c9de-47a0-932b-413466a3756b"
+        "deliveryReceiptId": "dbc1d14d-6115-4cec-ac00-1579fafa9c71"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1526,
+      "durationMs": 1470,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -272,7 +272,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -283,11 +283,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "107ead0d-c9de-47a0-932b-413466a3756b",
+        "deliveryReceiptId": "dbc1d14d-6115-4cec-ac00-1579fafa9c71",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
-          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
-          "bytes": 840874
+          "sha256": "7ccff263bc2c23ebafa09f1771c04ae506effd612701cca7654968656fe39a6e",
+          "bytes": 841109
         },
         "state": {
           "detail": "read",
@@ -992,7 +992,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -1007,11 +1007,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:30.801Z",
-  "durationMs": 2147,
+  "finishedAt": "2026-11-04T03:45:14.615Z",
+  "durationMs": 2028,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

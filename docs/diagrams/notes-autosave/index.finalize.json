@@ -5,15 +5,15 @@
   "status": "pass",
   "type": "lifecycle",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:22.107Z",
+  "startedAt": "2026-11-04T03:45:06.115Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/candidate.json",
-    "sha256": "d546bef7db3415361d38e31fbd25cc50683967288ce71de1b0e220a36bb7093d",
+    "sha256": "d746f50096743fe2d8e3dede1484e1c502a7a3325223f8c1fc9ef78982675651",
     "bytes": 4735
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.html",
-    "sha256": "8ef5402ce2a874c92139bc32e1576c1bbb1447961594168fcf41ae01c56910e7",
+    "sha256": "4d6532a4d129f3230225cda276dc5aa8fd668149c35a844f5a1dc9792c84e3cf",
     "bytes": 838813
   },
   "stages": {
@@ -40,7 +40,7 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "d546bef7db3415361d38e31fbd25cc50683967288ce71de1b0e220a36bb7093d",
+          "sha256": "d746f50096743fe2d8e3dede1484e1c502a7a3325223f8c1fc9ef78982675651",
           "bytes": 4735
         },
         "validation": {
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 314,
+      "durationMs": 339,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,18 +72,18 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "98fc70cb-5b11-47d5-add3-933954266810",
+        "receiptId": "1561df42-2b5b-4911-aefa-0e7381d76925",
         "ok": true,
         "command": "deliver",
         "type": "lifecycle",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.html",
         "specification": {
-          "sha256": "d546bef7db3415361d38e31fbd25cc50683967288ce71de1b0e220a36bb7093d",
+          "sha256": "d746f50096743fe2d8e3dede1484e1c502a7a3325223f8c1fc9ef78982675651",
           "bytes": 4735
         },
         "artifact": {
-          "sha256": "8ef5402ce2a874c92139bc32e1576c1bbb1447961594168fcf41ae01c56910e7",
+          "sha256": "4d6532a4d129f3230225cda276dc5aa8fd668149c35a844f5a1dc9792c84e3cf",
           "bytes": 838813
         },
         "validation": {
@@ -97,7 +97,7 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
           "references": 5
         },
         "update": {
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 133,
+      "durationMs": 134,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,7 +128,7 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.html",
         "artifact": {
-          "sha256": "8ef5402ce2a874c92139bc32e1576c1bbb1447961594168fcf41ae01c56910e7",
+          "sha256": "4d6532a4d129f3230225cda276dc5aa8fd668149c35a844f5a1dc9792c84e3cf",
           "bytes": 838813
         },
         "checks": [
@@ -246,13 +246,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "98fc70cb-5b11-47d5-add3-933954266810"
+        "deliveryReceiptId": "1561df42-2b5b-4911-aefa-0e7381d76925"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1404,
+      "durationMs": 1474,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -261,7 +261,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -272,10 +272,10 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "98fc70cb-5b11-47d5-add3-933954266810",
+        "deliveryReceiptId": "1561df42-2b5b-4911-aefa-0e7381d76925",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.html",
-          "sha256": "8ef5402ce2a874c92139bc32e1576c1bbb1447961594168fcf41ae01c56910e7",
+          "sha256": "4d6532a4d129f3230225cda276dc5aa8fd668149c35a844f5a1dc9792c84e3cf",
           "bytes": 838813
         },
         "state": {
@@ -307,13 +307,13 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1376,
+              "diagramWidth": 1323,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
-                "diagramChromePx": 78,
-                "svgPx": 663,
+                "diagramChromePx": 149,
+                "svgPx": 675,
                 "cardsPx": 0,
                 "viewBoxHeight": 450
               },
@@ -333,10 +333,10 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 10,
+              "dockStageGap": 24.5,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 54,
+              "viewerChromeReserve": 12,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -560,13 +560,13 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1376,
+              "diagramWidth": 1323,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
-                "diagramChromePx": 78,
-                "svgPx": 663,
+                "diagramChromePx": 149,
+                "svgPx": 675,
                 "cardsPx": 0,
                 "viewBoxHeight": 450
               },
@@ -586,10 +586,10 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 10,
+              "dockStageGap": 24.5,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 54,
+              "viewerChromeReserve": 12,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -765,13 +765,13 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1376,
+              "diagramWidth": 1323,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
-                "diagramChromePx": 78,
-                "svgPx": 663,
+                "diagramChromePx": 149,
+                "svgPx": 675,
                 "cardsPx": 0,
                 "viewBoxHeight": 450
               },
@@ -791,10 +791,10 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 10,
+              "dockStageGap": 24.5,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 54,
+              "viewerChromeReserve": 12,
               "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
@@ -957,7 +957,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -972,11 +972,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-autosave/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:24.070Z",
-  "durationMs": 1962,
+  "finishedAt": "2026-11-04T03:45:08.167Z",
+  "durationMs": 2051,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

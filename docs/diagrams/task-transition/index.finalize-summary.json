@@ -7,12 +7,12 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/candidate.json",
-    "sha256": "d8f8419ba228218b15fd6cec4c96d225e4b6548023c633fc70498a325b56672a",
+    "sha256": "a6a11733f3d49423c0c2dc991dd9219ae60c8360acbb6bfc3e29bdd708c6ecde",
     "bytes": 6877
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.html",
-    "sha256": "630c30d318e177128596f5baabfd98809d3cb404947df758b77c64b5e0f57cdb",
+    "sha256": "8090693e5bf51f5a60b303fba4084c0b9cbb2d720db3cb4e20748e9d3e81bf2f",
     "bytes": 842826
   },
   "gates": {
@@ -30,7 +30,7 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-transition/review-goals-ui-20261104/index.browser-check.json"
   },
   "update": {
     "status": "current",
@@ -43,7 +43,7 @@
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2235,
+  "durationMs": 2152,
   "browserCheck": {
     "requested": true,
     "ran": true

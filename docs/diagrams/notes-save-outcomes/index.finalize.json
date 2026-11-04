@@ -5,15 +5,15 @@
   "status": "pass",
   "type": "tree",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:10:24.151Z",
+  "startedAt": "2026-11-04T03:45:08.254Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/candidate.json",
-    "sha256": "7065dd630ecc94e44155b0a4d397eb98dcd5a83aa9f63f3a9ec5830da3ddd084",
+    "sha256": "d57507393ade336a279e9fe1bd092938ba12d7c3410b588660ad4115578a7237",
     "bytes": 3425
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.html",
-    "sha256": "d50eaeb9c63c7d704bcc377086743a77eaf95cd39c8f0f57d926e587fad0a8d7",
+    "sha256": "937d72f584a4580318cbb1285c3fcc985af2f1ff4e55ea5a1541b3b52796008a",
     "bytes": 840164
   },
   "stages": {
@@ -40,7 +40,7 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "7065dd630ecc94e44155b0a4d397eb98dcd5a83aa9f63f3a9ec5830da3ddd084",
+          "sha256": "d57507393ade336a279e9fe1bd092938ba12d7c3410b588660ad4115578a7237",
           "bytes": 3425
         },
         "validation": {
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 320,
+      "durationMs": 301,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,18 +72,18 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "a65e5a42-075a-4244-b80c-443bc70fcece",
+        "receiptId": "c04b5d6b-e8bf-46b9-81e6-bd3daa044a4a",
         "ok": true,
         "command": "deliver",
         "type": "tree",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.html",
         "specification": {
-          "sha256": "7065dd630ecc94e44155b0a4d397eb98dcd5a83aa9f63f3a9ec5830da3ddd084",
+          "sha256": "d57507393ade336a279e9fe1bd092938ba12d7c3410b588660ad4115578a7237",
           "bytes": 3425
         },
         "artifact": {
-          "sha256": "d50eaeb9c63c7d704bcc377086743a77eaf95cd39c8f0f57d926e587fad0a8d7",
+          "sha256": "937d72f584a4580318cbb1285c3fcc985af2f1ff4e55ea5a1541b3b52796008a",
           "bytes": 840164
         },
         "validation": {
@@ -97,7 +97,7 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
           "references": 7
         },
         "update": {
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 125,
+      "durationMs": 121,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,7 +128,7 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.html",
         "artifact": {
-          "sha256": "d50eaeb9c63c7d704bcc377086743a77eaf95cd39c8f0f57d926e587fad0a8d7",
+          "sha256": "937d72f584a4580318cbb1285c3fcc985af2f1ff4e55ea5a1541b3b52796008a",
           "bytes": 840164
         },
         "checks": [
@@ -248,13 +248,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "a65e5a42-075a-4244-b80c-443bc70fcece"
+        "deliveryReceiptId": "c04b5d6b-e8bf-46b9-81e6-bd3daa044a4a"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1511,
+      "durationMs": 1648,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -263,7 +263,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-refresh-20261104-2"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-goals-ui-20261104"
       ],
       "execution": "in-process",
       "receipt": {
@@ -274,10 +274,10 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "a65e5a42-075a-4244-b80c-443bc70fcece",
+        "deliveryReceiptId": "c04b5d6b-e8bf-46b9-81e6-bd3daa044a4a",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.html",
-          "sha256": "d50eaeb9c63c7d704bcc377086743a77eaf95cd39c8f0f57d926e587fad0a8d7",
+          "sha256": "937d72f584a4580318cbb1285c3fcc985af2f1ff4e55ea5a1541b3b52796008a",
           "bytes": 840164
         },
         "state": {
@@ -959,7 +959,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-refresh-20261104-2",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-goals-ui-20261104",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -974,11 +974,11 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-refresh-20261104-2/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-goals-ui-20261104/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:10:26.209Z",
-  "durationMs": 2058,
+  "finishedAt": "2026-11-04T03:45:10.438Z",
+  "durationMs": 2184,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",

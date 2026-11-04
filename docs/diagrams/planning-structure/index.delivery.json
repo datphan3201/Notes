@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "5fb48673-922f-49c1-b4d9-54fb9d796151",
+  "receiptId": "3522ea55-bc33-4e96-87a8-25c483edcbf3",
   "status": "current",
   "command": "deliver",
   "type": "tree",
   "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/candidate.json",
   "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/planning-structure/index.html",
   "specification": {
-    "sha256": "4e9bfe1545733443e2277b83de4e90c87d109c5427e69d8fd54d195ba115e0f2",
-    "bytes": 5248
+    "sha256": "6016d0936405c786e7d96688432a1caa65f29f4836a8f1b538dfc921bba53c86",
+    "bytes": 5379
   },
   "artifact": {
-    "sha256": "63cd7c6d0e0539c96530884329d70341d1eb38fd45700f8f71609c7de2687a37",
-    "bytes": 843558
+    "sha256": "90ec68b705d512f6f627864064d1160e765c6d3f3c42c2939c249c4d47bc2dc4",
+    "bytes": 843776
   }
 }
