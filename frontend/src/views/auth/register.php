@@ -1,7 +1,11 @@
 <section class="auth-card" id="main-content" aria-labelledby="auth-title">
     <p class="eyebrow"><?= $view->e($view->t('Start simply')) ?></p>
     <h1 id="auth-title"><?= $view->e($view->t('Create an account')) ?></h1>
-    <p class="auth-intro"><?= $view->e($view->t('Four details are all you need for a private planning workspace.')) ?></p>
+    <?php $registrationMode = $registration_mode ?? 'open'; ?>
+    <?php if ($registrationMode === 'closed'): ?>
+    <p class="auth-intro" data-registration-closed><?= $view->e($view->t('Registration is closed. Ask the administrator for an account.')) ?></p>
+    <?php else: ?>
+    <p class="auth-intro"><?= $view->e($view->t($registrationMode === 'invite' ? 'Registration is by invitation. Use the email address the administrator invited.' : 'Four details are all you need for a private planning workspace.')) ?></p>
     <form class="stack-form" action="/register" method="post">
         <input type="hidden" name="_token" value="<?= $view->e($csrf_token) ?>">
         <div class="field">
@@ -35,6 +39,7 @@
         </div>
         <button class="button button-primary button-wide" type="submit"><?= $view->e($view->t('Create account')) ?></button>
     </form>
+    <?php endif; ?>
     <p class="auth-switch">
         <?= $view->e($view->t('Already have an account?')) ?>
         <a href="/login"><?= $view->e($view->t('Sign in')) ?></a>

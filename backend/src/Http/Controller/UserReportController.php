@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Planner\Http\Controller;
 
+use Planner\Application\Admin\ReportOutcome;
 use Planner\Application\Account\AuthService;
 use Planner\Application\Admin\UserReportService;
 use Planner\Application\Files\FileStreamer;
@@ -55,7 +56,8 @@ final readonly class UserReportController
     {
         $admin = $this->auth->requireAdmin();
         $input = $request->input();
-        $this->input->rejectUnknown($input, ['status', 'response']);
+        $this->input->rejectUnknown($input, ['status', 'response', 'actions']);
+        $actions = ReportOutcome::parseActions($input['actions'] ?? null, ['warn_account', 'lock_account']);
         $errors = [];
         $status = $input['status'] ?? null;
         if (! in_array($status, ['resolved', 'dismissed'], true)) {
@@ -67,7 +69,7 @@ final readonly class UserReportController
         }
         $this->input->throwIfErrors($errors);
         $response = is_string($response) && trim($response) !== '' ? trim($response) : null;
-        $this->reports->resolve($admin->id, $parameters['id'], (string) $status, $response);
+        $this->reports->resolve($admin->id, $parameters['id'], (string) $status, $response, $actions);
 
         return Response::json(['data' => ['status' => $status]]);
     }

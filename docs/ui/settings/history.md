@@ -21,7 +21,7 @@ Rules are available in a collapsed History rules panel below retrieval results. 
 | Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L30)<br>[AccountValidator.php · public function preferences(](../../../backend/src/Application/Account/AccountValidator.php#L76) |
 | Persistence | [PdoTaskHistoryRepository.php · public function preferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L16)<br>[PdoTaskHistoryRepository.php · public function historyTasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L32)<br>[PdoTaskHistoryRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L47) |
 | Relevant tests (not a pass claim) | [task-views.test.js · history uses elapsed](../../../frontend/tests/js/task-views.test.js#L115) |
-| HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L139) |
+| HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L141) |
 
 ### Search, detail navigation and Reopen
 

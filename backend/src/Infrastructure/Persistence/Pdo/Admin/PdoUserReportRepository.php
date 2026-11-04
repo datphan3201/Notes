@@ -79,10 +79,11 @@ SQL);
         return is_array($row) ? $row : null;
     }
 
-    public function resolve(string $id, string $status, ?string $response, int $adminId, string $now): void
+    /** @param list<string> $actions */
+    public function resolve(string $id, string $status, ?string $response, int $adminId, string $now, array $actions = []): void
     {
-        $statement = $this->pdo->prepare('UPDATE user_reports SET status = :status, response = :response, resolved_by = :admin, resolved_at = :now WHERE id = :id');
-        $statement->execute(['status' => $status, 'response' => $response, 'admin' => $adminId, 'now' => $now, 'id' => $id]);
+        $statement = $this->pdo->prepare('UPDATE user_reports SET status = :status, response = :response, actions = :actions, resolved_by = :admin, resolved_at = :now WHERE id = :id');
+        $statement->execute(['status' => $status, 'response' => $response, 'actions' => $actions === [] ? null : json_encode($actions, JSON_THROW_ON_ERROR), 'admin' => $adminId, 'now' => $now, 'id' => $id]);
     }
 
     public function evidencePath(string $reportId, int $position): ?string

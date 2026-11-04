@@ -47,6 +47,10 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | POST | `/api/v1/admin/user-reports/{id}/resolve` | `api.admin.user-reports.resolve` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/admin/user-reports/{id}/evidence/{position}` | `admin.user-reports.evidence` | yes | no | — | [README.md](../ui/admin/README.md) |
 | GET | `/api/v1/admin/settings` | `api.admin.settings` | yes | no | — | [README.md](../ui/admin/README.md) |
+| GET | `/api/v1/admin/actions` | `api.admin.actions` | yes | no | — | [README.md](../ui/admin/README.md) |
+| GET | `/api/v1/admin/registration-invites` | `api.admin.invites` | yes | no | — | [README.md](../ui/admin/README.md) |
+| POST | `/api/v1/admin/registration-invites` | `api.admin.invites.store` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
+| DELETE | `/api/v1/admin/registration-invites` | `api.admin.invites.destroy` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | PATCH | `/api/v1/admin/settings` | `api.admin.settings.update` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/teamwork` | `planning.teamwork` | yes | no | — | [README.md](../ui/teamwork/README.md) |
 | GET | `/api/v1/team-goals` | `api.team-goals.index` | yes | no | — | [README.md](../ui/teamwork/README.md) |

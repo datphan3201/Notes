@@ -19,7 +19,7 @@ Profile PATCH accepts display_name and optional biography (up to 2,000 code poin
 | Controller / service / domain | [AccountService.php · public function updateProfile(](../../../backend/src/Application/Account/AccountService.php#L31) |
 | Persistence | [PdoAccountRepository.php · public function updateDisplayName(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L122)<br>[PdoAccountRepository.php · public function updateBiography(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L220) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_registration_session_profile_preferences_and_password_flow(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L57) |
-| HTTP | `GET /api/v1/profile` (`api.profile.show`) → [AccountController::profile](../../../backend/src/Http/Controller/AccountController.php#L116)<br>`PATCH /api/v1/profile` (`api.profile.update`) → [AccountController::updateProfile](../../../backend/src/Http/Controller/AccountController.php#L121) |
+| HTTP | `GET /api/v1/profile` (`api.profile.show`) → [AccountController::profile](../../../backend/src/Http/Controller/AccountController.php#L118)<br>`PATCH /api/v1/profile` (`api.profile.update`) → [AccountController::updateProfile](../../../backend/src/Http/Controller/AccountController.php#L123) |
 
 ### Replace and remove avatar
 
