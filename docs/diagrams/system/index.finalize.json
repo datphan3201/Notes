@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-11-01T17:51:05.694Z",
+  "startedAt": "2026-11-04T03:10:28.654Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
-    "sha256": "1262ff2e51319d0f6496662afe6eb3baf619d4c7834ad6331184ea49b60c21af",
-    "bytes": 5261
+    "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
+    "bytes": 5475
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
-    "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
-    "bytes": 840652
+    "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
+    "bytes": 840874
   },
   "stages": {
     "validate": {
@@ -40,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "1262ff2e51319d0f6496662afe6eb3baf619d4c7834ad6331184ea49b60c21af",
-          "bytes": 5261
+          "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
+          "bytes": 5475
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 360,
+      "durationMs": 346,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -72,19 +72,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "ce158154-f792-40c0-92b3-b2ab6bf5dd74",
+        "receiptId": "107ead0d-c9de-47a0-932b-413466a3756b",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
         "specification": {
-          "sha256": "1262ff2e51319d0f6496662afe6eb3baf619d4c7834ad6331184ea49b60c21af",
-          "bytes": 5261
+          "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
+          "bytes": 5475
         },
         "artifact": {
-          "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
-          "bytes": 840652
+          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
+          "bytes": 840874
         },
         "validation": {
           "checksPassed": 9,
@@ -97,7 +97,7 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/datphan3201/Notes",
-          "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
           "references": 12
         },
         "update": {
@@ -116,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 158,
+      "durationMs": 155,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,8 +128,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
         "artifact": {
-          "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
-          "bytes": 840652
+          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
+          "bytes": 840874
         },
         "checks": [
           {
@@ -257,20 +257,22 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "ce158154-f792-40c0-92b3-b2ab6bf5dd74"
+        "deliveryReceiptId": "107ead0d-c9de-47a0-932b-413466a3756b"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1799,
+      "durationMs": 1526,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
         "browser-check",
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
         "--json",
-        "--require-provenance"
+        "--require-provenance",
+        "--out-dir",
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2"
       ],
       "execution": "in-process",
       "receipt": {
@@ -281,11 +283,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "ce158154-f792-40c0-92b3-b2ab6bf5dd74",
+        "deliveryReceiptId": "107ead0d-c9de-47a0-932b-413466a3756b",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
-          "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
-          "bytes": 840652
+          "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
+          "bytes": 840874
         },
         "state": {
           "detail": "read",
@@ -990,6 +992,7 @@
           "contactSheet": null
         },
         "sidecars": {
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -1004,17 +1007,17 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-01T17:51:08.128Z",
-  "durationMs": 2433,
+  "finishedAt": "2026-11-04T03:10:30.801Z",
+  "durationMs": 2147,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null

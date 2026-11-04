@@ -1,16 +1,12 @@
-import { get, patch, post } from '../lib/http.js';
+import { get, patch } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { addDays, shiftMonth } from '../lib/calendar.js';
 import { entityIcon } from '../lib/entity-icons.js';
 import { lineIcon } from '../lib/line-icons.js';
 import { intlLocale } from '../lib/format.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
-import {
-    creationState,
-    createWithForm,
-    finishCreation,
-    reportWorkspaceError,
-} from '../lib/workspace-ui.js';
+import { reportWorkspaceError } from '../lib/workspace-ui.js';
+import { openQuickCreator, quickEditLink } from './quick-editor.js';
 import { localDate } from './task-views.js';
 import { timeOfDay } from './task-capture.js';
 import {
@@ -49,9 +45,6 @@ export function initCalendarPage(root) {
     const grid = find('[data-calendar-grid]');
     const status = find('[data-calendar-status]');
     const goalFilter = find('[data-calendar-goal]');
-    const dialog = find('#calendar-task-dialog');
-    const form = find('[data-calendar-task-form]');
-    const parentSelect = find('[data-calendar-parent]');
     const reads = new LatestRequest();
     const query = new URLSearchParams(location.search);
     const validDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : null);
@@ -106,7 +99,11 @@ export function initCalendarPage(root) {
     }
 
     function marker(entry) {
-        if (entry.type !== 'task') return entityIcon(entry.item, { size: 'sm' });
+        if (entry.type !== 'task')
+            return entityIcon(entry.item, {
+                size: 'sm',
+                fallbackIcon: entry.type === 'milestone' ? 'flag' : 'target',
+            });
         const icon = lineIcon(
             { scheduled: 'clock', occurrence: 'repeat', start: 'calendar', due: 'calendar' }[
                 entry.kind
@@ -120,6 +117,7 @@ export function initCalendarPage(root) {
         const link = document.createElement('a');
         link.className = `calendar-item is-${entry.type} is-${entry.kind}`;
         link.href = href(entry.type, entry.item);
+        quickEditLink(link, entry.type, entry.item.id);
         link.dataset.calendarKey = keyOf(entry);
         link.dataset.calendarDate = entry.date;
         const overdue =
@@ -431,21 +429,6 @@ export function initCalendarPage(root) {
             ...active.map((goal) => option(goal.id, goal.name)),
             option('inbox', t('Inbox')),
         ]);
-        choose(
-            parentSelect,
-            active.map((goal) => {
-                const group = document.createElement('optgroup');
-                group.label = goal.name;
-                group.append(
-                    option(`goal:${goal.id}`, goal.name),
-                    ...data.milestones
-                        .filter((item) => item.goal_id === goal.id && item.status !== 'Completed')
-                        .sort((a, b) => a.position - b.position)
-                        .map((item) => option(`milestone:${item.id}`, `↳ ${item.name}`)),
-                );
-                return group;
-            }),
-        );
     }
 
     async function load() {
@@ -473,40 +456,15 @@ export function initCalendarPage(root) {
         }
     }
 
+    // New Tasks open in the shared floating editor, due on the chosen day and placed in the
+    // filtered Goal when there is one.
     function openCreate(date = selected) {
-        if (document.querySelector('dialog[open]')) return;
-        form.reset();
-        form.elements.deadline.value = date;
         const filter = goalFilter.value;
-        if (filter && filter !== 'inbox') form.elements.parent.value = `goal:${filter}`;
-        creationState(form).markSaved();
-        dialog.querySelector('[data-dialog-error]').classList.add('is-hidden');
-        dialog.showModal();
-        form.elements.name.focus();
-    }
-
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const values = new FormData(form);
-        const [kind, id] = String(values.get('parent') || '').split(':');
-        createWithForm(form, async () => {
-            try {
-                await post('/api/v1/tasks', {
-                    name: values.get('name'),
-                    deadline: values.get('deadline'),
-                    goal_id: kind === 'goal' ? id : null,
-                    milestone_id: kind === 'milestone' ? id : null,
-                    importance: 3,
-                });
-                finishCreation(form);
-                announce(`${t('Task created')}: ${values.get('name')}`);
-                selected = values.get('deadline');
-                await load();
-            } catch (error) {
-                reportWorkspaceError(root, error);
-            }
+        openQuickCreator('task', {
+            deadline: date,
+            goal_id: filter && filter !== 'inbox' ? filter : null,
         });
-    });
+    }
 
     root.querySelectorAll('[data-calendar-step]').forEach((button) =>
         button.addEventListener('click', () => {
@@ -538,6 +496,7 @@ export function initCalendarPage(root) {
     );
     acceptDrops(find('[data-calendar-day]'), () => selected);
     goalFilter.addEventListener('change', render);
+    document.addEventListener('planner:changed', () => load());
     find('[data-calendar-add]').addEventListener('click', () => openCreate());
     find('[data-calendar-day-add]').addEventListener('click', () => openCreate());
     find('[data-planning-retry]').addEventListener('click', load);

@@ -22,6 +22,7 @@ import {
 } from './planning/planning-page';
 import { initHabitsPage } from './planning/habits-page';
 import { initCalendarPage } from './planning/calendar-page';
+import { initQuickEditor } from './planning/quick-editor.js';
 import { initDashboardPage, initReviewsPage } from './planning/dashboard-page';
 import { initTeamworkPage } from './planning/teamwork-page.js';
 import { initAdminPage } from './admin/admin-page.js';
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     decorateReference();
     initNavigation();
     initDialogBackdropClose();
+    initQuickEditor();
     document
         .querySelectorAll(
             '[data-goals-page], [data-tasks-page], [data-task-detail], [data-habits-page], [data-calendar-page], [data-dashboard-page], [data-reviews-page], [data-goal-detail], [data-preference-settings], [data-teamwork-page]',

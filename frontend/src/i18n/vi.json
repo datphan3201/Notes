@@ -1134,7 +1134,11 @@
     "Moved": "Đã dời",
     "Nothing planned for this day.": "Chưa có kế hoạch cho ngày này.",
     "Set due date": "Đặt hạn",
-    "Task created": "Đã tạo công việc",
     "more": "mục nữa",
-    "Starts": "Bắt đầu"
+    "Starts": "Bắt đầu",
+    "Dates and planning": "Ngày và kế hoạch",
+    "Description and criteria": "Mô tả và tiêu chí",
+    "Discard your unsaved changes?": "Bỏ các thay đổi chưa lưu?",
+    "Open full page": "Mở trang đầy đủ",
+    "This item changed elsewhere. Your edits are preserved.": "Mục này vừa được thay đổi ở nơi khác. Các chỉnh sửa của bạn vẫn được giữ."
 }

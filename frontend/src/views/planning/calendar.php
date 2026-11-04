@@ -65,34 +65,4 @@
             </section>
         </aside>
     </div>
-    <dialog id="calendar-task-dialog" class="workspace-dialog" aria-labelledby="calendar-task-dialog-title" data-workspace-dialog>
-        <header class="section-heading">
-            <h2 id="calendar-task-dialog-title"><?= $view->e($view->t('New task')) ?></h2>
-            <button class="icon-button" type="button" data-close-dialog aria-label="<?= $view->e($view->t('Close new task')) ?>">×</button>
-        </header>
-        <form class="stack-form" data-calendar-task-form>
-            <div class="field">
-                <label for="calendar-task-name"><?= $view->e($view->t('Task name')) ?></label>
-                <input id="calendar-task-name" name="name" autofocus maxlength="200" placeholder="<?= $view->e($view->t('What needs to get done?')) ?>" required>
-            </div>
-            <div class="field">
-                <label for="calendar-task-parent"><?= $view->e($view->t('Add to')) ?></label>
-                <select id="calendar-task-parent" name="parent" data-calendar-parent>
-                    <option value=""><?= $view->e($view->t('Inbox · organize later')) ?></option>
-                </select>
-            </div>
-            <div class="field">
-                <label for="calendar-task-deadline"><?= $view->e($view->t('Due date')) ?></label>
-                <input id="calendar-task-deadline" name="deadline" type="date" required>
-            </div>
-            <div class="dialog-footer">
-                <button class="button button-quiet" type="button" data-close-dialog><?= $view->e($view->t('Cancel')) ?></button>
-                <button class="button button-primary" type="submit">
-                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
-                    <?= $view->e($view->t('Create task')) ?>
-                </button>
-            </div>
-        </form>
-        <p class="field-error is-hidden" data-dialog-error role="alert"></p>
-    </dialog>
 </section>

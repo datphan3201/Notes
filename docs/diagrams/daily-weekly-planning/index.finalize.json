@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-11-02T02:25:31.351Z",
+  "startedAt": "2026-11-04T03:10:19.517Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/candidate.json",
-    "sha256": "eb78d2364bb4fd226cd1e03278ddd8b9d8ab8814a5b265a3ba719dcf86d04ab0",
-    "bytes": 4274
+    "sha256": "1faa26d95af906c9e06147ca14531476ac5d1bd5e6c02bf526a9e6af924b469e",
+    "bytes": 6590
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
-    "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
-    "bytes": 842990
+    "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+    "bytes": 846658
   },
   "stages": {
     "validate": {
@@ -31,6 +31,8 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
         "--quality",
         "showcase",
+        "--repo-root",
+        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
@@ -38,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "eb78d2364bb4fd226cd1e03278ddd8b9d8ab8814a5b265a3ba719dcf86d04ab0",
-          "bytes": 4274
+          "sha256": "1faa26d95af906c9e06147ca14531476ac5d1bd5e6c02bf526a9e6af924b469e",
+          "bytes": 6590
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 579,
+      "durationMs": 564,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -64,23 +66,25 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
         "--quality",
         "showcase",
+        "--repo-root",
+        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "9b6d1b35-a26a-4cd6-aca1-ed1017bf056c",
+        "receiptId": "a33001a0-a6e0-476a-bce0-c4a74f953e7f",
         "ok": true,
         "command": "deliver",
         "type": "workflow",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
         "specification": {
-          "sha256": "eb78d2364bb4fd226cd1e03278ddd8b9d8ab8814a5b265a3ba719dcf86d04ab0",
-          "bytes": 4274
+          "sha256": "1faa26d95af906c9e06147ca14531476ac5d1bd5e6c02bf526a9e6af924b469e",
+          "bytes": 6590
         },
         "artifact": {
-          "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
-          "bytes": 842990
+          "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+          "bytes": 846658
         },
         "validation": {
           "checksPassed": 9,
@@ -89,6 +93,12 @@
           "compositionStatus": "pass",
           "errors": 0,
           "warnings": 0
+        },
+        "evidence": {
+          "verified": true,
+          "repository": "https://github.com/datphan3201/Notes",
+          "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
+          "references": 13
         },
         "update": {
           "status": "unavailable",
@@ -106,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 145,
+      "durationMs": 134,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -118,8 +128,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
         "artifact": {
-          "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
-          "bytes": 842990
+          "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+          "bytes": 846658
         },
         "checks": [
           {
@@ -236,20 +246,22 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "9b6d1b35-a26a-4cd6-aca1-ed1017bf056c"
+        "deliveryReceiptId": "a33001a0-a6e0-476a-bce0-c4a74f953e7f"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1499,
+      "durationMs": 1693,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
         "browser-check",
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
         "--json",
-        "--require-provenance"
+        "--require-provenance",
+        "--out-dir",
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-refresh-20261104-2"
       ],
       "execution": "in-process",
       "receipt": {
@@ -260,11 +272,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "9b6d1b35-a26a-4cd6-aca1-ed1017bf056c",
+        "deliveryReceiptId": "a33001a0-a6e0-476a-bce0-c4a74f953e7f",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.html",
-          "sha256": "388a34d57e0ad74b09d77c2027e52e0665051a87f0825e50cea7d1ff10ead0bc",
-          "bytes": 842990
+          "sha256": "e09b820d6eb60eccb61be582f684e319914430009195342ad9e787f7bbd2ab98",
+          "bytes": 846658
         },
         "state": {
           "detail": "read",
@@ -1317,6 +1329,7 @@
           "contactSheet": null
         },
         "sidecars": {
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-refresh-20261104-2",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -1331,17 +1344,17 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/daily-weekly-planning/review-refresh-20261104-2/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-02T02:25:33.682Z",
-  "durationMs": 2330,
+  "finishedAt": "2026-11-04T03:10:22.022Z",
+  "durationMs": 2504,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null

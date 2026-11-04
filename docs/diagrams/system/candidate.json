@@ -8,7 +8,7 @@
     "locale": "en",
     "repository": {
       "url": "https://github.com/datphan3201/Notes.git",
-      "revision": "b1b5f976a9efdba105d7de6b7dd4417a5e52f74f",
+      "revision": "45ed89671e5dcfb04cbebfd805c63219428c202e",
       "link_mode": "web"
     }
   },
@@ -29,13 +29,13 @@
       "sources": [
         {
           "path": "frontend/src/js/app.js",
-          "line": 91,
-          "end_line": 152
+          "line": 76,
+          "end_line": 148
         },
         {
           "path": "frontend/src/views/layouts/app.php",
           "line": 1,
-          "end_line": 20
+          "end_line": 22
         }
       ]
     },
@@ -60,13 +60,13 @@
         },
         {
           "path": "backend/src/Http/Application.php",
-          "line": 26,
-          "end_line": 59
+          "line": 28,
+          "end_line": 62
         },
         {
           "path": "backend/routes/web.php",
-          "line": 184,
-          "end_line": 190
+          "line": 192,
+          "end_line": 199
         }
       ]
     },
@@ -86,8 +86,8 @@
       "sources": [
         {
           "path": "backend/src/Application/Planning/PlanningService.php",
-          "line": 345,
-          "end_line": 478
+          "line": 346,
+          "end_line": 510
         },
         {
           "path": "backend/src/Application/Files/FileService.php",
@@ -164,8 +164,8 @@
       "sources": [
         {
           "path": "backend/src/Infrastructure/Storage/LocalPrivateStorage.php",
-          "line": 20,
-          "end_line": 61
+          "line": 12,
+          "end_line": 76
         }
       ]
     }
@@ -223,10 +223,11 @@
     },
     {
       "dot": "slate",
-      "title": "Scope",
+      "title": "Committed source scope",
       "items": [
-        "Runtime overview at the pinned revision. Optional AI, SMTP and jobs are documented separately.",
-        "Current local Vite/CSP changes are in the Markdown source traces, not represented as committed evidence here."
+        "Runtime ownership at 45ed896: framework-free PHP, explicit wiring, PDO and private storage.",
+        "Calendar reuses planning APIs; AI queues Goal/Milestone/Task/Habit/Note proposals and requires explicit Apply. These are feature flows, not separate services.",
+        "SMTP, provider adapters and scheduled jobs remain optional infrastructure. Uncommitted quick-edit changes are outside this source snapshot."
       ]
     }
   ]

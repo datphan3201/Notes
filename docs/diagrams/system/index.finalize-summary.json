@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/candidate.json",
-    "sha256": "1262ff2e51319d0f6496662afe6eb3baf619d4c7834ad6331184ea49b60c21af",
-    "bytes": 5261
+    "sha256": "4da5806887bf032744dfa9819b24a28500e02fcf0098de34c5f9581c47e730e1",
+    "bytes": 5475
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.html",
-    "sha256": "06ef9b4becd5a9988350c1bb1f1e81266fd254db6e287b45843d7c280e0e95dc",
-    "bytes": 840652
+    "sha256": "6360a2d2df67365097f04e0c53fcbdcab862314e55204a123e9e42a53f8898c6",
+    "bytes": 840874
   },
   "gates": {
     "validate": "pass",
@@ -30,20 +30,20 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/system/review-refresh-20261104-2/index.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2433,
+  "durationMs": 2147,
   "browserCheck": {
     "requested": true,
     "ran": true

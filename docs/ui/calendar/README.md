@@ -18,7 +18,7 @@ Month (Monday-first weeks, no trailing empty week) and Week views with previous/
 | --- | --- |
 | UI / DOM | [calendar.php · data-calendar-grid](../../../frontend/src/views/planning/calendar.php#L45) |
 | CSS | [calendar.css · Calendar layout](../../../frontend/src/css/calendar.css#L1) |
-| Browser logic | [calendar-page.js · export function initCalendarPage(](../../../frontend/src/js/planning/calendar-page.js#L45)<br>[calendar-model.js · export function calendarEntries(](../../../frontend/src/js/planning/calendar-model.js#L74)<br>[calendar-model.js · export function monthWeeks(](../../../frontend/src/js/planning/calendar-model.js#L19) |
+| Browser logic | [calendar-page.js · export function initCalendarPage(](../../../frontend/src/js/planning/calendar-page.js#L41)<br>[calendar-model.js · export function calendarEntries(](../../../frontend/src/js/planning/calendar-model.js#L74)<br>[calendar-model.js · export function monthWeeks(](../../../frontend/src/js/planning/calendar-model.js#L19) |
 | Controller / service / domain | [PlanningService.php · public function list(string $type, int $userId): array](../../../backend/src/Application/Planning/PlanningService.php#L41) |
 | Persistence | [PdoPlanningRepository.php · public function list(string $type, int $userId, bool $includeArchived = false): array](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('weeks start on Monday and a month never ends with an empty week'](../../../frontend/tests/js/calendar-model.test.js#L22)<br>[calendar-model.test.js · test('a Task appears once per day, with the most specific date kind'](../../../frontend/tests/js/calendar-model.test.js#L32)<br>[FullFeedbackHttpTest.php · public function test_changed_pages_render_their_new_controls(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L259) |
@@ -33,7 +33,7 @@ An item moves by drag and drop onto a day or the selected-day panel, by Alt with
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [calendar.php · data-calendar-day-list](../../../frontend/src/views/planning/calendar.php#L57) |
-| Browser logic | [calendar-model.js · export function moveChanges(](../../../frontend/src/js/planning/calendar-model.js#L162)<br>[calendar-model.js · export function shiftInstant(](../../../frontend/src/js/planning/calendar-model.js#L60)<br>[calendar-page.js · async function move(](../../../frontend/src/js/planning/calendar-page.js#L188) |
+| Browser logic | [calendar-model.js · export function moveChanges(](../../../frontend/src/js/planning/calendar-model.js#L162)<br>[calendar-model.js · export function shiftInstant(](../../../frontend/src/js/planning/calendar-model.js#L60)<br>[calendar-page.js · async function move(](../../../frontend/src/js/planning/calendar-page.js#L186) |
 | Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L164) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('moving shifts every date on the source day and keeps scheduled clock times'](../../../frontend/tests/js/calendar-model.test.js#L56)<br>[calendar-model.test.js · test('daylight saving never moves the wall-clock time of a scheduled block'](../../../frontend/tests/js/calendar-model.test.js#L106) |
@@ -44,12 +44,12 @@ An item moves by drag and drop onto a day or the selected-day panel, by Alt with
 
 **Trace ID:** `calendar.capture`
 
-The side panel lists everything on the selected day with its kind, time and Goal or Milestone, and Add task. New task, Add task and double-clicking a day open one dialog with the name, an Add to choice (Inbox, a Goal or one of its open Milestones; preset from the Goal filter) and the due date preset to that day; it posts an ordinary Task. Unscheduled lists open one-off Tasks with no date at all, by importance; dragging one onto a day, or Set due date, gives it that due date.
+The side panel lists everything on the selected day with its kind, time and Goal or Milestone, and Add task. New task, Add task and double-clicking a day open the shared floating editor in create mode with the due date preset to that day and the filtered Goal as its parent. Clicking any item opens it in the floating editor instead of leaving the Calendar. Unscheduled lists open one-off Tasks with no date at all, by importance; dragging one onto a day, or Set due date, gives it that due date.
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [calendar.php · data-calendar-unscheduled aria-labelledby](../../../frontend/src/views/planning/calendar.php#L59)<br>[calendar.php · id="calendar-task-dialog"](../../../frontend/src/views/planning/calendar.php#L68) |
-| Browser logic | [calendar-model.js · export function unscheduledTasks(](../../../frontend/src/js/planning/calendar-model.js#L142)<br>[calendar-page.js · function openCreate(](../../../frontend/src/js/planning/calendar-page.js#L476) |
+| UI / DOM | [calendar.php · data-calendar-unscheduled aria-labelledby](../../../frontend/src/views/planning/calendar.php#L59)<br>[calendar.php · data-calendar-day-add](../../../frontend/src/views/planning/calendar.php#L52) |
+| Browser logic | [calendar-model.js · export function unscheduledTasks(](../../../frontend/src/js/planning/calendar-model.js#L142)<br>[calendar-page.js · function openCreate(](../../../frontend/src/js/planning/calendar-page.js#L461) |
 | Controller / service / domain | [PlanningService.php · public function create(string $type, int $userId, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L97) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('occurrences and completed work stay put; the tray lists only undated open one-offs'](../../../frontend/tests/js/calendar-model.test.js#L114) |

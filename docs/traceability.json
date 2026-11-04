@@ -79,7 +79,7 @@
         {
           "id": "tasks.row",
           "label": "Task row: completion, Today, week, importance stars and the ⋯ menu",
-          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin) and Today (sun) stay inline as icon toggles with hover labels and accessible names, followed by 1–5 importance stars (a keyboard radio group: click a star or use the arrow keys); the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Overdue rows show a red edge and facts line.",
+          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content; the name and Edit open the floating editor in place (a modified click opens the Task page). Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin) and Today (sun) stay inline as icon toggles with hover labels and accessible names, followed by 1–5 importance stars (a keyboard radio group: click a star or use the arrow keys); the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Overdue rows show a red edge and facts line.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -2646,7 +2646,7 @@
         {
           "id": "calendar.capture",
           "label": "Selected day, New task and Unscheduled",
-          "behavior": "The side panel lists everything on the selected day with its kind, time and Goal or Milestone, and Add task. New task, Add task and double-clicking a day open one dialog with the name, an Add to choice (Inbox, a Goal or one of its open Milestones; preset from the Goal filter) and the due date preset to that day; it posts an ordinary Task. Unscheduled lists open one-off Tasks with no date at all, by importance; dragging one onto a day, or Set due date, gives it that due date.",
+          "behavior": "The side panel lists everything on the selected day with its kind, time and Goal or Milestone, and Add task. New task, Add task and double-clicking a day open the shared floating editor in create mode with the due date preset to that day and the filtered Goal as its parent. Clicking any item opens it in the floating editor instead of leaving the Calendar. Unscheduled lists open one-off Tasks with no date at all, by importance; dragging one onto a day, or Set due date, gives it that due date.",
           "ui": [
             {
               "path": "frontend/src/views/planning/calendar.php",
@@ -2654,7 +2654,7 @@
             },
             {
               "path": "frontend/src/views/planning/calendar.php",
-              "symbol": "id=\"calendar-task-dialog\""
+              "symbol": "data-calendar-day-add"
             }
           ],
           "client": [
@@ -5260,6 +5260,85 @@
           "routes": [
             "api.walkthrough.dismiss"
           ]
+        },
+        {
+          "id": "shell.quick-editor",
+          "label": "Floating editor for Tasks, Goals and Milestones",
+          "behavior": "One side sheet (full screen below 600px) edits or creates a Task, Goal or Milestone on the current page. Calendar items, Tasks rows and their Edit item, Dashboard task rows and the roadmap's Milestone task list open it on a plain click; a modified click (Ctrl, Cmd, Shift, middle button) keeps the full page, and Open full page leads there for working notes, Related work and history. Task: name, Add to (Inbox, Goal or open Milestone), status, importance stars, start/due dates, scheduled start/end, reminder, estimate, description, criteria and the completion checklist (tick or add). Goal and Milestone: icon, name, importance, deadline, description and criteria; a new Goal picks its Area and a new Milestone its Goal, while moving them stays on the roadmap. Save sends only the changed fields with base_version; Complete/Reopen use the ordinary transitions and their confirmations. A version conflict keeps the draft and offers Use saved version or Keep my draft, which lays only the fields edited here over the latest version. Closing with unsaved changes asks first; Escape inside the icon picker closes only the picker. Every save dispatches planner:changed, which refreshes the Calendar, Tasks, Goals, Dashboard and roadmap in place.",
+          "ui": [
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "class QuickEditor {"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function initQuickEditor("
+            },
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function changedFields("
+            },
+            {
+              "path": "frontend/src/js/planning/quick-editor.js",
+              "symbol": "export function quickEditLink("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function update(string $type, int $userId, string $id, array $input): array"
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function create(string $type, int $userId, array $input): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php",
+              "symbol": "public function update("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/quick-editor.test.js",
+              "symbol": "test('an edit sends only what changed, in API shape'"
+            },
+            {
+              "path": "frontend/tests/js/quick-editor.test.js",
+              "symbol": "test('creating sends every field, and Goals and Milestones carry their icon'"
+            }
+          ],
+          "routes": [
+            "api.tasks.show",
+            "api.tasks.update",
+            "api.tasks.store",
+            "api.goals.show",
+            "api.goals.update",
+            "api.goals.store",
+            "api.milestones.show",
+            "api.milestones.update",
+            "api.milestones.store",
+            "api.tasks.checklist.index",
+            "api.tasks.checklist.store",
+            "api.tasks.checklist.update",
+            "api.tasks.complete",
+            "api.tasks.reopen",
+            "api.milestones.complete",
+            "api.milestones.reopen",
+            "api.goals.complete",
+            "api.goals.reopen"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/workspace.css",
+              "symbol": "/* Floating editor: a side sheet for editing or creating a Task, Goal or Milestone in place. */",
+              "label": "Floating editor sheet"
+            }
+          ],
+          "test_scope": "Form value and change mapping are unit-tested; opening, saving, conflicts, checklist and transitions were exercised in a browser."
         }
       ]
     },

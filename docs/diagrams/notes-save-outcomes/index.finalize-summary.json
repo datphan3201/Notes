@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/candidate.json",
-    "sha256": "48b6ffe55715513610f14f542a5e940541732f09f2c571624660e7135cbdbb50",
-    "bytes": 3041
+    "sha256": "7065dd630ecc94e44155b0a4d397eb98dcd5a83aa9f63f3a9ec5830da3ddd084",
+    "bytes": 3425
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.html",
-    "sha256": "610ca8ae5dd15345444f473d3695b7d70c47bd6ef514a17d6509df8361b0ea3b",
-    "bytes": 839662
+    "sha256": "d50eaeb9c63c7d704bcc377086743a77eaf95cd39c8f0f57d926e587fad0a8d7",
+    "bytes": 840164
   },
   "gates": {
     "validate": "pass",
@@ -30,20 +30,20 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/notes-save-outcomes/review-refresh-20261104-2/index.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-01T17:51:00.019Z",
+    "checkedAt": "2026-11-04T03:09:42.399Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2177,
+  "durationMs": 2058,
   "browserCheck": {
     "requested": true,
     "ran": true

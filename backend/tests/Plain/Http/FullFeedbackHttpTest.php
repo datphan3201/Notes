@@ -262,7 +262,7 @@ final class FullFeedbackHttpTest extends TestCase
         $expectations = [
             '/tasks' => ['data-schedule-open="repeat"', 'data-task-view="repeating"', 'data-task-completed'],
             '/' => ['data-view-toggle', 'data-note-sort', 'data-filter-shared', 'data-editor-save', 'data-color-custom'],
-            '/calendar' => ['data-calendar-page', 'data-calendar-grid', 'data-calendar-unscheduled', 'calendar-task-dialog'],
+            '/calendar' => ['data-calendar-page', 'data-calendar-grid', 'data-calendar-unscheduled', 'data-calendar-day-add'],
             '/habits' => ['habit-description'],
             '/dashboard' => ['data-activity-years'],
             '/teamwork' => ['data-teamwork-page', 'team-goal-dialog', 'data-team-search', 'data-team-page="1"', 'team-task-dialog', 'data-schedule-open="repeat"', 'team-invite-dialog'],

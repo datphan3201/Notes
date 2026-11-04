@@ -2,6 +2,23 @@
 
 [Testing](README.md) · [Audit history](../audit-history.md) · [Issue report](../issues.md)
 
+## Archify source refresh — 2026-11-04
+
+Refreshed all nine maintained candidates against committed 45ed89671e5dcfb04cbebfd805c63219428c202e. Reviewed changed cited paths from b1b5f976 and inspected the committed snapshot independently of current quick-edit worktree changes. The former contract-only Task classification, daily/weekly and TaskSeries maps now include committed source citations. The diagram index declares current coverage and the pending quick-edit boundary; ISSUE-027/028 are resolved.
+
+- All nine Archify finalize runs passed validate, deliver, strict provenance check and real-browser check. Canonical index.finalize-summary.json files bind current candidate/HTML hashes and point to fresh review-refresh-20261104-2 browser receipts.
+- Initial browser discovery failed until ARCHIFY_CHROME explicitly selected the installed Playwright Chromium. Failed-run discovery directories were removed; earlier pre-refresh evidence was preserved.
+- Documentation sync/check and all 17 isolated documentation-tool scenarios passed. No documentation-tool implementation changed.
+- No app/database bootstrap, live AI/SMTP, application backend/frontend suite or perceptual screenshot review was performed. Artifact/browser checks do not establish application acceptance. Generated HTML/receipts were written only by Archify; cosmetic whitespace is tracked separately in ISSUE-007.
+
+## Branch documentation audit — 2026-11-04
+
+Inspected feat/quick-edit at 45ed896 (initially clean, same commit as local feat/calendar). Checked the documentation indexes, maintained decisions and sampled Calendar and AI source contracts. Recorded semantic drift as ISSUE-027; no runtime changes or exhaustive route-by-route acceptance review.
+
+- `php tools/docs/check.php`: passed, 213 routes / 216 method-path pairs, 32 UI documents, 100 components, 206 source files, 9 diagram receipts and 218 unique manual cases.
+- `php tools/docs/tests/run.php`: 17 passed, 0 failed, using isolated fixtures without application/database bootstrap.
+- Documentation generation and the final checker were rerun after recording findings. No application PHPUnit/Node suite, browser, live provider, database or deployment verification was performed; earlier results below retain their original scope.
+
 ## AI branch integration — 2026-11-02
 
 Integrated the local UI/documentation snapshot based on c21b4ec onto origin/feature/ai-assistant at fd2030c in an isolated worktree. The only Git conflict was the duplicate Habit archive fix; retained the remote implementation/comment and the local native-prepares regression. Kept local Dashboard/Tasks/Habits/Notes changes, reconciled the AI trace registry/manual contracts, and formatted assistant.js to the existing gate.

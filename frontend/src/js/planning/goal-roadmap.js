@@ -14,6 +14,7 @@ import { transitionEntity } from './transitions.js';
 import { reportWorkspaceError } from '../lib/workspace-ui.js';
 import { referenceDecoration } from '../settings/reference-decoration.js';
 import { checkMark } from '../lib/check-mark.js';
+import { quickEditLink } from './quick-editor.js';
 
 const detailFields = [
     'name',
@@ -500,6 +501,7 @@ export function initGoalDetail(root) {
             const copy = element('div');
             const link = element('a', task.name);
             link.href = `/tasks/${encodeURIComponent(task.id)}`;
+            quickEditLink(link, 'task', task.id);
             copy.append(link, element('small', statusLabel(task.status)));
             row.append(copy);
             if (withActions) {
@@ -1051,6 +1053,8 @@ export function initGoalDetail(root) {
         }
     }
     window.addEventListener('hashchange', openHashInformation);
+    // Edits saved from the floating editor refresh the roadmap in place.
+    document.addEventListener('planner:changed', () => load());
     load().then(() => {
         openHashInformation();
         const milestoneId = new URLSearchParams(location.hash.slice(1)).get('milestone');

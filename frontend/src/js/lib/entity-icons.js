@@ -141,7 +141,10 @@ export function closeIconPicker() {
     openPicker = null;
 }
 globalThis.document?.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeIconPicker();
+    if (event.key !== 'Escape' || !openPicker) return;
+    // Escape closes the picker only, not a dialog it sits in.
+    event.preventDefault();
+    closeIconPicker();
 });
 globalThis.document?.addEventListener('click', (event) => {
     if (
@@ -220,12 +223,18 @@ export function openIconPicker(anchor, { icon = null, color = null, onSelect }) 
     });
     panel.append(colors, grid, reset);
     paint();
-    document.body.append(panel);
+    // Inside a modal dialog the page body is inert, so the picker joins the dialog's top layer
+    // and is placed against the viewport.
+    const host = anchor.closest('dialog[open]');
+    (host || document.body).append(panel);
     const rect = anchor.getBoundingClientRect();
     const width = Math.min(312, window.innerWidth - 16);
+    const scrollX = host ? 0 : window.scrollX;
+    const scrollY = host ? 0 : window.scrollY;
+    panel.classList.toggle('is-fixed', Boolean(host));
     panel.style.width = `${width}px`;
-    panel.style.left = `${Math.max(8, Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - width - 8))}px`;
-    panel.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    panel.style.left = `${Math.max(8, Math.min(rect.left + scrollX, scrollX + window.innerWidth - width - 8))}px`;
+    panel.style.top = `${rect.bottom + scrollY + 6}px`;
     openPicker = panel;
     grid.querySelector('[aria-pressed="true"]')?.focus() || grid.firstChild.focus();
 }

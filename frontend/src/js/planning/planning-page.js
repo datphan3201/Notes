@@ -40,6 +40,7 @@ import {
     formatMomentRange,
     formatPercent,
 } from '../lib/format.js';
+import { quickEditLink } from './quick-editor.js';
 export { initGoalDetail } from './goal-roadmap.js';
 
 export function buildGoalForest(goals) {
@@ -439,6 +440,8 @@ export function initGoalsPage(root) {
         event.currentTarget.textContent = expand ? t('Collapse all') : t('Expand all');
     });
     root.querySelector('[data-planning-retry]')?.addEventListener('click', load);
+    // Edits saved from the floating editor refresh this page in place.
+    document.addEventListener('planner:changed', () => load());
     load();
 }
 
@@ -560,6 +563,7 @@ export function initTasksPage(root) {
         copy.className = 'task-row-copy';
         const name = document.createElement('a');
         name.href = `/tasks/${encodeURIComponent(task.id)}`;
+        quickEditLink(name, 'task', task.id);
         name.textContent = task.name;
         const facts = document.createElement('small');
         const timezone = window.notesBootstrap.preferences.timezone;
@@ -707,6 +711,7 @@ export function initTasksPage(root) {
         const edit = document.createElement('a');
         edit.className = 'menu-item';
         edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
+        quickEditLink(edit, 'task', task.id);
         edit.append(
             lineIcon('edit'),
             Object.assign(document.createElement('span'), { textContent: t('Edit') }),
@@ -1126,6 +1131,8 @@ export function initTasksPage(root) {
         });
     });
     root.querySelector('[data-planning-retry]')?.addEventListener('click', load);
+    // Edits saved from the floating editor refresh this page in place.
+    document.addEventListener('planner:changed', () => load());
     load();
 }
 
