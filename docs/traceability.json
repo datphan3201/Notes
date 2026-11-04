@@ -78,8 +78,8 @@
         },
         {
           "id": "tasks.row",
-          "label": "Task row: completion, Today, week, Important and the ⋯ menu",
-          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin), Today (sun) and Important (star) stay inline as icon toggles with hover labels and accessible names; the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle. Overdue rows show a red edge and facts line.",
+          "label": "Task row: completion, Today, week, importance stars and the ⋯ menu",
+          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin) and Today (sun) stay inline as icon toggles with hover labels and accessible names, followed by 1–5 importance stars (a keyboard radio group: click a star or use the arrow keys); the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Overdue rows show a red edge and facts line.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -135,7 +135,7 @@
         {
           "id": "tasks.group",
           "label": "Group by Goal",
-          "behavior": "Tasks stays the execution view: the time filters (Today, This week…) and Status apply first, then Group by Goal splits the result into one collapsible section per Goal (a Milestone Task belongs to its Milestone's Goal), each with its count and Open roadmap, and a trailing Inbox. Inside a Goal, Tasks follow the roadmap (Milestone position, then Tasks directly in the Goal) under one subheading per Milestone; Sort orders Tasks within a Milestone. Grouped lists are not paged. The choice is remembered per browser.",
+          "behavior": "Tasks stays the execution view: the time filters (Today, This week…) and Status apply first, then Group by Goal splits the result into one collapsible section per Goal (a Milestone Task belongs to its Milestone's Goal), each with its count and Open roadmap, and a trailing Inbox. Inside a Goal, Tasks follow the roadmap (Milestone position, then Tasks directly in the Goal) under one subheading per Milestone; Sort orders Tasks within a Milestone. Grouped lists are not paged. Group by Goal is the default; choosing No grouping is remembered per browser.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -1350,7 +1350,7 @@
         {
           "id": "goals.areas",
           "label": "Manage Areas",
-          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived.",
+          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived. Each Area has an importance of 1–5 (default 3), set with the stars beside its name in the Goal tree.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1459,6 +1459,79 @@
             "api.dashboard.roadmap.show",
             "api.dashboard.roadmap.update"
           ]
+        },
+        {
+          "id": "planning.icons",
+          "label": "Icons, colours and importance stars",
+          "behavior": "Areas, Goals, Milestones and Habits each take an optional icon from a fixed 39-symbol line set and one of eight accent colours; null keeps the automatic default (Areas and Milestones cycle the accents by position). The picker opens from the icon itself, saves immediately with the entity version, closes on Escape or an outside click and offers Use default icon. Tasks have no icon. Importance reads as 1–5 stars at every planning level, including Area (default 3); stars are editable where the entity is shown as a heading and read-only in lists. The server validates icon/icon_color against its catalogue (unknown values → 422) and the browser catalogue is tested to match it.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-goal-icon"
+            },
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-milestone-icon"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/entity-icons.js",
+              "symbol": "export function openIconPicker("
+            },
+            {
+              "path": "frontend/src/js/lib/entity-icons.js",
+              "symbol": "export function iconButton("
+            },
+            {
+              "path": "frontend/src/js/lib/star-rating.js",
+              "symbol": "export function starRating("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Domain/Planning/EntityIcon.php",
+              "symbol": "final class EntityIcon"
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "'icon' => EntityIcon::icon($value)"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/database/plain-migrations/0029_add_entity_icons.php",
+              "symbol": "0029_add_entity_icons"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_icons_and_importance_are_chosen_at_every_planning_level("
+            },
+            {
+              "path": "frontend/tests/js/entity-icons.test.js",
+              "symbol": "test('the icon and colour catalogues match what the backend accepts'"
+            }
+          ],
+          "routes": [
+            "api.areas.update",
+            "api.goals.update",
+            "api.milestones.update",
+            "api.habits.update"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/components.css",
+              "symbol": ".icon-picker {",
+              "label": "Icon picker"
+            },
+            {
+              "path": "frontend/src/css/components.css",
+              "symbol": "/* Importance as stars, at every planning level. */",
+              "label": "Star rating"
+            }
+          ]
         }
       ]
     },
@@ -1469,7 +1542,7 @@
         {
           "id": "goal.roadmap",
           "label": "Fishbone, paging and Milestone focus",
-          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens.",
+          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens. The Goal header carries its icon (click to change) and editable importance stars; each Milestone branch shows its icon, accent and stars, and the Milestone focus header edits both.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
@@ -2456,7 +2529,7 @@
         {
           "id": "habits.collection",
           "label": "Habit cards and New/Edit dialog",
-          "behavior": "The existing theme/cards and Edit fields are retained. Check-in sits before the name; the calendar follows the text and moves below on narrower screens. Edit remains at the end; More options opens the existing secondary popover. Parent chips fit their text. Refresh is an icon with a native tooltip. Edit keeps Cancel then Save changes in a sticky footer on mobile. Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
+          "behavior": "The existing theme/cards and Edit fields are retained. Check-in sits before the name, which carries the Habit icon (click to change) and read-only importance stars; the calendar follows the text and moves below on narrower screens. Edit remains at the end; More options opens the existing secondary popover. Parent chips fit their text. Refresh is an icon with a native tooltip. Edit keeps Cancel then Save changes in a sticky footer on mobile. Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
           "ui": [
             {
               "path": "frontend/src/views/planning/habits.php",

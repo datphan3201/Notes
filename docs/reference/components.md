@@ -7,7 +7,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | Trace ID | Visible component | Page |
 | --- | --- | --- |
 | `tasks.collection` | [Collection, refresh, search and pagination](../ui/tasks/README.md#collection-refresh-search-and-pagination) | /tasks — Tasks |
-| `tasks.row` | [Task row: completion, Today, week, Important and the ⋯ menu](../ui/tasks/README.md#task-row-completion-today-week-important-and-the--menu) | /tasks — Tasks |
+| `tasks.row` | [Task row: completion, Today, week, importance stars and the ⋯ menu](../ui/tasks/README.md#task-row-completion-today-week-importance-stars-and-the--menu) | /tasks — Tasks |
 | `tasks.group` | [Group by Goal](../ui/tasks/README.md#group-by-goal) | /tasks — Tasks |
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
@@ -32,6 +32,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `task.detail.plan` | [Today and week planning actions](../ui/tasks/detail.md#today-and-week-planning-actions) | /tasks/{id} — Task details |
 | `goals.areas` | [Manage Areas](../ui/goals/README.md#manage-areas) | /goals — Areas and Goal collections |
 | `goals.collection` | [Goal tree, timeline and main Goal](../ui/goals/README.md#goal-tree-timeline-and-main-goal) | /goals — Areas and Goal collections |
+| `planning.icons` | [Icons, colours and importance stars](../ui/goals/README.md#icons-colours-and-importance-stars) | /goals — Areas and Goal collections |
 | `goal.roadmap` | [Fishbone, paging and Milestone focus](../ui/goals/roadmap.md#fishbone-paging-and-milestone-focus) | /goals/{id} — Fishbone roadmap |
 | `goal.information` | [Goal information: Edit, Strategy and Related work](../ui/goals/roadmap.md#goal-information-edit-strategy-and-related-work) | /goals/{id} — Fishbone roadmap |
 | `goal.progress` | [Goal progress, completion and ancestor reopen](../ui/goals/roadmap.md#goal-progress-completion-and-ancestor-reopen) | /goals/{id} — Fishbone roadmap |

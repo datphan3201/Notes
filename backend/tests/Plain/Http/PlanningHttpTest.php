@@ -215,6 +215,32 @@ final class PlanningHttpTest extends TestCase
         self::assertSame(0, (int) $this->pdo->query('SELECT COUNT(*) FROM activities')->fetchColumn());
     }
 
+    public function test_icons_and_importance_are_chosen_at_every_planning_level(): void
+    {
+        [$cookie, $csrf] = $this->register();
+        $json = fn (string $method, string $path, array $input = []) => $this->request($method, $path, $input, $cookie, $csrf, true);
+        $area = $this->json($this->request('GET', '/api/v1/areas', cookie: $cookie))['data'][0];
+        self::assertSame(3, $area['importance']);
+        self::assertNull($area['icon']);
+
+        $area = $this->json($json('PATCH', '/api/v1/areas/'.$area['id'], ['base_version' => $area['version'], 'icon' => 'dumbbell', 'icon_color' => 'coral', 'importance' => 5]))['data'];
+        self::assertSame(['dumbbell', 'coral', 5], [$area['icon'], $area['icon_color'], $area['importance']]);
+        $goal = $this->json($json('POST', '/api/v1/goals', ['area_id' => $area['id'], 'name' => 'Learn Docker', 'icon' => 'code', 'icon_color' => 'sky']))['data'];
+        self::assertSame(['code', 'sky'], [$goal['icon'], $goal['icon_color']]);
+        $milestone = $this->json($json('POST', '/api/v1/milestones', ['goal_id' => $goal['id'], 'name' => 'Basics', 'icon' => 'book']))['data'];
+        self::assertSame(['book', null], [$milestone['icon'], $milestone['icon_color']]);
+        $milestone = $this->json($json('PATCH', '/api/v1/milestones/'.$milestone['id'], ['base_version' => $milestone['version'], 'icon' => null]))['data'];
+        self::assertNull($milestone['icon']);
+        $habit = $this->json($json('POST', '/api/v1/habits', ['name' => 'Stretch', 'timezone' => 'UTC', 'icon' => 'activity', 'icon_color' => 'teal']))['data'];
+        self::assertSame(['activity', 'teal'], [$habit['icon'], $habit['icon_color']]);
+
+        // Only catalogue icons and colours, and Area importance stays within 1-5 stars.
+        self::assertSame(422, $json('POST', '/api/v1/goals', ['area_id' => $area['id'], 'name' => 'Bad', 'icon' => '<svg>'])->status);
+        self::assertSame(422, $json('PATCH', '/api/v1/habits/'.$habit['id'], ['base_version' => $habit['version'], 'icon_color' => '#ff0000'])->status);
+        self::assertSame(422, $json('PATCH', '/api/v1/areas/'.$area['id'], ['base_version' => $area['version'], 'importance' => 6])->status);
+        self::assertSame(422, $json('POST', '/api/v1/tasks', ['name' => 'No task icons yet', 'icon' => 'star'])->status);
+    }
+
     public function test_dashboard_roadmap_choice_is_persisted_owner_scoped_and_explicitly_cleared(): void
     {
         [$cookie, $csrf] = $this->register();

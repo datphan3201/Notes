@@ -49,7 +49,7 @@ final readonly class HabitService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public function create(int $userId, array $input): array
     {
-        $this->keys($input, ['primary_goal_id', 'name', 'description', 'importance', 'period', 'target_frequency', 'timezone', 'position', 'tag_ids']);
+        $this->keys($input, ['primary_goal_id', 'name', 'description', 'importance', 'period', 'target_frequency', 'timezone', 'position', 'tag_ids', 'icon', 'icon_color']);
         $values = $this->validate($input, true);
 
         return $this->transactions->run(function () use ($userId, $values): array {
@@ -67,7 +67,7 @@ final readonly class HabitService
     /** @param array<string, mixed> $input @return array<string, mixed> */
     public function update(int $userId, string $id, array $input): array
     {
-        $this->keys($input, ['base_version', 'primary_goal_id', 'name', 'description', 'importance', 'period', 'target_frequency', 'timezone', 'position', 'tag_ids']);
+        $this->keys($input, ['base_version', 'primary_goal_id', 'name', 'description', 'importance', 'period', 'target_frequency', 'timezone', 'position', 'tag_ids', 'icon', 'icon_color']);
         $baseVersion = $this->version($input);
         unset($input['base_version']);
         $changes = $this->validate($input, false);
@@ -267,11 +267,13 @@ final readonly class HabitService
                 'position' => $this->integer($value, 'position', 0, PHP_INT_MAX),
                 'primary_goal_id' => $value === null ? null : $this->uuidValue($value, 'primary_goal_id'),
                 'tag_ids' => $this->tagIds($value),
+                'icon' => \Planner\Domain\Planning\EntityIcon::icon($value),
+                'icon_color' => \Planner\Domain\Planning\EntityIcon::color($value),
                 default => throw new \LogicException('Unexpected Habit input.'),
             };
         }
         if ($create) {
-            $result += ['primary_goal_id' => null, 'description' => '', 'importance' => 3, 'period' => 'daily', 'target_frequency' => 1, 'timezone' => 'UTC', 'position' => 0, 'tag_ids' => [], 'first_check_in_at' => null];
+            $result += ['primary_goal_id' => null, 'description' => '', 'importance' => 3, 'period' => 'daily', 'target_frequency' => 1, 'timezone' => 'UTC', 'position' => 0, 'tag_ids' => [], 'first_check_in_at' => null, 'icon' => null, 'icon_color' => null];
             if (!isset($result['name'])) {
                 throw new ValidationException(['name' => ['The name is required.']]);
             }

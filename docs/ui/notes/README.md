@@ -54,7 +54,7 @@ A Note can belong to one active Goal or Task of the same owner. The editor's Lin
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L151)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L178)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
+| UI / DOM | [index.php · data-note-link](../../../frontend/src/views/notes/index.php#L151)<br>[goal.php · data-linked-notes="goal"](../../../frontend/src/views/planning/goal.php#L185)<br>[task.php · data-linked-notes="task"](../../../frontend/src/views/planning/task.php#L109) |
 | Browser logic | [note-editor.js · async setLink(](../../../frontend/src/js/notes/note-editor.js#L297)<br>[linked-notes.js · export async function renderLinkedNotes](../../../frontend/src/js/notes/linked-notes.js#L8)<br>[notes-page.js · openFromLocation() {](../../../frontend/src/js/notes/notes-page.js#L71) |
 | Controller / service / domain | [NoteLinkService.php · public function link(](../../../backend/src/Application/Notes/NoteLinkService.php#L38)<br>[NoteController.php · public function link(](../../../backend/src/Http/Controller/NoteController.php#L92) |
 | Persistence | [PdoNoteLinkRepository.php · public function save(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteLinkRepository.php#L17)<br>[0028_create_note_links.php · CREATE TABLE note_links](../../../backend/database/plain-migrations/0028_create_note_links.php#L19) |

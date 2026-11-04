@@ -6,6 +6,7 @@ namespace Planner\Application\Planning;
 
 use DateTimeImmutable;
 use Planner\Domain\Planning\GoalProgressCalculator;
+use Planner\Domain\Planning\EntityIcon;
 use Planner\Domain\Planning\GoalStatus;
 use Planner\Domain\Planning\GraphGuard;
 use Planner\Domain\Planning\Importance;
@@ -887,9 +888,9 @@ final readonly class PlanningService
     private function validateCreate(string $type, array $input): array
     {
         $allowed = match ($type) {
-            'area' => ['name', 'description', 'position'],
-            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
-            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids'],
+            'area' => ['name', 'description', 'position', 'icon', 'icon_color', 'importance'],
+            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
+            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
             'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
@@ -899,6 +900,13 @@ final readonly class PlanningService
             'description' => $this->text($input, 'description', 10_000, false, ''),
             'position' => $this->integer($input, 'position', 0, PHP_INT_MAX, 0),
         ];
+        if ($type !== 'task') {
+            $values['icon'] = EntityIcon::icon($input['icon'] ?? null);
+            $values['icon_color'] = EntityIcon::color($input['icon_color'] ?? null);
+        }
+        if ($type === 'area') {
+            $values['importance'] = (new Importance($this->integer($input, 'importance', 1, 5, 3)))->value;
+        }
 
         if ($type !== 'area') {
             $values['completion_criteria'] = $this->text($input, 'completion_criteria', 10_000, false, '');
@@ -941,9 +949,9 @@ final readonly class PlanningService
     private function validateUpdate(string $type, array $input): array
     {
         $allowed = match ($type) {
-            'area' => ['name', 'description', 'position'],
-            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids'],
-            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids'],
+            'area' => ['name', 'description', 'position', 'icon', 'icon_color', 'importance'],
+            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
+            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids', 'icon', 'icon_color'],
             'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
@@ -962,6 +970,8 @@ final readonly class PlanningService
                 'scheduled_start', 'scheduled_end', 'reminder_at' => $this->dateTime($input, $field),
                 'goal_id', 'milestone_id' => $this->nullableUuid($input, $field),
                 'tag_ids' => $this->tagIds($value),
+                'icon' => EntityIcon::icon($value),
+                'icon_color' => EntityIcon::color($value),
                 'status' => $this->nonTerminalStatus($type, $value),
                 default => $value,
             };

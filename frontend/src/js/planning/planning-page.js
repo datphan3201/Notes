@@ -29,6 +29,8 @@ import {
 } from '../lib/workspace-ui.js';
 import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
 import { lineIcon, spriteIcon } from '../lib/line-icons.js';
+import { cycleHue, entityIcon, iconButton as entityIconButton } from '../lib/entity-icons.js';
+import { starRating } from '../lib/star-rating.js';
 import { renderContributions } from './contributions-ui.js';
 import { createTagPicker, loadTags, sameTagIds, tagChips } from './tag-picker.js';
 import {
@@ -64,9 +66,11 @@ function linkForGoal(goal) {
     link.href = `/goals/${encodeURIComponent(goal.id)}`;
     link.className = 'planning-item-link goal-tree-link';
     const name = document.createElement('strong');
-    name.textContent = goal.name;
+    name.className = 'goal-tree-name';
+    name.append(entityIcon(goal, { size: 'sm' }), document.createTextNode(goal.name));
     const meta = document.createElement('span');
     meta.className = 'goal-tree-meta';
+    meta.append(starRating(goal.importance));
     if (goal.deadline) {
         const due = document.createElement('small');
         due.className = 'goal-tree-deadline';
@@ -87,7 +91,8 @@ function linkForGoal(goal) {
     return link;
 }
 
-function renderGoalTree(container, areas, goals) {
+// `saveArea(area, changes)` persists an Area's icon or importance chosen in its heading.
+function renderGoalTree(container, areas, goals, saveArea) {
     container.replaceChildren();
     const { nodes } = buildGoalForest(goals);
 
@@ -95,20 +100,22 @@ function renderGoalTree(container, areas, goals) {
         const section = document.createElement('details');
         section.className = 'goal-area-group';
         const heading = document.createElement('summary');
-        const badge = document.createElement('span');
-        badge.className = 'area-icon';
-        badge.style.setProperty('--area-hue', [168, 268, 41][areaIndex % 3]);
-        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        icon.classList.add('ui-icon');
-        icon.setAttribute('aria-hidden', 'true');
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttribute('href', '#icon-goals');
-        icon.append(use);
-        badge.append(icon);
+        const badge = entityIconButton(area, {
+            label: area.name,
+            fallbackHue: cycleHue(areaIndex),
+            save: (choice) => saveArea(area, choice),
+        });
         const title = document.createElement('strong');
         title.textContent = area.name;
         title.className = 'area-title';
-        heading.append(badge, title);
+        const stars = starRating(area.importance, {
+            label: `${t('Importance')}: ${area.name}`,
+            onChange: (importance) => saveArea(area, { importance }),
+        });
+        const titleRow = document.createElement('span');
+        titleRow.className = 'area-title-row';
+        titleRow.append(title, stars);
+        heading.append(badge, titleRow);
         const rootsForArea = goals.filter(
             (goal) => goal.area_id === area.id && !goal.parent_goal_id,
         );
@@ -217,7 +224,12 @@ export function initGoalsPage(root) {
         });
         picker.append(select);
         const description = document.createElement('p');
-        card.append(label, picker, description);
+        const title = document.createElement('div');
+        title.className = 'main-goal-title';
+        if (primary) title.append(entityIcon(primary, { size: 'lg' }));
+        title.append(picker);
+        if (primary) title.append(starRating(primary.importance, { size: 'md' }));
+        card.append(label, title, description);
         if (!primary) {
             description.className = 'subtle-copy';
             description.textContent = t(
@@ -328,7 +340,17 @@ export function initGoalsPage(root) {
             if (areas.some((area) => area.id === selectedArea)) areaSelect.value = selectedArea;
             if (!hadDraft) creationState(form).markSaved();
             const goals = goalResponse.payload.data;
-            renderGoalTree(tree, areas, goals);
+            renderGoalTree(tree, areas, goals, async (area, changes) => {
+                try {
+                    await patch(`/api/v1/areas/${encodeURIComponent(area.id)}`, {
+                        base_version: area.version,
+                        ...changes,
+                    });
+                    await load();
+                } catch (error) {
+                    showError(root, error);
+                }
+            });
             renderMainGoal(goals, focusResponse.payload.data.goal_id);
             const timeline = root.querySelector('[data-goal-timeline]');
             timeline.replaceChildren();
@@ -443,10 +465,11 @@ export function initTasksPage(root) {
     const status = root.querySelector('[data-task-status]');
     const sort = root.querySelector('[data-task-sort]');
     // Tasks is the place to do work; grouping by Goal answers "what is left in each Goal this
-    // week" without repeating the Goals page's structure. The choice is remembered per browser.
+    // week" without repeating the Goals page's structure, so it is the default; choosing No
+    // grouping is remembered per browser.
     const grouping = root.querySelector('[data-task-group]');
     const GROUPING_KEY = 'planner.tasks.group';
-    grouping.value = localStorage.getItem(GROUPING_KEY) === 'goal' ? 'goal' : 'none';
+    grouping.value = localStorage.getItem(GROUPING_KEY) === 'none' ? 'none' : 'goal';
     const collapsedGroups = new Set();
     let goalsById = new Map();
     let milestonesById = new Map();
@@ -699,19 +722,14 @@ export function initTasksPage(root) {
                 remove(`/api/v1/tasks/${task.id}`, { base_version: task.version }),
             );
         });
-        const important = iconButton(
-            `${t('Mark important')}: ${task.name}`,
-            lineIcon('star', { solid: task.importance === 5 }),
-            () =>
+        // Importance on the full 1-5 star scale, set in place.
+        const important = starRating(task.importance, {
+            label: `${t('Importance')}: ${task.name}`,
+            onChange: (importance) =>
                 mutate(important, () =>
-                    patch(`/api/v1/tasks/${task.id}`, {
-                        base_version: task.version,
-                        importance: task.importance === 5 ? 3 : 5,
-                    }),
+                    patch(`/api/v1/tasks/${task.id}`, { base_version: task.version, importance }),
                 ),
-        );
-        important.classList.toggle('is-important', task.importance === 5);
-        important.setAttribute('aria-pressed', String(task.importance === 5));
+        });
         if (taskView === 'overdue' && !done) {
             const reopen = document.createElement('button');
             reopen.type = 'button';
@@ -864,7 +882,11 @@ export function initTasksPage(root) {
             const count = document.createElement('span');
             count.className = 'count-badge';
             count.textContent = String(groupTasks.length);
-            toggle.append(spriteIcon(goal ? 'goals' : 'tasks'), title, count);
+            toggle.append(
+                goal ? entityIcon(goal, { size: 'sm' }) : spriteIcon('tasks'),
+                title,
+                count,
+            );
             const body = document.createElement('div');
             body.className = 'task-group-list';
             body.hidden = collapsedGroups.has(key);
@@ -1258,8 +1280,12 @@ export function initTaskDetail(root) {
             }
             note = noteResponse.payload.data;
             root.querySelector('[data-task-name]').textContent = task.name;
-            root.querySelector('[data-task-meta]').textContent =
-                `${statusLabel(task.status)} · ${t('Importance')} ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${formatDay(task.deadline)}` : ''}`;
+            root.querySelector('[data-task-meta]').replaceChildren(
+                document.createTextNode(
+                    `${statusLabel(task.status)}${task.deadline ? ` · ${t('Due')} ${formatDay(task.deadline)}` : ''} · `,
+                ),
+                starRating(task.importance, { size: 'md' }),
+            );
             root.querySelector('[data-task-description]').textContent = task.description || '—';
             root.querySelector('[data-task-result]').textContent = task.expected_result || '—';
             root.querySelector('[data-task-criteria]').textContent =

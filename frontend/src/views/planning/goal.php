@@ -5,8 +5,11 @@
                 <a href="/goals"><?= $view->e($view->t('Goals')) ?></a>
                 <?= $view->e($view->t('/ Roadmap')) ?>
             </p>
-            <h1 id="goal-detail-title" data-goal-name><?= $view->e($view->t('Loading…')) ?></h1>
-            <p data-goal-meta aria-live="polite"></p>
+            <div class="entity-title-row">
+                <span data-goal-icon></span>
+                <h1 id="goal-detail-title" data-goal-name><?= $view->e($view->t('Loading…')) ?></h1>
+            </div>
+            <p class="entity-meta-row"><span data-goal-meta aria-live="polite"></span><span data-goal-stars></span></p>
         </div>
         <div class="action-row">
             <button class="button button-quiet" type="button" data-open-dialog="goal-information-dialog"><?= $view->e($view->t('Goal information')) ?></button>
@@ -32,7 +35,11 @@
             <button class="button button-quiet" type="button" data-roadmap-back><?= $view->e($view->t('← Back to roadmap')) ?></button>
             <div class="workspace-header milestone-focus-header">
                 <div>
-                    <h2 data-milestone-title tabindex="-1"></h2>
+                    <div class="entity-title-row">
+                        <span data-milestone-icon></span>
+                        <h2 data-milestone-title tabindex="-1"></h2>
+                        <span data-milestone-stars></span>
+                    </div>
                     <p data-milestone-meta></p>
                 </div>
                 <div class="action-row">

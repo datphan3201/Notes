@@ -1346,3 +1346,50 @@ body:not(:has(.settings-page)) .account-nav,
         font-size: 1.2rem;
     }
 }
+/* Area headings: chosen icon (button), name with importance stars, count and progress. */
+.goal-area-group > summary > .entity-icon-button {
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+.goal-area-group > summary > .entity-icon-button .entity-icon {
+    --icon-glyph: 18px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+.area-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-items: center;
+    min-width: 0;
+}
+.goal-tree-name {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+.goal-tree-meta .star-rating {
+    margin-right: 6px;
+}
+.main-goal-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.main-goal-title .main-goal-picker {
+    margin: 0 0 0 -4px;
+}
+@media (max-width: 600px) {
+    /* Icon beside the picker; stars on their own line. */
+    .main-goal-title {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    .main-goal-title > .star-rating {
+        grid-column: 1 / -1;
+    }
+}

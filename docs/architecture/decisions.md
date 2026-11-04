@@ -14,6 +14,7 @@
 | Concept | Maintained boundary |
 | --- | --- |
 | Area / Goal | Configurable Areas and arbitrary-depth, single-parent Goal hierarchy |
+| Icons / importance | Areas, Goals, Milestones and Habits take an optional icon and accent from a fixed server-validated catalogue (null = automatic default); Tasks have none. Importance is 1–5 stars at every level, Area included |
 | Milestone | Goal checkpoint; prerequisites are a separate acyclic relation |
 | Task | Optional one primary Goal/Milestone, or Inbox; plain-text criteria, dates/schedule, optional estimate, independent Checklist and working Note |
 | Dashboard roadmap / Main goal | One explicit account-level focus Goal, shown as the Dashboard roadmap and as the Goals page Main goal and changeable from both; no automatic highest-importance fallback. Archived/cleared/unset selections invite a new choice. |

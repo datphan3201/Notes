@@ -1,3 +1,4 @@
+import { starRating } from '../lib/star-rating.js';
 import { countLabel, formatDay } from '../lib/format.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
@@ -350,7 +351,9 @@ export function initTeamworkPage(root) {
 
     const detailRow = (label, value) => {
         const row = element('div');
-        row.append(element('dt', '', label), element('dd', '', value || '—'));
+        const detail = element('dd', '', value instanceof Node ? undefined : value || '—');
+        if (value instanceof Node) detail.append(value);
+        row.append(element('dt', '', label), detail);
         return row;
     };
 
@@ -374,13 +377,13 @@ export function initTeamworkPage(root) {
         taskDetail.querySelector('[data-team-task-detail-list]').replaceChildren(
             detailRow(t('Status'), t(STATUS_LABELS[task.status])),
             detailRow(t('Assignee'), task.assignee?.display_name || t('Unassigned')),
-            detailRow(t('Start date'), task.start_date),
-            detailRow(t('Due date'), task.due_date),
+            detailRow(t('Start date'), formatDay(task.start_date)),
+            detailRow(t('Due date'), formatDay(task.due_date)),
             detailRow(
                 t('Estimated time'),
                 task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
             ),
-            detailRow(t('Importance'), `${task.importance}/5`),
+            detailRow(t('Importance'), starRating(task.importance)),
             detailRow(
                 t('Reminder'),
                 task.reminder_at

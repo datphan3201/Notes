@@ -17,7 +17,7 @@ The browser filters names/descriptions and pages up to four cards (two below 900
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [teamwork.php · data-teamwork-page](../../../frontend/src/views/planning/teamwork.php#L1) |
-| Browser logic | [teamwork-page.js · export function initTeamworkPage](../../../frontend/src/js/planning/teamwork-page.js#L90)<br>[teamwork-page.js · export function filterTeamGoals](../../../frontend/src/js/planning/teamwork-page.js#L18) |
+| Browser logic | [teamwork-page.js · export function initTeamworkPage](../../../frontend/src/js/planning/teamwork-page.js#L91)<br>[teamwork-page.js · export function filterTeamGoals](../../../frontend/src/js/planning/teamwork-page.js#L19) |
 | Controller / service / domain | [TeamService.php · public function show(](../../../backend/src/Application/Teamwork/TeamService.php#L102) |
 | Persistence | [PdoTeamRepository.php · public function goalsFor(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L47)<br>[PdoTeamRepository.php · public function goal(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L22)<br>[PdoTeamRepository.php · public function updateGoal(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L32) |
 | Relevant tests (not a pass claim) | [teamwork.test.js · team goal search](../../../frontend/tests/js/teamwork.test.js#L10)<br>[teamwork.test.js · carousel shows](../../../frontend/tests/js/teamwork.test.js#L26) |
@@ -32,7 +32,7 @@ Members have admin/member/viewer roles. Team admins manage membership; the creat
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [teamwork.php · data-team-invite&gt;](../../../frontend/src/views/planning/teamwork.php#L160) |
-| Browser logic | [teamwork-page.js · root.querySelector('&#91;data-team-invite&#93;')](../../../frontend/src/js/planning/teamwork-page.js#L104) |
+| Browser logic | [teamwork-page.js · root.querySelector('&#91;data-team-invite&#93;')](../../../frontend/src/js/planning/teamwork-page.js#L105) |
 | Controller / service / domain | [TeamService.php · public function invite(](../../../backend/src/Application/Teamwork/TeamService.php#L137)<br>[TeamService.php · public function changeRole(](../../../backend/src/Application/Teamwork/TeamService.php#L151) |
 | Persistence | [PdoTeamRepository.php · public function members(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L81)<br>[PdoTeamRepository.php · public function insertMember(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L64)<br>[PdoTeamRepository.php · public function updateMember(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L90)<br>[PdoTeamRepository.php · public function deleteMember(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L104) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_teamwork_roles_tasks_chat_and_member_isolation(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L158) |
@@ -47,7 +47,7 @@ Team members/admins may create Tasks; assignment is team-scoped. An assignee, in
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [teamwork.php · data-teamwork-page](../../../frontend/src/views/planning/teamwork.php#L1) |
-| Browser logic | [teamwork-page.js · export function teamTaskPayload](../../../frontend/src/js/planning/teamwork-page.js#L51) |
+| Browser logic | [teamwork-page.js · export function teamTaskPayload](../../../frontend/src/js/planning/teamwork-page.js#L52) |
 | Controller / service / domain | [TeamService.php · public function updateTask(](../../../backend/src/Application/Teamwork/TeamService.php#L255)<br>[TeamTaskRepeat.php · public static function next(](../../../backend/src/Domain/Teamwork/TeamTaskRepeat.php#L59) |
 | Persistence | [PdoTeamRepository.php · public function tasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L129)<br>[PdoTeamRepository.php · public function insertTask(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L112)<br>[PdoTeamRepository.php · public function updateTask(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L162) |
 | Relevant tests (not a pass claim) | [teamwork.test.js · team task payload](../../../frontend/tests/js/teamwork.test.js#L31)<br>[TeamTaskRepeatTest.php · public function test_next_dates_follow_each_frequency_and_stop_after_the_end_date(](../../../backend/tests/Plain/Unit/TeamTaskRepeatTest.php#L13) |
@@ -62,7 +62,7 @@ Messages are plain text, 1–2000 characters. The open chat polls every 5 second
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [teamwork.php · data-teamwork-page](../../../frontend/src/views/planning/teamwork.php#L1) |
-| Browser logic | [teamwork-page.js · 5000](../../../frontend/src/js/planning/teamwork-page.js#L11) |
+| Browser logic | [teamwork-page.js · 5000](../../../frontend/src/js/planning/teamwork-page.js#L12) |
 | Controller / service / domain | [TeamService.php · public function postMessage(](../../../backend/src/Application/Teamwork/TeamService.php#L313) |
 | Persistence | [PdoTeamRepository.php · public function insertMessage(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L176)<br>[PdoTeamRepository.php · public function messages(](../../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php#L185) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_teamwork_roles_tasks_chat_and_member_isolation(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L158) |
