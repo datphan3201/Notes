@@ -21,7 +21,7 @@
             </div>
         </div>
         <div data-review-list aria-live="polite"></div>
-        <div class="collection-pagination" data-review-pagination aria-label="<?= $view->e($view->t('Review pages')) ?>"></div>
+        <nav class="collection-pagination" data-review-pagination aria-label="<?= $view->e($view->t('Review pages')) ?>"></nav>
     </section>
     <section class="planning-panel" data-review-editor hidden>
         <button class="button button-quiet" type="button" data-review-back><?= $view->e($view->t('← Back to reviews')) ?></button>

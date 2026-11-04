@@ -280,7 +280,8 @@
 }
 .guest-story-content > p {
     max-width: 38ch;
-    color: var(--muted);
+    /* Slightly darker than --muted: the story panel's tint would otherwise fall below 4.5:1. */
+    color: color-mix(in srgb, var(--muted) 82%, var(--text));
     line-height: 1.8;
 }
 .guest-path {
@@ -322,13 +323,13 @@
 }
 .guest-path small {
     margin-top: 3px;
-    color: var(--muted);
+    color: color-mix(in srgb, var(--muted) 82%, var(--text));
     font-size: var(--font-size-meta);
 }
 .guest-footnote {
     margin: 0;
     font-size: var(--font-size-meta);
-    color: var(--muted);
+    color: color-mix(in srgb, var(--muted) 82%, var(--text));
 }
 .guest-form-region {
     display: flex;

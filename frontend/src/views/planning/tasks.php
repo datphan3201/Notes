@@ -100,7 +100,7 @@
             <div data-task-list aria-live="polite">
                 <p class="loading-copy"><?= $view->e($view->t('Loading tasks…')) ?></p>
             </div>
-            <div class="collection-pagination" data-task-pagination aria-label="<?= $view->e($view->t('Task pages')) ?>"></div>
+            <nav class="collection-pagination" data-task-pagination aria-label="<?= $view->e($view->t('Task pages')) ?>"></nav>
             <section class="task-completed-section" data-task-completed hidden aria-labelledby="task-completed-title">
                 <h3 id="task-completed-title"><?= $view->e($view->t('Completed')) ?> <span class="count-badge" data-task-completed-count></span></h3>
                 <p class="subtle-copy"><?= $view->e($view->t('Untick a task to move it back. Completed tasks move to Task history after the time you set in Settings.')) ?></p>

@@ -100,6 +100,8 @@ export function renderStreak(container, streak, today) {
         dot.className = `is-${state}`;
         dot.tabIndex = 0;
         dot.title = `${day.date}: ${t(habitDayDescriptions[state])}${day.total ? ` · ${day.done}/${day.total} ${t('daily habits done')}` : ''}`;
+        // A labelled image so screen readers announce the day's state.
+        dot.setAttribute('role', 'img');
         dot.setAttribute('aria-label', dot.title);
         if (state === 'checked') dot.append(checkMark());
         if (state === 'missed') dot.append(crossMark());

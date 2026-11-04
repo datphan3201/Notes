@@ -654,3 +654,11 @@
     margin: 0;
     font-size: var(--font-size-section);
 }
+
+/* Muted card text stays at WCAG AA contrast on every pastel note color. */
+.note-card .note-card-preview,
+.note-card .note-card-footer,
+.note-card .note-card-date,
+.note-card .note-card-owner {
+    color: color-mix(in srgb, var(--muted) 82%, var(--text));
+}
