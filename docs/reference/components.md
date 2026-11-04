@@ -7,7 +7,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | Trace ID | Visible component | Page |
 | --- | --- | --- |
 | `tasks.collection` | [Collection, refresh, search and pagination](../ui/tasks/README.md#collection-refresh-search-and-pagination) | /tasks — Tasks |
-| `tasks.row` | [Task row: completion, Today, week, Edit, Important and More options](../ui/tasks/README.md#task-row-completion-today-week-edit-important-and-more-options) | /tasks — Tasks |
+| `tasks.row` | [Task row: completion, Today, week, importance stars and the ⋯ menu](../ui/tasks/README.md#task-row-completion-today-week-importance-stars-and-the--menu) | /tasks — Tasks |
+| `tasks.group` | [Group by Goal](../ui/tasks/README.md#group-by-goal) | /tasks — Tasks |
 | `tasks.filter.today` | [Today](../ui/tasks/filters.md#today) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.next` | [Next](../ui/tasks/filters.md#next) | /tasks — Time filters, statuses and counts |
 | `tasks.filter.week` | [This week](../ui/tasks/filters.md#this-week) | /tasks — Time filters, statuses and counts |
@@ -31,6 +32,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `task.detail.plan` | [Today and week planning actions](../ui/tasks/detail.md#today-and-week-planning-actions) | /tasks/{id} — Task details |
 | `goals.areas` | [Manage Areas](../ui/goals/README.md#manage-areas) | /goals — Areas and Goal collections |
 | `goals.collection` | [Goal tree, timeline and main Goal](../ui/goals/README.md#goal-tree-timeline-and-main-goal) | /goals — Areas and Goal collections |
+| `planning.icons` | [Icons, colours and importance stars](../ui/goals/README.md#icons-colours-and-importance-stars) | /goals — Areas and Goal collections |
 | `goal.roadmap` | [Fishbone, paging and Milestone focus](../ui/goals/roadmap.md#fishbone-paging-and-milestone-focus) | /goals/{id} — Fishbone roadmap |
 | `goal.information` | [Goal information: Edit, Strategy and Related work](../ui/goals/roadmap.md#goal-information-edit-strategy-and-related-work) | /goals/{id} — Fishbone roadmap |
 | `goal.progress` | [Goal progress, completion and ancestor reopen](../ui/goals/roadmap.md#goal-progress-completion-and-ancestor-reopen) | /goals/{id} — Fishbone roadmap |
@@ -45,6 +47,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `dashboard.today.capture` | [Add task / Add for today](../ui/dashboard/README.md#add-task--add-for-today) | /dashboard — Today, This week and Activity |
 | `dashboard.overdue.reminder` | [Overdue reminder and encouragement](../ui/dashboard/README.md#overdue-reminder-and-encouragement) | /dashboard — Today, This week and Activity |
 | `dashboard.roadmap` | [Roadmap below the header and account selection](../ui/dashboard/README.md#roadmap-below-the-header-and-account-selection) | /dashboard — Today, This week and Activity |
+| `dashboard.team` | [Team tasks assigned to you](../ui/dashboard/README.md#team-tasks-assigned-to-you) | /dashboard — Today, This week and Activity |
 | `habits.collection` | [Habit cards and New/Edit dialog](../ui/habits/README.md#habit-cards-and-newedit-dialog) | /habits — Habits, streaks and Rest Days |
 | `habits.checkins` | [Check-in, undo and streak](../ui/habits/README.md#check-in-undo-and-streak) | /habits — Habits, streaks and Rest Days |
 | `habits.rest` | [More options and Rest Day window](../ui/habits/README.md#more-options-and-rest-day-window) | /habits — Habits, streaks and Rest Days |
@@ -53,7 +56,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `reviews.editor` | [Reflections, Save and conflict choices](../ui/reviews/README.md#reflections-save-and-conflict-choices) | /reviews — Collection and Review editor |
 | `reviews.facts` | [Refresh facts, Finalize, Reopen and Delete](../ui/reviews/README.md#refresh-facts-finalize-reopen-and-delete) | /reviews — Collection and Review editor |
 | `notes.collection` | [All notes, search, sort, grid/list and paging](../ui/notes/README.md#all-notes-search-sort-gridlist-and-paging) | / — Notes |
-| `notes.editor` | [New note, title/content, color, pin and Save](../ui/notes/README.md#new-note-titlecontent-color-pin-and-save) | / — Notes |
+| `notes.editor` | [New note, title/content, color, pin and Save and close](../ui/notes/README.md#new-note-titlecontent-color-pin-and-save-and-close) | / — Notes |
+| `notes.links` | [Note links to a Goal or Task](../ui/notes/README.md#note-links-to-a-goal-or-task) | / — Notes |
 | `notes.delete` | [Delete and tombstones](../ui/notes/README.md#delete-and-tombstones) | / — Notes |
 | `notes.autosave` | [Dirty, saving, saved and retry state](../ui/notes/autosave.md#dirty-saving-saved-and-retry-state) | / — Notes autosave, recovery and conflicts |
 | `notes.recovery` | [Recover draft, offline retry and session changes](../ui/notes/autosave.md#recover-draft-offline-retry-and-session-changes) | / — Notes autosave, recovery and conflicts |

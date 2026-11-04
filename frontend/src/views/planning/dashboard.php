@@ -1,7 +1,7 @@
 <section class="planning-page dashboard-page" data-dashboard-page aria-labelledby="dashboard-title">
     <header class="workspace-header scene-header" data-reference-decoration="landscape">
         <div>
-            <p class="dashboard-date" data-dashboard-date></p>
+            <p class="dashboard-date"><span data-dashboard-date></span> · <span class="dashboard-timezone" data-dashboard-timezone title="<?= $view->e($view->t('Your time zone')) ?>"></span></p>
             <h1 id="dashboard-title" data-dashboard-greeting><?= $view->e($view->t('Dashboard')) ?></h1>
             <p><?= $view->e($view->t('You’re making steady progress.')) ?></p>
         </div>
@@ -19,14 +19,15 @@
     </header>
     <article class="planning-panel dashboard-roadmap" aria-labelledby="dashboard-roadmap-title">
         <div class="section-heading">
-            <h2 id="dashboard-roadmap-title"><?= $view->e($view->t('Your roadmap')) ?></h2>
-            <div class="dashboard-roadmap-controls">
-                <label class="sr-only" for="dashboard-roadmap-select"><?= $view->e($view->t('Choose a roadmap')) ?></label>
+            <?php /* The roadmap picker is the visible card title; the hidden heading names the card without reading every option. */ ?>
+            <h2 class="sr-only" id="dashboard-roadmap-title"><?= $view->e($view->t('Roadmap')) ?></h2>
+            <label class="sr-only" for="dashboard-roadmap-select"><?= $view->e($view->t('Choose a roadmap')) ?></label>
+            <span class="roadmap-title-picker">
                 <select id="dashboard-roadmap-select" data-dashboard-roadmap-select disabled>
                     <option value=""><?= $view->e($view->t('Choose a roadmap')) ?></option>
                 </select>
-                <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
-            </div>
+            </span>
+            <a class="section-link" data-dashboard-roadmap-link href="/goals"><?= $view->e($view->t('View goals →')) ?></a>
         </div>
         <div class="roadmap-preview" data-dashboard-roadmap><p><?= $view->e($view->t('Choose a roadmap to display here.')) ?></p></div>
     </article>
@@ -53,7 +54,7 @@
                                 <h2 id="today-title">
                                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
                                     <?= $view->e($view->t('Daily tasks')) ?>
-                                    <span class="count-badge" data-today-count>—</span>
+                                    <span class="count-badge" data-today-count hidden>—</span>
                                 </h2>
                                 <button class="button button-quiet" type="button" data-dashboard-add-today>
                                     <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
@@ -74,7 +75,7 @@
                                 <select id="dashboard-today-status" data-dashboard-today-status>
                                     <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
                                     <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
                                     <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
                                     <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
                                 </select>
@@ -84,8 +85,20 @@
                     <div data-today-tasks aria-live="polite">
                         <p class="loading-copy"><?= $view->e($view->t('Loading today\'s tasks…')) ?></p>
                     </div>
+                    <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite" hidden></p>
                 </section>
-                <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite"></p>
+                <?php /* Team work assigned to you, so personal planning shows everything you owe today. */ ?>
+                <section class="planning-panel dashboard-team-panel" aria-labelledby="dashboard-team-title" data-dashboard-team hidden>
+                    <div class="section-heading">
+                        <h2 id="dashboard-team-title">
+                            <svg class="ui-icon" aria-hidden="true"><use href="#icon-profile"/></svg>
+                            <?= $view->e($view->t('Team tasks')) ?>
+                            <span class="count-badge" data-dashboard-team-count></span>
+                        </h2>
+                        <a class="section-link" href="/teamwork"><?= $view->e($view->t('Open Teamwork')) ?> →</a>
+                    </div>
+                    <div class="dashboard-team-list" data-dashboard-team-list></div>
+                </section>
             </div>
             <div class="dashboard-split-side">
                 <article class="planning-panel dashboard-habits-panel" aria-labelledby="dashboard-habits-title">
@@ -174,7 +187,7 @@
                                 <select id="dashboard-week-status" data-dashboard-week-status>
                                     <option value="all"><?= $view->e($view->t('All tasks')) ?></option>
                                     <option value="NotStarted"><?= $view->e($view->t('Not started')) ?></option>
-                                    <option value="InProgress"><?= $view->e($view->t('On progress')) ?></option>
+                                    <option value="InProgress"><?= $view->e($view->t('In progress')) ?></option>
                                     <option value="Blocked"><?= $view->e($view->t('Blocked')) ?></option>
                                     <option value="Done"><?= $view->e($view->t('Completed')) ?></option>
                                 </select>
@@ -296,8 +309,4 @@
             <div class="dialog-footer"><button class="button button-primary" type="submit"><?= $view->e($view->t('Create task')) ?></button></div>
         </form>
     </dialog>
-    <p class="dashboard-timezone">
-        <svg class="ui-icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
-        <span data-dashboard-timezone></span>
-    </p>
 </section>

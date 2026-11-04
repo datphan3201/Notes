@@ -1,3 +1,4 @@
+import { renderLinkedNotes } from '../notes/linked-notes.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { taskCaptureValues, createCapturedTask, seriesPayload } from './task-capture.js';
 import { openScheduleMenu } from './schedule-picker.js';
@@ -10,7 +11,7 @@ import { LatestRequest } from '../lib/read-coordinator.js';
 import { transitionEntity } from './transitions.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { NoteContentEditor } from '../notes/note-content-editor.js';
-import { sortTasks, completedInView, seriesPage } from './tasks-collection.js';
+import { sortTasks, completedInView, groupTasksByGoal, seriesPage } from './tasks-collection.js';
 import { collectionPage, renderPagination } from './collection-page.js';
 import {
     localDate,
@@ -27,9 +28,18 @@ import {
     reportWorkspaceError,
 } from '../lib/workspace-ui.js';
 import { checkMark, setCheckedLabel } from '../lib/check-mark.js';
-import { lineIcon } from '../lib/line-icons.js';
+import { lineIcon, spriteIcon } from '../lib/line-icons.js';
+import { cycleHue, entityIcon, iconButton as entityIconButton } from '../lib/entity-icons.js';
+import { starRating } from '../lib/star-rating.js';
 import { renderContributions } from './contributions-ui.js';
 import { createTagPicker, loadTags, sameTagIds, tagChips } from './tag-picker.js';
+import {
+    countLabel,
+    formatDay,
+    formatMoment,
+    formatMomentRange,
+    formatPercent,
+} from '../lib/format.js';
 export { initGoalDetail } from './goal-roadmap.js';
 
 export function buildGoalForest(goals) {
@@ -56,13 +66,15 @@ function linkForGoal(goal) {
     link.href = `/goals/${encodeURIComponent(goal.id)}`;
     link.className = 'planning-item-link goal-tree-link';
     const name = document.createElement('strong');
-    name.textContent = goal.name;
+    name.className = 'goal-tree-name';
+    name.append(entityIcon(goal, { size: 'sm' }), document.createTextNode(goal.name));
     const meta = document.createElement('span');
     meta.className = 'goal-tree-meta';
+    meta.append(starRating(goal.importance));
     if (goal.deadline) {
         const due = document.createElement('small');
         due.className = 'goal-tree-deadline';
-        due.textContent = goal.deadline;
+        due.textContent = formatDay(goal.deadline);
         meta.append(due);
     }
     const miniTrack = document.createElement('span');
@@ -73,13 +85,14 @@ function linkForGoal(goal) {
     miniTrack.append(miniFill);
     const progress = document.createElement('span');
     progress.className = 'goal-tree-progress';
-    progress.textContent = `${goal.progress ?? 0}%`;
+    progress.textContent = formatPercent(goal.progress);
     meta.append(miniTrack, progress);
     link.append(name, meta);
     return link;
 }
 
-function renderGoalTree(container, areas, goals) {
+// `saveArea(area, changes)` persists an Area's icon or importance chosen in its heading.
+function renderGoalTree(container, areas, goals, saveArea) {
     container.replaceChildren();
     const { nodes } = buildGoalForest(goals);
 
@@ -87,20 +100,22 @@ function renderGoalTree(container, areas, goals) {
         const section = document.createElement('details');
         section.className = 'goal-area-group';
         const heading = document.createElement('summary');
-        const badge = document.createElement('span');
-        badge.className = 'area-icon';
-        badge.style.setProperty('--area-hue', [168, 268, 41][areaIndex % 3]);
-        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        icon.classList.add('ui-icon');
-        icon.setAttribute('aria-hidden', 'true');
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttribute('href', '#icon-goals');
-        icon.append(use);
-        badge.append(icon);
+        const badge = entityIconButton(area, {
+            label: area.name,
+            fallbackHue: cycleHue(areaIndex),
+            save: (choice) => saveArea(area, choice),
+        });
         const title = document.createElement('strong');
         title.textContent = area.name;
         title.className = 'area-title';
-        heading.append(badge, title);
+        const stars = starRating(area.importance, {
+            label: `${t('Importance')}: ${area.name}`,
+            onChange: (importance) => saveArea(area, { importance }),
+        });
+        const titleRow = document.createElement('span');
+        titleRow.className = 'area-title-row';
+        titleRow.append(title, stars);
+        heading.append(badge, titleRow);
         const rootsForArea = goals.filter(
             (goal) => goal.area_id === area.id && !goal.parent_goal_id,
         );
@@ -112,7 +127,7 @@ function renderGoalTree(container, areas, goals) {
             : 0;
         const count = document.createElement('span');
         count.className = 'subtle-copy';
-        count.textContent = `${rootsForArea.length} ${t(rootsForArea.length === 1 ? 'goal' : 'goals')} · ${progress}% ${t('average goal progress')}`;
+        count.textContent = `${countLabel(rootsForArea.length, 'goal', 'goals')} · ${formatPercent(progress)} ${t('average goal progress')}`;
         const track = document.createElement('span');
         track.className = 'progress-track';
         const fill = document.createElement('i');
@@ -165,11 +180,96 @@ export function initGoalsPage(root) {
     let renamingArea = false;
     guardWorkspaceLeave(() => areaDrafts.size > 0 || renamingArea);
 
+    // "Main goal" is the user's explicit focus Goal, shared with the Dashboard roadmap
+    // (PATCH /api/v1/dashboard/roadmap): no importance-based guess, and changeable right here.
+    const renderMainGoal = (goals, focusId) => {
+        const main = root.querySelector('[data-main-goal]');
+        main.replaceChildren();
+        const candidates = goals.filter(
+            (goal) => goal.status !== 'Completed' || goal.id === focusId,
+        );
+        if (!candidates.length) return;
+        const byId = new Map(goals.map((goal) => [goal.id, goal]));
+        const primary = byId.get(focusId) || null;
+        const card = document.createElement('div');
+        card.className = 'main-goal-card scene-card';
+        card.append(referenceDecoration('summit'));
+        const label = document.createElement('span');
+        label.className = 'context-chip';
+        label.textContent = `★ ${t('Main goal')}`;
+        const picker = document.createElement('span');
+        picker.className = 'roadmap-title-picker main-goal-picker';
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', t('Choose your main goal'));
+        select.add(new Option(t('Choose your main goal'), ''));
+        for (const goal of candidates
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))) {
+            const parent = byId.get(goal.parent_goal_id);
+            select.add(new Option(`${parent ? `${parent.name} › ` : ''}${goal.name}`, goal.id));
+        }
+        select.value = primary ? primary.id : '';
+        select.addEventListener('change', async () => {
+            select.disabled = true;
+            try {
+                const saved = (
+                    await patch('/api/v1/dashboard/roadmap', { goal_id: select.value || null })
+                ).payload.data.goal_id;
+                renderMainGoal(goals, saved);
+            } catch (error) {
+                showError(root, error);
+                select.value = primary ? primary.id : '';
+                select.disabled = false;
+            }
+        });
+        picker.append(select);
+        const description = document.createElement('p');
+        const title = document.createElement('div');
+        title.className = 'main-goal-title';
+        if (primary) title.append(entityIcon(primary, { size: 'lg' }));
+        title.append(picker);
+        if (primary) title.append(starRating(primary.importance, { size: 'md' }));
+        card.append(label, title, description);
+        if (!primary) {
+            description.className = 'subtle-copy';
+            description.textContent = t(
+                'Pick the goal you are focusing on. It also becomes the roadmap on your Dashboard.',
+            );
+            main.append(card);
+            return;
+        }
+        // Only the Goal's own words are shown; an empty Goal gets a prompt.
+        description.textContent =
+            primary.expected_result ||
+            primary.description ||
+            t('Open this goal to describe the outcome you want.');
+        description.classList.toggle(
+            'subtle-copy',
+            !primary.expected_result && !primary.description,
+        );
+        const footer = document.createElement('div');
+        footer.className = 'main-goal-footer';
+        const progress = document.createElement('strong');
+        progress.textContent = `${statusLabel(primary.status)} · ${formatPercent(primary.progress)}`;
+        const track = document.createElement('span');
+        track.className = 'progress-track';
+        const fill = document.createElement('i');
+        fill.style.setProperty('--progress', `${primary.progress}%`);
+        track.append(fill);
+        const open = document.createElement('a');
+        open.className = 'section-link';
+        open.href = `/goals/${encodeURIComponent(primary.id)}`;
+        open.textContent = `${t('Open roadmap')} →`;
+        footer.append(progress, track, open);
+        card.append(footer);
+        main.append(card);
+    };
     const load = async () => {
         try {
-            const [areaResponse, goalResponse] = await Promise.all([
+            const [areaResponse, goalResponse, focusResponse] = await Promise.all([
                 get('/api/v1/areas'),
                 get('/api/v1/goals'),
+                get('/api/v1/dashboard/roadmap'),
             ]);
             areas = areaResponse.payload.data;
             const selectedArea = areaSelect.value;
@@ -240,42 +340,18 @@ export function initGoalsPage(root) {
             if (areas.some((area) => area.id === selectedArea)) areaSelect.value = selectedArea;
             if (!hadDraft) creationState(form).markSaved();
             const goals = goalResponse.payload.data;
-            renderGoalTree(tree, areas, goals);
-            const main = root.querySelector('[data-main-goal]');
-            main.replaceChildren();
-            const primary = goals
-                .filter((goal) => !goal.parent_goal_id && goal.status !== 'Completed')
-                .sort((a, b) => b.importance - a.importance)[0];
-            if (primary) {
-                const card = document.createElement('a');
-                card.className = 'main-goal-card scene-card';
-                card.href = `/goals/${primary.id}`;
-                card.append(referenceDecoration('summit'));
-                const label = document.createElement('span');
-                label.className = 'context-chip';
-                label.textContent = `★ ${t('Main goal')}`;
-                const name = document.createElement('h2');
-                name.textContent = primary.name;
-                const description = document.createElement('p');
-                // Only the Goal's own words are shown; an empty Goal gets a prompt.
-                description.textContent =
-                    primary.expected_result ||
-                    primary.description ||
-                    t('Open this goal to describe the outcome you want.');
-                description.classList.toggle(
-                    'subtle-copy',
-                    !primary.expected_result && !primary.description,
-                );
-                const progress = document.createElement('strong');
-                progress.textContent = `${statusLabel(primary.status)} · ${primary.progress}%`;
-                const track = document.createElement('span');
-                track.className = 'progress-track';
-                const fill = document.createElement('i');
-                fill.style.setProperty('--progress', `${primary.progress}%`);
-                track.append(fill);
-                card.append(label, name, description, progress, track);
-                main.append(card);
-            }
+            renderGoalTree(tree, areas, goals, async (area, changes) => {
+                try {
+                    await patch(`/api/v1/areas/${encodeURIComponent(area.id)}`, {
+                        base_version: area.version,
+                        ...changes,
+                    });
+                    await load();
+                } catch (error) {
+                    showError(root, error);
+                }
+            });
+            renderMainGoal(goals, focusResponse.payload.data.goal_id);
             const timeline = root.querySelector('[data-goal-timeline]');
             timeline.replaceChildren();
             for (const goal of goals
@@ -290,7 +366,8 @@ export function initGoalsPage(root) {
                 dot.className = 'goal-timeline-dot';
                 dot.setAttribute('aria-hidden', 'true');
                 const date = document.createElement('time');
-                date.textContent = goal.deadline || t('No deadline');
+                if (goal.deadline) date.dateTime = goal.deadline;
+                date.textContent = goal.deadline ? formatDay(goal.deadline) : t('No deadline');
                 if (goal.deadline) date.dateTime = goal.deadline;
                 row.append(dot, date, linkForGoal(goal));
                 timeline.append(row);
@@ -387,6 +464,15 @@ export function initTasksPage(root) {
     const search = root.querySelector('[data-task-search]');
     const status = root.querySelector('[data-task-status]');
     const sort = root.querySelector('[data-task-sort]');
+    // Tasks is the place to do work; grouping by Goal answers "what is left in each Goal this
+    // week" without repeating the Goals page's structure, so it is the default; choosing No
+    // grouping is remembered per browser.
+    const grouping = root.querySelector('[data-task-group]');
+    const GROUPING_KEY = 'planner.tasks.group';
+    grouping.value = localStorage.getItem(GROUPING_KEY) === 'none' ? 'none' : 'goal';
+    const collapsedGroups = new Set();
+    let goalsById = new Map();
+    let milestonesById = new Map();
     const seriesStatus = root.querySelector('[data-series-status]');
     const plan = form.elements.plan;
     const setPlanDefault = () => {
@@ -427,6 +513,31 @@ export function initTasksPage(root) {
         button.addEventListener('click', onClick);
         return button;
     };
+    // Labelled entries of a row's ⋯ menu.
+    const menuItem = (label, symbol, onClick) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'menu-item';
+        button.append(
+            symbol,
+            Object.assign(document.createElement('span'), { textContent: label }),
+        );
+        button.addEventListener('click', onClick);
+        return button;
+    };
+    // One row menu open at a time; it closes on outside clicks, Escape or after choosing an entry.
+    const closeMenus = (except) =>
+        root.querySelectorAll('.task-row-menu[open]').forEach((menu) => {
+            if (menu !== except) menu.open = false;
+        });
+    document.addEventListener('click', (event) => {
+        const menu = event.target.closest?.('.task-row-menu');
+        closeMenus(menu);
+        if (menu && event.target.closest('.menu-item')) menu.open = false;
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenus(null);
+    });
     const mutate = async (button, operation) => {
         button.disabled = true;
         try {
@@ -439,7 +550,8 @@ export function initTasksPage(root) {
         }
     };
     // Primary planning stays inline; less frequent controls use native disclosure.
-    const taskRow = (task) => {
+    // showContext=false: a grouped list already names the Goal and Milestone above the row.
+    const taskRow = (task, { showContext = true } = {}) => {
         const article = document.createElement('article');
         const overdue = taskIsOverdue(task, today);
         const done = task.status === 'Done';
@@ -451,26 +563,23 @@ export function initTasksPage(root) {
         name.textContent = task.name;
         const facts = document.createElement('small');
         const timezone = window.notesBootstrap.preferences.timezone;
-        const format = new Intl.DateTimeFormat(undefined, {
-            timeZone: timezone,
-            dateStyle: 'short',
-            timeStyle: 'short',
-        });
         facts.textContent = [
-            task.status === 'InProgress' ? t('On progress') : statusLabel(task.status),
+            statusLabel(task.status),
             overdue ? t('Overdue') : '',
             task.deadline === today
                 ? t('Due today')
                 : task.deadline
-                  ? `${t('Due')} ${task.deadline}`
+                  ? `${t('Due')} ${formatDay(task.deadline)}`
                   : '',
             dailyIds.has(task.id) ? t('Added for today') : '',
             task.scheduled_start
-                ? `${t('Scheduled')} ${format.format(new Date(task.scheduled_start))}${task.scheduled_end ? ` – ${format.format(new Date(task.scheduled_end))}` : ''}`
+                ? `${t('Scheduled')} ${formatMomentRange(task.scheduled_start, task.scheduled_end, { timeZone: timezone })}`
                 : task.start_date || task.occurrence_date
-                  ? `${t('Scheduled')} ${task.start_date || task.occurrence_date}`
+                  ? `${t('Scheduled')} ${formatDay(task.start_date || task.occurrence_date)}`
                   : '',
-            task.reminder_at ? `${t('Reminder')} ${format.format(new Date(task.reminder_at))}` : '',
+            task.reminder_at
+                ? `${t('Reminder')} ${formatMoment(task.reminder_at, { timeZone: timezone })}`
+                : '',
             task.series_id ? t('Repeats') : '',
             task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
         ]
@@ -479,7 +588,7 @@ export function initTasksPage(root) {
         const context =
             parentOptions.get(`milestone:${task.milestone_id}`) ||
             parentOptions.get(`goal:${task.goal_id}`);
-        if (context) {
+        if (context && showContext) {
             const chip = document.createElement('span');
             chip.className = 'context-chip';
             chip.textContent = context.name;
@@ -497,15 +606,20 @@ export function initTasksPage(root) {
         );
         const actions = document.createElement('div');
         actions.className = 'action-row task-row-actions';
+        // Frequent planning toggles stay inline as icons; everything else lives in one labelled menu.
         const secondary = document.createElement('details');
-        secondary.className = 'task-row-secondary';
+        secondary.className = 'task-row-menu';
         const summary = document.createElement('summary');
-        summary.textContent = t('More options');
+        summary.className = 'icon-button task-row-icon';
+        summary.setAttribute('aria-label', `${t('More options')}: ${task.name}`);
+        summary.title = t('More options');
+        summary.append(lineIcon('more'));
         const secondaryActions = document.createElement('div');
-        secondaryActions.className = 'action-row';
+        secondaryActions.className = 'task-row-menu-panel';
+        secondaryActions.setAttribute('role', 'menu');
         secondary.append(summary, secondaryActions);
         if (!done) {
-            const dateButton = iconButton(t('Due date'), lineIcon('calendar'), (event) =>
+            const dateButton = menuItem(t('Due date'), lineIcon('calendar'), (event) =>
                 openScheduleMenu(event.currentTarget, 'date', {
                     today,
                     value: task.deadline,
@@ -519,7 +633,7 @@ export function initTasksPage(root) {
                 }),
             );
             dateButton.dataset.scheduleOpen = 'date';
-            const reminderButton = iconButton(t('Remind me'), lineIcon('clock'), (event) =>
+            const reminderButton = menuItem(t('Remind me'), lineIcon('clock'), (event) =>
                 openScheduleMenu(event.currentTarget, 'reminder', {
                     today,
                     value: task.reminder_at ? localDateTime(new Date(task.reminder_at)) : null,
@@ -533,7 +647,7 @@ export function initTasksPage(root) {
                 }),
             );
             reminderButton.dataset.scheduleOpen = 'reminder';
-            const repeatButton = iconButton(t('Repeat'), lineIcon('repeat'), (event) =>
+            const repeatButton = menuItem(t('Repeat'), lineIcon('repeat'), (event) =>
                 openScheduleMenu(event.currentTarget, 'repeat', {
                     today,
                     onSelect: (choice) => {
@@ -572,8 +686,7 @@ export function initTasksPage(root) {
             planToday.type = 'button';
             planToday.className = 'icon-button task-row-icon';
             const planLabel = todayIds.has(task.id) ? t('Added for today') : t('Add for today');
-            if (todayIds.has(task.id)) planToday.append(checkMark());
-            else planToday.textContent = '+';
+            planToday.append(lineIcon('sun', { filled: todayIds.has(task.id) }));
             planToday.title = planLabel;
             planToday.setAttribute(
                 'aria-label',
@@ -592,14 +705,13 @@ export function initTasksPage(root) {
             secondaryActions.append(dateButton, reminderButton, repeatButton);
         }
         const edit = document.createElement('a');
-        edit.className = 'button button-quiet';
+        edit.className = 'menu-item';
         edit.href = `/tasks/${encodeURIComponent(task.id)}#edit`;
-        edit.textContent = t('Edit');
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'button button-quiet';
-        removeButton.textContent = t('Archive');
-        removeButton.addEventListener('click', () => {
+        edit.append(
+            lineIcon('edit'),
+            Object.assign(document.createElement('span'), { textContent: t('Edit') }),
+        );
+        const removeButton = menuItem(t('Archive'), lineIcon('archive'), () => {
             if (
                 !window.confirm(
                     `${t('Archive')} “${task.name}”? ${t('This removes it from active lists without deleting its data.')}`,
@@ -610,19 +722,14 @@ export function initTasksPage(root) {
                 remove(`/api/v1/tasks/${task.id}`, { base_version: task.version }),
             );
         });
-        const important = iconButton(
-            `${t('Mark important')}: ${task.name}`,
-            task.importance === 5 ? '★' : '☆',
-            () =>
+        // Importance on the full 1-5 star scale, set in place.
+        const important = starRating(task.importance, {
+            label: `${t('Importance')}: ${task.name}`,
+            onChange: (importance) =>
                 mutate(important, () =>
-                    patch(`/api/v1/tasks/${task.id}`, {
-                        base_version: task.version,
-                        importance: task.importance === 5 ? 3 : 5,
-                    }),
+                    patch(`/api/v1/tasks/${task.id}`, { base_version: task.version, importance }),
                 ),
-        );
-        important.classList.toggle('is-important', task.importance === 5);
-        important.setAttribute('aria-pressed', String(task.importance === 5));
+        });
         if (taskView === 'overdue' && !done) {
             const reopen = document.createElement('button');
             reopen.type = 'button';
@@ -633,7 +740,9 @@ export function initTasksPage(root) {
             );
             actions.append(reopen);
         }
-        actions.append(edit, important, secondary);
+        actions.append(important, secondary);
+        secondaryActions.prepend(edit);
+        removeButton.classList.add('is-danger');
         secondaryActions.append(removeButton);
         article.append(action, copy, actions);
         return article;
@@ -642,6 +751,7 @@ export function initTasksPage(root) {
         const repeating = taskView === 'repeating';
         status.closest('.field').hidden = repeating;
         sort.closest('.field').hidden = repeating;
+        grouping.closest('.field').hidden = repeating;
         root.querySelector('[data-series-status-field]').hidden = !repeating;
         root.querySelector('.task-filter-details').hidden = repeating || !tags.length;
         const timezone = window.notesBootstrap.preferences.timezone;
@@ -713,7 +823,8 @@ export function initTasksPage(root) {
         );
         completedSection.hidden = !completed.total || status.value !== 'open';
         completedSection.querySelector('[data-task-completed-count]').textContent = completed.total;
-        completedList.replaceChildren(...completed.items.map(taskRow));
+        completedList.replaceChildren(...completed.items.map((task) => taskRow(task)));
+        const grouped = grouping.value === 'goal';
         const result = collectionPage(
             sortTasks(
                 visibleTasks().filter((task) =>
@@ -725,8 +836,9 @@ export function initTasksPage(root) {
             {
                 query: search.value,
                 status: taskViewStatus(taskView, status.value),
-                page,
-                size,
+                // Groups show every matching Task: paging would split a Goal across pages.
+                page: grouped ? 0 : page,
+                size: grouped ? Number.MAX_SAFE_INTEGER : size,
             },
         );
         page = result.page;
@@ -743,7 +855,72 @@ export function initTasksPage(root) {
                     : 'Capture a task now and add details when you need them.',
                 ...(tasks.length ? {} : { href: '#task-name', action: 'Add your first task' }),
             });
-        list.append(...result.items.map(taskRow));
+        if (!grouped) {
+            list.append(...result.items.map((task) => taskRow(task)));
+            return;
+        }
+        for (const { goal, tasks: groupTasks } of groupTasksByGoal(result.items, {
+            goals: goalsById,
+            milestones: milestonesById,
+        })) {
+            const key = goal?.id || 'inbox';
+            const section = document.createElement('section');
+            section.className = 'task-group';
+            const heading = document.createElement('div');
+            heading.className = 'task-group-heading';
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'task-group-toggle';
+            toggle.setAttribute('aria-expanded', String(!collapsedGroups.has(key)));
+            const parentName = goal?.parent_goal_id
+                ? goalsById.get(goal.parent_goal_id)?.name
+                : null;
+            const title = document.createElement('strong');
+            title.textContent = goal
+                ? `${parentName ? `${parentName} › ` : ''}${goal.name}`
+                : t('Inbox');
+            const count = document.createElement('span');
+            count.className = 'count-badge';
+            count.textContent = String(groupTasks.length);
+            toggle.append(
+                goal ? entityIcon(goal, { size: 'sm' }) : spriteIcon('tasks'),
+                title,
+                count,
+            );
+            const body = document.createElement('div');
+            body.className = 'task-group-list';
+            body.hidden = collapsedGroups.has(key);
+            let milestone;
+            for (const task of groupTasks) {
+                // One subheading per Milestone instead of the same chip on every row.
+                if (goal && task.milestone_id !== milestone) {
+                    milestone = task.milestone_id;
+                    const label = document.createElement('p');
+                    label.className = 'task-group-milestone';
+                    label.textContent = milestone
+                        ? milestonesById.get(milestone)?.name || ''
+                        : t('Directly in this goal');
+                    body.append(label);
+                }
+                body.append(taskRow(task, { showContext: !goal }));
+            }
+            toggle.addEventListener('click', () => {
+                if (collapsedGroups.has(key)) collapsedGroups.delete(key);
+                else collapsedGroups.add(key);
+                toggle.setAttribute('aria-expanded', String(!collapsedGroups.has(key)));
+                body.hidden = collapsedGroups.has(key);
+            });
+            heading.append(toggle);
+            if (goal) {
+                const open = document.createElement('a');
+                open.className = 'section-link';
+                open.href = `/goals/${encodeURIComponent(goal.id)}`;
+                open.textContent = `${t('Open roadmap')} →`;
+                heading.append(open);
+            }
+            section.append(heading, body);
+            list.append(section);
+        }
     };
     const load = async () => {
         const ticket = reads.begin();
@@ -758,6 +935,8 @@ export function initTasksPage(root) {
             if (!reads.isCurrent(ticket)) return;
             tasks = response.payload.data;
             series = seriesResponse.payload.data;
+            goalsById = new Map(goals.payload.data.map((goal) => [goal.id, goal]));
+            milestonesById = new Map(milestones.payload.data.map((item) => [item.id, item]));
             today = dashboard.payload.data.today;
             selectedIds = new Set(dashboard.payload.data.selected_tasks.map((task) => task.id));
             dailyIds = new Set(dashboard.payload.data.daily_task_ids);
@@ -828,7 +1007,7 @@ export function initTasksPage(root) {
             return;
         }
         if (parent.value.startsWith('goal:'))
-            output.textContent = `${selected.name} · ${selected.progress}% ${t('goal progress')}`;
+            output.textContent = `${selected.name} · ${formatPercent(selected.progress)} ${t('goal progress')}`;
         else {
             const goal = parentOptions.get(`goal:${selected.goal_id}`);
             output.textContent = `${goal ? `${goal.name} › ` : ''}${selected.name} · ${selected.progress.completed}/${selected.progress.total} ${t('finite tasks completed')}`;
@@ -862,6 +1041,11 @@ export function initTasksPage(root) {
             render();
         })
         .catch(() => {});
+    grouping.addEventListener('change', () => {
+        localStorage.setItem(GROUPING_KEY, grouping.value);
+        page = 0;
+        render();
+    });
     for (const control of [sort, seriesStatus])
         control.addEventListener('change', () => {
             page = 0;
@@ -947,6 +1131,7 @@ export function initTasksPage(root) {
 
 export function initTaskDetail(root) {
     const id = root.dataset.taskId;
+    renderLinkedNotes(root.querySelector('[data-linked-notes]'));
     const reads = new LatestRequest();
     let task = null;
     let note = null;
@@ -1095,8 +1280,12 @@ export function initTaskDetail(root) {
             }
             note = noteResponse.payload.data;
             root.querySelector('[data-task-name]').textContent = task.name;
-            root.querySelector('[data-task-meta]').textContent =
-                `${statusLabel(task.status)} · ${t('Importance')} ${task.importance}/5${task.deadline ? ` · ${t('Due')} ${task.deadline}` : ''}`;
+            root.querySelector('[data-task-meta]').replaceChildren(
+                document.createTextNode(
+                    `${statusLabel(task.status)}${task.deadline ? ` · ${t('Due')} ${formatDay(task.deadline)}` : ''} · `,
+                ),
+                starRating(task.importance, { size: 'md' }),
+            );
             root.querySelector('[data-task-description]').textContent = task.description || '—';
             root.querySelector('[data-task-result]').textContent = task.expected_result || '—';
             root.querySelector('[data-task-criteria]').textContent =

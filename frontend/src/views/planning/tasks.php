@@ -4,23 +4,22 @@
             <h1 id="tasks-title"><?= $view->e($view->t('Tasks')) ?></h1>
             <p><?= $view->e($view->t('A place for the next step, and the one after that.')) ?></p>
         </div>
-        <button class="button button-primary" type="button" data-open-dialog="new-task-dialog">
-            <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
-            <?= $view->e($view->t('New task')) ?>
-        </button>
+        <div class="action-row workspace-header-actions">
+            <a class="button button-quiet" href="/settings/history"><?= $view->e($view->t('Task history')) ?></a>
+            <button class="button button-quiet" type="button" data-planning-retry>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
+                <?= $view->e($view->t('Refresh')) ?>
+            </button>
+            <button class="button button-primary" type="button" data-open-dialog="new-task-dialog">
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                <?= $view->e($view->t('New task')) ?>
+            </button>
+        </div>
     </header>
     <p class="field-error is-hidden" data-planning-error role="alert"></p>
     <div class="collection-layout collection-focused">
         <section class="planning-panel collection-main">
-            <div class="section-heading">
-                <h2>
-                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-tasks"/></svg>
-                    <?= $view->e($view->t('Tasks')) ?>
-                </h2>
-                <button class="icon-button" type="button" data-planning-retry aria-label="<?= $view->e($view->t('Refresh tasks')) ?>">
-                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
-                </button>
-            </div>
+            <h2 class="sr-only"><?= $view->e($view->t('Task list')) ?></h2>
             <div class="task-view-menu" role="group" aria-label="<?= $view->e($view->t('Task time filters')) ?>">
                 <button type="button" data-task-view="today" aria-pressed="false">
                     <?= $view->e($view->t('Today')) ?>
@@ -47,7 +46,6 @@
                     <span class="count-badge" data-task-view-count="all">—</span>
                 </button>
                 <button type="button" data-task-view="repeating" aria-pressed="false"><?= $view->e($view->t('Repeating')) ?> <span class="count-badge" data-task-view-count="repeating">—</span></button>
-                <a class="text-button" href="/settings/history"><?= $view->e($view->t('Task history')) ?></a>
             </div>
             <div class="collection-controls">
                 <div class="field">
@@ -70,6 +68,13 @@
                     <select id="task-sort" data-task-sort>
                         <option value="importance"><?= $view->e($view->t('Importance')) ?></option>
                         <option value="scheduled"><?= $view->e($view->t('Scheduled time')) ?></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="task-group"><?= $view->e($view->t('Group by')) ?></label>
+                    <select id="task-group" data-task-group>
+                        <option value="goal" selected><?= $view->e($view->t('Goal')) ?></option>
+                        <option value="none"><?= $view->e($view->t('No grouping')) ?></option>
                     </select>
                 </div>
                 <div class="field" data-series-status-field hidden>

@@ -1,3 +1,6 @@
+import { iconButton } from '../lib/entity-icons.js';
+import { starRating } from '../lib/star-rating.js';
+import { lineIcon } from '../lib/line-icons.js';
 import { get, patch, post, put, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { renderEmptyState } from '../lib/empty-state.js';
@@ -169,7 +172,25 @@ export function initHabitsPage(root) {
         const copy = document.createElement('div');
         copy.className = 'habit-row-copy';
         const name = document.createElement('strong');
-        name.textContent = habit.name;
+        name.className = 'habit-row-name';
+        // Name and stars wrap together beside the icon on narrow screens.
+        const title = document.createElement('span');
+        title.append(habit.name, ' ', starRating(habit.importance));
+        // Icon saves immediately; importance is shown as stars and edited with the Habit.
+        name.append(
+            iconButton(habit, {
+                label: habit.name,
+                fallbackIcon: 'activity',
+                save: (choice) =>
+                    act(name, () =>
+                        patch(`/api/v1/habits/${habit.id}`, {
+                            base_version: habit.version,
+                            ...choice,
+                        }),
+                    ),
+            }),
+            title,
+        );
         copy.append(name);
         if (habit.description) {
             const description = document.createElement('p');
@@ -276,10 +297,12 @@ export function initHabitsPage(root) {
         edit.addEventListener('click', () => openEdit(habit));
         const more = document.createElement('button');
         more.type = 'button';
-        more.className = 'text-button';
+        // Same ⋯ affordance as Task rows.
+        more.className = 'icon-button task-row-icon';
         more.dataset.habitMenu = '';
         more.dataset.habitControl = `${habit.id}:options`;
-        more.textContent = t('More options');
+        more.title = t('More options');
+        more.append(lineIcon('more'));
         more.setAttribute('aria-label', `${t('More options')}: ${habit.name}`);
         more.setAttribute('aria-haspopup', 'dialog');
         more.setAttribute('aria-expanded', 'false');

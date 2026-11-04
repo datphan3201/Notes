@@ -70,12 +70,25 @@ const ACTION_LABELS = {
     complete_goal: 'Complete Goal',
     reopen_goal: 'Reopen Goal',
     delete_goal: 'Delete Goal',
+    create_milestone: 'New Milestone',
+    update_milestone: 'Edit Milestone',
+    complete_milestone: 'Complete Milestone',
+    reopen_milestone: 'Reopen Milestone',
+    delete_milestone: 'Delete Milestone',
+    order_milestones: 'Milestone order',
+    move_task: 'Move Task',
     create_habit: 'New Habit',
     update_habit: 'Edit Habit',
     delete_habit: 'Delete Habit',
     check_in_habit: 'Check in Habit',
 };
-const DESTRUCTIVE = ['delete_task', 'delete_note', 'delete_goal', 'delete_habit'];
+const DESTRUCTIVE = [
+    'delete_task',
+    'delete_note',
+    'delete_goal',
+    'delete_milestone',
+    'delete_habit',
+];
 const FIELD_LABELS = {
     name: 'Name',
     title: 'Title',
@@ -87,6 +100,7 @@ const FIELD_LABELS = {
     completion_criteria: 'Completion criteria',
     strategy_notes: 'Strategy notes',
     parent: 'Location',
+    after: 'After',
     period: 'Period',
     target_frequency: 'Target frequency',
     date: 'Date',

@@ -11,8 +11,22 @@ use Planner\Http\HttpException;
 
 final readonly class GoogleAIProvider implements AIProviderInterface
 {
-    public function __construct(private string $apiKey, private string $model)
+    /** @var \Closure(string, list<string>, string): array{status:int, body:string|false, error:int} */
+    private \Closure $transport;
+
+    /**
+     * @param (\Closure(string, list<string>, string): array{status:int, body:string|false, error:int})|null $transport
+     *        HTTP POST seam for tests; defaults to cURL.
+     */
+    public function __construct(private string $apiKey, private string $model, ?\Closure $transport = null)
     {
+        $this->transport = $transport ?? static function (string $url, array $headers, string $body): array {
+            $curl = curl_init($url);
+            curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 30, CURLOPT_HTTPHEADER => $headers, CURLOPT_POSTFIELDS => $body]);
+            $response = curl_exec($curl);
+
+            return ['status' => (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE), 'body' => is_string($response) ? $response : false, 'error' => curl_errno($curl)];
+        };
     }
     public function name(): string
     {
@@ -78,21 +92,22 @@ final readonly class GoogleAIProvider implements AIProviderInterface
     {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.rawurlencode($this->model).':generateContent';
         $lastCode = 'AI_UNAVAILABLE';
+        $headers = ['Content-Type: application/json', 'x-goog-api-key: '.$this->apiKey];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
         for ($attempt = 0; $attempt < 3; $attempt++) {
-            $curl = curl_init($url);
-            curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 30, CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: '.$this->apiKey], CURLOPT_POSTFIELDS => json_encode($payload, JSON_THROW_ON_ERROR)]);
-            $body = curl_exec($curl);
-            $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-            $error = curl_errno($curl);
-            curl_close($curl);
+            ['status' => $status, 'body' => $response, 'error' => $error] = ($this->transport)($url, $headers, $body);
             if ($error !== 0) $lastCode = $error === CURLE_OPERATION_TIMEDOUT ? 'AI_TIMEOUT' : 'AI_UNAVAILABLE';
             elseif ($status === 429) $lastCode = 'AI_QUOTA';
             elseif ($status === 503) $lastCode = 'AI_UNAVAILABLE';
-            elseif ($status >= 200 && $status < 300 && is_string($body)) return $body;
-            elseif ($status === 400 || $status === 403) throw new HttpException(503, 'AI_CONFIGURATION', 'The AI provider cannot be used with the current configuration.');
+            elseif ($status >= 200 && $status < 300 && is_string($response)) return $response;
+            // 404 means the configured model is retired or misspelt: waiting will not help (ISSUE-025).
+            elseif ($status === 400 || $status === 403 || $status === 404) throw new HttpException(503, 'AI_CONFIGURATION', 'The AI provider cannot be used with the current configuration.');
             else $lastCode = 'AI_PROVIDER_ERROR';
             if ($attempt < 2 && in_array($lastCode, ['AI_TIMEOUT', 'AI_QUOTA', 'AI_UNAVAILABLE'], true)) usleep((100_000 * (2 ** $attempt)) + random_int(0, 50_000));
             else break;
+        }
+        if ($lastCode === 'AI_QUOTA') {
+            throw new HttpException(503, 'AI_QUOTA', 'The AI usage limit has been reached. Try again later.');
         }
         throw new HttpException(503, $lastCode, 'The AI provider is temporarily unavailable.');
     }

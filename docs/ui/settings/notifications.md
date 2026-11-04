@@ -22,5 +22,3 @@ Preferences control new in-app rows and opted-in email delivery. Admin report no
 | HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L139) |
 
 <!-- END GENERATED TRACE -->
-
-

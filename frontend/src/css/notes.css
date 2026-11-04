@@ -78,18 +78,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.label-add-link {
-    display: flex;
-    gap: 7px;
-    align-items: center;
-    margin: 12px 10px;
-    padding: 6px 0;
-    color: var(--accent);
-    background: transparent;
-    border: 0;
-    font-size: var(--font-size-ui);
-    cursor: pointer;
-}
 .notes-toolbar {
     display: flex;
     gap: 10px;
@@ -211,12 +199,54 @@
 .notes-feedback.is-error {
     color: var(--danger);
 }
-[data-note-preferences]:not([open]) {
-    padding: 0;
-    margin-bottom: 14px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+/* Note preferences: a compact header action opening a popover (ISSUE-017). */
+.note-preferences {
+    position: relative;
+}
+/* The header clips its scene art; the preferences popover must escape it. */
+[data-notes-workspace] > .scene-header {
+    overflow: visible;
+    z-index: 5;
+}
+.note-preferences > summary {
+    list-style: none;
+}
+.note-preferences > summary::-webkit-details-marker {
+    display: none;
+}
+.note-preferences[open] > summary {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.note-preferences-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    display: grid;
+    gap: 4px;
+    width: min(380px, calc(100vw - 32px));
+    padding: 16px 18px;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgb(10 20 40 / 20%);
+}
+.note-preferences-panel .preference-section {
+    display: grid;
+    min-height: 0;
+    gap: 10px;
+    justify-content: stretch;
+    padding: 12px 0;
+}
+.note-preferences-panel [data-note-preference-status]:empty {
+    display: none;
+}
+/* Permanent Delete sits apart from the save actions. */
+.editor-actions [data-editor-delete] {
+    order: -1;
+    margin-right: auto;
 }
 .notes-grid {
     display: grid;
@@ -442,6 +472,11 @@
 .page-button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+}
+.page-gap {
+    min-width: 20px;
+    color: var(--muted);
+    text-align: center;
 }
 .editor-modal {
     display: flex;
@@ -712,13 +747,16 @@
         flex: 0 0 auto;
     }
     .filter-divider,
-    .filter-heading,
-    .label-add-link {
+    .filter-heading {
         display: none;
     }
     .label-filter-list {
         display: flex;
         gap: 5px;
+    }
+    /* The tag chips scroll with the scope filters; an empty-state sentence does not fit there. */
+    .label-filter-list > p {
+        display: none;
     }
     .label-filter-option {
         min-height: 38px;
@@ -780,5 +818,106 @@
     }
     .modal-actions .button {
         flex: 1;
+    }
+}
+/* Checklist lines in card previews. */
+.note-preview-box {
+    display: inline-grid;
+    place-content: center;
+    width: 0.95em;
+    height: 0.95em;
+    margin-right: 0.45em;
+    vertical-align: -0.12em;
+    color: var(--on-accent);
+    border: 1.5px solid var(--control-border, var(--border));
+    border-radius: 4px;
+}
+.note-preview-box.is-checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.note-preview-box .check-mark {
+    width: 0.7em;
+    height: 0.7em;
+}
+/* The Goal or Task a note belongs to. */
+.note-link-chip {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 6px;
+    align-items: center;
+    max-width: 100%;
+    margin: -4px 0 12px;
+    padding: 3px 9px;
+    overflow: hidden;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    font-size: var(--font-size-caption);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.note-link-chip .ui-icon {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+}
+.note-card-attachment {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+}
+.note-card-attachment .line-icon {
+    width: 14px;
+    height: 14px;
+}
+.note-card-action .ui-icon,
+.note-card-action .line-icon {
+    width: 17px;
+    height: 17px;
+}
+/* Related notes on Goal and Task pages. */
+.linked-notes-list {
+    display: grid;
+    gap: 8px;
+}
+.linked-note {
+    display: grid;
+    gap: 3px;
+    padding: 10px 12px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+}
+.linked-note:hover,
+.linked-note:focus-visible {
+    border-color: var(--accent);
+}
+.linked-note span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.linked-note small {
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+}
+[data-task-detail] .linked-notes {
+    margin-top: 16px;
+}
+@media (max-width: 700px) {
+    /* Anchored to the header, the popover spans the screen instead of overflowing it. */
+    .note-preferences {
+        position: static;
+    }
+    .note-preferences-panel {
+        left: 0;
+        right: 0;
+        width: auto;
     }
 }

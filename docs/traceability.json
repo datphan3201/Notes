@@ -78,8 +78,8 @@
         },
         {
           "id": "tasks.row",
-          "label": "Task row: completion, Today, week, Edit, Important and More options",
-          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week/Today, Edit and Important stay inline; native More options reveals due/reminder/repeat and Archive. Archive retains data. Today uses + or a check with native hover labels and accessible names; automatic membership cannot be removed through a manual-selection action. Important retains its existing 3/5 toggle.",
+          "label": "Task row: completion, Today, week, importance stars and the ⋯ menu",
+          "behavior": "Aligned checkbox/content/actions keep the task name primary and parent chips sized to content. Facts distinguish status, localized due date/Due today, manual Today selection and scheduled interval/start/occurrence in the account timezone. Week (pin) and Today (sun) stay inline as icon toggles with hover labels and accessible names, followed by 1–5 importance stars (a keyboard radio group: click a star or use the arrow keys); the ⋯ menu lists Due date, Remind me, Repeat, Edit and Archive with labels and closes on outside click, Escape or a choice. Archive retains data. Automatic Today membership cannot be removed through a manual-selection action. Overdue rows show a red edge and facts line.",
           "ui": [
             {
               "path": "frontend/src/views/planning/tasks.php",
@@ -89,7 +89,7 @@
           "client": [
             {
               "path": "frontend/src/js/planning/planning-page.js",
-              "symbol": "const taskRow = (task) =>"
+              "symbol": "const taskRow = (task, { showContext = true } = {}) =>"
             },
             {
               "path": "frontend/src/js/planning/transitions.js",
@@ -131,6 +131,36 @@
               "label": "Aligned task row grid"
             }
           ]
+        },
+        {
+          "id": "tasks.group",
+          "label": "Group by Goal",
+          "behavior": "Tasks stays the execution view: the time filters (Today, This week…) and Status apply first, then Group by Goal splits the result into one collapsible section per Goal (a Milestone Task belongs to its Milestone's Goal), each with its count and Open roadmap, and a trailing Inbox. Inside a Goal, Tasks follow the roadmap (Milestone position, then Tasks directly in the Goal) under one subheading per Milestone; Sort orders Tasks within a Milestone. Grouped lists are not paged. Group by Goal is the default; choosing No grouping is remembered per browser.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/tasks.php",
+              "symbol": "data-task-group"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/tasks-collection.js",
+              "symbol": "export function groupTasksByGoal("
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const GROUPING_KEY = 'planner.tasks.group';"
+            }
+          ],
+          "server": [],
+          "storage": [],
+          "tests": [
+            {
+              "path": "frontend/tests/js/tasks-collection.test.js",
+              "symbol": "tasks group by their goal"
+            }
+          ],
+          "routes": []
         }
       ]
     },
@@ -1320,7 +1350,7 @@
         {
           "id": "goals.areas",
           "label": "Manage Areas",
-          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived.",
+          "behavior": "Accounts start with localized placeholder Areas. Rename/reorder uses owner/version checks; at most four active Areas and the last active Area cannot be archived. An Area containing active root Goals cannot be archived. Each Area has an importance of 1–5 (default 3), set with the stars beside its name in the Goal tree.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1378,7 +1408,7 @@
         {
           "id": "goals.collection",
           "label": "Goal tree, timeline and main Goal",
-          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
+          "behavior": "Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/timeline presentation does not alter it: expand carets sit in a gutter so sibling Goals stay aligned and only sub-Goals are indented; deadlines read as localized dates. The Main goal card is the account's explicit focus Goal, the same choice as the Dashboard roadmap; its title is a picker that changes both, and with no choice it invites one instead of guessing by importance. Create/move validates ownership, active ancestors and cycles. Open a Goal name for its fishbone.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goals.php",
@@ -1389,6 +1419,10 @@
             {
               "path": "frontend/src/js/planning/planning-page.js",
               "symbol": "export function initGoalsPage"
+            },
+            {
+              "path": "frontend/src/js/planning/planning-page.js",
+              "symbol": "const renderMainGoal = (goals, focusId) =>"
             }
           ],
           "server": [
@@ -1421,7 +1455,82 @@
             "api.goals.index",
             "api.goals.store",
             "api.goals.move",
-            "planning.goal"
+            "planning.goal",
+            "api.dashboard.roadmap.show",
+            "api.dashboard.roadmap.update"
+          ]
+        },
+        {
+          "id": "planning.icons",
+          "label": "Icons, colours and importance stars",
+          "behavior": "Areas, Goals, Milestones and Habits each take an optional icon from a fixed 39-symbol line set and one of eight accent colours; null keeps the automatic default (Areas and Milestones cycle the accents by position). The picker opens from the icon itself, saves immediately with the entity version, closes on Escape or an outside click and offers Use default icon. Tasks have no icon. Importance reads as 1–5 stars at every planning level, including Area (default 3); stars are editable where the entity is shown as a heading and read-only in lists. The server validates icon/icon_color against its catalogue (unknown values → 422) and the browser catalogue is tested to match it.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-goal-icon"
+            },
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-milestone-icon"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/lib/entity-icons.js",
+              "symbol": "export function openIconPicker("
+            },
+            {
+              "path": "frontend/src/js/lib/entity-icons.js",
+              "symbol": "export function iconButton("
+            },
+            {
+              "path": "frontend/src/js/lib/star-rating.js",
+              "symbol": "export function starRating("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Domain/Planning/EntityIcon.php",
+              "symbol": "final class EntityIcon"
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "'icon' => EntityIcon::icon($value)"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/database/plain-migrations/0029_add_entity_icons.php",
+              "symbol": "0029_add_entity_icons"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/PlanningHttpTest.php",
+              "symbol": "public function test_icons_and_importance_are_chosen_at_every_planning_level("
+            },
+            {
+              "path": "frontend/tests/js/entity-icons.test.js",
+              "symbol": "test('the icon and colour catalogues match what the backend accepts'"
+            }
+          ],
+          "routes": [
+            "api.areas.update",
+            "api.goals.update",
+            "api.milestones.update",
+            "api.habits.update"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/components.css",
+              "symbol": ".icon-picker {",
+              "label": "Icon picker"
+            },
+            {
+              "path": "frontend/src/css/components.css",
+              "symbol": "/* Importance as stars, at every planning level. */",
+              "label": "Star rating"
+            }
           ]
         }
       ]
@@ -1433,7 +1542,7 @@
         {
           "id": "goal.roadmap",
           "label": "Fishbone, paging and Milestone focus",
-          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens.",
+          "behavior": "The owned roadmap projection separates finite and recurring Tasks, direct Tasks, child Goals and Habits. The browser renders six Milestone cards per page and switches layout for narrow screens. The Goal header carries its icon (click to change) and editable importance stars; each Milestone branch shows its icon, accent and stars, and the Milestone focus header edits both.",
           "ui": [
             {
               "path": "frontend/src/views/planning/goal.php",
@@ -2288,7 +2397,7 @@
         {
           "id": "dashboard.roadmap",
           "label": "Roadmap below the header and account selection",
-          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. The connector after each node fills green in proportion to that Milestone's own progress (Completed is 100%, otherwise finished Tasks over its Tasks); a node is solid when complete and outlined green when partly done. Progress is a factual Task ratio, not a prediction. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice.",
+          "behavior": "The roadmap strip is directly below the page header, before the section tabs. A native select offers owned unarchived Goals, including child/completed Goals. Selection is stored per account; unset/cleared/archived choices show an invitation rather than automatically picking the highest-importance Goal. The preview shows up to six Milestones or the selected Goal link. The connector after each node fills green in proportion to that Milestone's own progress (Completed is 100%, otherwise finished Tasks over its Tasks); a node is solid when complete and outlined green when partly done. Progress is a factual Task ratio, not a prediction. Owner-locked PATCH validates exactly goal_id (owned UUID or null), returns 404 for foreign/archived IDs and does not modify Goal versions or planning facts. Stale Dashboard refreshes and obsolete preview requests cannot replace a newer choice. The same selection is the Goals page Main goal (GET /api/v1/dashboard/roadmap reads it).",
           "ui": [
             {
               "path": "frontend/src/views/planning/dashboard.php",
@@ -2368,6 +2477,48 @@
             "api.goals.roadmap",
             "api.dashboard.show"
           ]
+        },
+        {
+          "id": "dashboard.team",
+          "label": "Team tasks assigned to you",
+          "behavior": "The Daily tab lists open team Tasks assigned to the user across every active team Goal they joined (soonest due first, overdue highlighted), linking to that team Goal. The card is hidden when there are none; done Tasks, other members' Tasks and pending invitations never appear.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/dashboard.php",
+              "symbol": "data-dashboard-team hidden"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/dashboard-page.js",
+              "symbol": "const loadTeamTasks = async () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Teamwork/TeamService.php",
+              "symbol": "public function assigned("
+            },
+            {
+              "path": "backend/src/Http/Controller/TeamController.php",
+              "symbol": "public function assigned("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php",
+              "symbol": "public function assignedTo("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_teamwork_roles_tasks_chat_and_member_isolation("
+            }
+          ],
+          "routes": [
+            "api.team-tasks.assigned"
+          ]
         }
       ]
     },
@@ -2378,7 +2529,7 @@
         {
           "id": "habits.collection",
           "label": "Habit cards and New/Edit dialog",
-          "behavior": "The existing theme/cards and Edit fields are retained. Check-in sits before the name; the calendar follows the text and moves below on narrower screens. Edit remains at the end; More options opens the existing secondary popover. Parent chips fit their text. Refresh is an icon with a native tooltip. Edit keeps Cancel then Save changes in a sticky footer on mobile. Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
+          "behavior": "The existing theme/cards and Edit fields are retained. Check-in sits before the name, which carries the Habit icon (click to change) and read-only importance stars; the calendar follows the text and moves below on narrower screens. Edit remains at the end; More options opens the existing secondary popover. Parent chips fit their text. Refresh is an icon with a native tooltip. Edit keeps Cancel then Save changes in a sticky footer on mobile. Daily target is one completion day; weekly target is 1–7 distinct days. Period/timezone freeze after the first check-in; archive/recreate to change them. Name, description, importance, Goal and Tags remain editable. New/edited timezone inputs normalize supported browser aliases to canonical identifiers. Equivalent input on a checked-in legacy Habit preserves its stored timezone and history; an actual timezone change remains rejected.",
           "ui": [
             {
               "path": "frontend/src/views/planning/habits.php",
@@ -2861,8 +3012,8 @@
         },
         {
           "id": "notes.editor",
-          "label": "New note, title/content, color, pin and Save",
-          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; explicit Save flushes the normal save path.",
+          "label": "New note, title/content, color, pin and Save and close",
+          "behavior": "NoteEditor and AutosaveMachine share the complete editable snapshot. Plain-text content supports inline checkable lines. Custom RGB, pin and labels remain owner-controlled; Save and close flushes the normal save path, then closes (as the close button and backdrop do). Permanent Delete sits apart, at the start of the action row.",
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
@@ -2931,6 +3082,70 @@
               "symbol": ".editor-modal {",
               "label": "Note editor dialog"
             }
+          ]
+        },
+        {
+          "id": "notes.links",
+          "label": "Note links to a Goal or Task",
+          "behavior": "A Note can belong to one active Goal or Task of the same owner. The editor's Linked to picker sets or clears it outside the autosave snapshot (a new Note applies the choice after its first save); cards show the link as a chip, and Goal information and the Task Notes tab list linked Notes with a shortcut that opens a new Note already linked. Links to another account's work, or to both a Goal and a Task, are rejected; archiving or deleting the target hides or removes the link.",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-note-link"
+            },
+            {
+              "path": "frontend/src/views/planning/goal.php",
+              "symbol": "data-linked-notes=\"goal\""
+            },
+            {
+              "path": "frontend/src/views/planning/task.php",
+              "symbol": "data-linked-notes=\"task\""
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-editor.js",
+              "symbol": "async setLink("
+            },
+            {
+              "path": "frontend/src/js/notes/linked-notes.js",
+              "symbol": "export async function renderLinkedNotes"
+            },
+            {
+              "path": "frontend/src/js/notes/notes-page.js",
+              "symbol": "openFromLocation() {"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Notes/NoteLinkService.php",
+              "symbol": "public function link("
+            },
+            {
+              "path": "backend/src/Http/Controller/NoteController.php",
+              "symbol": "public function link("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteLinkRepository.php",
+              "symbol": "public function save("
+            },
+            {
+              "path": "backend/database/plain-migrations/0028_create_note_links.php",
+              "symbol": "CREATE TABLE note_links"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/NotesHttpTest.php",
+              "symbol": "public function test_note_links_to_one_goal_or_task_with_owner_isolation("
+            }
+          ],
+          "routes": [
+            "api.notes.link",
+            "api.goals.notes",
+            "api.tasks.notes"
           ]
         },
         {
@@ -3418,7 +3633,7 @@
           "ui": [
             {
               "path": "frontend/src/views/notes/index.php",
-              "symbol": "<button class=\"label-add-link\" type=\"button\" data-open-label-manager>"
+              "symbol": "data-open-label-manager><?= $view->e($view->t('Manage')) ?>"
             }
           ],
           "client": [
@@ -5009,7 +5224,7 @@
         {
           "id": "ai.chat",
           "label": "Tool-calling chat, owned reads and conversation history",
-          "behavior": "The chat sends the recent conversation as real turns. AIChatService runs up to six model rounds over owner-scoped read tools and queues supported writes into a proposal instead of mutating domain data. Disabled mode reports unavailable; provider calls do not bypass normal ownership. Preview and explicit Apply/Cancel live in the floating chat.",
+          "behavior": "The chat sends the recent conversation as real turns. AIChatService runs up to six model rounds over owner-scoped read tools (including get_roadmap) and queues supported writes into a proposal instead of mutating domain data. Create tools return refs so a Goal, its ordered Milestones and their Tasks are queued together; sub-Goals standing in for requested Milestones and delete-and-recreate restructures are refused. Disabled mode reports unavailable; provider calls do not bypass normal ownership. Preview and explicit Apply/Cancel live in the floating chat.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5046,6 +5261,14 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_chat_agent_reads_then_queues_task_and_note_changes_applied_only_on_confirmation("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_refs_build_inside_new_milestones_and_move_existing_tasks_instead_of_recreating("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_structural_guards_queue_nothing_for_rejected_requests("
             }
           ],
           "routes": [
@@ -5056,7 +5279,7 @@
         {
           "id": "ai.proposal",
           "label": "Chat proposal preview, Apply and Cancel",
-          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Tasks/Habits and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
+          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Milestones/Tasks/Habits, Task moves, Milestone order and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically, appending new Milestones and Tasks in proposal order. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5110,6 +5333,10 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal("
             }
           ],
           "routes": [
@@ -5530,6 +5757,11 @@
     "api.daily-selections.index": "docs/ui/dashboard/README.md",
     "api.daily-selections.store": "docs/ui/dashboard/README.md",
     "api.daily-selections.destroy": "docs/ui/dashboard/README.md",
-    "api.dashboard.roadmap.update": "docs/ui/dashboard/README.md"
+    "api.dashboard.roadmap.update": "docs/ui/dashboard/README.md",
+    "api.notes.link": "docs/ui/notes/README.md",
+    "api.goals.notes": "docs/ui/notes/README.md",
+    "api.tasks.notes": "docs/ui/notes/README.md",
+    "api.team-tasks.assigned": "docs/ui/dashboard/README.md",
+    "api.dashboard.roadmap.show": "docs/ui/dashboard/README.md"
   }
 }

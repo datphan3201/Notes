@@ -13,6 +13,7 @@ use Planner\Support\Clock;
 use Planner\Support\Timestamp;
 use Planner\Support\UuidGenerator;
 use Throwable;
+use Planner\Support\TimeZoneNames;
 
 final readonly class GoalSnapshotService
 {
@@ -38,7 +39,7 @@ final readonly class GoalSnapshotService
                 $created += $this->transactions->run(function () use ($userId, $owner, &$warnings): int {
                     $this->planningRepository->lockOwner($userId);
                     $timezone = (string) $owner['timezone'];
-                    $date = $this->clock->now()->setTimezone(new DateTimeZone($timezone))->modify('-1 day')->format('Y-m-d');
+                    $date = $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone))->modify('-1 day')->format('Y-m-d');
                     $progress = $this->planning->progress($userId);
                     $count = 0;
                     foreach ($progress as $goalId => $percentage) {

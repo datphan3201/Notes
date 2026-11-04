@@ -32,22 +32,26 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-004](#issue-004--duplicate-document-owners-can-overwrite-generated-trace-blocks) | Duplicate document owners can overwrite generated trace blocks | Low | Resolved | Generator/checker reject duplicate ownership in isolated regression cases |
 | [ISSUE-005](#issue-005--residual-known-issues-page-mixes-reporting-with-retired-contract-history) | Residual known-issues page mixes reporting with retired contract history | Low | Resolved | Central issue register and focused verification-limits guide; caller/link checks pass |
 | [ISSUE-006](#issue-006--dashboard-habit-fixture-assumes-tuesday-is-not-in-the-future) | Dashboard Habit fixture assumes Tuesday is not in the future | Low | Resolved | Fixed-time fixture and full backend suite pass; production date guard unchanged |
-| [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Open | Full staged diff check reports trailing whitespace and blank lines at EOF; artifact receipts remain valid |
+| [ISSUE-007](#issue-007--staged-generated-documents-contain-cosmetic-whitespace) | Staged generated documents contain cosmetic whitespace | Low | Partly resolved | Markdown generator fixed; Archify HTML needs regeneration |
 | [ISSUE-008](#issue-008--today-task-capture-and-membership-are-not-clear-in-the-ui) | Today task capture and membership are not clear in the UI | Low | Resolved | Approved daily/weekly checklist, selection and overdue policies implemented; PHP/Node/browser checks pass |
 | [ISSUE-009](#issue-009--dashboard-roadmap-has-no-explicit-account-level-selection) | Dashboard roadmap has no explicit account-level selection | Low | Resolved | Explicit saved selection and header placement implemented; service/HTTP/browser checks pass |
-| [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | In progress | Implemented; Node/build/lint pass; MySQL and browser verification pending |
+| [ISSUE-010](#issue-010--dashboard-today-mixes-week-content-habits-are-not-actionable-and-week-lacks-the-today-template) | Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
 | [ISSUE-011](#issue-011--tasks-completed-section-does-not-follow-the-selected-time-view) | Tasks Completed section does not follow the selected time view | Low | Resolved | View-scoped helper regression and browser scope/paging pass |
 | [ISSUE-012](#issue-012--repeating-exposes-inapplicable-task-filters-and-a-different-count-scope) | Repeating exposes inapplicable Task filters and a different count scope | Low | Resolved | Applicable series filters/count/paging verified with Node and browser fixtures |
 | [ISSUE-013](#issue-013--tasks-planning-and-retrieval-affordances-are-inconsistent-across-screens) | Tasks planning and retrieval affordances are inconsistent across screens | Low | Resolved | Approved layout implemented; local browser, Node, lint/build checks pass |
 | [ISSUE-014](#issue-014--archify-update-receipts-and-docs-checker-use-different-default-paths) | Archify update receipts and docs checker use different default paths | Low | Resolved | Explicit canonical receipt plus fresh browser directory; maintenance command documented |
 | [ISSUE-015](#issue-015--habit-actions-have-unclear-hierarchy-and-inconsistent-check-in-behavior) | Habit actions have unclear hierarchy and inconsistent check-in behavior | Low | Resolved | Direct check-in, secondary Rest day/Archive, responsive and keyboard browser smoke |
 | [ISSUE-016](#issue-016--habit-archive-fails-with-native-pdo-prepares) | Habit archive fails with native PDO prepares | Medium | Resolved | Reproduced HY093; distinct SQL bindings; integration regression and live browser archive pass |
-| [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Needs decision | Screenshot/template review; Save invokes the close workflow |
-| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Open | Browser read fixtures reproduce page 6/12 without an active page; hardcoded Trang labels |
-| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Open | Intercepted preference response reports List/Saved while Grid stays visible |
+| [ISSUE-017](#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) | Notes controls have redundant placement and unclear Save wording | Low | Resolved | Decided and fixed; verified in the browser (2026-11-03) |
+| [ISSUE-018](#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) | Notes pagination omits the current middle page and localized labels | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
+| [ISSUE-019](#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) | Notes layout preferences do not refresh the visible layout | Low | Resolved | Fixed and verified in the browser (2026-11-03) |
 | [ISSUE-020](#issue-020--ai-branch-generated-traces-still-describe-pre-agent-capabilities) | AI branch generated traces still describe pre-agent capabilities | Low | Resolved | Reconciled trace registry/manual cases with imported chat proposal implementation; source checks pass |
 | [ISSUE-021](#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) | Demo Review snapshots do not match the runtime schema | Medium | Resolved | Reproduced serializer failure; corrected demo builder, guarded data repair and regression/UI checks pass |
 | [ISSUE-022](#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) | Dashboard Activity and Weekly charts are hard to read | Low | Resolved | Shared heatmap palette, balanced card layout and readable weekly columns; responsive browser checks |
+| [ISSUE-023](#issue-023--deployment-automation-could-not-provision-or-safely-release-production) | Deployment automation could not provision or safely release production | High | Resolved | Scripts rewritten into the shared hosting module; sandboxed release/pull-deploy runs |
+| [ISSUE-024](#issue-024--hosting-behind-cloudflare-tunnel-breaks-client-addresses-and-csrf-origin) | Hosting behind Cloudflare Tunnel breaks client addresses and CSRF origin | High | Resolved | Nginx realip from loopback; quick-tunnel APP_URL sync verified against live cloudflared metrics |
+| [ISSUE-025](#issue-025--retired-ai-model-is-reported-as-a-temporary-provider-outage) | Retired AI model is reported as a temporary provider outage | Medium | Resolved | 404 is a configuration error, quota is named; unit tests with a fake transport |
+| [ISSUE-026](#issue-026--ai-assistant-cannot-build-a-goal-roadmap-and-restructures-by-deleting-tasks) | AI assistant cannot build a Goal roadmap and restructures by deleting Tasks | High | Resolved | Integration tests cover roadmap, refs, moves and guards; scripted provider only |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
 
@@ -133,7 +137,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-007 — Staged generated documents contain cosmetic whitespace
 
-- **Status:** Open.
+- **Status:** Partly resolved — generated Markdown fixed; Archify HTML still open.
 - **Severity:** Low; formatting-only finding without demonstrated runtime or navigation impact.
 - **Recorded:** 2026-11-02, during pre-push staging review.
 - **Affected area:** Archify HTML under [diagrams](diagrams/README.md), generated UI Markdown and [documentation generation](../tools/docs/sync.php).
@@ -142,6 +146,7 @@ The severity assessments below describe observed impact, not a completed securit
 - **Evidence:** Full staged diff inspection; documentation checker still passes and diagram candidate/artifact hashes match receipts. No application defect is established.
 - **Next step:** Normalize Markdown output in the generator and address HTML whitespace through the Archify delivery workflow, regenerating final receipts after any artifact change. Do not silently edit delivered HTML and invalidate receipts.
 - **Resolution criteria:** A full staged whitespace check passes, healthy/negative documentation-tool tests pass and all final diagram receipts remain valid.
+- **Progress (2026-11-03):** [sync.php](../tools/docs/sync.php) now writes each generated UI document with exactly one final newline; regenerated documents pass a whitespace check against an empty tree, and the 17 documentation-tool tests pass. The nine delivered Archify `index.html` files still carry trailing spaces (15–18 lines each); they were not hand-edited because their receipts pin the artifact hashes. Remaining step: regenerate them through the Archify workflow and refresh the receipts.
 
 ## ISSUE-008 — Today task capture and membership are not clear in the UI
 
@@ -171,7 +176,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-010 — Dashboard Today mixes week content, Habits are not actionable and Week lacks the Today template
 
-- **Status:** In progress — implemented; browser verification is pending (see Limits).
+- **Status:** Resolved.
 - **Severity:** Low; information-architecture and discoverability problems without demonstrated data loss.
 - **Recorded:** 2026-11-02, from the user's report and Dashboard screenshots.
 - **Affected UI:** [Dashboard Today, This week, Habits and Roadmap](ui/dashboard/README.md).
@@ -180,6 +185,7 @@ The severity assessments below describe observed impact, not a completed securit
 - **Resolution (implemented):** Reorganized the Dashboard view and browser modules, added `dashboard-habits.js`, exposed the Habit-local `today` date on each Dashboard Habit row (additive field), added Daily tasks Sort/Status comboboxes matching Weekly, and added connector fill via a `--segment-progress` CSS variable. No migration, route or write-path change; Habit check-in reuses the existing PUT/DELETE routes.
 - **Verification so far:** Backend integration tests (`DashboardReviewsTest.php` on goals_test): 15 tests, 93 assertions pass; Node: 86 tests pass (including Habit summary/targets, Milestone progress, and Daily/Weekly sort/status filtering); frontend format check and build pass; PHP lint passes.
 - **Limits:** Live browser flows (layout on desktop/mobile, Habit check-in click, connector fill, empty states) have not been run through Playwright for this change. The daily/weekly Archify diagram describes selection/completion contracts and was not regenerated.
+- **Browser verification (2026-11-03):** Playwright against the live local app (dark theme, 1280px): the first Daily Habit was checked in from the Dashboard (done_today false → true, label became "Undo today’s check-in") and undone again (→ false); no page errors.
 
 ## ISSUE-011 — Tasks Completed section does not follow the selected time view
 
@@ -246,7 +252,7 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-017 — Notes controls have redundant placement and unclear Save wording
 
-- **Status:** Needs decision.
+- **Status:** Resolved.
 - **Severity:** Low; hierarchy/discoverability and wording, with no demonstrated lost content.
 - **Recorded:** 2026-11-02 (Asia/Saigon), Notes design review.
 - **Affected UI/source:** [Notes template](../frontend/src/views/notes/index.php), collection toolbar and editor actions; [NoteEditor](../frontend/src/js/notes/note-editor.js).
@@ -254,26 +260,34 @@ The severity assessments below describe observed impact, not a completed securit
 - **Proposal:** Keep the current theme and writing area; make preferences a compact header action, retain one Grid/List entry, group editor metadata/attachments separately from its primary footer, and move permanent Delete to secondary actions. Keep autosave/recovery/conflict behavior. Prefer Save and close wording to preserve current behavior.
 - **Pending decision:** Preserve save-and-close with clearer wording, or deliberately change Save to save without closing. Do not remove explicit Save or rename permanent Note deletion to Archive without a separate requirement.
 - **Evidence limits:** Desktop/mobile screenshots of the collection and empty New note editor were inspected; persisted/shared action layouts were inspected in source. No Note content was changed, shared or deleted. This review is not a full save/recovery/sharing acceptance test.
+- **Decision and resolution (2026-11-03):** Kept save-and-close behavior and labelled it **Save and close**. Note preferences became a compact header **Preferences** popover (closes on outside click/Escape, full width on phones); the layout choice lives only in the toolbar Grid/List toggle; the sidebar keeps a single Manage entry for tags; permanent Delete moved to the start of the editor action row, apart from Save; the Linked to picker sits beside the colours so the footer keeps one row.
+- **Verification:** Playwright on the live local app at 1440px and 390px: popover fully visible and closing on outside click, editor footer on one row with Delete apart; no page errors.
 
 ## ISSUE-018 — Notes pagination omits the current middle page and localized labels
 
-- **Status:** Open.
+- **Status:** Resolved.
 - **Severity:** Low; navigation/orientation and screen-reader wording; no demonstrated data corruption.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [NotesPage::renderPagination/pageButton](../frontend/src/js/notes/notes-page.js).
 - **Observed:** Only numbered pages 1–5 and the last page render; intermediate current pages have no active numbered button or gap indicator. Previous/Next and numbered controls use hardcoded Trang plus a page number, including on English UI.
 - **Evidence:** Intercepted GET list responses with last_page=12; navigating 5 to 6 produced no active page button. Returned accessible labels included Trang 1–5/12 and Trang 5/7 for navigation. This fixture tests browser rendering, not SQL pagination.
 - **Expected / next step:** Keep a visible current-page window and clear gaps/position, with localized Previous/Next/Page labels. Verify first/middle/last pages, search/page reset and both locales before resolving.
+- **Resolution (implemented):** [pageWindow](../frontend/src/js/lib/pagination.js) always shows the first and last page plus two pages on each side of the current one, with an ellipsis for skipped pages (a single skipped page is shown instead). The current page is marked with `aria-current="page"`; numbered buttons are labelled "Page N of M" and the arrows "Previous page"/"Next page" through the Vietnamese dictionary.
+- **Verification so far:** 5 new [pagination tests](../frontend/tests/js/pagination.test.js) cover short ranges, first/middle/last pages, single-page skips and clamping; 96 Node tests, Prettier and the Vite build pass. Browser checks of both locales and search/page reset are still pending.
+- **Browser verification (2026-11-03):** Playwright with intercepted list metadata (last_page 12): after five Next clicks the bar read `‹ 1 … 4 5 [6] 7 8 … 12 ›` with aria-current on 6 and labels "Previous page" / "Page 4 of 12"; no page errors.
 
 ## ISSUE-019 — Notes layout preferences do not refresh the visible layout
 
-- **Status:** Open.
+- **Status:** Resolved.
 - **Severity:** Low; visible layout disagrees with the chosen preference until a later layout refresh; no content loss established.
 - **Recorded:** 2026-11-02 (Asia/Saigon).
 - **Affected source:** [initNotePreferences](../frontend/src/js/settings/delivery-preferences.js), [NotesPage](../frontend/src/js/notes/notes-page.js) and [template](../frontend/src/views/notes/index.php).
 - **Observed:** Preference success updates state and dispatches notes:preferences-changed, but NotesPage only copies preferences. The follow-up selector targets data-view, while the actual toolbar uses data-view-toggle; applyView is not called.
 - **Evidence:** Intercepted PATCH preference response returned notes_view=list; the UI reported Saved while the Grid remained visible. No stored account preference was changed for this review.
 - **Expected / next step:** Consolidate the layout entry or apply the authoritative preference through the same view-rendering path and synchronize controls. Verify immediate switching and reload persistence with saved/draft state intact.
+- **Resolution (implemented):** NotesPage now applies `notes_view` from `notes:preferences-changed` through `applyView` (without saving again), and the dead `[data-view]` click in initNotePreferences was removed.
+- **Verification so far:** 96 Node tests, Prettier and the Vite build pass. Browser switching and reload persistence are still pending.
+- **Browser verification (2026-11-03):** Playwright on the live local app: choosing List in Note preferences hid the Grid and showed the List immediately (and back), without a reload; no page errors.
 
 ## ISSUE-020 — AI branch generated traces still describe pre-agent capabilities
 
@@ -304,6 +318,49 @@ The severity assessments below describe observed impact, not a completed securit
 - **Observed:** Recent Activity did not inherit the year calendar's heat-level variables, leaving its cells effectively uncoloured; right-aligned content wasted the card's left side. Weekly columns were only 9px wide inside a short chart, and minimum fill height made zero-count dates look active.
 - **Resolution:** Shared existing light/dark palette variables; balanced total/calendar layout, legend and selected-date outline; larger weekly columns with per-day counts, distinct weekday labels, current-date emphasis and a factual total. Zero values have zero fill. The shared Reviews renderer retains its default markup; Dashboard opts into counts/tracks.
 - **Verification:** 91 Node tests and Vite build passed. Authenticated browser read fixtures using the demo projection (71 recent contributions, five on Monday) verified 30 coloured date buttons, selected-day details, seven columns, totals, zero fills, and no JavaScript errors. Light/dark screenshots and widths 320/390/768/1440 were inspected/checked. Empty activity was checked separately. These are chart presentation checks with intercepted reads and theme attributes, not a new backend, theme-preference persistence or all-feature acceptance test; existing demo records were not changed.
+
+## ISSUE-023 — Deployment automation could not provision or safely release production
+
+- **Status:** Resolved.
+- **Severity:** High; CI could not start, the host did not match the required MySQL version or serve the app, and releases migrated without a backup.
+- **Recorded:** 2026-11-03; review of the unmerged chore/deploy-automation branch.
+- **Affected source:** [CI/CD workflow](../.github/workflows/ci-cd.yml), host setup (then tools/deploy/oracle-ubuntu-setup.sh, now [setup.sh](../tools/deploy/setup.sh)), [release helper](../tools/deploy/release.sh); [production guide](operations/deployment.md).
+- **Observed:** mysqld arguments were passed as `docker create` options for the CI MySQL service; Ubuntu 24.04's apt `mysql-server` is 8.0, not 8.4, and MySQL's APT repository has no arm64 packages; no Nginx site or certificate was configured; the deploy job reported success when skipped for missing secrets; migrations ran without the backup the release procedure requires; no scheduler cron was installed; private storage and logs were not writable by PHP-FPM; `ssh-keyscan` trusted whatever host key it received; the iptables insert position assumed Oracle's rule layout.
+- **Resolution:** CI keeps only Docker options and pins the test database collation. Setup runs MySQL 8.4 from the official multi-arch image on loopback, creates the database, user and production .env, installs the Nginx site, Certbot TLS, scheduler and backup cron, PHP upload limits, writable-directory ACLs and minimal sudo rules, and runs the first release. Releases take a mandatory verified backup before migrating. Deployment is opt-in through `DEPLOY_ENABLED`, fails on missing secrets, pins the host key through `ORACLE_KNOWN_HOSTS`, deploys the verified commit and runs one at a time.
+- **Verification:** `bash -n` on all deploy scripts; a sandboxed release.sh run with stub composer/php checked the argument, .env, manifest and missing-backup guards, `--skip-backup`, relative/absolute path resolution and setgid directories; the setup script's generated production .env loaded through ConfigLoader; workflow YAML parsed. Not verified: shellcheck/actionlint (not available locally; CI now runs shellcheck), ACL behaviour (setfacl absent locally), and a real provisioning, certificate or GitHub deployment run on an Oracle instance.
+- **Follow-up:** On 2026-11-03 the SSH deploy job, `DEPLOY_ENABLED` and the `ORACLE_*` secrets were replaced by pull-based deployment, and oracle-ubuntu-setup.sh by the shared hosting module; see [ISSUE-024](#issue-024--hosting-behind-cloudflare-tunnel-breaks-client-addresses-and-csrf-origin) and the [production guide](operations/deployment.md#continuous-integration-and-deployment).
+
+## ISSUE-024 — Hosting behind Cloudflare Tunnel breaks client addresses and CSRF origin
+
+- **Status:** Resolved (deployment configuration; application code unchanged).
+- **Severity:** High for tunnel ingress; sign-in and every form would fail, and throttling would be shared by all visitors.
+- **Recorded:** 2026-11-03; source inspection while adding Cloudflare Tunnel ingress to [the hosting module](../tools/deploy/setup.sh).
+- **Affected source:** [Request::clientIp](../backend/src/Http/Request.php) uses REMOTE_ADDR for sessions, login and password-reset throttling and guest rate limits; [CsrfGuard](../backend/src/Http/Security/CsrfGuard.php) requires the Origin scheme/host/port to equal APP_URL.
+- **Observed:** Behind cloudflared every request reaches Nginx from 127.0.0.1, so all visitors would share one client identity. A quick tunnel's random trycloudflare.com hostname changes on each restart, so a fixed APP_URL would reject every state-changing request with 419.
+- **Resolution:** In tunnel ingresses Nginx trusts `CF-Connecting-IP` only from loopback peers (realip), and the local app server listens on 127.0.0.1 only. The quick-tunnel helper rewrites APP_URL and /etc/planner/public-url from cloudflared's metrics server on every tunnel start; named tunnels and direct ingress pin APP_URL to `https://<domain>`. Config is reloaded per request, so no PHP-FPM reload is needed. Mail links sent before a quick tunnel restart still break; this is documented as a quick-tunnel limitation.
+- **Verification:** Rendered Nginx site for quick-tunnel and direct ingress inspected; `env_set` behaviour checked against .env.example. Not verified: a live cloudflared quick or named tunnel, its `/quicktunnel` metrics response, or realip on a real host.
+
+## ISSUE-025 — Retired AI model is reported as a temporary provider outage
+
+- **Status:** Resolved.
+- **Severity:** Medium; the AI assistant stops working while the message suggests waiting, hiding a configuration fix.
+- **Recorded:** 2026-11-03; local AI chat reported "The AI provider is temporarily unavailable."
+- **Affected source:** [GoogleAIProvider::post](../backend/src/Infrastructure/AI/GoogleAIProvider.php); local backend/.env.
+- **Observed:** generateContent for `gemini-2.5-flash-lite` returned HTTP 404 NOT_FOUND ("no longer available to new users… use models/gemini-3.5-flash-lite"), while the model metadata endpoint still answered 200. post() maps every unlisted status, 404 included, to AI_PROVIDER_ERROR and the generic 503 "temporarily unavailable" message. Separately, the same method calls curl_close(), deprecated since PHP 8.5 (no effect since 8.0); it emits E_DEPRECATED on every attempt.
+- **Expected / next step:** Treat 404 like 400/403 (AI_CONFIGURATION, "cannot be used with the current configuration") and log the provider status and model; drop the curl_close() call. Confirm the intended message before changing behavior.
+- **Evidence:** One 5-token generateContent request per model with the configured key: gemini-2.5-flash-lite 404, gemini-3.5-flash-lite 200. Local AI_MODEL was changed to gemini-3.5-flash-lite (the .env.example default); no code was changed. The in-app chat after the change was not re-tested.
+- **Resolution:** [GoogleAIProvider](../backend/src/Infrastructure/AI/GoogleAIProvider.php) treats 404 like 400/403 (AI_CONFIGURATION, no retries) and names exhausted quota after its retries (AI_QUOTA, "The AI usage limit has been reached. Try again later."); the deprecated curl_close() call is gone and HTTP goes through an injectable transport.
+- **Verification:** [GoogleAIProviderTest](../backend/tests/Plain/Unit/GoogleAIProviderTest.php): retired model (one call), quota (three calls), temporary outage then success, API key only in the header.
+
+## ISSUE-026 — AI assistant cannot build a Goal roadmap and restructures by deleting Tasks
+
+- **Status:** Resolved.
+- **Severity:** High for the AI flow; accepted plans were applied partially and existing Tasks were archived to restructure.
+- **Recorded:** 2026-11-03; user test of the floating AI chat ("create a Docker learning roadmap").
+- **Affected source:** [AIChatService](../backend/src/Application/AI/AIChatService.php), [ProposalValidator](../backend/src/Application/AI/ProposalValidator.php), [AIActionService](../backend/src/Application/AI/AIActionService.php), [assistantSummary](../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php).
+- **Observed:** The chat had no Milestone tools, and create tools returned no reference, so Tasks could only attach to Goals that already existed: an accepted "Goal with Tasks" plan created only the Goal, follow-up Tasks landed in the Inbox, and a request for Milestones produced prefixed sub-Goals while the old Tasks were deleted. The summary showed no Milestones or Task locations. Separately, Milestones and Tasks created by Apply all received position 0, so roadmap order followed random ids.
+- **Resolution:** Create tools return refs usable as parents in the same message; new `get_roadmap`, `create_roadmap`, `create_milestones`, `update/complete/reopen/delete_milestone` and `move_tasks` tools; `move_task` and Milestone change operations in ProposalValidator and Apply; multi-step tools queue all or nothing; sub-Goals are refused when the message asks for Milestones and delete-and-recreate of a Task is refused (withdrawing the queued delete); Apply appends Milestones/Tasks in proposal order; the summary includes Milestones and Task locations; the system prompt states the data model and the roadmap, acceptance, focus, restructure and deletion rules. [AI assistant guide](ui/shared/ai.md).
+- **Verification:** 4 new integration tests (roadmap in one proposal with order and prerequisites; refs, moves and the recreate guard; structural guards queue nothing; validator rejects an invalid move parent) plus the 11 existing AIActionTest cases; full PHPUnit 153 tests / 1358 assertions; 91 Node tests; Prettier; Vite build; documentation checks. Model compliance with the prompt was exercised with a scripted provider only, not with live Gemini.
 
 ## New issue template
 

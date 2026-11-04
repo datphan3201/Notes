@@ -5,8 +5,11 @@
                 <a href="/goals"><?= $view->e($view->t('Goals')) ?></a>
                 <?= $view->e($view->t('/ Roadmap')) ?>
             </p>
-            <h1 id="goal-detail-title" data-goal-name><?= $view->e($view->t('Loading…')) ?></h1>
-            <p data-goal-meta aria-live="polite"></p>
+            <div class="entity-title-row">
+                <span data-goal-icon></span>
+                <h1 id="goal-detail-title" data-goal-name><?= $view->e($view->t('Loading…')) ?></h1>
+            </div>
+            <p class="entity-meta-row"><span data-goal-meta aria-live="polite"></span><span data-goal-stars></span></p>
         </div>
         <div class="action-row">
             <button class="button button-quiet" type="button" data-open-dialog="goal-information-dialog"><?= $view->e($view->t('Goal information')) ?></button>
@@ -19,7 +22,7 @@
         <div data-roadmap-overview>
             <div class="section-heading">
                 <div>
-                    <h2><?= $view->e($view->t('Your roadmap')) ?></h2>
+                    <h2 class="roadmap-heading"><?= $view->e($view->t('Roadmap')) ?></h2>
                     <p class="subtle-copy"><?= $view->e($view->t('Select the Goal name for its information, or a milestone for its tasks.')) ?></p>
                 </div>
                 <button class="button button-quiet" type="button" data-open-milestone-create data-open-dialog="new-milestone-dialog" disabled><?= $view->e($view->t('Add milestone')) ?></button>
@@ -32,7 +35,11 @@
             <button class="button button-quiet" type="button" data-roadmap-back><?= $view->e($view->t('← Back to roadmap')) ?></button>
             <div class="workspace-header milestone-focus-header">
                 <div>
-                    <h2 data-milestone-title tabindex="-1"></h2>
+                    <div class="entity-title-row">
+                        <span data-milestone-icon></span>
+                        <h2 data-milestone-title tabindex="-1"></h2>
+                        <span data-milestone-stars></span>
+                    </div>
                     <p data-milestone-meta></p>
                 </div>
                 <div class="action-row">
@@ -172,6 +179,22 @@
                 <?php require __DIR__.'/task-capture-fields.php'; ?>
                 <button class="button button-quiet" type="submit"><?= $view->e($view->t('Add task')) ?></button>
             </form>
+        </details>
+        <details name="goal-information-sections" class="goal-information-section">
+            <summary><?= $view->e($view->t('Related notes')) ?></summary>
+            <div class="linked-notes" data-linked-notes="goal" data-linked-id="<?= $view->e($goal_id) ?>">
+            <div class="section-heading">
+                <div>
+                    <h2><?= $view->e($view->t('Related notes')) ?></h2>
+                    <p class="subtle-copy"><?= $view->e($view->t('Notes linked to this goal from the Notes page.')) ?></p>
+                </div>
+                <a class="button button-quiet" href="/" data-linked-notes-new>
+                    <svg class="ui-icon" aria-hidden="true"><use href="#icon-plus"/></svg>
+                    <?= $view->e($view->t('New linked note')) ?>
+                </a>
+            </div>
+            <div class="linked-notes-list" data-linked-notes-list></div>
+        </div>
         </details>
         <details name="goal-information-sections" class="goal-information-section">
             <summary><?= $view->e($view->t('Tags')) ?></summary>

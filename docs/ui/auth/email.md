@@ -21,5 +21,3 @@ Verification links expire after 24h; address-change links after 1h. The service 
 | HTTP | `GET /verify-email` (`email.verify`) → [EmailController::verify](../../../backend/src/Http/Controller/EmailController.php#L33)<br>`GET /confirm-email` (`email.change.confirm`) → [EmailController::confirmChange](../../../backend/src/Http/Controller/EmailController.php#L45) |
 
 <!-- END GENERATED TRACE -->
-
-

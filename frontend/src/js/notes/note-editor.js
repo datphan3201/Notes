@@ -1,6 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { NoteSharing } from './note-sharing.js';
-import { get, patch, post, remove, upload } from '../lib/http';
+import { get, patch, post, put, remove, upload } from '../lib/http';
 import { RecoveryStore } from '../lib/recovery-store';
 import { secureUuidV4 } from '../lib/uuid.js';
 import {
@@ -42,6 +42,11 @@ export class NoteEditor {
         this.titleError = root.querySelector('[data-editor-title-error]');
         this.contentError = root.querySelector('[data-editor-content-error]');
         this.pinButton = root.querySelector('[data-editor-pin]');
+        // Goal/Task link: outside the autosave snapshot, like the background image.
+        this.linkSelect = root.querySelector('[data-note-link]');
+        this.linkSelect.addEventListener('change', () => this.setLink(this.linkSelect.value));
+        this.pendingLink = '';
+        this.savedNoteId = null;
         this.pinLabel = root.querySelector('[data-pin-label]');
         this.deleteButton = root.querySelector('[data-editor-delete]');
         this.labelPopover = root.querySelector('[data-editor-label-popover]');
@@ -135,7 +140,10 @@ export class NoteEditor {
 
         this.dispose();
         this.note = null;
+        this.savedNoteId = null;
+        this.linkSelect.disabled = false;
         this.show();
+        this.loadLinkOptions(this.pendingLink);
         this.heading.textContent = t('Write down what matters');
         this.eyebrow.textContent = t('New note');
         this.writeFields({ title: '', content: '' });
@@ -168,6 +176,12 @@ export class NoteEditor {
             const result = await get('/api/v1/notes/' + encodeURIComponent(noteId));
             if (generation !== this.generation) return;
             this.note = result.payload.data;
+            this.savedNoteId = this.note.id;
+            this.pendingLink = '';
+            this.linkSelect.disabled = false;
+            this.loadLinkOptions(
+                this.note.link ? `${this.note.link.type}:${this.note.link.id}` : '',
+            );
             this.writeFields(this.note);
             this.machine = this.createMachine(this.note, true);
             this.heading.textContent = this.note.title || t('Untitled note');
@@ -211,6 +225,13 @@ export class NoteEditor {
                 content: request.sentSnapshot.content,
                 color: request.sentSnapshot.color,
             });
+            this.savedNoteId = request.noteId;
+            // A link chosen before the first save (or passed in from a Goal/Task page) follows it.
+            if (this.pendingLink) {
+                const link = this.pendingLink;
+                this.pendingLink = '';
+                this.setLink(link);
+            }
             return result.payload;
         }
         const result = await patch('/api/v1/notes/' + encodeURIComponent(request.noteId), {
@@ -236,6 +257,59 @@ export class NoteEditor {
 
     setColor(color) {
         this.machine?.input({ color });
+    }
+
+    /** Fills the "Linked to" picker with active Goals and open Tasks, then selects `value`. */
+    async loadLinkOptions(value) {
+        const select = this.linkSelect;
+        if (!this.linkOptions) {
+            try {
+                const [goals, tasks] = await Promise.all([
+                    get('/api/v1/goals'),
+                    get('/api/v1/tasks'),
+                ]);
+                const list = (data) => (Array.isArray(data) ? data : data?.items || []);
+                this.linkOptions = {
+                    goals: list(goals.payload.data).filter((goal) => goal.status !== 'Completed'),
+                    tasks: list(tasks.payload.data).filter((task) => task.status !== 'Done'),
+                };
+            } catch {
+                this.linkOptions = { goals: [], tasks: [] };
+            }
+            const group = (label, type, items) => {
+                if (!items.length) return;
+                const node = document.createElement('optgroup');
+                node.label = t(label);
+                for (const item of items) node.append(new Option(item.name, `${type}:${item.id}`));
+                select.append(node);
+            };
+            group('Goals', 'goal', this.linkOptions.goals);
+            group('Tasks', 'task', this.linkOptions.tasks);
+        }
+        select.value = value;
+        // A linked item outside the lists (for example completed) still shows what the note belongs to.
+        if (value && select.value !== value && this.note?.link) {
+            select.append(new Option(this.note.link.name, value));
+            select.value = value;
+        }
+    }
+
+    async setLink(value) {
+        if (!this.savedNoteId) {
+            this.pendingLink = value;
+            return;
+        }
+        const [type, id] = value ? value.split(':') : [];
+        try {
+            const response = await put(
+                '/api/v1/notes/' + encodeURIComponent(this.savedNoteId) + '/link',
+                type ? { [`${type}_id`]: id } : { goal_id: null },
+            );
+            if (this.note) this.note = { ...this.note, link: response.payload.data };
+            this.onChanged?.();
+        } catch (error) {
+            this.toast(error.message || t('Unable to link the note.'), true);
+        }
     }
 
     /** Background images live outside the autosave snapshot; saving them never conflicts. */
@@ -524,6 +598,9 @@ export class NoteEditor {
         // the server; a fresh GET is not consent to overwrite another tab.
         this.dispose();
         this.note = null;
+        // Linking waits until the recovered draft is saved and reopened.
+        this.savedNoteId = null;
+        this.linkSelect.disabled = true;
         this.show();
         this.heading.textContent = t('Write down what matters');
         this.eyebrow.textContent = t('Recovered draft');

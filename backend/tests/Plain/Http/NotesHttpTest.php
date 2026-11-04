@@ -333,6 +333,51 @@ SQL);
     }
 
     /** @return array{string,string,int} */
+    public function test_note_links_to_one_goal_or_task_with_owner_isolation(): void
+    {
+        [$cookie, $csrf, $ownerId] = $this->registerAccount('owner@example.test');
+        $areas = $this->json($this->api('GET', '/api/v1/areas', cookie: $cookie))['data'];
+        $goal = $this->json($this->api('POST', '/api/v1/goals', ['area_id' => $areas[0]['id'], 'parent_goal_id' => null, 'name' => 'Learn Docker'], $cookie, $csrf))['data'];
+        $task = $this->json($this->api('POST', '/api/v1/tasks', ['goal_id' => $goal['id'], 'milestone_id' => null, 'name' => 'Write a Dockerfile'], $cookie, $csrf))['data'];
+        $note = $this->createNote($ownerId, 'Docker cheatsheet', '- [x] docker run');
+        $otherId = $this->seedAccount('other@example.test');
+        $foreignGoal = $this->foreignGoal($otherId);
+
+        $linked = $this->api('PUT', "/api/v1/notes/$note/link", ['goal_id' => $goal['id']], $cookie, $csrf);
+        self::assertSame(200, $linked->status);
+        self::assertSame(['type' => 'goal', 'id' => $goal['id'], 'name' => 'Learn Docker'], $this->json($linked)['data']);
+        self::assertSame('goal', $this->json($this->api('GET', "/api/v1/notes/$note", cookie: $cookie))['data']['link']['type']);
+        self::assertSame($goal['id'], $this->json($this->api('GET', '/api/v1/notes', cookie: $cookie))['data'][0]['link']['id']);
+        self::assertSame([$note], array_column($this->json($this->api('GET', "/api/v1/goals/{$goal['id']}/notes", cookie: $cookie))['data'], 'id'));
+
+        // One target only, never another account's Goal, and not someone else's Notes either.
+        self::assertSame(422, $this->api('PUT', "/api/v1/notes/$note/link", ['goal_id' => $goal['id'], 'task_id' => $task['id']], $cookie, $csrf)->status);
+        self::assertSame(404, $this->api('PUT', "/api/v1/notes/$note/link", ['goal_id' => $foreignGoal], $cookie, $csrf)->status);
+        self::assertSame(404, $this->api('GET', "/api/v1/goals/$foreignGoal/notes", cookie: $cookie)->status);
+        $foreignNote = $this->createNote($otherId, 'Secret', '');
+        self::assertSame(404, $this->api('PUT', "/api/v1/notes/$foreignNote/link", ['goal_id' => $goal['id']], $cookie, $csrf)->status);
+
+        // Re-linking moves the Note; clearing removes the link.
+        self::assertSame('task', $this->json($this->api('PUT', "/api/v1/notes/$note/link", ['task_id' => $task['id']], $cookie, $csrf))['data']['type']);
+        self::assertSame([], $this->json($this->api('GET', "/api/v1/goals/{$goal['id']}/notes", cookie: $cookie))['data']);
+        self::assertSame([$note], array_column($this->json($this->api('GET', "/api/v1/tasks/{$task['id']}/notes", cookie: $cookie))['data'], 'id'));
+        self::assertNull($this->json($this->api('PUT', "/api/v1/notes/$note/link", ["goal_id" => null], $cookie, $csrf))["data"]);
+        self::assertNull($this->json($this->api('GET', "/api/v1/notes/$note", cookie: $cookie))['data']['link']);
+    }
+
+    private function foreignGoal(int $userId): string
+    {
+        $area = strtolower(Uuid::uuid4()->toString());
+        $goal = strtolower(Uuid::uuid4()->toString());
+        $now = gmdate('Y-m-d H:i:s').'.000000';
+        $this->pdo->prepare("INSERT INTO areas (id, user_id, name, description, position, created_at, updated_at) VALUES (?, ?, 'Theirs', '', 0, ?, ?)")
+            ->execute([$area, $userId, $now, $now]);
+        $this->pdo->prepare("INSERT INTO goals (id, user_id, area_id, name, description, expected_result, completion_criteria, created_at, updated_at) VALUES (?, ?, ?, 'Their goal', '', '', '', ?, ?)")
+            ->execute([$goal, $userId, $area, $now, $now]);
+
+        return $goal;
+    }
+
     private function registerAccount(string $email): array
     {
         $page = $this->request('GET', '/register');

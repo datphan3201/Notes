@@ -45,7 +45,7 @@
     list-style: none;
 }
 .goal-tree {
-    padding-left: 0;
+    padding-left: 22px;
 }
 .planning-item-link,
 .planning-list-item {
@@ -111,9 +111,9 @@
 .planning-list-item small {
     color: var(--muted);
 }
+/* Overdue reads through an edge and the red facts line, not a fully red card. */
 .planning-list-item.is-overdue {
-    background: var(--danger-soft);
-    border-color: var(--danger);
+    box-shadow: inset 3px 0 0 var(--danger);
 }
 .planning-list-item.is-overdue small {
     color: var(--danger);
@@ -370,6 +370,12 @@
     gap: 9px;
     align-items: center;
     margin: 0;
+}
+/* Goal page: the roadmap is the page's main section, so its heading reads larger. */
+.section-heading h2.roadmap-heading {
+    margin-bottom: 2px;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
 }
 .section-heading h2 .ui-icon {
     width: 18px;
@@ -722,20 +728,9 @@
     align-items: flex-start;
     text-align: left;
 }
+/* The time zone sits next to today's date in the header. */
 .dashboard-timezone {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    padding-inline: 4px;
     color: var(--muted);
-    font-size: var(--font-size-caption);
-    line-height: 1.8;
-    overflow-wrap: anywhere;
-}
-.dashboard-timezone .ui-icon {
-    width: 14px;
-    height: 14px;
-    margin-top: 2px;
 }
 .review-prompt {
     display: flex;
@@ -858,9 +853,6 @@
         grid-template-columns: 1fr 1fr;
         align-items: start;
     }
-    .dashboard-timezone {
-        grid-column: 1 / -1;
-    }
     .dashboard-weekly-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -925,8 +917,9 @@
     .inline-form input {
         flex-basis: 140px;
     }
+    /* Keeps room for the caret gutter (see .goal-tree details > summary). */
     .goal-tree ul {
-        padding-left: 12px;
+        padding-left: 22px;
     }
 }
 
@@ -1032,7 +1025,8 @@
     line-height: 1.4;
 }
 .roadmap-locked {
-    color: var(--danger) !important;
+    color: var(--muted) !important;
+    font-style: italic;
 }
 .roadmap-pagination {
     grid-column: 1 / -1;

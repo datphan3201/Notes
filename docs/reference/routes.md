@@ -50,6 +50,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | PATCH | `/api/v1/admin/settings` | `api.admin.settings.update` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/teamwork` | `planning.teamwork` | yes | no | — | [README.md](../ui/teamwork/README.md) |
 | GET | `/api/v1/team-goals` | `api.team-goals.index` | yes | no | — | [README.md](../ui/teamwork/README.md) |
+| GET | `/api/v1/team-tasks/assigned` | `api.team-tasks.assigned` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | POST | `/api/v1/team-goals` | `api.team-goals.store` | yes | yes | mutations | [README.md](../ui/teamwork/README.md) |
 | GET | `/api/v1/team-goals/{id}` | `api.team-goals.show` | yes | no | — | [README.md](../ui/teamwork/README.md) |
 | PATCH | `/api/v1/team-goals/{id}` | `api.team-goals.update` | yes | yes | mutations | [README.md](../ui/teamwork/README.md) |
@@ -109,6 +110,9 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/api/v1/notes/{note}` | `api.notes.show` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
 | PATCH | `/api/v1/notes/{note}` | `api.notes.update` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
 | DELETE | `/api/v1/notes/{note}` | `api.notes.destroy` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
+| PUT | `/api/v1/notes/{note}/link` | `api.notes.link` | yes | yes | mutations | [README.md](../ui/notes/README.md) |
+| GET | `/api/v1/goals/{id}/notes` | `api.goals.notes` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
+| GET | `/api/v1/tasks/{id}/notes` | `api.tasks.notes` | yes | no | note-reads | [README.md](../ui/notes/README.md) |
 | GET | `/api/v1/labels` | `api.labels.index` | yes | no | note-reads | [tags.md](../ui/shared/tags.md) |
 | POST | `/api/v1/labels` | `api.labels.store` | yes | yes | mutations | [tags.md](../ui/shared/tags.md) |
 | PATCH | `/api/v1/labels/{label}` | `api.labels.update` | yes | yes | mutations | [tags.md](../ui/shared/tags.md) |
@@ -146,6 +150,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | PATCH | `/api/v1/task-series/{id}` | `api.task-series.update` | yes | yes | mutations | [repeating.md](../ui/tasks/repeating.md) |
 | POST | `/api/v1/task-series/{id}/{action}` | `api.task-series.transition` | yes | yes | mutations | [repeating.md](../ui/tasks/repeating.md) |
 | GET | `/api/v1/dashboard` | `api.dashboard.show` | yes | no | — | [README.md](../ui/dashboard/README.md) |
+| GET | `/api/v1/dashboard/roadmap` | `api.dashboard.roadmap.show` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | PATCH | `/api/v1/dashboard/roadmap` | `api.dashboard.roadmap.update` | yes | yes | mutations | [README.md](../ui/dashboard/README.md) |
 | GET | `/api/v1/daily-selections/task` | `api.daily-selections.index` | yes | no | — | [README.md](../ui/dashboard/README.md) |
 | POST | `/api/v1/daily-selections/task` | `api.daily-selections.store` | yes | yes | mutations | [README.md](../ui/dashboard/README.md) |

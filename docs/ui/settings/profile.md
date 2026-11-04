@@ -52,5 +52,3 @@ Changing email requires current_password, emails a confirmation link to the new 
 | HTTP | `GET /api/v1/email` (`api.email.show`) → [EmailController::status](../../../backend/src/Http/Controller/EmailController.php#L66)<br>`POST /api/v1/email/verification` (`api.email.verification`) → [EmailController::resend](../../../backend/src/Http/Controller/EmailController.php#L57)<br>`POST /api/v1/email/change` (`api.email.change`) → [EmailController::change](../../../backend/src/Http/Controller/EmailController.php#L79) |
 
 <!-- END GENERATED TRACE -->
-
-

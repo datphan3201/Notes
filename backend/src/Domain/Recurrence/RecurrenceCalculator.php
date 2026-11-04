@@ -7,6 +7,7 @@ namespace Planner\Domain\Recurrence;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use Planner\Support\TimeZoneNames;
 
 final readonly class RecurrenceCalculator
 {
@@ -97,7 +98,7 @@ final readonly class RecurrenceCalculator
     private function timezone(string $name): DateTimeZone
     {
         try {
-            return new DateTimeZone($name);
+            return TimeZoneNames::zone($name);
         } catch (\Exception) {
             throw new InvalidArgumentException('Invalid IANA timezone.');
         }

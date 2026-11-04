@@ -1,3 +1,5 @@
+import { starRating } from '../lib/star-rating.js';
+import { countLabel, formatDay } from '../lib/format.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
 import { repeatRule } from '../lib/calendar.js';
@@ -160,13 +162,13 @@ export function initTeamworkPage(root) {
             element(
                 'small',
                 '',
-                goal.due_date ? `${t('Due')}: ${goal.due_date}` : t('No due date'),
+                goal.due_date ? `${t('Due')} ${formatDay(goal.due_date)}` : t('No due date'),
             ),
             bar,
             element(
                 'small',
                 '',
-                `${percent}% ${t('complete')} · ${goal.progress.total} ${t('tasks')}`,
+                `${percent}% ${t('complete')} · ${countLabel(goal.progress.total, 'task', 'tasks')}`,
             ),
             avatars,
         );
@@ -195,6 +197,8 @@ export function initTeamworkPage(root) {
             );
         arrows[0].disabled = page === 0;
         arrows[1].disabled = page >= pages - 1;
+        // A single page needs no paging arrows; the cards then use the full width.
+        track.closest('.team-carousel')?.classList.toggle('is-single-page', pages <= 1);
     };
 
     const renderOverview = (data) => {
@@ -347,7 +351,9 @@ export function initTeamworkPage(root) {
 
     const detailRow = (label, value) => {
         const row = element('div');
-        row.append(element('dt', '', label), element('dd', '', value || '—'));
+        const detail = element('dd', '', value instanceof Node ? undefined : value || '—');
+        if (value instanceof Node) detail.append(value);
+        row.append(element('dt', '', label), detail);
         return row;
     };
 
@@ -362,7 +368,7 @@ export function initTeamworkPage(root) {
         taskDetail.querySelector('[data-team-task-detail-meta]').textContent = [
             t(STATUS_LABELS[task.status]),
             task.assignee?.display_name || t('Unassigned'),
-            task.due_date ? `${overdue ? t('Overdue') : t('Due')}: ${task.due_date}` : '',
+            task.due_date ? `${overdue ? t('Overdue') : t('Due')} ${formatDay(task.due_date)}` : '',
         ]
             .filter(Boolean)
             .join(' · ');
@@ -371,13 +377,13 @@ export function initTeamworkPage(root) {
         taskDetail.querySelector('[data-team-task-detail-list]').replaceChildren(
             detailRow(t('Status'), t(STATUS_LABELS[task.status])),
             detailRow(t('Assignee'), task.assignee?.display_name || t('Unassigned')),
-            detailRow(t('Start date'), task.start_date),
-            detailRow(t('Due date'), task.due_date),
+            detailRow(t('Start date'), formatDay(task.start_date)),
+            detailRow(t('Due date'), formatDay(task.due_date)),
             detailRow(
                 t('Estimated time'),
                 task.estimated_minutes ? `${task.estimated_minutes} ${t('min')}` : '',
             ),
-            detailRow(t('Importance'), `${task.importance}/5`),
+            detailRow(t('Importance'), starRating(task.importance)),
             detailRow(
                 t('Reminder'),
                 task.reminder_at
@@ -508,7 +514,8 @@ export function initTeamworkPage(root) {
         copy.append(element('strong', '', task.name));
         if (task.description) copy.append(element('p', 'subtle-copy', task.description));
         const meta = [`${t('Assigned')}: ${task.assignee?.display_name || t('Unassigned')}`];
-        if (task.due_date) meta.push(`${overdue ? t('Overdue') : t('Due')}: ${task.due_date}`);
+        if (task.due_date)
+            meta.push(`${overdue ? t('Overdue') : t('Due')} ${formatDay(task.due_date)}`);
         if (task.reminder_at)
             meta.push(
                 `${t('Reminder')}: ${new Date(task.reminder_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}`,
@@ -562,7 +569,7 @@ export function initTeamworkPage(root) {
         root.querySelector('[data-team-description]').textContent =
             goal.description || t('No description.');
         root.querySelector('[data-team-due]').textContent = goal.due_date
-            ? `${t('Due')}: ${goal.due_date}`
+            ? `${t('Due')} ${formatDay(goal.due_date)}`
             : t('No due date');
         const percent = completionPercent(goal.progress.done, goal.progress.total);
         root.querySelector('[data-team-progress-bar]').style.width = `${percent}%`;

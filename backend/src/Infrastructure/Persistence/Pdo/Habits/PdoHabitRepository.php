@@ -10,7 +10,7 @@ final readonly class PdoHabitRepository
 {
     private const COLUMNS = [
         'primary_goal_id', 'name', 'description', 'importance', 'period',
-        'target_frequency', 'timezone', 'position', 'first_check_in_at',
+        'target_frequency', 'timezone', 'position', 'first_check_in_at', 'icon', 'icon_color',
     ];
 
     public function __construct(private PDO $pdo)

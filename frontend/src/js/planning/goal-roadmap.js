@@ -1,3 +1,9 @@
+import { COLORS, cycleHue, entityIcon, iconButton } from '../lib/entity-icons.js';
+import { starRating } from '../lib/star-rating.js';
+
+const MILESTONE_ICONS = ['target', 'activity', 'flag', 'book'];
+import { renderLinkedNotes } from '../notes/linked-notes.js';
+import { formatDay, formatPercent } from '../lib/format.js';
 import { taskCaptureValues, createCapturedTask } from './task-capture.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
@@ -28,6 +34,7 @@ function element(tag, text, className) {
 
 export function initGoalDetail(root) {
     const id = root.dataset.goalId;
+    renderLinkedNotes(root.querySelector('[data-linked-notes]'));
     const find = (selector) => root.querySelector(selector);
     const errorOutput = find('[data-planning-error]');
     const map = find('[data-roadmap-map]');
@@ -128,11 +135,34 @@ export function initGoalDetail(root) {
         for (const [field, value] of Object.entries(values))
             form.elements[field].value = value ?? '';
     }
+    // Icon, accent and importance save immediately, like tags; other fields keep their drafts.
+    const saveEntity = (type, entity, changes) =>
+        mutation(async () => {
+            await patch(`/api/v1/${type}/${encodeURIComponent(entity.id)}`, {
+                base_version: entity.version,
+                ...changes,
+            });
+            await load();
+        });
     function receiveGoal(goal) {
         data.goal = goal;
         find('[data-goal-name]').textContent = goal.name;
+        find('[data-goal-icon]').replaceChildren(
+            iconButton(goal, {
+                label: goal.name,
+                size: 'lg',
+                save: (choice) => saveEntity('goals', goal, choice),
+            }),
+        );
+        find('[data-goal-stars]').replaceChildren(
+            starRating(goal.importance, {
+                label: `${t('Importance')}: ${goal.name}`,
+                size: 'md',
+                onChange: (importance) => saveEntity('goals', goal, { importance }),
+            }),
+        );
         find('[data-goal-meta]').textContent =
-            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')}`;
+            `${statusLabel(goal.status)} · ${formatPercent(goal.progress ?? data.progress)} ${t('progress')}`;
         const headName = map.querySelector('[data-roadmap-goal-name]');
         const headState = map.querySelector('[data-roadmap-goal-state]');
         if (headName) headName.textContent = goal.name;
@@ -142,7 +172,7 @@ export function initGoalDetail(root) {
         );
         find('[data-goal-information-name]').textContent = goal.name;
         find('[data-goal-information-meta]').textContent =
-            `${statusLabel(goal.status)} · ${goal.progress ?? data.progress ?? 0}% ${t('progress')} · ${t('Importance')} ${goal.importance}/5${goal.deadline ? ` · ${t('Due')} ${goal.deadline}` : ''}`;
+            `${statusLabel(goal.status)} · ${formatPercent(goal.progress ?? data.progress)} ${t('progress')} · ${t('Importance')} ${'★'.repeat(goal.importance)}${'☆'.repeat(5 - goal.importance)}${goal.deadline ? ` · ${t('Due')} ${formatDay(goal.deadline)}` : ''}`;
         find('[data-goal-information-description]').textContent =
             goal.description || t('No description yet. Open Edit goal to add one.');
         for (const [key, value] of [
@@ -153,7 +183,7 @@ export function initGoalDetail(root) {
             find(`[data-goal-information-${key}-row]`).hidden = !value;
         }
         if (headState)
-            headState.textContent = `${goal.progress ?? data.progress ?? 0}% · ${statusLabel(goal.status)}`;
+            headState.textContent = `${formatPercent(goal.progress ?? data.progress)} · ${statusLabel(goal.status)}`;
         requestAnimationFrame(drawConnections);
         if (strategy.receive(strategyValues(goal), goal.version))
             writeForm(strategyForm, strategy.values);
@@ -346,7 +376,7 @@ export function initGoalDetail(root) {
         headName.dataset.roadmapGoalName = '';
         const headState = element(
             'span',
-            `${data.goal.progress}% · ${statusLabel(data.goal.status)}`,
+            `${formatPercent(data.goal.progress)} · ${statusLabel(data.goal.status)}`,
             'roadmap-goal-state',
         );
         headState.dataset.roadmapGoalState = '';
@@ -375,24 +405,39 @@ export function initGoalDetail(root) {
             branch.style.setProperty('--mobile-row', Math.floor(index / 2) + 1);
             branch.style.setProperty(
                 '--branch-hue',
-                [37, 270, 195, 17, 0, 171, 218, 293][index % 8],
+                COLORS[milestone.icon_color] ?? cycleHue(index),
             );
-            const icon = document.createElementNS(svgNamespace, 'svg');
-            icon.classList.add('ui-icon', 'milestone-icon');
-            icon.setAttribute('aria-hidden', 'true');
-            const use = document.createElementNS(svgNamespace, 'use');
-            use.setAttribute('href', `#icon-${['goals', 'habits', 'tasks', 'reviews'][index % 4]}`);
-            icon.append(use);
-            branch.append(icon);
+            // The chosen icon, or the automatic one that cycles with the roadmap position.
+            branch.append(
+                entityIcon(milestone, {
+                    size: 'sm',
+                    fallbackIcon: MILESTONE_ICONS[index % MILESTONE_ICONS.length],
+                    fallbackHue: cycleHue(index),
+                }),
+            );
             branch.append(
                 element('strong', milestone.name),
                 element(
                     'small',
                     `${milestone.progress.completed}/${milestone.progress.total} ${t('tasks')} · ${statusLabel(milestone.status)}`,
                 ),
+                starRating(milestone.importance),
             );
-            if (milestone.completion_locked)
-                branch.append(element('small', t('Prerequisites unfinished'), 'roadmap-locked'));
+            // Waiting on an earlier Milestone is the normal order, not an error: name what comes first.
+            if (milestone.completion_locked) {
+                const waiting = milestone.prerequisites
+                    .filter((prerequisite) => prerequisite.status !== 'Completed')
+                    .map((prerequisite) => prerequisite.name);
+                branch.append(
+                    element(
+                        'small',
+                        waiting.length
+                            ? `${t('After')} ${waiting.join(', ')}`
+                            : t('Prerequisites unfinished'),
+                        'roadmap-locked',
+                    ),
+                );
+            }
             const preview = element('ul', undefined, 'roadmap-task-preview');
             for (const task of (milestone.tasks.some((task) => task.status !== 'Done')
                 ? milestone.tasks.filter((task) => task.status !== 'Done')
@@ -493,10 +538,25 @@ export function initGoalDetail(root) {
         overview.hidden = true;
         focus.hidden = false;
         find('[data-milestone-title]').textContent = milestone.name;
+        find('[data-milestone-icon]').replaceChildren(
+            iconButton(milestone, {
+                label: milestone.name,
+                fallbackIcon:
+                    MILESTONE_ICONS[data.milestones.indexOf(milestone) % MILESTONE_ICONS.length],
+                fallbackHue: cycleHue(data.milestones.indexOf(milestone)),
+                save: (choice) => saveEntity('milestones', milestone, choice),
+            }),
+        );
+        find('[data-milestone-stars]').replaceChildren(
+            starRating(milestone.importance, {
+                label: `${t('Importance')}: ${milestone.name}`,
+                onChange: (importance) => saveEntity('milestones', milestone, { importance }),
+            }),
+        );
         const unfinished = milestone.prerequisites.filter((item) => item.status !== 'Completed');
         find('[data-milestone-meta]').textContent = unfinished.length
             ? `${t('Completion requires')}: ${unfinished.map((item) => item.name).join(', ')}. ${t('Tasks remain available.')}`
-            : `${statusLabel(milestone.status)} · ${milestone.progress.completed}/${milestone.progress.total} ${t('finite tasks complete')}${milestone.deadline ? ` · ${t('Due')} ${milestone.deadline}` : ''}`;
+            : `${statusLabel(milestone.status)} · ${milestone.progress.completed}/${milestone.progress.total} ${t('finite tasks complete')}${milestone.deadline ? ` · ${t('Due')} ${formatDay(milestone.deadline)}` : ''}`;
         find('[data-milestone-criteria]').textContent =
             milestone.completion_criteria ||
             t(

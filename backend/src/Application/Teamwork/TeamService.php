@@ -60,6 +60,23 @@ final readonly class TeamService
         return ['goals' => $goals, 'invitations' => $invitations];
     }
 
+    /**
+     * The user's open team Tasks across every team, so personal planning views can show them.
+     *
+     * @return list<array{id:string,name:string,status:string,importance:int,due_date:?string,team_goal:array{id:string,name:string}}>
+     */
+    public function assigned(int $userId): array
+    {
+        return array_map(static fn (array $row): array => [
+            'id' => (string) $row['id'],
+            'name' => (string) $row['name'],
+            'status' => (string) $row['status'],
+            'importance' => (int) $row['importance'],
+            'due_date' => $row['due_date'] === null ? null : (string) $row['due_date'],
+            'team_goal' => ['id' => (string) $row['team_goal_id'], 'name' => (string) $row['team_goal_name']],
+        ], $this->teams->assignedTo($userId));
+    }
+
     /** @param array<string, mixed> $input */
     public function create(int $userId, array $input): array
     {
@@ -673,7 +690,7 @@ final readonly class TeamService
         }
         $rule = TeamTaskRepeat::normalize(json_decode((string) $task['repeat_rule'], true, 8, JSON_THROW_ON_ERROR));
         $timezone = TimeZoneNames::canonical($this->accounts->preferences($userId)['timezone']) ?? 'UTC';
-        $from = $task['due_date'] ?? $this->clock->now()->setTimezone(new DateTimeZone($timezone))->format('Y-m-d');
+        $from = $task['due_date'] ?? $this->clock->now()->setTimezone(TimeZoneNames::zone($timezone))->format('Y-m-d');
         $next = TeamTaskRepeat::next((string) $from, $rule);
         if ($next === null) {
             return;

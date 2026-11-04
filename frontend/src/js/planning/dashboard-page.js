@@ -1,5 +1,6 @@
+import { formatDay } from '../lib/format.js';
 import { t, statusLabel } from '../lib/i18n.js';
-import { referenceDecoration } from '../settings/reference-decoration.js';
+import { lineIcon } from '../lib/line-icons.js';
 import { get, post, put, remove } from '../lib/http.js';
 import { dashboardTaskList, weeklyTaskList, renderTaskChecklist } from './dashboard-tasks.js';
 import { renderEmptyState } from '../lib/empty-state.js';
@@ -41,7 +42,7 @@ function rows(container, items, empty, type = 'task') {
         const name = document.createElement('strong');
         name.textContent = item.name;
         const meta = document.createElement('small');
-        meta.textContent = `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${item.deadline}` : ''}`;
+        meta.textContent = `${statusLabel(item.status || 'NotStarted')}${item.deadline ? ` · ${t('Due')} ${formatDay(item.deadline)}` : ''}`;
         copy.append(name, meta);
         row.append(marker, copy);
         container.append(row);
@@ -324,10 +325,13 @@ export function initDashboardPage(root) {
             mode: 'today',
             limit: Infinity,
         });
-        root.querySelector('[data-today-count]').textContent =
-            todayStatus && todayStatus.value !== 'all'
-                ? `${filteredToday.length} / ${taskData.today_tasks.length}`
-                : String(filteredToday.length);
+        // The ring already counts today's tasks; the badge only explains an active status filter.
+        const todayCount = root.querySelector('[data-today-count]');
+        const filtering = Boolean(todayStatus && todayStatus.value !== 'all');
+        todayCount.hidden = !filtering;
+        todayCount.textContent = filtering
+            ? `${filteredToday.length} / ${taskData.today_tasks.length}`
+            : String(filteredToday.length);
         const filtered = weeklyTaskList(taskData.selected_tasks, {
             sort: weekSort.value,
             status: weekStatus.value,
@@ -357,10 +361,9 @@ export function initDashboardPage(root) {
         renderHabitTargets(root.querySelector('[data-dashboard-habits]'), taskData.habits);
         const reminder = root.querySelector('[data-overdue-reminder]');
         reminder.replaceChildren();
+        reminder.hidden = taskData.overdue_tasks.length === 0;
         const text = document.createElement('span');
-        text.textContent = taskData.overdue_tasks.length
-            ? `${taskData.overdue_tasks.length} ${t(taskData.overdue_tasks.length === 1 ? 'overdue task to review' : 'overdue tasks to review')}`
-            : t('You’re making steady progress.');
+        text.textContent = `${taskData.overdue_tasks.length} ${t(taskData.overdue_tasks.length === 1 ? 'overdue task to review' : 'overdue tasks to review')}`;
         const link = document.createElement('a');
         link.className = 'section-link';
         link.href = '/tasks?view=overdue';
@@ -477,6 +480,44 @@ export function initDashboardPage(root) {
         if (event.key === 'Escape') hideTooltip();
     });
 
+    // Open team Tasks assigned to the user; the card stays hidden when there are none.
+    const loadTeamTasks = async () => {
+        const panel = root.querySelector('[data-dashboard-team]');
+        if (!panel) return;
+        try {
+            const tasks = (await get('/api/v1/team-tasks/assigned')).payload.data;
+            panel.hidden = tasks.length === 0;
+            root.querySelector('[data-dashboard-team-count]').textContent = String(tasks.length);
+            const list = root.querySelector('[data-dashboard-team-list]');
+            list.replaceChildren(
+                ...tasks.slice(0, 6).map((task) => {
+                    const row = document.createElement('a');
+                    row.className = 'dashboard-team-task';
+                    row.href = `/teamwork?goal=${encodeURIComponent(task.team_goal.id)}`;
+                    const overdue = Boolean(
+                        task.due_date && taskData?.today && task.due_date < taskData.today,
+                    );
+                    row.classList.toggle('is-overdue', overdue);
+                    const name = document.createElement('strong');
+                    name.textContent = task.name;
+                    const meta = document.createElement('small');
+                    meta.textContent = [
+                        task.team_goal.name,
+                        t(task.status === 'in_progress' ? 'In progress' : 'To do'),
+                        task.due_date
+                            ? `${t(overdue ? 'Overdue' : 'Due')} ${formatDay(task.due_date)}`
+                            : '',
+                    ]
+                        .filter(Boolean)
+                        .join(' · ');
+                    row.append(name, meta);
+                    return row;
+                }),
+            );
+        } catch {
+            panel.hidden = true;
+        }
+    };
     const load = async (requestedMonth = displayedMonth) => {
         if (loading) {
             reloadRequested = true;
@@ -495,8 +536,8 @@ export function initDashboardPage(root) {
             const data = payload.data;
             taskData = data;
             displayedMonth = data.month;
-            root.querySelector('[data-dashboard-timezone]').textContent =
-                `${t('Your time zone')}: ${data.timezone}`;
+            loadTeamTasks();
+            root.querySelector('[data-dashboard-timezone]').textContent = data.timezone;
             root.querySelector('[data-dashboard-date]').textContent = new Intl.DateTimeFormat(
                 window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',
                 {
@@ -507,7 +548,6 @@ export function initDashboardPage(root) {
                     timeZone: 'UTC',
                 },
             ).format(new Date(`${data.today}T00:00:00Z`));
-            root.querySelector('[data-today-count]').textContent = data.today_tasks.length;
             root.querySelector('[data-week-range]').textContent = weekRangeLabel(data.week_start);
             root.querySelector('[data-weekly-milestone-count]').textContent =
                 data.selected_milestones.length;
@@ -522,7 +562,9 @@ export function initDashboardPage(root) {
             root.querySelector('[data-dashboard-greeting]').textContent = t(
                 hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!',
             );
-            root.querySelector('[data-dashboard-greeting]').append(referenceDecoration('greeting'));
+            const sparkle = lineIcon('sparkle', { solid: true });
+            sparkle.classList.add('greeting-sparkle');
+            root.querySelector('[data-dashboard-greeting]').append(sparkle);
             renderRing(
                 root.querySelector('[data-today-ring]'),
                 data.today_summary.percentage,

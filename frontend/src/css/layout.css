@@ -129,11 +129,15 @@
     min-width: 0;
     gap: 2px;
 }
+/* The sidebar is narrow: names wrap to two lines instead of collapsing to "Roadm…". */
 .sidebar-user-copy strong,
 .sidebar-user-copy small {
+    display: -webkit-box;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.3;
+    overflow-wrap: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 .sidebar-user-copy strong {
     font-size: var(--font-size-meta);
@@ -466,4 +470,31 @@ body.navigation-open {
     .guest-form-region {
         padding: 36px 24px 60px;
     }
+}
+.sidebar-user-copy small.is-warning {
+    color: var(--danger);
+}
+/* The user takes the full row; Settings and Sign out sit underneath, so names stay whole. */
+.sidebar-footer {
+    flex-wrap: wrap;
+}
+.sidebar-footer .sidebar-user {
+    flex: 1 0 100%;
+}
+.sidebar-footer .icon-button {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+}
+.sidebar-footer form {
+    margin: 0;
+}
+.sidebar-user .avatar-small {
+    flex: 0 0 auto;
+}
+/* Team work is shared, so it sits apart from the personal planning pages. */
+.sidebar-nav-divider {
+    height: 1px;
+    margin: 8px 12px;
+    background: var(--border);
 }

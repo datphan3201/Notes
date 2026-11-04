@@ -102,7 +102,7 @@ $scenario = static function (string $name, callable $edit, string $expected, boo
 };
 
 try {
-    foreach (['docs', 'frontend', 'backend', 'tools/docs', '.agents/skills', 'AGENTS.md', 'README.md', 'CLAUDE.md'] as $path) {
+    foreach (['docs', 'frontend', 'backend', 'tools', '.github', '.agents/skills', 'AGENTS.md', 'README.md', 'CLAUDE.md'] as $path) {
         copyFixture($root.'/'.$path, $fixture.'/'.$path);
     }
     symlink('backend/.ai', $fixture.'/.ai');

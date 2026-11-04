@@ -78,7 +78,8 @@ function generated(): array
         if (!str_contains($original, '<!-- BEGIN GENERATED TRACE -->')) {
             throw new \RuntimeException('Missing generated block in '.$document);
         }
-        $outputs[$document] = preg_replace_callback('/<!-- BEGIN GENERATED TRACE -->.*?<!-- END GENERATED TRACE -->/s', static fn (): string => $body, $original);
+        // One final newline: trailing blank lines after the generated block are not kept (ISSUE-007).
+        $outputs[$document] = rtrim(preg_replace_callback('/<!-- BEGIN GENERATED TRACE -->.*?<!-- END GENERATED TRACE -->/s', static fn (): string => $body, $original))."\n";
     }
     $inventory = "# HTTP route inventory\n\nGenerated from route declarations without application/database bootstrap.\nUse the owning UI document to understand behavior; API URLs are not browser pages.\n\n| Methods | Path | Name | Auth | CSRF | Rate bucket | Owner document |\n| --- | --- | --- | --- | --- | --- | --- |\n";
     $csv = fopen('php://temp', 'r+');

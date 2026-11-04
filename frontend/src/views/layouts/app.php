@@ -6,7 +6,7 @@ $navigation = [
     ['Habits', '/habits', 'habits', ['planning.habits']],
     ['Notes', '/', 'notes', ['notes.index']],
     ['Reviews', '/reviews', 'reviews', ['planning.reviews']],
-    ['Teamwork', '/teamwork', 'profile', ['planning.teamwork']],
+    ['Teamwork', '/teamwork', 'team', ['planning.teamwork']],
 ];
 if (($user['role'] ?? 'user') === 'admin') {
     $navigation[] = ['Administration', '/admin', 'lock', ['admin.index']];
@@ -52,6 +52,7 @@ $accountNavigation = [
                     <div class="sidebar-section-label"><?= $view->e($view->t('Your workspace')) ?></div>
                     <?php foreach ($navigation as [$label, $href, $icon, $routes]): ?>
                         <?php $active = in_array($current_route, $routes, true); ?>
+                        <?php if ($label === 'Teamwork'): ?><div class="sidebar-nav-divider" role="presentation"></div><?php endif; ?>
                     <a class="nav-link<?= $active ? ' is-active' : '' ?>" href="<?= $view->e($href) ?>"<?= $active ? ' aria-current="page"' : '' ?> data-leave-guard>
                         <svg class="ui-icon nav-icon" aria-hidden="true"><use href="#icon-<?= $view->e($icon) ?>"/></svg>
                         <span><?= $view->e($view->t($label)) ?></span>
@@ -74,12 +75,15 @@ $accountNavigation = [
                     </details>
                 </nav>
                 <div class="sidebar-footer">
-                    <a class="sidebar-user" href="/settings/profile" data-leave-guard>
+                    <a class="sidebar-user" href="/settings/profile" title="<?= $view->e($user['display_name']) ?>" data-leave-guard>
                         <span class="avatar avatar-small" data-avatar-fallback><?= $view->e($view->initial($user['display_name'])) ?></span>
                         <span class="sidebar-user-copy">
                             <strong><?= $view->e($user['display_name']) ?></strong>
-                            <small><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Verify your email')) ?></small>
+                            <small<?= $user['email_verified'] ? '' : ' class="is-warning"' ?>><?= $view->e($view->t($user['email_verified'] ? 'Personal account' : 'Verify email')) ?></small>
                         </span>
+                    </a>
+                    <a class="icon-button" href="/settings/profile" aria-label="<?= $view->e($view->t('Settings')) ?>" title="<?= $view->e($view->t('Settings')) ?>" data-leave-guard>
+                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-settings"/></svg>
                     </a>
                     <form action="/logout" method="post" data-leave-guard-form>
                         <input type="hidden" name="_token" value="<?= $view->e($csrf_token) ?>">
@@ -96,7 +100,7 @@ $accountNavigation = [
                         <button class="mobile-menu-button icon-button" type="button" data-open-sidebar aria-label="<?= $view->e($view->t('Open navigation')) ?>" aria-controls="app-sidebar" aria-expanded="false">
                             <svg class="ui-icon" aria-hidden="true"><use href="#icon-menu"/></svg>
                         </button>
-                        <span class="topbar-space"><?= $view->e($view->t('Personal space')) ?></span>
+                        <span class="topbar-space"><?= $view->e($view->t(str_starts_with((string) $current_route, 'planning.teamwork') ? 'Team space' : 'Personal space')) ?></span>
                         <span class="topbar-divider" aria-hidden="true">/</span>
                         <span><?= $view->e($view->t($title ?? 'Planner')) ?></span>
                     </div>

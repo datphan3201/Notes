@@ -22,6 +22,12 @@ final readonly class TeamController
         return Response::json(['data' => $this->teams->overview($this->auth->requireUser()->id)]);
     }
 
+    /** GET /api/v1/team-tasks/assigned */
+    public function assigned(Request $request): Response
+    {
+        return Response::json(['data' => $this->teams->assigned($this->auth->requireUser()->id)]);
+    }
+
     public function store(Request $request): Response
     {
         return Response::json(['data' => $this->teams->create($this->auth->requireUser()->id, $request->input())], 201);

@@ -848,7 +848,7 @@ SQL);
             'id' => Uuid::uuid4()->toString(),
             'user_id' => $userId,
             'title' => 'Triton Kernel Optimization Checklist',
-            'content' => "[x] Ensure tensor memory is 128-byte aligned\n[x] Maximize L2 cache reuse across thread blocks\n[ ] Check register spilling with ptxas\n[ ] Compare roofline model vs cuBLAS baseline",
+            'content' => "- [x] Ensure tensor memory is 128-byte aligned\n- [x] Maximize L2 cache reuse across thread blocks\n- [ ] Check register spilling with ptxas\n- [ ] Compare roofline model vs cuBLAS baseline",
             'color' => 'sky',
             'created_at' => '2026-10-15 14:00:00.000000',
             'updated_at' => '2026-11-01 16:00:00.000000',

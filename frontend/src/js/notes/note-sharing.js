@@ -1,5 +1,7 @@
 import { get, patch, post, put, remove } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
+import { checkMark } from '../lib/check-mark.js';
+import { noteLines } from '../lib/note-checkbox-text.js';
 
 const element = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -65,6 +67,28 @@ export function appendHighlightedText(container, text, query) {
             container.append(document.createTextNode(segment.text));
         }
     }
+}
+
+/** Card preview: checklist lines show a box instead of their "- [x]" markup. */
+export function appendNotePreview(container, text, query) {
+    container.replaceChildren();
+    noteLines(text || '').forEach((line, index) => {
+        if (index) container.append(document.createTextNode('\n'));
+        if (line.checked !== null) {
+            const box = element('span', `note-preview-box${line.checked ? ' is-checked' : ''}`);
+            box.setAttribute('role', 'img');
+            box.setAttribute('aria-label', t(line.checked ? 'Checked' : 'Unchecked'));
+            if (line.checked) box.append(checkMark());
+            container.append(document.createTextNode(line.indent), box);
+        }
+        for (const segment of highlightTextSegments(line.text, query)) {
+            if (segment.match) {
+                container.append(element('mark', 'note-search-highlight', segment.text));
+            } else {
+                container.append(document.createTextNode(segment.text));
+            }
+        }
+    });
 }
 
 /**

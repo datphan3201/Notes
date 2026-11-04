@@ -134,6 +134,30 @@ SQL);
         return $statement->fetchAll();
     }
 
+    /**
+     * Open Tasks assigned to the user in active team Goals they have joined, soonest first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function assignedTo(int $userId, int $limit = 50): array
+    {
+        $statement = $this->pdo->prepare(<<<'SQL'
+SELECT t.id, t.name, t.status, t.importance, t.due_date, g.id AS team_goal_id, g.name AS team_goal_name
+FROM team_tasks t
+JOIN team_goals g ON g.id = t.team_goal_id AND g.archived_at IS NULL AND g.status = 'active'
+JOIN team_members m ON m.team_goal_id = g.id AND m.user_id = :member AND m.status = 'accepted'
+WHERE t.assignee_id = :assignee AND t.archived_at IS NULL AND t.status <> 'done'
+ORDER BY t.due_date IS NULL, t.due_date, t.importance DESC, t.created_at, t.id
+LIMIT :limit
+SQL);
+        $statement->bindValue('member', $userId, PDO::PARAM_INT);
+        $statement->bindValue('assignee', $userId, PDO::PARAM_INT);
+        $statement->bindValue('limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
     /** @param array<string, mixed> $changes */
     public function updateTask(string $taskId, array $changes, int $version, string $now): void
     {

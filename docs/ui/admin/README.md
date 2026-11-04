@@ -61,11 +61,9 @@ The admin can set the history cap (100–10000, default 1000). The history maint
 | --- | --- |
 | UI / DOM | [index.php · data-admin-settings](../../../frontend/src/views/admin/index.php#L45) |
 | Browser logic | [admin-page.js · data-admin-settings](../../../frontend/src/js/admin/admin-page.js#L19) |
-| Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L29) |
+| Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L30) |
 | Persistence | [PdoSystemSettingRepository.php · public function historyLimit(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php#L18)<br>[PdoSystemSettingRepository.php · public function setHistoryLimit(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php#L27) |
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_reports_reach_admins_and_locked_accounts_lose_access(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L98) |
 | HTTP | `GET /api/v1/admin/settings` (`api.admin.settings`) → [AdminController::settings](../../../backend/src/Http/Controller/AdminController.php#L88)<br>`PATCH /api/v1/admin/settings` (`api.admin.settings.update`) → [AdminController::updateSettings](../../../backend/src/Http/Controller/AdminController.php#L95) |
 
 <!-- END GENERATED TRACE -->
-
-
