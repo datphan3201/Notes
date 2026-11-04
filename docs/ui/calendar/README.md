@@ -34,7 +34,7 @@ An item moves by drag and drop onto a day or the selected-day panel, by Alt with
 | --- | --- |
 | UI / DOM | [calendar.php · data-calendar-day-list](../../../frontend/src/views/planning/calendar.php#L57) |
 | Browser logic | [calendar-model.js · export function moveChanges(](../../../frontend/src/js/planning/calendar-model.js#L162)<br>[calendar-model.js · export function shiftInstant(](../../../frontend/src/js/planning/calendar-model.js#L60)<br>[calendar-page.js · async function move(](../../../frontend/src/js/planning/calendar-page.js#L186) |
-| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L164) |
+| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L182) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('moving shifts every date on the source day and keeps scheduled clock times'](../../../frontend/tests/js/calendar-model.test.js#L56)<br>[calendar-model.test.js · test('daylight saving never moves the wall-clock time of a scheduled block'](../../../frontend/tests/js/calendar-model.test.js#L106) |
 | Coverage limit | Move rules are unit-tested; drag and drop, Alt+arrow focus and the native picker need a browser check. |

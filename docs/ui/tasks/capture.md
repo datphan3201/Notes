@@ -18,7 +18,7 @@ A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed f
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L124) |
 | Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L1009) |
-| Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L992) |
+| Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L1010) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L354) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34) |
@@ -33,7 +33,7 @@ The shared PHP partial renders schedule-related fields. Browser input is normali
 | --- | --- |
 | UI / DOM | [task-capture-fields.php · estimated_minutes](../../../frontend/src/views/planning/task-capture-fields.php#L34)<br>[importance-options.php · &lt;?php foreach (&#91;1 =&gt;](../../../frontend/src/views/planning/importance-options.php#L1) |
 | Browser logic | [task-capture.js · export function taskCaptureValues](../../../frontend/src/js/planning/task-capture.js#L7) |
-| Controller / service / domain | [PlanningService.php · private function validateCreate(](../../../backend/src/Application/Planning/PlanningService.php#L888)<br>[PlanningService.php · private function validateDates(](../../../backend/src/Application/Planning/PlanningService.php#L1340) |
+| Controller / service / domain | [PlanningService.php · private function validateCreate(](../../../backend/src/Application/Planning/PlanningService.php#L906)<br>[PlanningService.php · private function validateDates(](../../../backend/src/Application/Planning/PlanningService.php#L1358) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_estimates_are_optional_versioned_and_do_not_change_completion_facts(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L396) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`PATCH /api/v1/tasks/{id}` (`api.tasks.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54) |

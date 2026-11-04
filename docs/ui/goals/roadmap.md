@@ -19,7 +19,7 @@ The owned roadmap projection separates finite and recurring Tasks, direct Tasks,
 | UI / DOM | [goal.php · data-roadmap-map](../../../frontend/src/views/planning/goal.php#L30) |
 | CSS | [illustrated.css · Illustrated roadmap base](../../../frontend/src/css/illustrated.css#L87) |
 | Browser logic | [goal-roadmap.js · export function initGoalDetail](../../../frontend/src/js/planning/goal-roadmap.js#L30) |
-| Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L726)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L734) |
+| Controller / service / domain | [PlanningService.php · public function roadmap(](../../../backend/src/Application/Planning/PlanningService.php#L744)<br>[PlanningService.php · private function roadmapSnapshot(](../../../backend/src/Application/Planning/PlanningService.php#L752) |
 | Persistence | [PdoPlanningRepository.php · public function roadmapRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L403) |
 | Relevant tests (not a pass claim) | [goal-roadmap.test.js · refresh cannot erase](../../../frontend/tests/js/goal-roadmap.test.js#L20)<br>[PlanningCoreTest.php · public function test_roadmap_groups_only_owned_active_work_and_excludes_occurrences_from_finite_p...](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L257) |
 | Coverage limit | Projection and shared draft behavior are covered here; fishbone SVG layout, paging and responsive interaction require a browser check. |
@@ -35,7 +35,7 @@ Goal information keeps Strategy, Related work/notes and Tags in-page. Edit goal 
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-strategy-form](../../../frontend/src/views/planning/goal.php#L109) |
 | Browser logic | [goal-roadmap.js · data-goal-strategy-form](../../../frontend/src/js/planning/goal-roadmap.js#L38)<br>[draft-buffer.js · export class DraftBuffer](../../../frontend/src/js/planning/draft-buffer.js#L1)<br>[quick-editor.js · export function openQuickEditor(](../../../frontend/src/js/planning/quick-editor.js#L621) |
-| Controller / service / domain | [PlanningService.php · public function update(](../../../backend/src/Application/Planning/PlanningService.php#L164) |
+| Controller / service / domain | [PlanningService.php · public function update(](../../../backend/src/Application/Planning/PlanningService.php#L182) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_strategy_notes_are_versioned_without_affecting_progress_or_activity(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L234) |
 | HTTP | `GET /api/v1/goals/{id}` (`api.goals.show`) → [PlanningController::show](../../../backend/src/Http/Controller/PlanningController.php#L44)<br>`PATCH /api/v1/goals/{id}` (`api.goals.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`GET /api/v1/goals/{id}/contributions` (`api.goals.contributions.index`) → [PlanningController::contributions](../../../backend/src/Http/Controller/PlanningController.php#L220) |
@@ -50,7 +50,7 @@ Progress is the mean of immediate active child Goal percentages, completed Miles
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-transition](../../../frontend/src/views/planning/goal.php#L17) |
 | Browser logic | [transitions.js · export async function transitionEntity](../../../frontend/src/js/planning/transitions.js#L7) |
-| Controller / service / domain | [GoalProgressCalculator.php · public function calculate(](../../../backend/src/Domain/Planning/GoalProgressCalculator.php#L17)<br>[PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L346) |
+| Controller / service / domain | [GoalProgressCalculator.php · public function calculate(](../../../backend/src/Domain/Planning/GoalProgressCalculator.php#L17)<br>[PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L364) |
 | Persistence | [PdoPlanningRepository.php · public function progressRows(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L388) |
 | Relevant tests (not a pass claim) | [PlanningDomainTest.php · public function test_progress_uses_immediate_finite_components_and_detects_cycles(](../../../backend/tests/Plain/Unit/PlanningDomainTest.php#L26) |
 | HTTP | `POST /api/v1/goals/{id}/complete` (`api.goals.complete`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/goals/{id}/reopen` (`api.goals.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92) |
@@ -65,7 +65,7 @@ Empty-container archive and include_contents=true are different operations. The 
 | --- | --- |
 | UI / DOM | [goal.php · data-goal-archive](../../../frontend/src/views/planning/goal.php#L160) |
 | Browser logic | [goal-roadmap.js · await remove(`/api/v1/goals/](../../../frontend/src/js/planning/goal-roadmap.js#L762) |
-| Controller / service / domain | [PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L229)<br>[PlanningService.php · private function archiveGoalContents(](../../../backend/src/Application/Planning/PlanningService.php#L271) |
+| Controller / service / domain | [PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L247)<br>[PlanningService.php · private function archiveGoalContents(](../../../backend/src/Application/Planning/PlanningService.php#L289) |
 | Persistence | [PdoPlanningRepository.php · public function archiveWhere(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L130)<br>[PdoPlanningRepository.php · public function removeMilestoneDependencies(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L146) |
 | Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_goal_and_milestone_can_be_archived_with_everything_inside(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L123) |
 | HTTP | `DELETE /api/v1/goals/{id}` (`api.goals.archive`) → [PlanningController::archive](../../../backend/src/Http/Controller/PlanningController.php#L65) |
