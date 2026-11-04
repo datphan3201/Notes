@@ -19,6 +19,7 @@ Run application commands from backend. [bin/console](../../backend/bin/console) 
 | `php bin/console areas:backfill` | Create default Areas where needed |
 | `php bin/console users:role <email> admin\|user` | Operator-controlled system role change |
 | `php bin/console mail:test <email>` | Deliver a test message through configured transport |
+| `php bin/realtime.php` | Run the live-collaboration WebSocket server (long-running; see [jobs](../operations/jobs.md#realtime-server)) |
 
 From the repository root, documentation commands work without a database:
 

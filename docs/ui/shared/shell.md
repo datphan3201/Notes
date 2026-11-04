@@ -4,6 +4,8 @@
 
 Every authenticated route uses the application layout. The guest layout is separate. `app.js` reads safe bootstrap JSON, starts shared modules, and dispatches page initializers by data attributes.
 
+The application layout also shows a banner for unverified accounts (**Resend email**, gone once the activation link is used) and an **Offline** pill in the top bar while the browser has no connection. Both layouts link the web app manifest and icons; [pwa.js](../../../frontend/src/js/lib/pwa.js) registers the service worker in production builds and clears offline caches on logout ([offline use](../notes/offline.md)). The Notes workspace is loaded as a separate chunk only on `/`.
+
 [Archify: system architecture](../../diagrams/system/index.html) shows the runtime boundaries.
 
 <!-- BEGIN GENERATED TRACE -->

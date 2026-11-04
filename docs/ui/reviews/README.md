@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-Daily/Weekly/Monthly Reviews open an in-page editor; `/reviews/{id}` is not an HTML route. Snapshot facts and reflection fields have separate meanings. Demo fixtures also require the complete schema-one snapshot, including period/timezone, capture time and fact collections. [ISSUE-021](../../issues.md#issue-021--demo-review-snapshots-do-not-match-the-runtime-schema) records the bounded demo-data repair; normal Finalized snapshot behavior remains unchanged.
+Daily/Weekly/Monthly Reviews open an in-page editor; `/reviews/{id}` is not an HTML route. Snapshot facts and reflection fields have separate meanings. Demo fixtures also require the complete schema-one snapshot, including period/timezone, capture time and fact collections.
 
 <!-- BEGIN GENERATED TRACE -->
 

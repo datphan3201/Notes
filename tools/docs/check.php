@@ -66,7 +66,7 @@ foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/
     }
 }
 $files = [];
-foreach (['docs', 'backend/.ai/rules', '.agents/skills'] as $directory) {
+foreach (['docs', 'backend/.ai/rules'] as $directory) {
     if (!is_dir($root.'/'.$directory)) {
         continue;
     }
@@ -76,7 +76,7 @@ foreach (['docs', 'backend/.ai/rules', '.agents/skills'] as $directory) {
         }
     }
 }
-foreach (['README.md', 'AGENTS.md', 'CLAUDE.md'] as $file) {
+foreach (['README.md', 'CHANGELOG.md', 'AGENTS.md', 'CLAUDE.md'] as $file) {
     $files[] = $root.'/'.$file;
 }
 

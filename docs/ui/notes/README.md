@@ -13,9 +13,9 @@ Notes lives at `/`, not `/notes`. The workspace supports owned Notes and a separ
 - [AI summary and questions](ai.md)
 - [Offline use and sync](offline.md)
 
-## Pending interface review
+## Layout and status
 
-[ISSUE-017](../../issues.md#issue-017--notes-controls-have-redundant-placement-and-unclear-save-wording) proposes compact preferences and clearer action hierarchy while preserving the current visual system. Save currently invokes save-and-close; its wording/behavior needs confirmation before implementation. [ISSUE-018](../../issues.md#issue-018--notes-pagination-omits-the-current-middle-page-and-localized-labels) and [ISSUE-019](../../issues.md#issue-019--notes-layout-preferences-do-not-refresh-the-visible-layout) track reproduced browser rendering discrepancies. No application change was made by this review.
+Grid is the default layout; the View button switches to list and is saved per account. Pinned Notes come first (newest pin first), then the chosen order; a *Pinned / Other notes* divider separates them. Each card shows icons for pinned, password-protected and shared Notes in both layouts. *Save and close* flushes the normal autosave path and closes the editor, like the close button and backdrop.
 
 <!-- BEGIN GENERATED TRACE -->
 

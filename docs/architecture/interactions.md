@@ -16,10 +16,12 @@ The shared [CSS map](../ui/shared/shell.md#style-file-ownership) identifies styl
 | Planning drafts | [DraftBuffer](../../frontend/src/js/planning/draft-buffer.js) | Older acknowledgement must not erase newer typing |
 | Notes autosave | [AutosaveMachine](../../frontend/src/js/notes/autosave-machine.js) | Frozen request identity, one logical in-flight mutation, explicit conflict choice |
 | Notes recovery | [RecoveryStore](../../frontend/src/js/lib/recovery-store.js) | Account-scoped, validated sessionStorage recovery |
+| Live co-editing | [OTClient](../../frontend/src/js/lib/ot-client.js), [CollaborationSession](../../frontend/src/js/notes/collaboration.js) | At most one operation in flight; remote operations are transformed over unacknowledged local edits; reconnects rebase without duplicating an edit the server already applied |
+| Offline Notes | [OfflineStore](../../frontend/src/js/lib/offline-store.js), [OfflineSync](../../frontend/src/js/notes/offline-sync.js) | One queued change per Note, replayed in order; a 409 keeps the offline text as a copy instead of overwriting |
 | Transitions | [transitionEntity](../../frontend/src/js/planning/transitions.js) | Required completion/ancestor acknowledgements remain explicit |
 | Navigation/dialogs | [workspace-ui](../../frontend/src/js/lib/workspace-ui.js), [backdrop helper](../../frontend/src/js/lib/dialog-backdrop.js) | Preserve draft/focus, guard pending saves and dirty navigation |
 
-Checkable Note lines remain literal `- [ ]` / `- [x]` plain text with compatible undo/composition behavior. Completion Checklist rows remain separate domain data and Activity. Task notes, shared title/content edits and Review reflections use explicit Save; do not apply the main Notes autosave contract to them accidentally.
+Checkable Note lines remain literal `- [ ]` / `- [x]` plain text with compatible undo/composition behavior. Completion Checklist rows remain separate domain data and Activity. Task notes and Review reflections use explicit Save; shared-Note recipients autosave (live when connected). Do not apply the main Notes autosave contract to Task notes or Reviews accidentally.
 
 ## Facts and denominator discipline
 

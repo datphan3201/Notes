@@ -7,7 +7,7 @@
 - PHP 8.5, strict types, explicit dependencies/bootstrap, focused Composer utilities, PDO and MySQL 8.4. No application framework, ORM or automatic container.
 - Keep browser sources/PHP views in frontend, public deployment files in backend/public and private uploads outside that public root. Preserve same-origin application APIs, cookies, CSRF and `/api/v1` compatibility.
 - Controllers parse/serialize HTTP; application services own transactions; domain code owns pure invariants; repositories own SQL. All owned lookups require the authenticated owner. Membership paths use explicit authorization, not an assumed owner match.
-- Preserve unrelated local changes. Do not treat retired Laravel instructions or historical phase gates as active requirements.
+- Preserve unrelated local changes. Historical phase gates and retired framework instructions are not requirements.
 
 ## Product model
 

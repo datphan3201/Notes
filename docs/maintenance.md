@@ -7,9 +7,9 @@
 1. Find the exact URL/label in the [route index](README.md). Open its component trace; do not search migration phases.
 2. Follow the PHP template/DOM hook and browser symbol. Inspect relevant CSS in the [shared shell map](ui/shared/shell.md#style-file-ownership).
 3. Follow named routes to controllers, services/domain and repositories. Confirm actual branches and effects, including shared consumers and permissions.
-4. Confirm intended behavior changes with the user when intent is unclear. Collect discrepancies for [the issue report](issues.md) within the same task.
+4. Confirm intended behavior changes with the user when intent is unclear. Record unresolved discrepancies in [the open-issue list](issues.md) within the same task.
 5. Change code/tests through the normal repository rules. Preserve unrelated local work and keep secrets out of examples.
-6. At completion, consolidate owning narrative, structured traces and diagrams; regenerate/check them once the implementation is stable. Add one concise [audit entry](audit-history.md) with the final change and evidence. Do not write per-step documentation/status diaries.
+6. At completion, consolidate owning narrative, structured traces and diagrams; regenerate/check them once the implementation is stable. Add one concise [changelog](../CHANGELOG.md) entry for user-visible or operational changes; test evidence goes in the commit/PR description. Do not write per-step documentation/status diaries.
 
 ## Trace source of truth
 
@@ -34,26 +34,24 @@ A renamed/moved symbol requires a registry update. A new HTML route needs a rout
 
 Use Archify for diagrams; no Mermaid/ASCII duplicate is maintained. Each [diagram folder](diagrams/README.md) contains the authored candidate JSON, final HTML and automated delivery receipts. Output paths live under docs/diagrams, not .archify. Code-backed source evidence is pinned to the committed revision and must be regenerated when cited behavior changes; current uncommitted behavior must not be misrepresented as committed evidence. An approved requirements/contract diagram may omit repository attribution and must clearly state that scope, with live code/test links in the corresponding Markdown trace.
 
-Read the installed Archify skill, relevant schema and repository-authoring guidance. On this machine the tool repo is `~/code/tools/archify`; it is an external authoring tool, not a runtime dependency. Typical invocation from the project root:
+Read the installed Archify skill, relevant schema and repository-authoring guidance. Archify is an external authoring tool, not a runtime or build dependency; set `ARCHIFY` to its checkout. Typical invocation from the project root:
 
 ```bash
-node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --json
+node "$ARCHIFY/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --json
 ```
 
 ARCHIFY_CHROME may point to an installed Chromium executable. Keep receipts from failed runs out of the maintained final result; repairs follow the skill's review/output ownership rules. When updating an existing artifact, use a fresh browser evidence directory and explicitly keep the finalize receipt at its canonical path, because the docs checker reads that path:
 
 ```bash
-node "$HOME/code/tools/archify/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --out-dir docs/diagrams/task-planning/review-N --receipt docs/diagrams/task-planning/index.finalize.json --json
+node "$ARCHIFY/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --out-dir docs/diagrams/task-planning/review-N --receipt docs/diagrams/task-planning/index.finalize.json --json
 ```
 
-Replace `review-N` with a fresh evidence directory. The CLI derives the sibling `index.finalize-summary.json`; existing browser evidence is preserved. See [ISSUE-014](issues.md#issue-014--archify-update-receipts-and-docs-checker-use-different-default-paths).
+Replace `review-N` with a fresh evidence directory. The CLI derives the sibling `index.finalize-summary.json`; existing browser evidence is preserved.
 
 Do not edit generated HTML or receipts by hand. Report a failed diagram as failed, and distinguish automated browser checks from visual inspection.
 
 ## Keeping docs current
 
-Report newly discovered problems in [issues.md](issues.md) during the same task, including problems fixed immediately. Search existing IDs first; record observed/expected behavior, affected UI/source, impact, status, evidence limits and resolution criteria. Keep fix/verification evidence when resolved. Ask for missing product intent; issue reporting alone does not authorize a behavior change. Feature docs link to the central report instead of duplicating its contents.
+Report unresolved problems in [issues.md](issues.md) during the same task; search existing IDs first and record observed/expected behavior, affected UI/source, impact, status, limits and next step. A fixed issue is deleted from the list and summarized in the [changelog](../CHANGELOG.md). Ask for missing product intent; issue reporting alone does not authorize a behavior change. Feature docs link to the open-issue list instead of duplicating it.
 
 The live docs contain decisions, navigation, operating procedures, tests and unresolved findings. Remove completed phase plans, duplicate status diaries and obsolete feature exclusions after migrating their still-valid constraints. Update AGENTS/CLAUDE/rules and links in the same change. Git history holds historical committed docs; do not recreate a docs/archive or .archify folder.
-
-[Current documentation checks](testing/documentation-checks.md) records only checks actually executed for this refactor. Future changes should replace stale check evidence with their scope/limits, not append an endless diary.

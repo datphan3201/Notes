@@ -41,7 +41,6 @@ AGENTS.local.md
 CLAUDE.local.md
 agent.local.md
 /.ai/local/
-/.agents/local/
 /.mcp.json
 /feedback.docx
 
@@ -49,3 +48,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# IDE caches
+.vs/
+.idea/

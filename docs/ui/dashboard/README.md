@@ -4,9 +4,9 @@
 
 These are workspace sections on one URL. Their facts come from server projections; browser cards/heat levels do not create a productivity score.
 
-Today and This week use the existing split layout: the checklist and its progress summary occupy the main column, while supporting cards sit alongside it on desktop and stack on small screens. Today includes Habits and recent Activity; This week includes Milestones, Habit targets and the Weekly activity chart. Current focus is retired. Recent Activity balances the total with a coloured 30-day calendar and legend; the full-year Activity tab remains available. Weekly activity has readable columns, daily counts and a contribution total, distinct from the checklist completion percentage. Habits can be checked in directly from Today. The chosen roadmap is saved per account and appears directly below the header; an unset choice invites selection. Account-local daily selections are independent of deadlines and work intervals; automatic membership alone does not select the week. See [ISSUE-022](../../issues.md#issue-022--dashboard-activity-and-weekly-charts-are-hard-to-read) for the chart presentation fix and evidence limits.
+Today and This week use the existing split layout: the checklist and its progress summary occupy the main column, while supporting cards sit alongside it on desktop and stack on small screens. Today includes Habits and recent Activity; This week includes Milestones, Habit targets and the Weekly activity chart. Current focus is retired. Recent Activity balances the total with a coloured 30-day calendar and legend; the full-year Activity tab remains available. Weekly activity has readable columns, daily counts and a contribution total, distinct from the checklist completion percentage. Habits can be checked in directly from Today. The chosen roadmap is saved per account and appears directly below the header; an unset choice invites selection. Account-local daily selections are independent of deadlines and work intervals; automatic membership alone does not select the week.
 
-[Archify: daily/weekly planning contract](../../diagrams/daily-weekly-planning/index.html) · [Audit entry](../../audit-history.md)
+[Archify: daily/weekly planning contract](../../diagrams/daily-weekly-planning/index.html)
 
 <!-- BEGIN GENERATED TRACE -->
 

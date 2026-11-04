@@ -4,7 +4,7 @@
 
 ## Requirements
 
-PHP 8.5 with the extensions in [composer.json](../../backend/composer.json), Composer 2, MySQL 8.4/InnoDB/utf8mb4_0900_ai_ci, Node 22 and npm 10. Production uses Apache/Nginx with PHP-FPM; PHP's development server is for local work only.
+PHP 8.5 with the extensions in [composer.json](../../backend/composer.json), Composer 2, MySQL 8.4/InnoDB/utf8mb4_0900_ai_ci, Node 22 and npm 10. Production uses Nginx (or Apache) with PHP-FPM, plus the long-running realtime process for live collaboration; PHP's development server is for local work only.
 
 Check installed capabilities rather than assuming dependency installation succeeded:
 
@@ -48,6 +48,8 @@ npm ci
 npm run build
 ```
 
+Optional features: set `AI_ENABLED=true`, `GOOGLE_AI_API_KEY` (and optionally `AI_MODEL`, `AI_EMBEDDING_MODEL`) for the assistant, AI summaries and Ask AI; keep `REALTIME_ENABLED=true` and run `php bin/realtime.php` for live co-editing ([local](local-development.md) or [production](deployment.md#live-collaboration-realtime-server) setup). Offline support needs HTTPS (or localhost) because browsers only register service workers in secure contexts.
+
 The migration ledger/checksum is authoritative; read migrate:status instead of relying on a historical fixed migration count. Do not edit applied migrations or use a test reset to repair app data.
 
 Create backend/.env.testing from the same example with APP_ENV=testing, exact goals_test database/allowlist and its separate credentials. The test harness checks the actual database before cleanup. It does not need the live AI provider.
@@ -55,7 +57,3 @@ Create backend/.env.testing from the same example with APP_ENV=testing, exact go
 ## First account
 
 Start [local development](local-development.md), open `/register` and create an account. There is no universal seeded password. Public registration creates role user, not admin. An authorized operator assigns system admin using `php bin/console users:role <email> admin`; never grant that role merely to make a negative-access test pass.
-
-## Machine-local MySQL
-
-The existing development machine has a separate persistent instance at 127.0.0.1:3307, configured under `~/.local/share/planner/mysql/`; its data is not the system MySQL instance. If it is already listening, reuse it. If stopped, its operator can start `mysqld --defaults-file="$HOME/.local/share/planner/mysql/my.cnf" --daemonize`. Fresh installations do not assume that machine-local config or credentials exist.

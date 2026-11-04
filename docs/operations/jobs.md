@@ -1,4 +1,4 @@
-# Periodic jobs and mail
+# Periodic jobs, processes and mail
 
 [Operations](README.md) · [Console source](../../backend/bin/console)
 
@@ -24,10 +24,14 @@ Alternatively supervise `php bin/console schedule:work`; it checks the schedule 
 
 Task/Dashboard reads additionally top up personal recurrence in current code. They are not a substitute for reminders, snapshots or cleanup jobs. Every command uses configured application data; run destructive retention/prune experiments only against intentional QA fixtures.
 
+## Realtime server
+
+`php bin/realtime.php` is a long-running WebSocket process for live co-editing of shared Notes (not a cron job). Run exactly one per installation under a supervisor: setup.sh installs `planner-realtime.service` (restart on failure, PHP-FPM user) and release.sh restarts it after each release. It listens on `REALTIME_LISTEN` behind the `/realtime` proxy, keeps its database connection alive and exits for a supervised restart if the connection is lost; open editors reconnect and resend unacknowledged edits. Logs go to the application log and `journalctl -u planner-realtime`.
+
 ## Mail
 
 See [environment variables](../../backend/.env.example) and [mail infrastructure](../../backend/src/Infrastructure/). With MAIL_HOST configured, delivery uses SMTP and MAIL_PORT/MAIL_ENCRYPTION/MAIL_USERNAME/MAIL_PASSWORD. Without SMTP, local/testing writes restrictive .eml messages under private storage/mail-outbox; production uses the system transport. Configure MAIL_FROM_ADDRESS/NAME.
 
 An authorized operator can run `php bin/console mail:test <recipient-email>` to test the configured delivery path. That is an actual outbound message when delivery is enabled; use an intended recipient. Never paste verification/reset links or codes into docs/log screenshots.
 
-Invitation, verification/change, password reset and reminder delivery have different product triggers. In-app team reminders do not imply team email reminders. Personal reminder emails are at-least-once across a delivery/commit crash boundary and can duplicate after a crash; do not claim exactly-once external delivery.
+Invitation (including Note shares), verification/change, password reset (link and 6-digit code) and reminder delivery have different product triggers. In-app team reminders do not imply team email reminders. Personal reminder emails are at-least-once across a delivery/commit crash boundary and can duplicate after a crash; do not claim exactly-once external delivery.

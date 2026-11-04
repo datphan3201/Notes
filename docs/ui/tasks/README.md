@@ -4,7 +4,7 @@
 
 Browser route: `GET /tasks` (`planning.tasks`). The shell is rendered by `AccountController::planningPage`; `app.js` starts `initTasksPage` on `[data-tasks-page]`.
 
-[Approved design decisions and verification](design-review.md). Tasks is the full catalogue; Dashboard remains the daily/weekly execution overview. The current format, theme and controls are retained. Today controls show “Added for today” on hover once included; manual selections retain their remove action.
+Tasks is the full catalogue; Dashboard remains the daily/weekly execution overview. The current format, theme and controls are retained. Today controls show “Added for today” on hover once included; manual selections retain their remove action.
 
 | What you see | Read next |
 | --- | --- |

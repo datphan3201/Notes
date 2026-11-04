@@ -1,6 +1,6 @@
 # Verification limits
 
-[Testing](README.md) · [Issue report](../issues.md) · [Executed documentation checks](documentation-checks.md)
+[Testing](README.md) · [Open issues](../issues.md)
 
 Record discovered defects and unresolved product decisions in the issue report. This guide defines what each kind of evidence can establish; it is not another issue register.
 
@@ -16,4 +16,4 @@ Record discovered defects and unresolved product decisions in the issue report. 
 
 Main Notes has account-scoped recovery. Explicit-save Task/Review drafts do not promise browser-crash recovery. Check each component's `Coverage limit` note and relevant source when deciding what a test actually exercises.
 
-Live SMTP/AI, deployed web-server behavior, concurrency/failure injection and backup restoration require their own scoped evidence. Historical suite totals and unrelated passing checks do not resolve an open issue. Document the command, environment, observed result and remaining limits before changing an issue to Resolved.
+Live SMTP/AI, deployed web-server behavior, concurrency/failure injection and backup restoration require their own scoped evidence. Historical suite totals and unrelated passing checks do not resolve an open issue. Before removing an issue as fixed, record the command, environment, observed result and remaining limits in the commit or pull-request description.

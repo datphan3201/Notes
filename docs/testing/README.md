@@ -39,8 +39,11 @@ From repository root:
 ```bash
 php tools/docs/check.php
 php tools/docs/tests/run.php
+node --test tools/deploy/tests/*.test.mjs
 git diff --check
 ```
+
+`tests/Plain/Http/RealtimeSocketTest.php` starts `bin/realtime.php` on a random loopback port against goals_test; it needs no other running server. Browser checks of offline mode need a production build (the service worker is not registered under `npm run dev`).
 
 Commands above are procedures, not a current pass report. Run the narrowest relevant checks first. Before any destructive MySQL test cleanup, require APP_ENV=testing, configured database goals_test and actual SELECT DATABASE()=goals_test. The [integration/HTTP test setup](../../backend/tests/Plain/Integration/PlanningCoreTest.php) contains the guard. Never point integration tests at the running app's goals_dev database.
 
@@ -48,4 +51,4 @@ Concurrency cases need independent committed connections and owned fixtures. Inj
 
 ## Reporting
 
-See [executed checks](documentation-checks.md) for the current scoped evidence. Record revision and local-change scope, environment, exact command, result/assertion counts, selected browser flows and untested edges. A shell HTTP 200 is not a successful UI walkthrough. Historical suite totals do not certify the current worktree. Record discovered problems in [the issue report](../issues.md); keep resolved entries with actual fix/verification evidence. [Verification limits](verification-limits.md) link to those entries instead of duplicating reports.
+Put verification evidence in the commit or pull-request description: revision and local-change scope, environment, exact command, result/assertion counts, selected browser flows and untested edges. A shell HTTP 200 is not a successful UI walkthrough, and historical suite totals do not certify the current worktree. Record unresolved problems in [the open-issue list](../issues.md). [Verification limits](verification-limits.md) explain what each kind of evidence establishes.

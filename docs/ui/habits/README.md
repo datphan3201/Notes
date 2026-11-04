@@ -4,7 +4,7 @@
 
 Habits are dedicated entities with check-in history; personal repeating Tasks are managed under [Tasks / Repeating](../tasks/repeating.md). Habit check-ins do not change Goal progress.
 
-The approved action layout keeps the existing visuals: direct today check-in before the name, Edit at the end, and Rest day/Archive inside More options. The calendar retains dated interactions. See [ISSUE-015](../../issues.md#issue-015--habit-actions-have-unclear-hierarchy-and-inconsistent-check-in-behavior) and [ISSUE-016](../../issues.md#issue-016--habit-archive-fails-with-native-pdo-prepares) for changes and verification.
+The approved action layout keeps the existing visuals: direct today check-in before the name, Edit at the end, and Rest day/Archive inside More options. The calendar retains dated interactions.
 
 <!-- BEGIN GENERATED TRACE -->
 
@@ -73,4 +73,4 @@ Archive is secondary inside More options. Confirmation explains removal from act
 
 ## Timezone compatibility
 
-Supported aliases such as `Asia/Saigon` normalize to `Asia/Ho_Chi_Minh` on new input, even when PHP directly accepts the alias. Existing accepted fixed-offset inputs retain their prior behavior. A checked-in legacy Habit receiving an equivalent alias keeps its exact stored timezone; name/content edits remain possible without rewriting check-ins or Activity. A genuinely different timezone remains forbidden after the first check-in. Stored names are resolved through `TimeZoneNames::zone`, so a legacy alias keeps working on servers whose tz database no longer ships it. See [ISSUE-001](../../issues.md#issue-001--habit-timezone-alias-is-not-always-canonicalized) for implementation/test evidence.
+Supported aliases such as `Asia/Saigon` normalize to `Asia/Ho_Chi_Minh` on new input, even when PHP directly accepts the alias. Existing accepted fixed-offset inputs retain their prior behavior. A checked-in legacy Habit receiving an equivalent alias keeps its exact stored timezone; name/content edits remain possible without rewriting check-ins or Activity. A genuinely different timezone remains forbidden after the first check-in. Stored names are resolved through `TimeZoneNames::zone`, so a legacy alias keeps working on servers whose tz database no longer ships it.

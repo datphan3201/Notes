@@ -185,15 +185,59 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 [Behavior and source trace](../ui/notes/sharing.md)
 
-- [ ] SHARE01 — Owner invites B with view permission; generic success shape does not enumerate unknown email accounts.
+- [ ] SHARE01 — Owner invites B (and a second registered account in the same field, comma-separated) with view permission; an unregistered address is rejected by name and nothing is shared; B receives an in-app invitation and, if enabled, an email.
 - [ ] SHARE02 — B accepts/declines invitation; access is available only after acceptance.
 - [ ] SHARE03 — View recipient can read title/content but cannot edit or access owner-only controls/files.
-- [ ] SHARE04 — Owner grants edit; B explicitly saves title/content with version checks.
-- [ ] SHARE05 — Concurrent shared edit returns conflict instead of silently overwriting content.
+- [ ] SHARE04 — Owner grants edit; B's title/content changes autosave (no Save button) and the owner sees them.
+- [ ] SHARE05 — With the realtime server stopped, B's autosave after a concurrent owner edit keeps B's text on top of the newer version instead of failing silently.
 - [ ] SHARE06 — Owner/other accepted recipients receive appropriate update/join notifications; actor does not notify themselves.
 - [ ] SHARE07 — Owner revokes or changes permission; B immediately loses the removed capability.
 - [ ] SHARE08 — B leaves a share; deleted Note no longer has accessible shares.
 - [ ] SHARE09 — B reports the shared Note; admin sees the captured snapshot/reason, not live owner Note access.
+- [ ] SHARE10 — Shared with me shows owner, view-only/can-edit badge and share time; the owner's share list shows each recipient's email, permission and invited/has-access state.
+
+## Note passwords — LOCK
+
+[Behavior and source trace](../ui/notes/locks.md)
+
+- [ ] LOCK01 — Turn on a password: a mismatch or fewer than 4 characters is refused; success shows Locked and the card shows a lock icon without preview in grid and list.
+- [ ] LOCK02 — Reopen, pin, share and delete a locked Note: each first asks for the password; a wrong password shows an error and repeated guesses are throttled.
+- [ ] LOCK03 — Search finds a locked Note by title but not by its content; Ask AI never cites it.
+- [ ] LOCK04 — Change password: wrong current password and mismatched new passwords are refused; afterwards the old password no longer unlocks it in another session.
+- [ ] LOCK05 — Remove password requires the current password; the Note then opens without a prompt.
+- [ ] LOCK06 — B (accepted recipient) must enter the same password to open a locked shared Note and cannot change or remove it.
+
+## Live collaboration (requires B) — LIVE
+
+[Behavior and source trace](../ui/notes/collaboration.md)
+
+- [ ] LIVE01 — Owner and B (edit) open the same shared Note: both show Saved · live and each other's initials.
+- [ ] LIVE02 — Both type at the same time in different places: both screens end with identical text and the saved Note matches after reopening.
+- [ ] LIVE03 — Each sees the other's named caret move while typing; a title change appears for the other person.
+- [ ] LIVE04 — A view-only recipient sees updates live but cannot type.
+- [ ] LIVE05 — Owner removes B's access while B is editing: B is told and the editor closes within seconds.
+- [ ] LIVE06 — Stop the realtime server: editors report reconnecting, then keep autosaving over HTTP without losing typed text.
+
+## Note AI — NOTEAI
+
+[Behavior and source trace](../ui/notes/ai.md)
+
+- [ ] NOTEAI01 — Summarize a Note (authorized live provider): the summary is in the Note's language; Regenerate replaces it.
+- [ ] NOTEAI02 — Edit the Note's text: the summary shows Out of date; pinning or recolouring does not.
+- [ ] NOTEAI03 — Ask AI a question answered by one Note: the answer cites it and choosing the source opens it; a shared Note opens in the shared dialog.
+- [ ] NOTEAI04 — Ask something no Note covers: the answer says so and cites nothing.
+- [ ] NOTEAI05 — With AI disabled, Summarize and Ask AI report AI is not enabled; nothing else changes.
+
+## Offline use — OFFLINE
+
+[Behavior and source trace](../ui/notes/offline.md)
+
+- [ ] OFFLINE01 — On a production build over HTTPS or localhost, load Notes once, go offline and reload: Notes opens with the Offline banner and the saved Notes.
+- [ ] OFFLINE02 — Offline search and tag filters work; a locked Note cannot be opened offline.
+- [ ] OFFLINE03 — Edit and create Notes offline: status says Saved on this device and cards show the waiting-to-sync icon; reloading offline keeps the changes.
+- [ ] OFFLINE04 — Reconnect: a toast confirms sync, icons disappear and the server has the changes.
+- [ ] OFFLINE05 — Edit the same Note elsewhere while offline, then reconnect: the offline text is saved as “… (offline copy)”.
+- [ ] OFFLINE06 — Log out: offline data and cached pages are removed (another account on the same browser sees none of them).
 
 ## Bell and reminders — NOTIFY
 
@@ -277,6 +321,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] EMAIL02 — Expired/invalid/replayed verification/change links fail safely without information disclosure.
 - [ ] EMAIL03 — Request address change with current password; new-address confirmation applies change and notifies old address.
 - [ ] EMAIL04 — Inspect correct private local mail or authorized SMTP delivery; do not log token/code content.
+- [ ] EMAIL05 — An unverified account sees the activation banner on every page; Resend email sends a new link and the banner disappears after activation.
 
 ## Password, recovery and 2FA — SECURITY
 
@@ -290,6 +335,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] SECURITY06 — Password success with 2FA remains pending until valid challenge; direct protected requests cannot bypass it.
 - [ ] SECURITY07 — Request allowed email fallback for TOTP and verify intended challenge behavior.
 - [ ] SECURITY08 — Disable 2FA with current password on QA account; restore intended final access settings.
+- [ ] SECURITY09 — Recovery by code: the email's 6-digit code leads to the new-password form once; five wrong codes spend it.
 
 ## AI — AI
 

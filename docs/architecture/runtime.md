@@ -8,6 +8,17 @@
 
 The configured web root is backend/public. [dev-router.php](../../backend/dev-router.php) is local-only routing for PHP's development server. API endpoints and HTML shells share the same application, not separate microservices.
 
+## Processes
+
+| Process | Role | Source |
+| --- | --- | --- |
+| PHP-FPM (or `php -S` locally) | Every HTML page and `/api/v1` request | [public/index.php](../../backend/public/index.php) |
+| Realtime server | WebSocket rooms for live co-editing of shared Notes; saves through `NoteService` | [bin/realtime.php](../../backend/bin/realtime.php), [CollaborationHub](../../backend/src/Infrastructure/Realtime/CollaborationHub.php) |
+| Scheduler | Reminders, retention, file cleanup and other periodic jobs (cron `schedule:run`) | [bin/console](../../backend/bin/console), [jobs](../operations/jobs.md) |
+| Service worker | Browser-side asset/page cache for offline use; never caches `/api` | [sw.js](../../backend/public/sw.js) |
+
+The realtime server is stateless across restarts: it loads a Note's text when the first participant joins and writes merged text back through the ordinary application service. It never reads browser sessions; the web app authorizes each participant and issues a 60-second HMAC ticket ([RealtimeTicket](../../backend/src/Infrastructure/Realtime/RealtimeTicket.php)).
+
 ## Ownership table
 
 | Layer | Responsibility | Starting source |
@@ -26,8 +37,8 @@ Use constructor dependencies rather than a service locator. New features belong 
 
 ## Browser behavior is not all server behavior
 
-Tasks time views are a client projection; Dashboard has SQL-backed projections. Personal recurrence and Teamwork repeats have distinct services. Main Notes uses an autosave machine; Task notes and Reviews use explicit save/draft handling. A shared visual control does not imply a shared transaction or persistence contract.
+Tasks time views are a client projection; Dashboard has SQL-backed projections. Personal recurrence and Teamwork repeats have distinct services. Main Notes uses an autosave machine (or the realtime session for shared Notes, with an IndexedDB outbox when offline); Task notes and Reviews use explicit save/draft handling. A shared visual control does not imply a shared transaction or persistence contract.
 
 ## Optional infrastructure
 
-[GoogleAIProvider](../../backend/src/Infrastructure/AI/GoogleAIProvider.php) and [DisabledAIProvider](../../backend/src/Infrastructure/AI/DisabledAIProvider.php) implement the provider boundary. Credentials remain server-side. Mail uses configured SMTP or the runtime's environment-specific fallback. These are optional adapters, not a claim that a live provider has been tested.
+[GoogleAIProvider](../../backend/src/Infrastructure/AI/GoogleAIProvider.php) and [DisabledAIProvider](../../backend/src/Infrastructure/AI/DisabledAIProvider.php) implement the provider boundary (chat, completion and embeddings) used by the assistant and by [Note AI](../ui/notes/ai.md). Credentials remain server-side. Mail uses configured SMTP or the runtime's environment-specific fallback. These are optional adapters, not a claim that a live provider has been tested.

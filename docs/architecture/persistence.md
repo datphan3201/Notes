@@ -15,9 +15,12 @@
 | Habit | habits, habit_check_ins, habit_rest_days; [Habit repository](../../backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php) |
 | Recurrence | task_series and template relations, tasks.series_id/occurrence_date; [Series repository](../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php) |
 | Activity/Review | activities, goal_daily_snapshots, reviews, daily_task_selections, weekly_task_selections, weekly_milestone_selections; [repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
+| Notes | notes (incl. lock_hash/locked_at for per-Note passwords), label_note, attachments, note_links, note_summaries, note_embeddings; [Note repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php), [AI repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteAIRepository.php) |
 | Shared Notes / reports | note_shares, note_reports; [sharing](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php), [reports](../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php) |
 | Teamwork | team_goals, team_members, team_tasks, team_messages; [Team repository](../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php) |
 | Infrastructure | attachments, pending_file_deletions, user_backgrounds, notifications, ai_actions, rate_limit_buckets, scheduled_jobs, schema_migrations |
+
+The offline sync feed reads notes by the `(user_id, updated_at, id)` cursor index (migration 0030); tombstoned rows report deletions. AI summaries and embeddings store a SHA-256 of the title/content they describe, so pinning or recolouring does not make them stale. Password-reset rows also hold a hashed 6-digit code and its attempt counter (migration 0031).
 
 Dashboard roadmap selection is stored in user_preferences.dashboard_roadmap_goal_id with a composite owner/Goal foreign key; [migration 0026](../../backend/database/plain-migrations/0026_add_dashboard_roadmap_preference.php) is the DDL source. Archived Goals are excluded on read without silently selecting another Goal.
 
@@ -34,6 +37,8 @@ Goal has exactly one Area or parent Goal. Task has at most one Goal/Milestone pr
 Application services own transactions using [TransactionManager](../../backend/src/Infrastructure/Database/TransactionManager.php). Lock the owner first, aggregates in stable ID order, then relationship/checklist rows and Activity/action rows. Validate graph changes under the same owner transaction so concurrent inverse edges cannot both succeed. Traverse arbitrary hierarchy iteratively; do not rely on recursive SQL/stack depth.
 
 Different aggregate changes increment version once; exact desired-state replay may be a no-op before stale-version rejection where that endpoint supports it. Archive/delete and relationship APIs have their own exact preconditions; do not invent a universal base_version requirement for check-ins, invitation responses or preferences.
+
+Live collaboration bypasses base_version by design: the realtime hub is the single sequencer for a shared Note's text and saves through `NoteService::writeCollaborativeText`, which re-checks edit access; color/pin/tags change through the separate attribute endpoint, so they never race the text.
 
 Files are written before metadata transactions with compensation on failure. Record deletion intent transactionally; perform actual byte deletion after commit. Provider calls do not belong inside write transactions.
 
