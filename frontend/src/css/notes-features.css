@@ -16,12 +16,17 @@
     outline: 2px solid var(--focus);
     outline-offset: 3px;
 }
+.note-card-head .note-card-title {
+    flex: 1 1 auto;
+}
 .note-card-badges {
     display: flex;
     flex: 0 0 auto;
     gap: 4px;
     align-items: center;
-    margin-left: auto;
+}
+.note-card-badges:empty {
+    display: none;
 }
 .note-status-badge {
     display: inline-flex;

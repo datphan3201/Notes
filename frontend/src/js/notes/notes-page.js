@@ -559,7 +559,8 @@ export class NotesPage {
             this.togglePin(note);
         });
         actions.append(pin);
-        head.append(title, badges, actions);
+        // Hover actions sit before the status icons so the icons stay flush right.
+        head.append(title, actions, badges);
         const preview = document.createElement('p');
         preview.className = 'note-card-preview';
         if (note.is_locked) preview.append(this.lockedPreview());

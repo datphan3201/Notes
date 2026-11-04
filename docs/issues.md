@@ -59,7 +59,7 @@ The severity assessments below describe observed impact, not a completed securit
 | [ISSUE-031](#issue-031--graded-note-features-were-missing-or-excluded) | Graded Note features were missing or excluded | High | Resolved | Passwords, live co-editing, AI summary/Q&A and offline sync implemented; PHPUnit, Node and real-browser flows pass |
 | [ISSUE-032](#issue-032--sharing-silently-accepted-unknown-recipients-and-recipients-saved-manually) | Sharing silently accepted unknown recipients and recipients saved manually | Medium | Resolved | Validated multi-recipient invites; recipient autosave/live editing; HTTP and browser checks |
 | [ISSUE-033](#issue-033--unverified-accounts-had-no-prominent-notice-and-recovery-had-no-code-option) | Unverified accounts had no prominent notice and recovery had no code option | Medium | Resolved | Banner with Resend; 6-digit recovery code; integration and browser checks |
-| [ISSUE-034](#issue-034--login-lands-on-dashboard-while-the-assignment-describes-a-notes-homepage) | Login lands on Dashboard while the assignment describes a notes homepage | Low | Needs decision | Source-inspected; behavior unchanged |
+| [ISSUE-034](#issue-034--login-lands-on-dashboard-while-the-assignment-describes-a-notes-homepage) | Login lands on Dashboard while the assignment describes a notes homepage | Low | Closed without change | Owner: the assignment text is outdated; Dashboard stays the home page |
 | [ISSUE-035](#issue-035--live-collaboration-needs-a-websocket-proxy-that-the-existing-runtime-lacks) | Live collaboration needs a WebSocket proxy that the existing runtime lacks | Low | Open | Nginx/systemd setup added; php -S runtime falls back to autosave |
 
 ## ISSUE-001 — Habit timezone alias is not always canonicalized
@@ -457,12 +457,11 @@ The severity assessments below describe observed impact, not a completed securit
 
 ## ISSUE-034 — Login lands on Dashboard while the assignment describes a notes homepage
 
-- **Status:** Needs decision.
+- **Status:** Closed without change (2026-11-04): the owner considers that assignment text outdated, so Dashboard remains the post-login home page and Notes stays one click away at /.
 - **Severity / impact:** Low; the assignment says users land on a homepage where they can view their notes. AccountController redirects to /dashboard after login/registration; Notes is one click away at /.
 - **Recorded:** 2026-11-04, source-inspected ([AccountController](../backend/src/Http/Controller/AccountController.php)).
-- **Pending decision:** keep Dashboard as the planner homepage, redirect to / (Notes), or add a recent-notes card to the Dashboard.
+- **Decision:** keep Dashboard as the planner homepage.
 - **Evidence limits:** Behavior intentionally unchanged.
-- **Resolution criteria:** The owner chooses the landing page.
 
 ## ISSUE-035 — Live collaboration needs a WebSocket proxy that the existing runtime lacks
 
