@@ -10,7 +10,6 @@ import { createTagPicker, sameTagIds } from './tag-picker.js';
 import { DraftBuffer } from './draft-buffer.js';
 import { transitionEntity } from './transitions.js';
 import { reportWorkspaceError } from '../lib/workspace-ui.js';
-import { referenceDecoration } from '../settings/reference-decoration.js';
 import { checkMark } from '../lib/check-mark.js';
 import { taskRowShell } from './task-row.js';
 import { actionMenu, initActionMenus } from './action-menu.js';
@@ -323,11 +322,6 @@ export function initGoalDetail(root) {
         const headCta = element('span', `${t('Goal information')} →`, 'roadmap-goal-cta');
         center.append(headName, headState, headCta);
         map.append(svg, center);
-        map.append(
-            referenceDecoration('sky'),
-            referenceDecoration('roadmap'),
-            referenceDecoration('hiker'),
-        );
         page = Math.min(page, Math.max(0, Math.ceil(data.milestones.length / 6) - 1));
         const visibleMilestones = data.milestones.slice(page * 6, page * 6 + 6);
         map.dataset.roadmapEmpty = String(visibleMilestones.length === 0);

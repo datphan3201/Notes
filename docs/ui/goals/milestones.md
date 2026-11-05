@@ -15,7 +15,7 @@ Prerequisite edges form a separate acyclic graph and may cross owned Goals. All 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-milestone-prerequisites](../../../frontend/src/views/planning/goal.php#L55) |
-| Browser logic | [goal-roadmap.js · data-milestone-prerequisites](../../../frontend/src/js/planning/goal-roadmap.js#L577) |
+| Browser logic | [goal-roadmap.js · data-milestone-prerequisites](../../../frontend/src/js/planning/goal-roadmap.js#L571) |
 | Controller / service / domain | [PlanningService.php · public function addDependency(](../../../backend/src/Application/Planning/PlanningService.php#L531)<br>[PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L364) |
 | Persistence | [PdoPlanningRepository.php · public function prerequisites(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L266)<br>[PdoPlanningRepository.php · public function dependencyEdges(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L191)<br>[PdoPlanningRepository.php · public function completedDependents(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L281) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_milestone_dependency_blocks_milestone_but_not_its_task(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L107)<br>[PlanningCoreTest.php · public function test_failed_milestone_reopen_does_not_partially_reopen_completed_goals(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L319) |
@@ -30,7 +30,7 @@ Tasks under a locked Milestone are usable and completable. Completing a Mileston
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-milestone-tasks](../../../frontend/src/views/planning/goal.php#L64) |
-| Browser logic | [goal-roadmap.js · function taskRows(](../../../frontend/src/js/planning/goal-roadmap.js#L435)<br>[task-row.js · export function taskRowShell(](../../../frontend/src/js/planning/task-row.js#L7) |
+| Browser logic | [goal-roadmap.js · function taskRows(](../../../frontend/src/js/planning/goal-roadmap.js#L429)<br>[task-row.js · export function taskRowShell(](../../../frontend/src/js/planning/task-row.js#L7) |
 | Controller / service / domain | [PlanningService.php · public function transition(](../../../backend/src/Application/Planning/PlanningService.php#L364) |
 | Persistence | [PdoPlanningRepository.php · public function milestoneTaskProgress(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L214)<br>[PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_milestone_dependency_blocks_milestone_but_not_its_task(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L107) |
@@ -45,7 +45,7 @@ Milestone edits and contribution changes use aggregate versions. Archiving with 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goal.php · data-milestone-menu](../../../frontend/src/views/planning/goal.php#L47) |
-| Browser logic | [goal-roadmap.js · function archiveMilestone(](../../../frontend/src/js/planning/goal-roadmap.js#L723)<br>[quick-editor.js · export function openQuickEditor(](../../../frontend/src/js/planning/quick-editor.js#L621)<br>[action-menu.js · export function actionMenu(](../../../frontend/src/js/planning/action-menu.js#L5) |
+| Browser logic | [goal-roadmap.js · function archiveMilestone(](../../../frontend/src/js/planning/goal-roadmap.js#L717)<br>[quick-editor.js · export function openQuickEditor(](../../../frontend/src/js/planning/quick-editor.js#L621)<br>[action-menu.js · export function actionMenu(](../../../frontend/src/js/planning/action-menu.js#L5) |
 | Controller / service / domain | [PlanningService.php · private function archiveMilestoneContents(](../../../backend/src/Application/Planning/PlanningService.php#L321)<br>[PlanningService.php · public function addContribution(](../../../backend/src/Application/Planning/PlanningService.php#L544) |
 | Persistence | [PdoPlanningRepository.php · public function archiveWhere(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L130)<br>[PdoPlanningRepository.php · public function addEdge(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L247) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_contributions_are_multi_target_and_separate_from_primary_hierarchy(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L84) |

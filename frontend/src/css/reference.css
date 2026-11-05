@@ -6,22 +6,7 @@
     overflow: hidden;
     z-index: -1;
 }
-.reference-landscape {
-    right: 0;
-    bottom: 0;
-    width: 64%;
-    height: 100%;
-    mask-image: linear-gradient(90deg, transparent, black 30%);
-}
-[data-visual-theme='mountain'] .scene-header::before,
-[data-visual-theme='mountain'] .main-goal-card::before,
-[data-visual-theme='mountain'] .quote-scene-card::before {
-    background: none;
-}
-[data-visual-theme]:not([data-visual-theme='mountain']) .reference-landscape,
-[data-visual-theme]:not([data-visual-theme='mountain']) .reference-summit {
-    display: none;
-}
+
 [data-show-illustrations='false'] .reference-decoration {
     display: none;
 }
@@ -82,11 +67,7 @@
     margin-bottom: 12px;
     align-items: start;
 }
-.dashboard-page > .scene-header .reference-landscape {
-    width: 76%;
-    height: 175px;
-    mask-image: linear-gradient(90deg, transparent, black 25%);
-}
+
 .dashboard-page > .scene-header .theme-quote {
     margin-top: 34px;
     margin-left: auto;
@@ -225,14 +206,7 @@
     background: linear-gradient(115deg, var(--surface), var(--scene-tint, #ebeaff));
     box-shadow: 0 0 0 1px #dfdffe;
 }
-.main-goal-card .reference-summit {
-    right: 0;
-    top: 0;
-    width: 41%;
-    height: 100%;
-    mask-image: linear-gradient(90deg, transparent, black 30%);
-    z-index: -1;
-}
+
 .main-goal-card h2 {
     max-width: 26ch;
     font-size: 1.5rem;
@@ -338,29 +312,7 @@
 [data-theme='dark'] .goal-roadmap {
     background: linear-gradient(160deg, #1e3048, #192a43);
 }
-[data-visual-theme='mountain'] .goal-roadmap::before {
-    background: none;
-}
-.goal-roadmap > .reference-landscape {
-    top: 0;
-    width: 52%;
-    height: 108px;
-    mask-image: linear-gradient(0deg, transparent, black 50%);
-}
-.reference-foothills {
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 105px;
-    z-index: -1;
-}
-.reference-hiker {
-    left: 0;
-    bottom: 0;
-    width: 115px;
-    height: 92px;
-    z-index: 0;
-}
+
 .roadmap-center {
     grid-column: 1;
     grid-row: 1 / span var(--roadmap-rows, 2);
@@ -626,10 +578,7 @@
         max-width: 18ch;
         font-size: 1.3125rem;
     }
-    .main-goal-card .reference-summit {
-        width: 46%;
-        opacity: 0.6;
-    }
+
     .goal-area-group > summary {
         grid-template-columns: 28px minmax(0, 1fr);
     }
@@ -652,20 +601,7 @@
         border-left: 0;
     }
 }
-/* Keep the entire original mountain composition, not an enlarged central crop. */
-.reference-corner {
-    right: 0;
-    bottom: 0;
-    width: 245px;
-    height: 110px;
-    mask-image: linear-gradient(90deg, transparent, black 25%);
-}
-.reference-roadmap {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-}
+
 .reference-anchor {
     clip-path: circle(47% at 50% 50%);
 }
@@ -676,11 +612,7 @@
 [data-notes-workspace] > .scene-header {
     min-height: 90px;
 }
-.dashboard-page > .scene-header .reference-landscape {
-    width: 65%;
-    height: auto;
-    aspect-ratio: 307 / 73;
-}
+
 .dashboard-page > .scene-header .theme-quote {
     position: absolute;
     right: 1.9%;
@@ -692,14 +624,7 @@
     padding: 15px 18px;
     max-width: none;
 }
-[data-show-illustrations='false'] .reference-corner,
-[data-show-illustrations='false'] .reference-roadmap {
-    display: none;
-}
-[data-visual-theme]:not([data-visual-theme='mountain']) .reference-roadmap {
-    /* The scenic themes share the reference foreground details and layout. */
-    mask-image: linear-gradient(transparent 60%, black 85%);
-}
+
 @media (max-width: 600px) {
     .dashboard-page > .scene-header .theme-quote {
         position: relative;
@@ -708,13 +633,6 @@
         width: 210px;
         min-height: 0;
     }
-    .dashboard-page > .scene-header .reference-landscape {
-        width: 100%;
-    }
-    .reference-corner {
-        width: 180px;
-        height: 80px;
-    }
 }
 .dialog-footer {
     display: flex;
@@ -722,64 +640,7 @@
     gap: 8px;
     margin-top: 6px;
 }
-[data-visual-theme='mountain'][data-show-background='true'] .app-body::before {
-    background: linear-gradient(#f6f9ff, #eef4fe);
-}
-[data-theme='dark'][data-visual-theme='mountain'][data-show-background='true'] .app-body::before {
-    background: linear-gradient(#111c2d, #152236);
-}
-.reference-backdrop {
-    position: fixed;
-    left: 188px;
-    bottom: 0;
-    width: calc(100% - 188px);
-    height: 180px;
-    opacity: 0.29;
-    mask-image: linear-gradient(transparent, black);
-    z-index: -1;
-}
-[data-show-background='true'] .reference-backdrop {
-    display: block;
-}
-[data-show-background='false'] .reference-backdrop,
-[data-visual-theme]:not([data-visual-theme='mountain']) .reference-backdrop {
-    display: none;
-}
-[data-theme='dark'] .reference-backdrop {
-    opacity: 0.27;
-}
-.goal-roadmap .reference-hiker {
-    left: 0.43%;
-    width: 18.84%;
-    height: auto;
-    aspect-ratio: 88 / 70;
-    bottom: 2px;
-    mask-image: linear-gradient(90deg, black 78%, transparent);
-}
-@media (max-width: 800px) {
-    .reference-backdrop {
-        left: 0;
-        width: 100%;
-    }
-}
-@media (max-width: 760px) {
-    .goal-roadmap .reference-hiker {
-        width: 115px;
-        bottom: 0;
-    }
-}
-.reference-sky {
-    inset: 0 0 auto;
-    width: 100%;
-    height: 60px;
-    mask-image: linear-gradient(black 40%, transparent);
-}
-.goal-roadmap .reference-hiker {
-    mask-image:
-        linear-gradient(90deg, black 78%, transparent),
-        linear-gradient(0deg, black 94%, transparent);
-    mask-composite: intersect;
-}
+
 .roadmap-branch > strong {
     font-size: var(--font-size-body);
 }
@@ -882,21 +743,7 @@ body:not(:has(.settings-page)) .account-nav,
 [data-note-overview-host] .stack-form > button {
     justify-self: end;
 }
-[data-visual-theme] .theme-option .reference-theme-thumbnail,
-[data-visual-theme] .theme-preview-region .reference-theme-preview {
-    display: block;
-    position: relative;
-    inset: auto;
-    z-index: 0;
-    mask-image: none;
-    width: 100%;
-    height: 100px;
-    margin-bottom: 12px;
-}
-.theme-preview-region .reference-theme-preview {
-    height: 200px;
-    border-radius: 12px;
-}
+
 .habit-summary [data-habit-streak] {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -1273,24 +1120,13 @@ body:not(:has(.settings-page)) .account-nav,
 [data-theme='dark'] .main-goal-card > .context-chip {
     color: #b9a6ff;
 }
-[data-theme='dark'] :is(.reference-summit, .reference-plant, .reference-trophy, .reference-corner) {
+[data-theme='dark'] :is(.reference-plant, .reference-trophy) {
     display: none;
 }
 [data-theme='dark'] .quote-scene-card {
     padding-right: 22px;
 }
-/* Header actions never sit on top of the corner illustration. */
-@media (min-width: 901px) {
-    :root:not([data-theme='dark'])[data-show-illustrations='true']
-        .scene-header[data-reference-decoration='corner'] {
-        padding-right: 200px;
-    }
-}
-@media (max-width: 900px) {
-    .scene-header[data-reference-decoration='corner'] > .reference-corner {
-        display: none;
-    }
-}
+
 /* Without its illustration (dark theme) the quote card centres a larger quote. */
 [data-theme='dark'] .quote-scene-card {
     display: grid;
@@ -1305,12 +1141,7 @@ body:not(:has(.settings-page)) .account-nav,
     font-style: italic;
     line-height: 1.55;
 }
-@media (min-width: 901px) {
-    .scene-header[data-reference-decoration='corner'] > .reference-corner {
-        width: 190px;
-        height: 86px;
-    }
-}
+
 /* Goals page Main goal: the focus picker is the card title, as on the Dashboard roadmap card. */
 .main-goal-card > .context-chip {
     display: block;

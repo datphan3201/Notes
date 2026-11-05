@@ -15,7 +15,7 @@ Accounts start with localized placeholder Areas. Rename/reorder uses owner/versi
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goals.php · data-area-list](../../../frontend/src/views/planning/goals.php#L47) |
-| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L189) |
+| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L188) |
 | Controller / service / domain | [PlanningService.php · public function reorder(](../../../backend/src/Application/Planning/PlanningService.php#L819)<br>[PlanningService.php · public function archive(](../../../backend/src/Application/Planning/PlanningService.php#L247) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77)<br>[PdoPlanningRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L116) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_default_area_backfill_is_idempotent_and_preserves_existing_accounts(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L219)<br>[PlanningCoreTest.php · public function test_empty_planning_objects_and_checklist_can_be_archived_with_native_prepares(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L380) |
@@ -30,7 +30,7 @@ Goal hierarchy has one primary Area or parent Goal and arbitrary depth. Tree/tim
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [goals.php · data-goal-tree](../../../frontend/src/views/planning/goals.php#L31) |
-| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L189)<br>[planning-page.js · const renderMainGoal = (goals, focusId) =&gt;](../../../frontend/src/js/planning/planning-page.js#L200)<br>[quick-editor.js · export function openQuickCreator(](../../../frontend/src/js/planning/quick-editor.js#L626) |
+| Browser logic | [planning-page.js · export function initGoalsPage](../../../frontend/src/js/planning/planning-page.js#L188)<br>[planning-page.js · const renderMainGoal = (goals, focusId) =&gt;](../../../frontend/src/js/planning/planning-page.js#L199)<br>[quick-editor.js · export function openQuickCreator(](../../../frontend/src/js/planning/quick-editor.js#L626) |
 | Controller / service / domain | [PlanningService.php · public function moveGoal(](../../../backend/src/Application/Planning/PlanningService.php#L330)<br>[GraphGuard.php · public function wouldCycle(](../../../backend/src/Domain/Planning/GraphGuard.php#L14) |
 | Persistence | [PdoPlanningRepository.php · public function goalHierarchyEdges(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L170)<br>[PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [PlanningDomainTest.php · public function test_graph_guard_handles_deep_graphs_without_recursion(](../../../backend/tests/Plain/Unit/PlanningDomainTest.php#L14) |

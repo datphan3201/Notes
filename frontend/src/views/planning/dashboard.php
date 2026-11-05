@@ -1,5 +1,5 @@
 <section class="planning-page dashboard-page" data-dashboard-page aria-labelledby="dashboard-title">
-    <header class="workspace-header scene-header" data-reference-decoration="landscape">
+    <header class="workspace-header scene-header">
         <div>
             <p class="dashboard-date"><span data-dashboard-date></span> · <span class="dashboard-timezone" data-dashboard-timezone title="<?= $view->e($view->t('Your time zone')) ?>"></span></p>
             <h1 id="dashboard-title" data-dashboard-greeting><?= $view->e($view->t('Dashboard')) ?></h1>

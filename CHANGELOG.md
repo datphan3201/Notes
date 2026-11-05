@@ -2,6 +2,12 @@
 
 Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Chi_Minh. Detailed contracts live in the [documentation](docs/README.md); commit history holds the full record.
 
+## 2026-11-05
+
+### Changed
+- Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).
+- Summit trail (formerly Mountain journey) now uses its own sharp watercolour illustration for the background, page headers, roadmap and previews like the other sceneries; the blurry enlarged crops of a reference screenshot were removed from every theme.
+
 ## 2026-11-04
 
 ### Added
