@@ -132,6 +132,41 @@ final class PlanningCoreTest extends TestCase
         self::assertSame('Completed', $second['status']);
     }
 
+    public function test_goals_and_milestones_have_an_optional_start_date_before_their_deadline(): void
+    {
+        $area = $this->planning->create('area', $this->owner, ['name' => 'Study']);
+        $goal = $this->planning->create('goal', $this->owner, ['area_id' => $area['id'], 'name' => 'Exam', 'start_date' => '2026-11-02', 'deadline' => '2026-12-31']);
+        self::assertSame(['2026-11-02', '2026-12-31'], [$goal['start_date'], $goal['deadline']]);
+        $first = $this->planning->create('milestone', $this->owner, ['goal_id' => $goal['id'], 'name' => 'Grammar', 'start_date' => '2026-11-02', 'deadline' => '2026-11-15']);
+        $second = $this->planning->create('milestone', $this->owner, ['goal_id' => $goal['id'], 'name' => 'Listening']);
+        self::assertNull($second['start_date']);
+        $this->planning->addDependency($this->owner, $second['id'], ['prerequisite_id' => $first['id'], 'base_version' => $second['version']]);
+
+        // The Gantt view draws prerequisite links from the milestone list.
+        $listed = array_column($this->planning->list('milestone', $this->owner), null, 'id');
+        self::assertSame([$first['id']], $listed[$second['id']]['prerequisite_ids']);
+        self::assertSame([], $listed[$first['id']]['prerequisite_ids']);
+
+        // A start after the deadline is refused on create, and on update even when only one side changes.
+        foreach ([
+            fn () => $this->planning->create('milestone', $this->owner, ['goal_id' => $goal['id'], 'name' => 'Bad', 'start_date' => '2026-12-02', 'deadline' => '2026-12-01']),
+            fn () => $this->planning->update('milestone', $this->owner, $first['id'], ['start_date' => '2026-11-20', 'base_version' => $first['version']]),
+            fn () => $this->planning->update('goal', $this->owner, $goal['id'], ['deadline' => '2026-11-01', 'base_version' => $goal['version']]),
+        ] as $attempt) {
+            try {
+                $attempt();
+                self::fail('A start after the deadline must be rejected.');
+            } catch (ValidationException $exception) {
+                self::assertArrayHasKey('deadline', $exception->errors);
+            }
+        }
+
+        $moved = $this->planning->update('milestone', $this->owner, $first['id'], ['start_date' => '2026-11-05', 'deadline' => '2026-11-20', 'base_version' => $first['version']]);
+        self::assertSame(['2026-11-05', '2026-11-20'], [$moved['start_date'], $moved['deadline']]);
+        $cleared = $this->planning->update('goal', $this->owner, $goal['id'], ['start_date' => null, 'base_version' => $goal['version']]);
+        self::assertNull($cleared['start_date']);
+    }
+
     public function test_checklist_state_is_independent_and_task_completion_requires_acknowledgement(): void
     {
         $task = $this->planning->create('task', $this->owner, [

@@ -217,6 +217,8 @@
             <?= $shot('calendar', 'Lịch tháng với khung ngày được chọn và danh sách Chưa có lịch') ?>
             <p><strong>Quy tắc khi dời:</strong> mọi ngày của mục đó trên ngày cũ đều dịch cùng một số ngày; khung giờ làm việc giữ nguyên giờ bắt đầu và kết thúc. Lần lặp của chuỗi lặp lại và việc đã hoàn thành không dời được. Thói quen không hiện trên Lịch; xem ở trang Thói quen.</p>
             <?= $shot('calendar-week', 'Lịch theo tuần') ?>
+            <h3>Dạng Gantt</h3>
+            <p>Bấm <em>Gantt</em> cạnh Tháng / Tuần để xem mỗi mục là một thanh trên dòng thời gian. Chọn <em>Xem theo</em> Mục tiêu (bấm ▸ để mở ra cột mốc rồi công việc), Cột mốc hoặc Công việc, và <em>Thu phóng</em> theo ngày, tuần hoặc tháng. Trượt ngang để xem các tuần sau. Kéo cả thanh để dời; kéo mép trái hoặc phải để đổi ngày bắt đầu hoặc hạn chót. Mục tiêu và cột mốc có thể đặt <em>Ngày bắt đầu</em> trong khung chỉnh sửa; nếu để trống, Planner lấy ngày từ công việc bên trong và vẽ mép đó bằng nét đứt.</p>
         </section>
 
         <section id="thoi-quen">

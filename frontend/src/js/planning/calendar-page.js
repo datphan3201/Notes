@@ -9,6 +9,7 @@ import { reportWorkspaceError } from '../lib/workspace-ui.js';
 import { openQuickCreator, quickEditLink } from './quick-editor.js';
 import { localDate } from './task-views.js';
 import { timeOfDay } from './task-capture.js';
+import { initGanttView } from './gantt-view.js';
 import {
     calendarEntries,
     canMove,
@@ -49,7 +50,7 @@ export function initCalendarPage(root) {
     const query = new URLSearchParams(location.search);
     const validDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(value || '') ? value : null);
     let view = query.get('view') || localStorage.getItem(VIEW_KEY);
-    if (!['month', 'week'].includes(view)) view = 'month';
+    if (!['month', 'week', 'gantt'].includes(view)) view = 'month';
     let selected = validDate(query.get('date')) || today();
     let anchor = selected;
     let data = { tasks: [], milestones: [], goals: [] };
@@ -268,7 +269,32 @@ export function initCalendarPage(root) {
         return cell;
     }
 
+    function ganttTitle() {
+        const { from, to } = gantt.period();
+        find('[data-calendar-period]').textContent = `${dayLabel(from, {
+            day: 'numeric',
+            month: 'short',
+        })} – ${dayLabel(to, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+
+    function renderGantt() {
+        gantt.update(data);
+        ganttTitle();
+    }
+
     function renderGrid() {
+        const gantted = view === 'gantt';
+        find('[data-calendar-gantt]').hidden = !gantted;
+        grid.hidden = gantted;
+        find('[data-calendar-hint]').hidden = gantted;
+        root.querySelector('.calendar-layout').classList.toggle('is-gantt', gantted);
+        if (gantted) {
+            find('[data-calendar-weekdays]').hidden = true;
+            for (const button of root.querySelectorAll('[data-calendar-view]'))
+                button.setAttribute('aria-pressed', String(button.dataset.calendarView === view));
+            renderGantt();
+            return;
+        }
         const weekdays = find('[data-calendar-weekdays]');
         weekdays.replaceChildren(
             ...weekDays(anchor).map((date) => {
@@ -469,6 +495,11 @@ export function initCalendarPage(root) {
     root.querySelectorAll('[data-calendar-step]').forEach((button) =>
         button.addEventListener('click', () => {
             const step = Number(button.dataset.calendarStep);
+            if (view === 'gantt') {
+                gantt.step(step);
+                ganttTitle();
+                return;
+            }
             if (view === 'week') {
                 anchor = addDays(anchor, step * 7);
                 selected = addDays(selected, step * 7);
@@ -483,6 +514,11 @@ export function initCalendarPage(root) {
         }),
     );
     find('[data-calendar-today]').addEventListener('click', () => {
+        if (view === 'gantt') {
+            gantt.today();
+            ganttTitle();
+            return;
+        }
         anchor = today();
         select(today());
     });
@@ -494,6 +530,32 @@ export function initCalendarPage(root) {
             render();
         }),
     );
+    // Gantt bars change dates through the same versioned PATCH as the month and week grids.
+    const gantt = initGanttView(find('[data-calendar-gantt]'), {
+        timezone,
+        today,
+        visible,
+        announce,
+        onChange: async (row, changes) => {
+            if (pending) return;
+            pending = true;
+            try {
+                await patch(`/api/v1/${row.type}s/${row.item.id}`, {
+                    base_version: row.item.version,
+                    ...changes,
+                });
+                announce(`${t('Updated')} ${row.item.name}`);
+            } catch (error) {
+                reportWorkspaceError(root, error);
+            } finally {
+                pending = false;
+                await load();
+            }
+        },
+    });
+    find('[data-gantt-scroll]').addEventListener('scroll', () => {
+        if (view === 'gantt') ganttTitle();
+    });
     acceptDrops(find('[data-calendar-day]'), () => selected);
     goalFilter.addEventListener('change', render);
     document.addEventListener('planner:changed', () => load());
