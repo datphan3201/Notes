@@ -5651,6 +5651,55 @@
               "symbol": ".assistant-proposal-actions {"
             }
           ]
+        },
+        {
+          "id": "ai.calendar",
+          "label": "Calendar scheduling from the chat",
+          "behavior": "The assistant can act on the Calendar. create_tasks and update_task accept start_date and a scheduled block (scheduled_start/scheduled_end) given as local wall-clock times in the account timezone; clear_schedule removes the block. reschedule moves up to 30 Tasks, Milestones or Goals by shift_days or to_date with the Calendar move rule: every date of an item moves by the same number of days and a block keeps its local clock times across daylight saving; with to_date the item's first Calendar date lands on that day and an undated item gets it as its due date. Done or completed items, times in the past, landing days before today and inverted ranges are refused before anything is queued. Changes appear on the confirmation card as Reschedule with local times and run only on Apply, through the ordinary versioned updates.",
+          "client": [
+            {
+              "path": "frontend/src/js/planning/assistant.js",
+              "symbol": "const FIELD_LABELS"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/AI/AIChatService.php",
+              "symbol": "private function reschedule("
+            },
+            {
+              "path": "backend/src/Application/AI/AIChatService.php",
+              "symbol": "private function scheduleFields("
+            },
+            {
+              "path": "backend/src/Application/AI/AIChatService.php",
+              "symbol": "private function moveTask("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php",
+              "symbol": "public function searchTasks("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_chat_schedules_and_reschedules_calendar_items_only_on_confirmation("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_reschedule_keeps_clock_times_across_daylight_saving_and_dates_undated_work("
+            },
+            {
+              "path": "backend/tests/Plain/Integration/AIActionTest.php",
+              "symbol": "public function test_reschedule_moves_a_slot_to_the_same_local_time_after_daylight_saving("
+            }
+          ],
+          "routes": [
+            "api.ai.chat",
+            "api.ai.actions.apply"
+          ]
         }
       ]
     },

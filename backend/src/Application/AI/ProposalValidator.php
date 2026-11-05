@@ -19,7 +19,7 @@ final readonly class ProposalValidator
     ];
     /** Re-parents an existing Task (Goal, Milestone or Inbox) instead of deleting and recreating it. */
     private const MOVE = ['move_task'];
-    private const TASK_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline'];
+    private const TASK_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end'];
     private const GOAL_UPDATE_FIELDS = ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline'];
     private const MILESTONE_UPDATE_FIELDS = ['name', 'description', 'completion_criteria', 'importance', 'deadline'];
     private const HABIT_FIELDS = ['name', 'description', 'importance', 'period', 'target_frequency'];

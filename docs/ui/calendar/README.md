@@ -4,6 +4,8 @@
 
 The Calendar is a view over existing planning data, not a separate store: it reads the owner's Tasks, Milestones and Goals and changes them only through their ordinary versioned PATCH and POST endpoints. A Task appears once per day it touches (scheduled block, due date, repeat occurrence or start date, in that order when several share a day); Milestone and Goal deadlines appear as their own items with the chosen icon. Habits are not drawn: a daily Habit would mark every day without adding information, and its history stays on [Habits](../habits/README.md).
 
+The [AI assistant](../shared/ai.md#calendar-scheduling-from-the-chat) can also schedule and reschedule these items from the chat (for example "move everything overdue to tomorrow"); its changes follow the same move rule and apply only after the user confirms them.
+
 Weeks start on Monday, matching the Dashboard's This week. Scheduled instants are shown in the account timezone.
 
 <!-- BEGIN GENERATED TRACE -->

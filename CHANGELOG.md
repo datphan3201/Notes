@@ -4,6 +4,9 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 
 ## 2026-11-05
 
+### Added
+- **AI on the Calendar:** the assistant can put Tasks into a time slot, set start dates, remove a slot and reschedule Tasks, Milestones and Goals by a number of days or to a date (Calendar move rule, local times kept across daylight saving); every change is previewed as *Reschedule* and applied only on confirmation. ([docs](docs/ui/shared/ai.md#calendar-scheduling-from-the-chat))
+
 ### Changed
 - Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).
 - Summit trail (formerly Mountain journey) now uses its own sharp watercolour illustration for the background, page headers, roadmap and previews like the other sceneries; the blurry enlarged crops of a reference screenshot were removed from every theme.

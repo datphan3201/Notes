@@ -183,6 +183,106 @@ final class AIActionTest extends TestCase
         self::assertNotNull($this->pdo->query("SELECT archived_at FROM habits WHERE id = '{$old['id']}'")->fetchColumn());
     }
 
+    public function test_chat_schedules_and_reschedules_calendar_items_only_on_confirmation(): void
+    {
+        $this->pdo->prepare('UPDATE user_preferences SET timezone = ? WHERE user_id = ?')->execute(['Asia/Ho_Chi_Minh',$this->owner]);
+        $day=fn (int $offset): string => (new \DateTimeImmutable('now',new \DateTimeZone('Asia/Ho_Chi_Minh')))->modify("+$offset days")->format('Y-m-d');
+        $planning=$this->runtime['planning_service'];
+        $area=$planning->create('area',$this->owner,['name'=>'Study']);
+        $goal=$planning->create('goal',$this->owner,['name'=>'Pass the exam','area_id'=>$area['id'],'deadline'=>$day(20)]);
+        $milestone=$planning->create('milestone',$this->owner,['name'=>'Revise','goal_id'=>$goal['id'],'deadline'=>$day(10)]);
+        // 09:00-10:00 in Ho Chi Minh City (UTC+7) on day 3.
+        $blocked=$planning->create('task',$this->owner,['name'=>'Mock test','start_date'=>$day(1),'deadline'=>$day(3),'scheduled_start'=>$day(3).'T02:00:00Z','scheduled_end'=>$day(3).'T03:00:00Z']);
+        $loose=$planning->create('task',$this->owner,['name'=>'Read chapter 4']);
+        $done=$planning->create('task',$this->owner,['name'=>'Buy books','deadline'=>$day(2)]);
+        $planning->transition('task',$this->owner,$done['id'],'complete',['base_version'=>(int)$done['version']]);
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [
+                ['name'=>'get_task','args'=>['id'=>$blocked['id']]],
+                ['name'=>'update_task','args'=>['id'=>$loose['id'],'scheduled_start'=>$day(2).'T14:00','scheduled_end'=>$day(2).'T15:30']],
+                ['name'=>'reschedule','args'=>['items'=>[['type'=>'task','id'=>$blocked['id']],['type'=>'milestone','id'=>$milestone['id']]],'shift_days'=>2]],
+                ['name'=>'reschedule','args'=>['items'=>[['type'=>'goal','id'=>$goal['id']]],'to_date'=>$day(25)]],
+                // Refused: completed work, a slot in the past, and both modes at once queue nothing.
+                ['name'=>'reschedule','args'=>[ 'items'=>[['type'=>'task','id'=>$done['id']]],'shift_days'=>1]],
+                ['name'=>'update_task','args'=>['id'=>$loose['id'],'scheduled_start'=>$day(-1).'T08:00']],
+                ['name'=>'reschedule','args'=>['items'=>[['type'=>'goal','id'=>$goal['id']]],'shift_days'=>1,'to_date'=>$day(5)]],
+            ]),
+            function (array $contents) use ($day): array {
+                $responses=json_encode(end($contents),JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES);
+                // The model reads and writes local wall-clock times, not UTC.
+                self::assertStringContainsString('"scheduled_start":"'.$day(3).'T09:00"',$responses);
+                self::assertStringContainsString('completed work stays where it is',$responses);
+                self::assertStringContainsString('in the past',$responses);
+                self::assertStringContainsString('exactly one of shift_days or to_date',$responses);
+                return $this->step('Prepared the new schedule.');
+            },
+        ]);
+        $actions=$this->actionService($provider);
+
+        $reply=$this->chatService($provider,$actions)->ask($this->owner,'Plan my week');
+
+        self::assertSame(['update_task','reschedule','reschedule','reschedule'],array_column($reply['preview'],'action'));
+        self::assertContains(['field'=>'scheduled_start','from'=>$day(3).'T09:00','to'=>$day(5).'T09:00'],$reply['preview'][1]['changes']);
+        self::assertContains(['field'=>'deadline','from'=>$day(20),'to'=>$day(25)],$reply['preview'][3]['changes']);
+        self::assertNull($planning->show('task',$this->owner,$loose['id'])['scheduled_start']);
+
+        $actions->apply($this->owner,$reply['proposal']['id'],['base_version'=>$reply['proposal']['version'],'proposal_hash'=>$reply['proposal']['proposal_hash']]);
+
+        $loose=$planning->show('task',$this->owner,$loose['id']);
+        self::assertSame($day(2).'T07:00:00.000000Z',$loose['scheduled_start']);
+        self::assertSame($day(2).'T08:30:00.000000Z',$loose['scheduled_end']);
+        $blocked=$planning->show('task',$this->owner,$blocked['id']);
+        self::assertSame([$day(3),$day(5),$day(5).'T02:00:00.000000Z',$day(5).'T03:00:00.000000Z'],[$blocked['start_date'],$blocked['deadline'],$blocked['scheduled_start'],$blocked['scheduled_end']]);
+        self::assertSame($day(12),$planning->show('milestone',$this->owner,$milestone['id'])['deadline']);
+        self::assertSame($day(25),$planning->show('goal',$this->owner,$goal['id'])['deadline']);
+        self::assertSame($day(2),$planning->show('task',$this->owner,$done['id'])['deadline']);
+    }
+
+    public function test_reschedule_keeps_clock_times_across_daylight_saving_and_dates_undated_work(): void
+    {
+        $this->pdo->prepare('UPDATE user_preferences SET timezone = ? WHERE user_id = ?')->execute(['Europe/Berlin',$this->owner]);
+        $planning=$this->runtime['planning_service'];
+        // 09:00 Berlin on Friday 2027-03-26 (CET, UTC+1); clocks go forward on Sunday 2027-03-28.
+        $slot=$planning->create('task',$this->owner,['name'=>'Weekly review','scheduled_start'=>'2027-03-26T08:00:00Z','scheduled_end'=>'2027-03-26T09:00:00Z']);
+        $undated=$planning->create('task',$this->owner,['name'=>'Call the bank']);
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [
+                ['name'=>'reschedule','args'=>['items'=>[['type'=>'task','id'=>$slot['id']]],'to_date'=>'2027-03-29']],
+                ['name'=>'reschedule','args'=>['items'=>[['type'=>'task','id'=>$undated['id']]],'to_date'=>'2027-01-04']],
+                ['name'=>'update_task','args'=>['id'=>$slot['id'],'clear_schedule'=>true]],
+            ]),
+            fn (): array => $this->step('Done.'),
+        ]);
+        $actions=$this->actionService($provider);
+
+        $reply=$this->chatService($provider,$actions)->ask($this->owner,'Move the review to Monday and the bank call to 4 January');
+        // The slot removal is a separate edit after the move; the card shows it as None.
+        self::assertContains(['field'=>'scheduled_start','from'=>'2027-03-26T09:00','to'=>null],$reply['preview'][2]['changes']);
+        $actions->apply($this->owner,$reply['proposal']['id'],['base_version'=>$reply['proposal']['version'],'proposal_hash'=>$reply['proposal']['proposal_hash']]);
+
+        self::assertNull($planning->show('task',$this->owner,$slot['id'])['scheduled_start']);
+        self::assertSame('2027-01-04',$planning->show('task',$this->owner,$undated['id'])['deadline']);
+    }
+
+    public function test_reschedule_moves_a_slot_to_the_same_local_time_after_daylight_saving(): void
+    {
+        $this->pdo->prepare('UPDATE user_preferences SET timezone = ? WHERE user_id = ?')->execute(['Europe/Berlin',$this->owner]);
+        $planning=$this->runtime['planning_service'];
+        $slot=$planning->create('task',$this->owner,['name'=>'Weekly review','scheduled_start'=>'2027-03-26T08:00:00Z','scheduled_end'=>'2027-03-26T09:00:00Z']);
+        $provider=$this->scriptedProvider([
+            fn (): array => $this->step('', [['name'=>'reschedule','args'=>['items'=>[['type'=>'task','id'=>$slot['id']]],'shift_days'=>3]]]),
+            fn (): array => $this->step('Done.'),
+        ]);
+        $actions=$this->actionService($provider);
+
+        $reply=$this->chatService($provider,$actions)->ask($this->owner,'Move the review to Monday');
+        $actions->apply($this->owner,$reply['proposal']['id'],['base_version'=>$reply['proposal']['version'],'proposal_hash'=>$reply['proposal']['proposal_hash']]);
+
+        // Still 09:00-10:00 in Berlin, now CEST (UTC+2).
+        $slot=$planning->show('task',$this->owner,$slot['id']);
+        self::assertSame(['2027-03-29T07:00:00.000000Z','2027-03-29T08:00:00.000000Z'],[$slot['scheduled_start'],$slot['scheduled_end']]);
+    }
+
     public function test_chat_change_is_rejected_when_the_object_changed_after_the_proposal(): void
     {
         $task=$this->runtime['planning_service']->create('task',$this->owner,['name'=>'Write report']);
