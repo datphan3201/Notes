@@ -6,6 +6,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 
 ### Added
 - **AI on the Calendar:** the assistant can put Tasks into a time slot, set start dates, remove a slot and reschedule Tasks, Milestones and Goals by a number of days or to a date (Calendar move rule, local times kept across daylight saving); every change is previewed as *Reschedule* and applied only on confirmation. ([docs](docs/ui/shared/ai.md#calendar-scheduling-from-the-chat))
+- **Archive** in Settings: every archived Area, Goal, Milestone, Task and Habit, filterable by type and name, with *Restore*. A Goal or Milestone comes back with everything archived together with it; items inside an archived parent ask for the parent first, and Areas respect the four-active limit. ([docs](docs/ui/settings/archive.md))
 
 ### Changed
 - Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).

@@ -25,7 +25,7 @@ The chat sends the recent conversation as real turns. AIChatService runs up to s
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L150) |
+| UI / DOM | [app.php · data-assistant-dialog](../../../frontend/src/views/layouts/app.php#L151) |
 | Browser logic | [assistant.js · export function initAssistant](../../../frontend/src/js/planning/assistant.js#L135) |
 | Controller / service / domain | [AIChatService.php · public function ask(](../../../backend/src/Application/AI/AIChatService.php#L68) |
 | Persistence | [PdoAIActionRepository.php · public function assistantSummary(](../../../backend/src/Infrastructure/Persistence/Pdo/AI/PdoAIActionRepository.php#L87) |
@@ -40,7 +40,7 @@ The chat card previews queued supported create/update/transition/archive operati
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L156) |
+| UI / DOM | [app.php · data-assistant-log](../../../frontend/src/views/layouts/app.php#L157) |
 | CSS | [feedback.css · .assistant-proposal-actions {](../../../frontend/src/css/feedback.css#L298) |
 | Browser logic | [assistant.js · const renderProposal = (message) =&gt;](../../../frontend/src/js/planning/assistant.js#L156) |
 | Controller / service / domain | [AIActionService.php · public function apply(](../../../backend/src/Application/AI/AIActionService.php#L108)<br>[ProposalValidator.php · public function validate(](../../../backend/src/Application/AI/ProposalValidator.php#L28) |

@@ -18,6 +18,7 @@ $accountNavigation = [
     ['Security', '/settings/password', 'lock', ['settings.password']],
     ['Notifications', '/settings/notifications', 'calendar', ['settings.notifications']],
     ['Task history', '/settings/history', 'tasks', ['settings.history']],
+    ['Archive', '/settings/archive', 'refresh', ['settings.archive']],
     ['Report a user', '/settings/reports', 'lock', ['settings.reports']],
 ];
 ?>

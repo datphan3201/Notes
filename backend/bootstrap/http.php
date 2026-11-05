@@ -354,6 +354,12 @@ $realtimeController = new \Planner\Http\Controller\RealtimeController(
     $auth, $noteRepository, $noteShareRepository, $noteLockGate, $realtimeTickets,
     $config->nullableString('realtime.public_url'), $services['clock'],
 );
+$archiveService = new \Planner\Application\Archive\ArchiveService(
+    new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoArchiveRepository($services['pdo']),
+    $planningRepository,
+    $services['transactions'],
+    $services['clock'],
+);
 $routeFactory = require dirname(__DIR__).'/routes/web.php';
 $router = new Router($routeFactory(
     $accountController,
@@ -381,6 +387,7 @@ $router = new Router($routeFactory(
     $noteLockController,
     $noteAIController,
     $realtimeController,
+    new \Planner\Http\Controller\ArchiveController($auth, $archiveService),
 ));
 $application = new Application(
     $router,
@@ -430,6 +437,7 @@ return [
     'file_service' => $fileService,
     'planning_repository' => $planningRepository,
     'planning_service' => $planningService,
+    'archive_service' => $archiveService,
     'activity_repository' => $activityRepository,
     'habit_repository' => $habitRepository,
     'habit_service' => $habitService,
