@@ -2712,6 +2712,74 @@
           "routes": [
             "api.tasks.store"
           ]
+        },
+        {
+          "id": "calendar.gantt",
+          "label": "Gantt view by Goal, Milestone or Task",
+          "behavior": "A third Calendar view beside Month and Week. Show by Goal (expand ▸ to Milestones, then Tasks), Milestone (expand to Tasks) or Task (work that ended before the timeline begins is left out); the Goal filter still applies. The name column stays put while the timeline scrolls sideways and grows as its end comes into view; zoom is Days, Weeks or Months, the arrows slide about a screen and Today returns. A Task spans its start date or slot to its due date or slot end; a Goal or Milestone spans its own start date to its deadline, taking a missing end from the work inside (drawn dashed, not draggable); a single date is a diamond. Bars look like Calendar items (icon, slot time, name), names stay readable at the visible left edge, overdue is red, done is faded and struck through, Goal and Milestone progress is a line along the bottom and prerequisite Milestones are joined by dashed links. Dragging a bar moves all of its own dates (a slot keeps its clock times), dragging an edge changes the start or the deadline without crossing the other; focused, Alt+←/→ moves by a day and Alt+Shift+←/→ changes the deadline. Each change is one versioned PATCH; Goal and Milestone start dates are validated not to fall after the deadline. Grouping and zoom are remembered per browser.",
+          "ui": [
+            {
+              "path": "frontend/src/views/planning/calendar.php",
+              "symbol": "data-calendar-gantt"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/planning/gantt-view.js",
+              "symbol": "export function initGanttView"
+            },
+            {
+              "path": "frontend/src/js/planning/gantt-model.js",
+              "symbol": "export function ganttRows("
+            },
+            {
+              "path": "frontend/src/js/planning/gantt-model.js",
+              "symbol": "export function dragChanges("
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function update(string $type, int $userId, string $id, array $input): array"
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function list(string $type, int $userId): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/database/plain-migrations/0033_add_goal_and_milestone_start_dates.php",
+              "symbol": "ALTER TABLE goals ADD COLUMN start_date"
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/gantt-model.test.js",
+              "symbol": "test('rows by goal nest milestones and tasks only when opened'"
+            },
+            {
+              "path": "frontend/tests/js/gantt-model.test.js",
+              "symbol": "test('dragging moves own dates together and edges never cross'"
+            },
+            {
+              "path": "backend/tests/Plain/Integration/PlanningCoreTest.php",
+              "symbol": "public function test_goals_and_milestones_have_an_optional_start_date_before_their_deadline("
+            }
+          ],
+          "routes": [
+            "planning.calendar",
+            "api.tasks.update",
+            "api.milestones.update",
+            "api.goals.update",
+            "api.milestones.index"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/calendar.css",
+              "symbol": "/* Gantt view: a sticky name column"
+            }
+          ]
         }
       ]
     },

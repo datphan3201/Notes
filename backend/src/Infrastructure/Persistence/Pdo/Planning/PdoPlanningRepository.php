@@ -18,8 +18,8 @@ final readonly class PdoPlanningRepository
 
     private const COLUMNS = [
         'area' => ['name', 'description', 'position', 'icon', 'icon_color', 'importance'],
-        'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'status', 'deadline', 'position', 'completed_at', 'icon', 'icon_color'],
-        'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'status', 'deadline', 'position', 'completed_at', 'icon', 'icon_color'],
+        'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'status', 'start_date', 'deadline', 'position', 'completed_at', 'icon', 'icon_color'],
+        'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'position', 'completed_at', 'icon', 'icon_color'],
         'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'reminder_at', 'reminder_sent_at', 'reminder_read_at', 'estimated_minutes', 'position', 'completed_at'],
         'checklist' => ['task_id', 'title', 'checked', 'position', 'checked_at'],
     ];

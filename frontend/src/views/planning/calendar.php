@@ -38,12 +38,33 @@
                     <div class="calendar-switch" role="group" aria-label="<?= $view->e($view->t('Calendar view')) ?>">
                         <button type="button" data-calendar-view="month" aria-pressed="true"><?= $view->e($view->t('Month')) ?></button>
                         <button type="button" data-calendar-view="week" aria-pressed="false"><?= $view->e($view->t('Week')) ?></button>
+                        <button type="button" data-calendar-view="gantt" aria-pressed="false"><?= $view->e($view->t('Gantt')) ?></button>
                     </div>
                 </div>
             </div>
             <div class="calendar-weekdays" data-calendar-weekdays aria-hidden="true"></div>
             <div class="calendar-grid" data-calendar-grid aria-busy="true"></div>
-            <p class="calendar-hint subtle-copy"><?= $view->e($view->t('Drag an item to another day, or focus it and press Alt with an arrow key. Double-click a day to add a task on it.')) ?></p>
+            <p class="calendar-hint subtle-copy" data-calendar-hint><?= $view->e($view->t('Drag an item to another day, or focus it and press Alt with an arrow key. Double-click a day to add a task on it.')) ?></p>
+            <div class="gantt" data-calendar-gantt hidden>
+                <div class="gantt-controls">
+                    <label><?= $view->e($view->t('Show by')) ?>
+                        <select data-gantt-by>
+                            <option value="goal"><?= $view->e($view->t('Goal')) ?></option>
+                            <option value="milestone"><?= $view->e($view->t('Milestone')) ?></option>
+                            <option value="task"><?= $view->e($view->t('Task')) ?></option>
+                        </select>
+                    </label>
+                    <label><?= $view->e($view->t('Zoom')) ?>
+                        <select data-gantt-zoom>
+                            <option value="day"><?= $view->e($view->t('Days')) ?></option>
+                            <option value="week"><?= $view->e($view->t('Weeks')) ?></option>
+                            <option value="month"><?= $view->e($view->t('Months')) ?></option>
+                        </select>
+                    </label>
+                </div>
+                <div class="gantt-scroll" data-gantt-scroll tabindex="0" role="region" aria-label="<?= $view->e($view->t('Gantt timeline')) ?>"></div>
+                <p class="calendar-hint subtle-copy"><?= $view->e($view->t('Slide sideways to see later weeks. Drag a bar to move it or its edges to change the start or the deadline; focused, Alt with an arrow key moves it and Alt+Shift changes its deadline. Faded edges are taken from the work inside.')) ?></p>
+            </div>
         </section>
         <aside class="calendar-side">
             <section class="planning-panel calendar-day" data-calendar-day aria-labelledby="calendar-day-title">

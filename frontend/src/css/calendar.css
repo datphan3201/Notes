@@ -389,3 +389,392 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Gantt view: a sticky name column beside a timeline that scrolls sideways. */
+.calendar-layout.is-gantt {
+    grid-template-columns: minmax(0, 1fr);
+}
+.calendar-layout.is-gantt .calendar-side {
+    display: none;
+}
+.gantt {
+    --label-width: 260px;
+    --row-height: 40px;
+    display: grid;
+    gap: 10px;
+}
+.gantt[hidden] {
+    display: none;
+}
+.gantt-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+.gantt-controls label {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    font-size: var(--font-size-ui);
+    color: var(--muted);
+}
+.gantt-scroll {
+    overflow: auto;
+    max-height: min(70vh, 760px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    overscroll-behavior-x: contain;
+}
+.gantt-scroll:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+.gantt-canvas {
+    position: relative;
+    width: calc(var(--label-width) + var(--timeline));
+}
+.gantt-row {
+    display: grid;
+    grid-template-columns: var(--label-width) var(--timeline);
+    height: var(--row-height);
+    border-bottom: 1px solid var(--border);
+}
+.gantt-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    padding: 0 10px 0 calc(8px + var(--depth, 0) * 16px);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    /* Covers the row line too, so nothing on the timeline shows through beside the names. */
+    box-shadow: 0 1px 0 var(--border);
+}
+.gantt-label-copy {
+    display: grid;
+    min-width: 0;
+    line-height: 1.2;
+}
+.gantt-label-name {
+    overflow: hidden;
+    color: var(--text);
+    font-size: var(--font-size-ui);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gantt-label-name:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+.gantt-label-context {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gantt-row.is-goal .gantt-label-name {
+    font-weight: 700;
+}
+.gantt-toggle,
+.gantt-toggle-space {
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+}
+.gantt-toggle {
+    padding: 0;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.gantt-toggle:hover {
+    background: var(--surface-soft);
+}
+.gantt-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    height: 52px;
+    background: var(--surface-soft);
+}
+.gantt-head .gantt-label {
+    z-index: 4;
+    font-size: var(--font-size-meta);
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--surface-soft);
+}
+.gantt-scale {
+    position: relative;
+}
+.gantt-scale-row {
+    position: relative;
+    height: 26px;
+}
+.gantt-scale-row.is-top {
+    border-bottom: 1px solid var(--border);
+}
+.gantt-scale-cell {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    padding: 0 6px;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+    line-height: 26px;
+    white-space: nowrap;
+    border-left: 1px solid var(--border);
+}
+.gantt-scale-row:not(.is-top) .gantt-scale-cell {
+    text-align: center;
+    padding: 0;
+}
+.gantt-scale-cell.is-weekend {
+    background: rgb(100 116 128 / 8%);
+}
+.gantt-scale-cell.is-today {
+    color: var(--on-accent);
+    font-weight: 700;
+    background: var(--accent);
+}
+.gantt-body {
+    position: relative;
+}
+.gantt-track {
+    position: relative;
+    /* Day lines, and shaded weekends when the range starts on a Monday. */
+    background-image:
+        linear-gradient(
+            to right,
+            transparent calc(var(--day) * 5),
+            rgb(100 116 128 / 7%) calc(var(--day) * 5)
+        ),
+        linear-gradient(to right, var(--border) 1px, transparent 1px);
+    background-size:
+        calc(var(--day) * 7) 100%,
+        var(--day) 100%;
+}
+.gantt-canvas.is-week .gantt-track {
+    /* A line per week; weekends stay shaded. */
+    background-image:
+        linear-gradient(
+            to right,
+            transparent calc(var(--day) * 5),
+            rgb(100 116 128 / 7%) calc(var(--day) * 5)
+        ),
+        linear-gradient(to right, var(--border) 1px, transparent 1px);
+    background-size:
+        calc(var(--day) * 7) 100%,
+        calc(var(--day) * 7) 100%;
+}
+.gantt-canvas.is-month .gantt-track {
+    background-image: linear-gradient(to right, var(--border) 1px, transparent 1px);
+    background-size: calc(var(--day) * 7) 100%;
+}
+.gantt-tracks {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--label-width);
+    width: var(--timeline);
+    pointer-events: none;
+}
+.gantt-today {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--danger);
+    opacity: 0.7;
+}
+.gantt-links {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+}
+.gantt-links path {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+}
+.gantt-bar {
+    /* Styled like a Calendar item chip: accent edge, soft fill; overdue turns red. */
+    --bar: var(--accent);
+    position: absolute;
+    top: 8px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    height: 24px;
+    min-width: 10px;
+    color: var(--text);
+    font-size: var(--font-size-caption);
+    line-height: 1.5;
+    text-decoration: none;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--bar) 14%, var(--surface));
+    border-left: 3px solid var(--bar);
+    border-radius: 6px;
+}
+.gantt-bar:hover {
+    background: color-mix(in srgb, var(--bar) 22%, var(--surface));
+}
+.gantt-bar.is-goal,
+.gantt-bar.is-milestone {
+    font-weight: 600;
+    background: color-mix(in srgb, var(--bar) 7%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--bar) 35%, var(--border));
+    border-left: 3px solid var(--bar);
+}
+/* Progress of a Goal or Milestone: a thin line along the bottom. */
+.gantt-bar.is-goal::after,
+.gantt-bar.is-milestone::after {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: var(--progress, 0%);
+    height: 3px;
+    content: '';
+    background: var(--bar);
+    border-radius: 0 0 0 4px;
+}
+.gantt-bar-content {
+    /* Stays at the left edge of the visible timeline while the bar's start is scrolled
+       behind the name column, so a long bar never loses its name. */
+    position: sticky;
+    left: calc(var(--label-width) + 4px);
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 6px;
+    overflow: hidden;
+}
+.gantt-bar-icon {
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
+    color: var(--muted);
+}
+.gantt-bar-time {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.gantt-bar-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gantt-bar.is-narrow .gantt-bar-content {
+    /* The name continues to the right of a short bar or a point. */
+    position: absolute;
+    left: calc(100% + 4px);
+    max-width: none;
+    overflow: visible;
+    padding: 0 2px;
+    pointer-events: none;
+}
+.gantt-bar.is-narrow .gantt-bar-content > :first-child {
+    display: none;
+}
+.gantt-bar.is-draggable {
+    cursor: grab;
+    touch-action: pan-y;
+}
+.gantt-bar.is-dragging {
+    z-index: 2;
+    cursor: grabbing;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 18%);
+}
+.gantt-bar:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+}
+.gantt-bar.is-done {
+    opacity: 0.6;
+}
+.gantt-bar.is-done .gantt-bar-text {
+    text-decoration: line-through;
+}
+.gantt-bar.is-overdue {
+    --bar: var(--danger);
+    color: var(--danger);
+}
+.gantt-bar.is-overdue .gantt-bar-icon {
+    color: var(--danger);
+}
+/* An end taken from the work inside is drawn dashed, not as a firm date. */
+.gantt-bar.is-derived-start {
+    border-left-style: dashed;
+}
+.gantt-bar.is-derived-end {
+    border-right: 1px dashed var(--bar);
+}
+.gantt-bar.is-point,
+.gantt-bar.is-point:hover {
+    width: 14px;
+    min-width: 0;
+    margin-left: calc(var(--day) / 2 - 7px);
+    background: none;
+    border: 0;
+}
+/* A single date is a diamond; the bar itself stays upright so its label reads normally. */
+.gantt-bar.is-point::before {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    content: '';
+    background: color-mix(in srgb, var(--bar) 25%, var(--surface));
+    border: 2px solid var(--bar);
+    border-radius: 2px;
+    transform: rotate(45deg);
+}
+.gantt-bar.is-point::after {
+    display: none;
+}
+.gantt-bar.is-point.is-narrow .gantt-bar-content {
+    left: 18px;
+}
+
+.gantt-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: ew-resize;
+}
+.gantt-handle.is-start {
+    left: 0;
+}
+.gantt-handle.is-end {
+    right: 0;
+}
+.gantt-bar:hover .gantt-handle {
+    background: rgb(255 255 255 / 35%);
+}
+.gantt-empty {
+    padding: 16px;
+}
+
+@media (max-width: 600px) {
+    .gantt {
+        --label-width: 140px;
+        --row-height: 44px;
+    }
+    .gantt-label-context {
+        display: none;
+    }
+}

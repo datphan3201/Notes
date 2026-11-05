@@ -132,6 +132,16 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] REPEAT09 — Tasks/Dashboard reads may top up horizon; scheduler/catch-up/DST tests require controlled time and separate evidence.
 - [ ] REPEAT10 — Repeating name search and All/Active/Paused/Ended share the same result/count/paging; Task-only controls are hidden and Ended has no Pause/Resume action.
 
+## Calendar — CAL
+
+[Behavior and source trace](../ui/calendar/README.md)
+
+- [ ] CAL01 — Month and Week show Task dates, work slots and Milestone/Goal deadlines; dragging an item, Alt+arrow and Move to… change only the dates on the source day, and Unscheduled tasks get a due date when dropped.
+- [ ] CAL02 — Gantt by Goal opens Goal → Milestone → Task rows with ▸; by Milestone and by Task list their items, and the Goal filter applies. Undated containers take their missing end from the work inside (dashed); single dates are diamonds; prerequisite Milestones are linked.
+- [ ] CAL03 — In Gantt, sliding right keeps adding weeks; Days/Weeks/Months zoom keeps the visible date; arrows and Today move the view; a long bar's name stays visible at the left edge.
+- [ ] CAL04 — Dragging a bar moves its own start, deadline and slot (clock times kept); dragging an edge changes only the start or the deadline and never crosses the other; Alt+←/→ and Alt+Shift+←/→ do the same from the keyboard. Done items and derived ends cannot be dragged; a stale version shows the server message and reloads.
+- [ ] CAL05 — Goals and Milestones accept an optional start date in the floating editor; a start after the deadline is refused.
+
 ## Habits, streaks and Rest Days — HABIT
 
 [Behavior and source trace](../ui/habits/README.md)

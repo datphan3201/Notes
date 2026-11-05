@@ -217,6 +217,8 @@
             <?= $shot('calendar', 'The month calendar with the selected day and the Unscheduled list') ?>
             <p><strong>How moving works:</strong> every date of the item on the old day moves by the same number of days; a work slot keeps its start and end times. Occurrences of a repeating task and completed items don't move. Habits aren't shown on the Calendar; see the Habits page.</p>
             <?= $shot('calendar-week', 'The week view of the Calendar') ?>
+            <h3>The Gantt view</h3>
+            <p>Click <em>Gantt</em> next to Month and Week to see each item as a bar on a timeline. Choose <em>Show by</em> Goal (click ▸ to open its milestones, then tasks), Milestone or Task, and <em>Zoom</em> by days, weeks or months. Slide sideways to see later weeks. Drag a bar to move it, or drag its left or right edge to change its start date or deadline. Goals and milestones can have a <em>Start date</em> in the editor; when it is empty, Planner takes it from the work inside and draws that edge dashed.</p>
         </section>
 
         <section id="habits">

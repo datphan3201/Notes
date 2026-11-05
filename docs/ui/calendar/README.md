@@ -6,6 +6,8 @@ The Calendar is a view over existing planning data, not a separate store: it rea
 
 The [AI assistant](../shared/ai.md#calendar-scheduling-from-the-chat) can also schedule and reschedule these items from the chat (for example "move everything overdue to tomorrow"); its changes follow the same move rule and apply only after the user confirms them.
 
+The **Gantt** view draws the same items as bars on a timeline that slides sideways, grouped by Goal, Milestone or Task; it uses the start dates that Goals and Milestones can now have, and moving or resizing a bar follows the same versioned updates.
+
 Weeks start on Monday, matching the Dashboard's This week. Scheduled instants are shown in the account timezone.
 
 <!-- BEGIN GENERATED TRACE -->
@@ -18,9 +20,9 @@ Month (Monday-first weeks, no trailing empty week) and Week views with previous/
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [calendar.php · data-calendar-grid](../../../frontend/src/views/planning/calendar.php#L45) |
+| UI / DOM | [calendar.php · data-calendar-grid](../../../frontend/src/views/planning/calendar.php#L46) |
 | CSS | [calendar.css · Calendar layout](../../../frontend/src/css/calendar.css#L1) |
-| Browser logic | [calendar-page.js · export function initCalendarPage(](../../../frontend/src/js/planning/calendar-page.js#L41)<br>[calendar-model.js · export function calendarEntries(](../../../frontend/src/js/planning/calendar-model.js#L74)<br>[calendar-model.js · export function monthWeeks(](../../../frontend/src/js/planning/calendar-model.js#L19) |
+| Browser logic | [calendar-page.js · export function initCalendarPage(](../../../frontend/src/js/planning/calendar-page.js#L42)<br>[calendar-model.js · export function calendarEntries(](../../../frontend/src/js/planning/calendar-model.js#L74)<br>[calendar-model.js · export function monthWeeks(](../../../frontend/src/js/planning/calendar-model.js#L19) |
 | Controller / service / domain | [PlanningService.php · public function list(string $type, int $userId): array](../../../backend/src/Application/Planning/PlanningService.php#L41) |
 | Persistence | [PdoPlanningRepository.php · public function list(string $type, int $userId, bool $includeArchived = false): array](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('weeks start on Monday and a month never ends with an empty week'](../../../frontend/tests/js/calendar-model.test.js#L22)<br>[calendar-model.test.js · test('a Task appears once per day, with the most specific date kind'](../../../frontend/tests/js/calendar-model.test.js#L32)<br>[FullFeedbackHttpTest.php · public function test_changed_pages_render_their_new_controls(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L262) |
@@ -34,9 +36,9 @@ An item moves by drag and drop onto a day or the selected-day panel, by Alt with
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [calendar.php · data-calendar-day-list](../../../frontend/src/views/planning/calendar.php#L57) |
-| Browser logic | [calendar-model.js · export function moveChanges(](../../../frontend/src/js/planning/calendar-model.js#L162)<br>[calendar-model.js · export function shiftInstant(](../../../frontend/src/js/planning/calendar-model.js#L60)<br>[calendar-page.js · async function move(](../../../frontend/src/js/planning/calendar-page.js#L186) |
-| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L182) |
+| UI / DOM | [calendar.php · data-calendar-day-list](../../../frontend/src/views/planning/calendar.php#L78) |
+| Browser logic | [calendar-model.js · export function moveChanges(](../../../frontend/src/js/planning/calendar-model.js#L162)<br>[calendar-model.js · export function shiftInstant(](../../../frontend/src/js/planning/calendar-model.js#L60)<br>[calendar-page.js · async function move(](../../../frontend/src/js/planning/calendar-page.js#L187) |
+| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L188) |
 | Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('moving shifts every date on the source day and keeps scheduled clock times'](../../../frontend/tests/js/calendar-model.test.js#L56)<br>[calendar-model.test.js · test('daylight saving never moves the wall-clock time of a scheduled block'](../../../frontend/tests/js/calendar-model.test.js#L106) |
 | Coverage limit | Move rules are unit-tested; drag and drop, Alt+arrow focus and the native picker need a browser check. |
@@ -50,12 +52,28 @@ The side panel lists everything on the selected day with its kind, time and Goal
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [calendar.php · data-calendar-unscheduled aria-labelledby](../../../frontend/src/views/planning/calendar.php#L59)<br>[calendar.php · data-calendar-day-add](../../../frontend/src/views/planning/calendar.php#L52) |
-| Browser logic | [calendar-model.js · export function unscheduledTasks(](../../../frontend/src/js/planning/calendar-model.js#L142)<br>[calendar-page.js · function openCreate(](../../../frontend/src/js/planning/calendar-page.js#L461) |
-| Controller / service / domain | [PlanningService.php · public function create(string $type, int $userId, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L97) |
+| UI / DOM | [calendar.php · data-calendar-unscheduled aria-labelledby](../../../frontend/src/views/planning/calendar.php#L80)<br>[calendar.php · data-calendar-day-add](../../../frontend/src/views/planning/calendar.php#L73) |
+| Browser logic | [calendar-model.js · export function unscheduledTasks(](../../../frontend/src/js/planning/calendar-model.js#L142)<br>[calendar-page.js · function openCreate(](../../../frontend/src/js/planning/calendar-page.js#L487) |
+| Controller / service / domain | [PlanningService.php · public function create(string $type, int $userId, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L103) |
 | Persistence | [PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [calendar-model.test.js · test('occurrences and completed work stay put; the tray lists only undated open one-offs'](../../../frontend/tests/js/calendar-model.test.js#L114) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34) |
+
+### Gantt view by Goal, Milestone or Task
+
+**Trace ID:** `calendar.gantt`
+
+A third Calendar view beside Month and Week. Show by Goal (expand ▸ to Milestones, then Tasks), Milestone (expand to Tasks) or Task (work that ended before the timeline begins is left out); the Goal filter still applies. The name column stays put while the timeline scrolls sideways and grows as its end comes into view; zoom is Days, Weeks or Months, the arrows slide about a screen and Today returns. A Task spans its start date or slot to its due date or slot end; a Goal or Milestone spans its own start date to its deadline, taking a missing end from the work inside (drawn dashed, not draggable); a single date is a diamond. Bars look like Calendar items (icon, slot time, name), names stay readable at the visible left edge, overdue is red, done is faded and struck through, Goal and Milestone progress is a line along the bottom and prerequisite Milestones are joined by dashed links. Dragging a bar moves all of its own dates (a slot keeps its clock times), dragging an edge changes the start or the deadline without crossing the other; focused, Alt+←/→ moves by a day and Alt+Shift+←/→ changes the deadline. Each change is one versioned PATCH; Goal and Milestone start dates are validated not to fall after the deadline. Grouping and zoom are remembered per browser.
+
+| Layer | Entry point |
+| --- | --- |
+| UI / DOM | [calendar.php · data-calendar-gantt](../../../frontend/src/views/planning/calendar.php#L48) |
+| CSS | [calendar.css · /* Gantt view: a sticky name column](../../../frontend/src/css/calendar.css#L393) |
+| Browser logic | [gantt-view.js · export function initGanttView](../../../frontend/src/js/planning/gantt-view.js#L41)<br>[gantt-model.js · export function ganttRows(](../../../frontend/src/js/planning/gantt-model.js#L67)<br>[gantt-model.js · export function dragChanges(](../../../frontend/src/js/planning/gantt-model.js#L249) |
+| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L188)<br>[PlanningService.php · public function list(string $type, int $userId): array](../../../backend/src/Application/Planning/PlanningService.php#L41) |
+| Persistence | [0033_add_goal_and_milestone_start_dates.php · ALTER TABLE goals ADD COLUMN start_date](../../../backend/database/plain-migrations/0033_add_goal_and_milestone_start_dates.php#L17) |
+| Relevant tests (not a pass claim) | [gantt-model.test.js · test('rows by goal nest milestones and tasks only when opened'](../../../frontend/tests/js/gantt-model.test.js#L114)<br>[gantt-model.test.js · test('dragging moves own dates together and edges never cross'](../../../frontend/tests/js/gantt-model.test.js#L159)<br>[PlanningCoreTest.php · public function test_goals_and_milestones_have_an_optional_start_date_before_their_deadline(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L135) |
+| HTTP | `GET /calendar` (`planning.calendar`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L194)<br>`PATCH /api/v1/tasks/{id}` (`api.tasks.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`PATCH /api/v1/milestones/{id}` (`api.milestones.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`PATCH /api/v1/goals/{id}` (`api.goals.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`GET /api/v1/milestones` (`api.milestones.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 
 <!-- END GENERATED TRACE -->
 

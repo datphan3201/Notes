@@ -52,8 +52,14 @@ final readonly class PlanningService
         }
 
         if ($type === 'milestone') {
+            // Which Milestones must be completed first; the Calendar's Gantt view draws them as links.
+            $prerequisites = [];
+            foreach ($this->repository->dependencyEdges($userId) as [$dependent, $prerequisite]) {
+                $prerequisites[(string) $dependent][] = (string) $prerequisite;
+            }
             foreach ($rows as &$row) {
                 $row['progress'] = $this->milestoneProgress($userId, (string) $row['id'], (string) $row['status']);
+                $row['prerequisite_ids'] = $prerequisites[(string) $row['id']] ?? [];
             }
             unset($row);
         }
@@ -199,9 +205,12 @@ final readonly class PlanningService
             $finiteParentChange = $parentChanged && ($type !== 'task' || $current['series_id'] === null);
             $this->validateParents($type, $userId, [...$current, ...$changes], $finiteParentChange);
 
-            if ($type === 'task') {
+            if ($type !== 'area') {
+                // Start and deadline are checked together, also when only one of them changes.
                 $this->validateDates([...$current, ...$changes]);
+            }
 
+            if ($type === 'task') {
                 if ($current['status'] === TaskStatus::Done->value && array_key_exists('status', $changes)) {
                     throw new ValidationException(['status' => ['Use the reopen Task operation.']]);
                 }
@@ -907,8 +916,8 @@ final readonly class PlanningService
     {
         $allowed = match ($type) {
             'area' => ['name', 'description', 'position', 'icon', 'icon_color', 'importance'],
-            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
-            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
+            'goal' => ['area_id', 'parent_goal_id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'start_date', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
+            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'start_date', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
             'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
@@ -929,8 +938,10 @@ final readonly class PlanningService
         if ($type !== 'area') {
             $values['completion_criteria'] = $this->text($input, 'completion_criteria', 10_000, false, '');
             $values['importance'] = (new Importance($this->integer($input, 'importance', 1, 5, 3)))->value;
+            $values['start_date'] = $this->date($input, 'start_date');
             $values['deadline'] = $this->date($input, 'deadline');
             $values['tag_ids'] = $this->tagIds($input['tag_ids'] ?? []);
+            $this->validateDates($values);
         }
 
         if ($type === 'goal') {
@@ -950,7 +961,6 @@ final readonly class PlanningService
                 'milestone_id' => $this->nullableUuid($input, 'milestone_id'),
                 'expected_result' => $this->text($input, 'expected_result', 10_000, false, ''),
                 'status' => TaskStatus::NotStarted->value,
-                'start_date' => $this->date($input, 'start_date'),
                 'scheduled_start' => $this->dateTime($input, 'scheduled_start'),
                 'scheduled_end' => $this->dateTime($input, 'scheduled_end'),
                 'reminder_at' => $this->dateTime($input, 'reminder_at'),
@@ -968,8 +978,8 @@ final readonly class PlanningService
     {
         $allowed = match ($type) {
             'area' => ['name', 'description', 'position', 'icon', 'icon_color', 'importance'],
-            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
-            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'deadline', 'position', 'status', 'tag_ids', 'icon', 'icon_color'],
+            'goal' => ['name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'importance', 'start_date', 'deadline', 'position', 'tag_ids', 'icon', 'icon_color'],
+            'milestone' => ['goal_id', 'name', 'description', 'completion_criteria', 'importance', 'start_date', 'deadline', 'position', 'status', 'tag_ids', 'icon', 'icon_color'],
             'task' => ['goal_id', 'milestone_id', 'name', 'description', 'expected_result', 'completion_criteria', 'importance', 'status', 'start_date', 'deadline', 'scheduled_start', 'scheduled_end', 'estimated_minutes', 'reminder_at', 'position', 'tag_ids'],
             default => throw new \LogicException('Unsupported planning resource type.'),
         };
@@ -995,11 +1005,11 @@ final readonly class PlanningService
             };
         }
 
-        if ($type === 'task') {
-            if (array_key_exists('reminder_at', $changes)) {
-                $changes['reminder_sent_at'] = null;
-                $changes['reminder_read_at'] = null;
-            }
+        if ($type === 'task' && array_key_exists('reminder_at', $changes)) {
+            $changes['reminder_sent_at'] = null;
+            $changes['reminder_read_at'] = null;
+        }
+        if ($type !== 'area') {
             $this->validateDates($changes);
         }
 

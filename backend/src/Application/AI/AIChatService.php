@@ -164,7 +164,7 @@ final class AIChatService
         $object = static fn (array $properties, array $required = []): array => ['type' => 'object', 'properties' => $properties, 'required' => $required];
         $taskItem = $object(['name' => ['type' => 'string'], 'description' => ['type' => 'string'], 'expected_result' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'deadline' => $date, 'importance' => $importance], ['name']);
         $milestoneItem = $object([
-            'name' => ['type' => 'string'], 'description' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'deadline' => $date, 'importance' => $importance,
+            'name' => ['type' => 'string'], 'description' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'start_date' => $date, 'deadline' => $date, 'importance' => $importance,
             'tasks' => ['type' => 'array', 'items' => $taskItem, 'description' => 'Concrete Tasks inside this Milestone'],
         ], ['name']);
 
@@ -186,7 +186,7 @@ final class AIChatService
                 'expected_result' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'deadline' => $date, 'importance' => $importance,
                 'start_date' => $date, 'scheduled_start' => $localTime, 'scheduled_end' => $localTime, 'clear_schedule' => ['type' => 'boolean'],
             ], ['id'])],
-            ['name' => 'reschedule', 'description' => 'Queue moving Tasks, Milestones or Goals on the Calendar, like dragging them to another day. Give shift_days (whole days, negative for earlier) or to_date, not both. Every date of an item moves by the same number of days: a Task\'s start date, due date and scheduled block (keeping its clock times); a Milestone\'s or Goal\'s deadline. With to_date the item\'s first Calendar date (its scheduled block, else due date, else start date) lands on that day; an item with no date gets to_date as its due date.', 'parameters' => $object([
+            ['name' => 'reschedule', 'description' => 'Queue moving Tasks, Milestones or Goals on the Calendar, like dragging them to another day. Give shift_days (whole days, negative for earlier) or to_date, not both. Every date of an item moves by the same number of days: a Task\'s start date, due date and scheduled block (keeping its clock times); a Milestone\'s or Goal\'s start date and deadline. With to_date the item\'s first Calendar date (its scheduled block, else due date, else start date) lands on that day; an item with no date gets to_date as its due date.', 'parameters' => $object([
                 'items' => ['type' => 'array', 'items' => $object(['type' => ['type' => 'string', 'enum' => ['task', 'milestone', 'goal']], 'id' => $id], ['type', 'id'])],
                 'shift_days' => ['type' => 'integer'], 'to_date' => $date,
             ], ['items'])],
@@ -217,7 +217,7 @@ final class AIChatService
             ], ['goal_id', 'milestones'])],
             ['name' => 'update_milestone', 'description' => 'Queue edits to a Milestone. Only pass fields to change. append_description adds text to the end.', 'parameters' => $object([
                 'id' => $id, 'name' => ['type' => 'string'], 'description' => ['type' => 'string'], 'append_description' => ['type' => 'string'],
-                'completion_criteria' => ['type' => 'string'], 'deadline' => $date, 'importance' => $importance,
+                'completion_criteria' => ['type' => 'string'], 'start_date' => $date, 'deadline' => $date, 'importance' => $importance,
             ], ['id'])],
             ['name' => 'complete_milestone', 'description' => 'Queue marking a Milestone completed.', 'parameters' => $object(['id' => $id], ['id'])],
             ['name' => 'reopen_milestone', 'description' => 'Queue reopening a completed Milestone.', 'parameters' => $object(['id' => $id], ['id'])],
@@ -229,7 +229,7 @@ final class AIChatService
             ], ['name'])],
             ['name' => 'update_goal', 'description' => 'Queue edits to a Goal. Only pass fields to change. append_description adds text to the end.', 'parameters' => $object([
                 'id' => $id, 'name' => ['type' => 'string'], 'description' => ['type' => 'string'], 'append_description' => ['type' => 'string'],
-                'expected_result' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'strategy_notes' => ['type' => 'string'], 'deadline' => $date, 'importance' => $importance,
+                'expected_result' => ['type' => 'string'], 'completion_criteria' => ['type' => 'string'], 'strategy_notes' => ['type' => 'string'], 'start_date' => $date, 'deadline' => $date, 'importance' => $importance,
             ], ['id'])],
             ['name' => 'complete_goal', 'description' => 'Queue marking a Goal completed.', 'parameters' => $object(['id' => $id], ['id'])],
             ['name' => 'reopen_goal', 'description' => 'Queue reopening a completed Goal.', 'parameters' => $object(['id' => $id], ['id'])],
@@ -271,7 +271,7 @@ final class AIChatService
                     fn (array $area): bool => $this->text($args['query'] ?? '') === '' || mb_stripos($area['name'], $this->text($args['query'])) !== false,
                 ))],
                 'search_goals' => ['goals' => $this->repository->searchGoals($userId, $this->text($args['query'] ?? ''), ($args['include_completed'] ?? false) === true)],
-                'get_goal' => ['goal' => $this->publicFields($this->load($userId, 'goal', $args['id'] ?? null), ['id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'status', 'importance', 'deadline', 'area_id', 'parent_goal_id', 'progress'])],
+                'get_goal' => ['goal' => $this->publicFields($this->load($userId, 'goal', $args['id'] ?? null), ['id', 'name', 'description', 'expected_result', 'completion_criteria', 'strategy_notes', 'status', 'importance', 'start_date', 'deadline', 'area_id', 'parent_goal_id', 'progress'])],
                 'get_roadmap' => ['roadmap' => $this->roadmap($userId, $args['goal_id'] ?? null)],
                 'create_roadmap' => $this->createRoadmap($userId, $args),
                 'create_milestones' => $this->createMilestones($userId, $args),
@@ -414,9 +414,9 @@ final class AIChatService
         $task = static fn (array $row): array => array_intersect_key($row, array_flip(['id', 'name', 'status', 'deadline', 'importance']));
 
         return [
-            'goal' => array_intersect_key($roadmap['goal'], array_flip(['id', 'name', 'status', 'deadline', 'progress', 'area_id', 'parent_goal_id'])),
+            'goal' => array_intersect_key($roadmap['goal'], array_flip(['id', 'name', 'status', 'start_date', 'deadline', 'progress', 'area_id', 'parent_goal_id'])),
             'milestones' => array_map(static fn (array $milestone): array => [
-                ...array_intersect_key($milestone, array_flip(['id', 'name', 'status', 'deadline'])),
+                ...array_intersect_key($milestone, array_flip(['id', 'name', 'status', 'start_date', 'deadline'])),
                 'requires' => array_map(static fn (array $prerequisite): string => (string) $prerequisite['id'], $milestone['prerequisites']),
                 'tasks' => array_map($task, $milestone['tasks']),
             ], $roadmap['milestones']),
@@ -551,6 +551,7 @@ final class AIChatService
         if ($fields === []) {
             return ['error' => 'Nothing to change.'];
         }
+        $this->checkDateOrder($milestone, $fields);
 
         return $this->queue(
             ['op' => 'update_milestone', 'target' => $this->reference('milestone', $milestone), 'fields' => $fields],
@@ -612,7 +613,13 @@ final class AIChatService
     /** @param array<string,mixed> $input @return array<string,mixed> */
     private function milestoneFields(array $input, bool $creating): array
     {
-        return array_diff_key($this->taskFields($input, $creating), ['expected_result' => true]);
+        return [...array_diff_key($this->taskFields($input, $creating), ['expected_result' => true]), ...$this->startDate($input)];
+    }
+
+    /** Goals and Milestones may start on a date (the Calendar's Gantt view draws start to deadline). @param array<string,mixed> $input @return array<string,string> */
+    private function startDate(array $input): array
+    {
+        return ($date = $this->date($input['start_date'] ?? null)) !== null ? ['start_date' => $date] : [];
     }
 
     /**
@@ -683,6 +690,7 @@ final class AIChatService
         if ($fields === []) {
             return ['error' => 'Nothing to change.'];
         }
+        $this->checkDateOrder($goal, $fields);
 
         return $this->queue(
             ['op' => 'update_goal', 'target' => $this->reference('goal', $goal), 'fields' => $fields],
@@ -711,7 +719,7 @@ final class AIChatService
     /** @param array<string,mixed> $input @return array<string,mixed> */
     private function goalFields(array $input, bool $creating): array
     {
-        $fields = $this->taskFields($input, $creating);
+        $fields = [...$this->taskFields($input, $creating), ...$this->startDate($input)];
         if (is_string($input['strategy_notes'] ?? null)) {
             $fields['strategy_notes'] = mb_substr(trim(TextNormalizer::body($input['strategy_notes'])), 0, 5000);
         }
@@ -1146,7 +1154,7 @@ final class AIChatService
         return $fields;
     }
 
-    /** @param array<string,mixed> $object a Milestone or Goal @return array{deadline:string} */
+    /** @param array<string,mixed> $object a Milestone or Goal @return array<string,string> its deadline, and start date when it has one, moved together */
     private function moveDeadline(array $object, ?int $shift, ?string $target): array
     {
         if (($object['deadline'] ?? null) === null) {
@@ -1158,8 +1166,12 @@ final class AIChatService
         }
         $days = $shift ?? (int) (new \DateTimeImmutable((string) $object['deadline']))->diff(new \DateTimeImmutable($target))->format('%r%a');
         $this->assertLands($object, (string) $object['deadline'], $days);
+        $fields = ['deadline' => $this->addDays((string) $object['deadline'], $days)];
+        if (($object['start_date'] ?? null) !== null) {
+            $fields['start_date'] = $this->addDays((string) $object['start_date'], $days);
+        }
 
-        return ['deadline' => $this->addDays((string) $object['deadline'], $days)];
+        return $fields;
     }
 
     /** @param array<string,mixed> $object */
