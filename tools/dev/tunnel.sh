@@ -73,7 +73,12 @@ fi
 
 # --- Database: refuse to serve an outdated schema -------------------------------------------------
 cd "${BACKEND}"
-PENDING="$(php bin/console migrate:status | awk '$1 == "pending" {print $2}')"
+# Checked on its own: inside a pipeline a failure would end the script without a word.
+if ! STATUS="$(php bin/console migrate:status 2>/dev/null)"; then
+    DB_TARGET="$(php -r 'require "vendor/autoload.php"; $c=(new Planner\Config\ConfigLoader)->load(getcwd()); echo $c->string("database.host"), ":", $c->int("database.port");' 2>/dev/null || echo "the configured host")"
+    die "Cannot reach the database at ${DB_TARGET}. Start it first (for example Docker Desktop, or: sudo service mysql start), then run this again."
+fi
+PENDING="$(printf '%s\n' "${STATUS}" | awk '$1 == "pending" {print $2}')"
 if [ -n "${PENDING}" ]; then
     DB_NAME="$(php -r 'require "vendor/autoload.php"; echo (new Planner\Config\ConfigLoader)->load(getcwd())->string("database.name");')"
     say "Database ${DB_NAME} has pending migrations:"
