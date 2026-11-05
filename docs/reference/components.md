@@ -103,6 +103,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `bell.reminders` | [Due personal/assigned team reminders and dismissal](../ui/shared/notifications.md#due-personalassigned-team-reminders-and-dismissal) | Shared — Notification bell and reminders |
 | `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |
 | `ai.proposal` | [Chat proposal preview, Apply and Cancel](../ui/shared/ai.md#chat-proposal-preview-apply-and-cancel) | Shared — Floating AI assistant and proposal APIs |
+| `ai.calendar` | [Calendar scheduling from the chat](../ui/shared/ai.md#calendar-scheduling-from-the-chat) | Shared — Floating AI assistant and proposal APIs |
 | `admin.reports` | [Open/resolved reports and resolution](../ui/admin/README.md#openresolved-reports-and-resolution) | /admin — System reports, users and settings |
 | `admin.user-reports` | [User reports with image evidence](../ui/admin/README.md#user-reports-with-image-evidence) | /admin — System reports, users and settings |
 | `admin.users` | [Search users, lock/unlock](../ui/admin/README.md#search-users-lockunlock) | /admin — System reports, users and settings |

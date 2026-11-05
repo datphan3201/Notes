@@ -145,7 +145,7 @@ final readonly class PdoAIActionRepository
     public function searchTasks(int $userId, string $query, bool $includeDone): array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, name, status, deadline, importance FROM tasks WHERE user_id = :user AND archived_at IS NULL'
+            'SELECT id, name, status, start_date, deadline, scheduled_start, scheduled_end, importance FROM tasks WHERE user_id = :user AND archived_at IS NULL'
             .($includeDone ? '' : " AND status <> 'Done'")
             .($query === '' ? '' : ' AND (name LIKE :name OR description LIKE :description)')
             .' ORDER BY deadline IS NULL, deadline, updated_at DESC LIMIT 30',

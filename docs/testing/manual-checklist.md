@@ -347,6 +347,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] AI04 — Chat proposal cards show the queued before/after changes. Malformed/foreign/stale/hash/expiry violations reject Apply; no separate /ai page is implied.
 - [ ] AI05 — Explicit Apply runs only supported create/edit/transition/archive/delete operations atomically through ordinary services; no domain write occurs before confirmation. Replay/Cancel retain their outcome.
 - [ ] AI06 — Chat reads are owner-scoped; editing an object after proposal generation returns 409 without applying it. Conversation history includes earlier proposal outcomes and does not silently repeat handled requests.
+- [ ] AI07 — With a live provider, ask to put a Task into a time slot and to move a Task, a Milestone and an overdue item ("move them to tomorrow", "push the Milestone back a week"). The card shows *Reschedule* with local before → after times; nothing moves on the Calendar until Apply, then each item lands on the expected day with unchanged clock times. Asking to move done work or to a past time queues nothing.
 
 ## Help walkthrough — HELP
 

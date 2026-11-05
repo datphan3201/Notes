@@ -77,6 +77,7 @@ const ACTION_LABELS = {
     delete_milestone: 'Delete Milestone',
     order_milestones: 'Milestone order',
     move_task: 'Move Task',
+    reschedule: 'Reschedule',
     create_habit: 'New Habit',
     update_habit: 'Edit Habit',
     delete_habit: 'Delete Habit',
@@ -95,6 +96,9 @@ const FIELD_LABELS = {
     description: 'Description',
     content: 'Content',
     deadline: 'Due date',
+    start_date: 'Start date',
+    scheduled_start: 'Scheduled start',
+    scheduled_end: 'Scheduled end',
     importance: 'Importance',
     expected_result: 'Expected result',
     completion_criteria: 'Completion criteria',
@@ -170,9 +174,11 @@ export function initAssistant(doc = document) {
                 changes.forEach(({ field, from, to }) => {
                     const line = document.createElement('li');
                     const before = shorten(from);
+                    // A cleared value (such as a removed time slot) reads as None, not a blank.
+                    const after = shorten(to) || t('None');
                     line.textContent = before
-                        ? `${t(FIELD_LABELS[field] || field)}: ${before} → ${shorten(to)}`
-                        : `${t(FIELD_LABELS[field] || field)}: ${shorten(to)}`;
+                        ? `${t(FIELD_LABELS[field] || field)}: ${before} → ${after}`
+                        : `${t(FIELD_LABELS[field] || field)}: ${after}`;
                     details.append(line);
                 });
                 item.append(details);
