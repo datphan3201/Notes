@@ -30,6 +30,7 @@ final readonly class AuthService
         private Clock $clock,
         private PdoPlanningRepository $planning,
         private UuidGenerator $uuid,
+        private RegistrationPolicy $registration,
     ) {
         $this->dummyHash = password_hash('dummy password used only to equalize login timing', PASSWORD_BCRYPT);
     }
@@ -40,12 +41,14 @@ final readonly class AuthService
         try {
             $user = $this->transactions->run(function () use ($email, $displayName, $password, $locale): UserRecord {
                 $timestamp = $this->timestamp();
+                $this->registration->assertAllowed($email);
                 $user = $this->accounts->insertUser(
                     $email,
                     $displayName,
                     password_hash($password, PASSWORD_BCRYPT),
                     $timestamp,
                 );
+                $this->registration->accepted($email, $user->id, $timestamp);
                 // Placeholder Areas follow the language chosen before sign-up and stay editable.
                 $areaName = $locale === 'vi' ? 'Lĩnh vực' : 'Area';
                 $this->planning->insertDefaultAreas($user->id, [

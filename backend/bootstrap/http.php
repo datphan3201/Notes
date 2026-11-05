@@ -90,6 +90,10 @@ $noteLockGate = new \Planner\Application\Notes\NoteLockGate($session, $services[
 $accountRepository = new PdoAccountRepository($services['pdo']);
 $planningRepository = new PdoPlanningRepository($services['pdo']);
 $rateLimiter = new RateLimiter($services['pdo']);
+$systemSettings = new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($services['pdo']);
+$registrationInvites = new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoRegistrationInviteRepository($services['pdo']);
+$registrationPolicy = new \Planner\Application\Account\RegistrationPolicy($systemSettings, $registrationInvites);
+$adminActionLog = new \Planner\Application\Admin\AdminActionLog(new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoAdminActionRepository($services['pdo']), $services['clock']);
 $auth = new AuthService(
     $accountRepository,
     $services['transactions'],
@@ -98,6 +102,7 @@ $auth = new AuthService(
     $services['clock'],
     $planningRepository,
     $services['uuid'],
+    $registrationPolicy,
 );
 $accountService = new AccountService($accountRepository, $services['transactions'], $services['clock']);
 $validator = new AccountValidator(new InputValidator, new EmailValidator);
@@ -139,6 +144,7 @@ $accountController = new AccountController(
     $session,
     $views,
     $emailVerificationService,
+    $registrationPolicy,
 );
 $emailController = new \Planner\Http\Controller\EmailController($auth, $emailVerificationService, $validator, $accountRepository, $mailer, $views, $session);
 $passwordResetService = new \Planner\Application\Account\PasswordResetService(
@@ -270,14 +276,14 @@ $notificationService = new \Planner\Application\Notifications\NotificationServic
 $notificationController = new \Planner\Http\Controller\NotificationController($auth, $notificationService, $inputValidator);
 $noteShareRepository = new \Planner\Infrastructure\Persistence\Pdo\Notes\PdoNoteShareRepository($services['pdo']);
 $noteShareService = new \Planner\Application\Notes\NoteShareService($noteRepository, $noteShareRepository, $accountRepository, $notificationService, $services['transactions'], $services['uuid'], $services['clock'], $noteLockGate);
-$systemSettings = new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository($services['pdo']);
+$accountLocks = new \Planner\Application\Admin\AccountLockService($accountRepository, $adminActionLog, $services['transactions'], $services['clock']);
 $reportService = new \Planner\Application\Admin\ReportService(
     new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoReportRepository($services['pdo']),
-    $systemSettings, $accountRepository, $noteShareService, $notificationService, $services['transactions'], $services['uuid'], $services['clock'],
+    $systemSettings, $registrationInvites, $accountRepository, $noteShareService, $accountLocks, $adminActionLog, $notificationService, $services['transactions'], $services['uuid'], $services['clock'],
 );
 $userReportService = new \Planner\Application\Admin\UserReportService(
     new \Planner\Infrastructure\Persistence\Pdo\Admin\PdoUserReportRepository($services['pdo']),
-    $accountRepository, $notificationService, $storage, $services['transactions'], $services['uuid'], $services['clock'],
+    $accountRepository, $notificationService, $storage, $services['transactions'], $services['uuid'], $services['clock'], $accountLocks, $adminActionLog,
 );
 $userReportController = new \Planner\Http\Controller\UserReportController($auth, $userReportService, $uploadValidator, $inputValidator);
 $noteService = new NoteService(
@@ -308,7 +314,7 @@ $noteController = new NoteController(
     new \Planner\Application\Notes\NoteSync($noteRepository, $noteSerializer),
 );
 $noteShareController = new \Planner\Http\Controller\NoteShareController($auth, $noteShareService, $reportService, new NoteValidator($inputValidator), $inputValidator);
-$adminController = new \Planner\Http\Controller\AdminController($auth, $reportService, $inputValidator, $accountController);
+$adminController = new \Planner\Http\Controller\AdminController($auth, $reportService, $inputValidator, $accountController, $adminActionLog);
 $twoFactorService = new \Planner\Application\Account\TwoFactorService(
     $accountRepository,
     new \Planner\Infrastructure\Persistence\Pdo\Account\PdoTwoFactorRepository($services['pdo']),

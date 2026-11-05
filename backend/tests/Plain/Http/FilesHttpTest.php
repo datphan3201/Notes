@@ -354,7 +354,7 @@ SQL);
         self::assertSame(404, $this->request('GET', '/api/v1/admin/user-reports', cookie: $cookie)->status);
         self::assertSame(404, $this->request('GET', '/admin/user-reports/'.$report['id'].'/evidence/3', cookie: $adminCookie)->status);
 
-        self::assertSame(200, $this->api('POST', '/api/v1/admin/user-reports/'.$report['id'].'/resolve', ['status' => 'resolved', 'response' => 'Account warned.'], $adminCookie, $adminCsrf)->status);
+        self::assertSame(200, $this->api('POST', '/api/v1/admin/user-reports/'.$report['id'].'/resolve', ['status' => 'resolved', 'response' => 'Account warned.', 'actions' => ['warn_account']], $adminCookie, $adminCsrf)->status);
         self::assertSame(422, $this->api('POST', '/api/v1/admin/user-reports/'.$report['id'].'/resolve', ['status' => 'dismissed'], $adminCookie, $adminCsrf)->status);
         $resolved = array_values(array_filter(
             $this->json($this->request('GET', '/api/v1/user-reports', cookie: $cookie))['data'],

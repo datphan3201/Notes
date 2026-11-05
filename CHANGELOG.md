@@ -11,6 +11,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 - **Offline / PWA:** installable app (manifest, service worker); the Notes list, search and editor work offline from an IndexedDB copy, and offline creates/edits/deletes sync on reconnect, conflicts kept as an “(offline copy)”. ([docs](docs/ui/notes/offline.md))
 - **Account:** prominent banner for unverified accounts with *Resend email*; password recovery by emailed 6-digit code as well as by link.
 - **Calendar** page with month/week views, drag-and-drop rescheduling and an Unscheduled tray; shared floating editor for Tasks, Goals and Milestones.
+- **Administration:** registration modes (open, invitation-only, closed) with an invitation list; report resolution with explicit actions (withdraw shares, warn, lock) and truthful reporter notifications; locking hides the account's shared Notes and blocks new Team assignments; administrators cannot lock each other; append-only administrator activity log; `registration:mode` console command.
 - **Deployment:** `planner-realtime` systemd service and Nginx `/realtime` WebSocket proxy; green-main continuous deployment for an existing PHP + Cloudflare Tunnel runtime.
 
 ### Changed
@@ -24,7 +25,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 - Creating or renaming an Area to the name of an archived Area showed “service unavailable”; it now explains that names are unique including archived Areas.
 
 ### Database
-- `0030_add_note_locks_ai_and_sync`, `0031_add_password_reset_codes`.
+- `0030_add_system_admin_controls`, `0031_add_note_locks_ai_and_sync`, `0032_add_password_reset_codes`.
 
 ## 2026-11-03
 

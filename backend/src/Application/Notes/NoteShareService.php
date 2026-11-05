@@ -229,6 +229,23 @@ final readonly class NoteShareService
         $this->notifyCollaborators($note, $actorId, $actorName);
     }
 
+    /**
+     * Moderation: withdraws a Note from every recipient, including pending invitations.
+     *
+     * @return list<int> recipients who lost access
+     */
+    public function revokeAll(int $ownerId, string $noteId): array
+    {
+        return $this->transactions->run(function () use ($ownerId, $noteId): array {
+            $removed = $this->shares->deleteForNote($ownerId, $noteId);
+            foreach ($removed as $share) {
+                $this->notifications->resolveSubject($share['recipient_id'], 'share_invite', $share['id']);
+            }
+
+            return array_map(static fn (array $share): int => $share['recipient_id'], $removed);
+        });
+    }
+
     /** @return array{0:NoteRecord,1:array<string,mixed>} */
     public function accessible(int $recipientId, string $noteId, bool $forUpdate = false): array
     {

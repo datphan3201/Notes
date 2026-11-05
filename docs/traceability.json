@@ -3610,21 +3610,6 @@
           ]
         },
         {
-          "id": "notes.sharing.recipient",
-          "label": "Shared with me, accept/decline, edit and leave",
-          "behavior": "Shared with me lists accepted Notes with owner, permission (view only / can edit), share time and lock state; invitations can be accepted or declined. Edit recipients change title/content only: live over the realtime socket when available, otherwise by debounced autosave with base_version (a 409 retries on the newer version). View-only recipients see live updates read-only.",
-          "ui": [
-            {
-              "path": "frontend/src/views/notes/index.php",
-              "symbol": "data-filter-shared"
-            }
-          ],
-          "client": [
-            {
-              "path": "frontend/src/js/notes/note-sharing.js",
-              "symbol": "export class NoteSharing"
-            }
-          ],
           "server": [
             {
               "path": "backend/src/Application/Notes/NoteShareService.php",
@@ -3633,6 +3618,34 @@
             {
               "path": "backend/src/Application/Notes/NoteShareService.php",
               "symbol": "public function respond("
+            }
+          ],
+          "label": "Shared with me, accept/decline, edit and leave",
+          "ui": [
+            {
+              "path": "frontend/src/views/notes/index.php",
+              "symbol": "data-filter-shared"
+            }
+          ],
+          "routes": [
+            "api.shared-notes.index",
+            "api.shared-notes.respond",
+            "api.shared-notes.show",
+            "api.shared-notes.update",
+            "api.shared-notes.leave"
+          ],
+          "id": "notes.sharing.recipient",
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            }
+          ],
+          "behavior": "Shared with me lists accepted Notes with owner, permission (view only / can edit), share time and lock state; invitations can be accepted or declined. Edit recipients change title/content only: live over the realtime socket when available, otherwise by debounced autosave with base_version (a 409 retries on the newer version). View-only recipients see live updates read-only. Notes owned by a locked account are hidden from recipients (list and direct links return 404) until the account is unlocked; a moderator can also withdraw a reported Note from every recipient.",
+          "client": [
+            {
+              "path": "frontend/src/js/notes/note-sharing.js",
+              "symbol": "export class NoteSharing"
             }
           ],
           "storage": [
@@ -3648,19 +3661,6 @@
               "path": "backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php",
               "symbol": "public function delete("
             }
-          ],
-          "tests": [
-            {
-              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
-              "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
-            }
-          ],
-          "routes": [
-            "api.shared-notes.index",
-            "api.shared-notes.respond",
-            "api.shared-notes.show",
-            "api.shared-notes.update",
-            "api.shared-notes.leave"
           ]
         },
         {
@@ -3955,7 +3955,7 @@
         {
           "id": "teamwork.members",
           "label": "Invite, accept/decline, role, remove and completion",
-          "behavior": "Members have admin/member/viewer roles. Team admins manage membership; the creator cannot be removed/demoted by the normal flow. Member biography and factual done/assigned counts are shown.",
+          "behavior": "Members have admin/member/viewer roles. Team admins manage membership; the creator cannot be removed/demoted by the normal flow. Member biography and factual done/assigned counts are shown. A locked account stays a member, shown as Locked, keeps the work already assigned to it and cannot be chosen for new work.",
           "ui": [
             {
               "path": "frontend/src/views/planning/teamwork.php",
@@ -4855,7 +4855,7 @@
         {
           "id": "auth.register",
           "label": "/register — Create account",
-          "behavior": "Registration creates owned preferences/default Areas transactionally, stores guest language, sends a verification link and establishes the normal session. Public registration does not grant system-admin role.",
+          "behavior": "Registration creates owned preferences/default Areas transactionally, stores guest language, sends a verification link and establishes the normal session. Public registration does not grant system-admin role. An administrator decides who may register: Anyone with the link (default), Only invited emails, or Nobody. By invitation, the email must be on the admin's invitation list, and each invitation creates one account; closed hides the form and the Login page's sign-up link. The server enforces the mode inside the registration transaction.",
           "ui": [
             {
               "path": "frontend/src/views/auth/register.php",
@@ -4876,6 +4876,10 @@
             {
               "path": "backend/src/Application/Account/AuthService.php",
               "symbol": "public function register("
+            },
+            {
+              "path": "backend/src/Application/Account/RegistrationPolicy.php",
+              "symbol": "public function assertAllowed("
             }
           ],
           "storage": [
@@ -4888,6 +4892,10 @@
             {
               "path": "backend/tests/Plain/Http/AccountHttpTest.php",
               "symbol": "public function test_registration_session_profile_preferences_and_password_flow("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_registration_mode_and_invitations_decide_who_can_create_an_account("
             }
           ],
           "routes": [
@@ -5653,7 +5661,7 @@
         {
           "id": "admin.reports",
           "label": "Open/resolved reports and resolution",
-          "behavior": "List report snapshots, reason, reporter/owner and date. Resolve/dismiss with response; notification recipients follow report service rules.",
+          "behavior": "List report snapshots, reason, reporter/owner (with lock state) and date. An open report has a resolution form: choose actions — Stop sharing this note with everyone (removes every share, including pending invitations), Warn the owner (an always-delivered notification that never names the reporter) and Lock the owner’s account — add an optional reply, then Resolve or Dismiss. Resolve requires at least one action unless the owner is already locked; Dismiss takes none. The reporter is told “reviewed and action was taken” or “reviewed. No action was needed” accordingly. The actions taken are stored with the report and shown as chips once handled, and each one is recorded in Administrator activity.",
           "ui": [
             {
               "path": "frontend/src/views/admin/index.php",
@@ -5674,6 +5682,14 @@
             {
               "path": "backend/src/Application/Admin/ReportService.php",
               "symbol": "public function resolve("
+            },
+            {
+              "path": "backend/src/Application/Admin/ReportOutcome.php",
+              "symbol": "public static function assertConsistent("
+            },
+            {
+              "path": "backend/src/Application/Notes/NoteShareService.php",
+              "symbol": "public function revokeAll("
             }
           ],
           "storage": [
@@ -5690,6 +5706,10 @@
             {
               "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
               "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_resolving_a_note_report_takes_the_chosen_action_and_tells_the_reporter("
             }
           ],
           "routes": [
@@ -5700,7 +5720,7 @@
         {
           "id": "admin.user-reports",
           "label": "User reports with image evidence",
-          "behavior": "List reports filed from Settings: reported email, matched account (or none), reporter, reason and evidence thumbnails served only to admins. Resolve/dismiss once with an optional reply to the reporter; lock the matched account from the card.",
+          "behavior": "List reports filed from Settings: reported email, matched account (or none), reporter, reason and evidence thumbnails served only to admins. Resolve with Warn this account and/or Lock this account (or because the account is already locked), or Dismiss with no action; an optional reply goes to the reporter, whose notification says whether action was taken. A report whose email matches no account can only be dismissed. Actions are stored with the report and recorded in Administrator activity.",
           "ui": [
             {
               "path": "frontend/src/views/admin/index.php",
@@ -5741,6 +5761,10 @@
             {
               "path": "backend/tests/Plain/Http/FilesHttpTest.php",
               "symbol": "public function test_user_reports_with_image_evidence_are_private_to_administrators("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_user_reports_can_lock_the_account_and_locked_members_take_no_new_team_work("
             }
           ],
           "routes": [
@@ -5752,7 +5776,7 @@
         {
           "id": "admin.users",
           "label": "Search users, lock/unlock",
-          "behavior": "Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. Self-lock is rejected. Team roles do not grant these endpoints.",
+          "behavior": "Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. It also hides the Notes they shared from every recipient and marks them Locked in Teams, where they keep existing work but cannot be assigned new tasks; unlocking restores both. The list shows who locked an account and why. Self-lock is rejected, and administrators cannot be locked here: the role is granted and removed only with the server console (users:role), so one administrator cannot shut another out. Team roles do not grant these endpoints.",
           "ui": [
             {
               "path": "frontend/src/views/admin/index.php",
@@ -5766,6 +5790,10 @@
             }
           ],
           "server": [
+            {
+              "path": "backend/src/Application/Admin/AccountLockService.php",
+              "symbol": "public function lock("
+            },
             {
               "path": "backend/src/Application/Admin/ReportService.php",
               "symbol": "public function setLocked("
@@ -5789,6 +5817,10 @@
             {
               "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
               "symbol": "public function test_reports_reach_admins_and_locked_accounts_lose_access("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_locking_hides_shared_notes_records_the_admin_and_spares_administrators("
             }
           ],
           "routes": [
@@ -5837,6 +5869,113 @@
           "routes": [
             "api.admin.settings",
             "api.admin.settings.update"
+          ]
+        },
+        {
+          "id": "admin.registration",
+          "label": "Registration mode and invitations",
+          "behavior": "Registration sets who can create an account: Anyone with the link, Only invited emails or Nobody (closed). Invited emails are listed with Waiting for sign-up or Account created and who used them; an unused invitation can be removed, and an email that already has an account cannot be invited. The operator can set the same mode with php bin/console registration:mode [open|invite|closed] before exposing a new host. Every change is recorded in Administrator activity.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-registration"
+            },
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-invite-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "const renderInvites = (invites) =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/ReportService.php",
+              "symbol": "public function invite("
+            },
+            {
+              "path": "backend/src/Application/Account/RegistrationPolicy.php",
+              "symbol": "final readonly class RegistrationPolicy"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoRegistrationInviteRepository.php",
+              "symbol": "public function markUsed("
+            },
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php",
+              "symbol": "public function registrationMode("
+            },
+            {
+              "path": "backend/database/plain-migrations/0030_add_system_admin_controls.php",
+              "symbol": "CREATE TABLE registration_invites"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_registration_mode_and_invitations_decide_who_can_create_an_account("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_console_commands_change_roles_and_registration_and_are_recorded("
+            }
+          ],
+          "routes": [
+            "api.admin.settings.update",
+            "api.admin.invites",
+            "api.admin.invites.store",
+            "api.admin.invites.destroy"
+          ]
+        },
+        {
+          "id": "admin.activity",
+          "label": "Administrator activity",
+          "behavior": "An append-only record of administration, newest first (100 entries): locks and unlocks, warnings, withdrawn shares, report resolutions and dismissals, setting changes, invitations, and role or registration changes made with the server console (shown as Server console). Each entry has the time, the actor and a short summary; it never stores report evidence or Note content.",
+          "ui": [
+            {
+              "path": "frontend/src/views/admin/index.php",
+              "symbol": "data-admin-activity"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "const loadActivity = async () =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Admin/AdminActionLog.php",
+              "symbol": "public function record("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Admin/PdoAdminActionRepository.php",
+              "symbol": "public function recent("
+            },
+            {
+              "path": "backend/database/plain-migrations/0030_add_system_admin_controls.php",
+              "symbol": "CREATE TABLE admin_actions"
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_locking_hides_shared_notes_records_the_admin_and_spares_administrators("
+            },
+            {
+              "path": "backend/tests/Plain/Http/SystemAdminHttpTest.php",
+              "symbol": "public function test_console_commands_change_roles_and_registration_and_are_recorded("
+            }
+          ],
+          "routes": [
+            "api.admin.actions"
           ]
         }
       ]
@@ -5889,7 +6028,7 @@
               "symbol": "public function setLock("
             },
             {
-              "path": "backend/database/plain-migrations/0030_add_note_locks_ai_and_sync.php",
+              "path": "backend/database/plain-migrations/0031_add_note_locks_ai_and_sync.php",
               "symbol": "ADD COLUMN lock_hash"
             }
           ],
@@ -6396,6 +6535,10 @@
     "api.notes.summary.generate": "docs/ui/notes/ai.md",
     "api.notes.ask": "docs/ui/notes/ai.md",
     "api.notes.sync": "docs/ui/notes/offline.md",
-    "api.notes.attributes": "docs/ui/notes/README.md"
+    "api.notes.attributes": "docs/ui/notes/README.md",
+    "api.admin.actions": "docs/ui/admin/README.md",
+    "api.admin.invites": "docs/ui/admin/README.md",
+    "api.admin.invites.store": "docs/ui/admin/README.md",
+    "api.admin.invites.destroy": "docs/ui/admin/README.md"
   }
 }

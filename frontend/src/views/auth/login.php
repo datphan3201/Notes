@@ -21,8 +21,10 @@
         <button class="button button-primary button-wide" type="submit"><?= $view->e($view->t('Sign in')) ?></button>
     </form>
     <p><a href="/forgot-password"><?= $view->e($view->t('Forgot password?')) ?></a></p>
+    <?php if (($registration_mode ?? 'open') !== 'closed'): ?>
     <p class="auth-switch">
         <?= $view->e($view->t('New here?')) ?>
         <a href="/register"><?= $view->e($view->t('Create an account')) ?></a>
     </p>
+    <?php endif; ?>
 </section>

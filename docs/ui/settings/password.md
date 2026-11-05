@@ -16,10 +16,10 @@ Require current password and exact confirmation, at least 10 code points, at mos
 | --- | --- |
 | UI / DOM | [password.php · data-password-form](../../../frontend/src/views/settings/password.php#L13) |
 | Browser logic | [password.js · export function initPassword](../../../frontend/src/js/settings/password.js#L5)<br>[password-visibility.js · export function initPasswordVisibility](../../../frontend/src/js/lib/password-visibility.js#L35) |
-| Controller / service / domain | [AuthService.php · public function changePassword(](../../../backend/src/Application/Account/AuthService.php#L182) |
+| Controller / service / domain | [AuthService.php · public function changePassword(](../../../backend/src/Application/Account/AuthService.php#L185) |
 | Persistence | [PdoAccountRepository.php · public function updatePasswordAndVersion(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L239)<br>[PdoAccountRepository.php · public function deleteSessions(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L336) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_registration_session_profile_preferences_and_password_flow(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L57) |
-| HTTP | `POST /api/v1/password` (`api.password.update`) → [AccountController::changePassword](../../../backend/src/Http/Controller/AccountController.php#L156) |
+| HTTP | `POST /api/v1/password` (`api.password.update`) → [AccountController::changePassword](../../../backend/src/Http/Controller/AccountController.php#L158) |
 
 ### Set up email codes or TOTP, confirm and disable
 

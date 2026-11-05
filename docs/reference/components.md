@@ -107,6 +107,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `admin.user-reports` | [User reports with image evidence](../ui/admin/README.md#user-reports-with-image-evidence) | /admin — System reports, users and settings |
 | `admin.users` | [Search users, lock/unlock](../ui/admin/README.md#search-users-lockunlock) | /admin — System reports, users and settings |
 | `admin.history` | [System Task history limit](../ui/admin/README.md#system-task-history-limit) | /admin — System reports, users and settings |
+| `admin.registration` | [Registration mode and invitations](../ui/admin/README.md#registration-mode-and-invitations) | /admin — System reports, users and settings |
+| `admin.activity` | [Administrator activity](../ui/admin/README.md#administrator-activity) | /admin — System reports, users and settings |
 | `notes.locks` | [Password: turn on, change, remove and unlock](../ui/notes/locks.md#password-turn-on-change-remove-and-unlock) | / — Note passwords |
 | `notes.collaboration` | [Live co-editing of shared Notes](../ui/notes/collaboration.md#live-co-editing-of-shared-notes) | / — Live collaboration |
 | `notes.ai.summary` | [AI summary of one Note](../ui/notes/ai.md#ai-summary-of-one-note) | / — AI summary and questions |

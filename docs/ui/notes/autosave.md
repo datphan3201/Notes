@@ -34,7 +34,7 @@ One account-scoped sessionStorage record preserves acknowledged/draft/frozen req
 | Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L38) |
 | Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L125) |
 | Relevant tests (not a pass claim) | [recovery-store.test.js · isolated by user](../../../frontend/tests/js/recovery-store.test.js#L24)<br>[recovery-store.test.js · corrupt and expired](../../../frontend/tests/js/recovery-store.test.js#L35)<br>[recovery-store.test.js · clearAll](../../../frontend/tests/js/recovery-store.test.js#L50)<br>[autosave-machine.test.js · J12 recovery](../../../frontend/tests/js/autosave-machine.test.js#L282)<br>[autosave-machine.test.js · J13 expired session](../../../frontend/tests/js/autosave-machine.test.js#L297) |
-| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L104) |
+| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L106) |
 
 ### Saved-version/draft conflict decisions
 

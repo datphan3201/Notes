@@ -269,7 +269,7 @@ final readonly class TeamService
             }
             $this->assertVersion($input, (int) $task['version']);
             if (array_key_exists('assignee_id', $fields)) {
-                $this->assertAssignee($members, $fields['assignee_id']);
+                $this->assertAssignee($members, $fields['assignee_id'], $task['assignee_id'] === null ? null : (int) $task['assignee_id']);
             }
             if (array_key_exists('status', $fields) && $fields['status'] !== $task['status']) {
                 $fields['completed_at'] = $fields['status'] === 'done' ? $this->now() : null;
@@ -404,6 +404,8 @@ final readonly class TeamService
                 'biography' => (string) ($member['biography'] ?? ''),
                 'role' => (string) $member['role'],
                 'status' => (string) $member['status'],
+                // A locked account keeps its membership and history but cannot take new work.
+                'locked' => ($member['locked_at'] ?? null) !== null,
                 'is_creator' => $goal['created_by'] !== null && (int) $goal['created_by'] === $id,
                 'assigned' => $stats[$id]['assigned'] ?? 0,
                 'done' => $stats[$id]['done'] ?? 0,
@@ -559,13 +561,17 @@ final readonly class TeamService
     }
 
     /** @param list<array<string, mixed>> $members */
-    private function assertAssignee(array $members, ?int $assigneeId): void
+    private function assertAssignee(array $members, ?int $assigneeId, ?int $currentAssignee = null): void
     {
         if ($assigneeId === null) {
             return;
         }
         foreach ($members as $member) {
             if ((int) $member['user_id'] === $assigneeId && $member['status'] === 'accepted') {
+                if (($member['locked_at'] ?? null) !== null && $assigneeId !== $currentAssignee) {
+                    throw new ValidationException(['assignee_id' => ['This member\'s account is locked. Choose another member.']]);
+                }
+
                 return;
             }
         }

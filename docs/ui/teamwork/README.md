@@ -27,7 +27,7 @@ The browser filters names/descriptions and pages up to four cards (two below 900
 
 **Trace ID:** `teamwork.members`
 
-Members have admin/member/viewer roles. Team admins manage membership; the creator cannot be removed/demoted by the normal flow. Member biography and factual done/assigned counts are shown.
+Members have admin/member/viewer roles. Team admins manage membership; the creator cannot be removed/demoted by the normal flow. Member biography and factual done/assigned counts are shown. A locked account stays a member, shown as Locked, keeps the work already assigned to it and cannot be chosen for new work.
 
 | Layer | Entry point |
 | --- | --- |

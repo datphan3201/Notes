@@ -132,6 +132,6 @@ Under Open tasks, recently Done Tasks appear in a separate, independently paged 
 | Controller / service / domain | [TaskHistoryService.php · public function prune(](../../../backend/src/Application/Planning/TaskHistoryService.php#L30) |
 | Persistence | [PdoTaskHistoryRepository.php · public function historyTasks(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L32)<br>[PdoTaskHistoryRepository.php · public function archive(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoTaskHistoryRepository.php#L47) |
 | Relevant tests (not a pass claim) | [task-views.test.js · each view count](../../../frontend/tests/js/task-views.test.js#L59)<br>[task-views.test.js · history uses elapsed](../../../frontend/tests/js/task-views.test.js#L115)<br>[tasks-collection.test.js · test('Completed follows Today/Week/Next/All membership instead of leaking global completions'](../../../frontend/tests/js/tasks-collection.test.js#L12) |
-| HTTP | `GET /settings/history` (`settings.history`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L170) |
+| HTTP | `GET /settings/history` (`settings.history`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L172) |
 
 <!-- END GENERATED TRACE -->

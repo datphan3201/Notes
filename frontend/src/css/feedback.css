@@ -986,6 +986,70 @@
     background: var(--surface-soft);
     border-left: 3px solid var(--danger);
 }
+/* Resolving a report: actions to take, a reply, then Dismiss or Resolve. */
+.admin-resolution {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+.admin-resolution fieldset {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.admin-resolution legend {
+    margin-bottom: 4px;
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+}
+.admin-resolution .action-row {
+    justify-content: flex-end;
+}
+.admin-outcome {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.admin-settings-form + h3 {
+    margin: 22px 0 4px;
+}
+.admin-settings-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+/* Administrator activity: time, who, what. */
+.admin-activity {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.admin-activity li {
+    display: grid;
+    grid-template-columns: 11rem 10rem minmax(0, 1fr);
+    gap: 12px;
+    padding: 8px 0;
+    font-size: var(--font-size-ui);
+    border-bottom: 1px solid var(--border);
+}
+.admin-activity li:last-child {
+    border-bottom: 0;
+}
+@media (max-width: 760px) {
+    .admin-activity li {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+}
+
 /* Evidence thumbnails: chosen files in Settings, stored images in Administration. */
 .report-evidence-previews {
     display: flex;

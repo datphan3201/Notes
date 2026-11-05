@@ -20,9 +20,9 @@ AccountController renders page shell/bootstrap; page modules load their own data
 | --- | --- |
 | UI / DOM | [app.php · data-app-body](../../../frontend/src/views/layouts/app.php#L102)<br>[guest.php · $view-&gt;assets()](../../../frontend/src/views/layouts/guest.php#L12)<br>[icons.php · &lt;svg](../../../frontend/src/views/layouts/icons.php#L2) |
 | Browser logic | [app.js · DOMContentLoaded](../../../frontend/src/js/app.js#L90)<br>[navigation.js · export function initNavigation](../../../frontend/src/js/lib/navigation.js#L3) |
-| Controller / service / domain | [AccountController.php · private function renderApplicationPage(](../../../backend/src/Http/Controller/AccountController.php#L232) |
+| Controller / service / domain | [AccountController.php · private function renderApplicationPage(](../../../backend/src/Http/Controller/AccountController.php#L235) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_php_templates_preserve_dom_contract_and_escape_bootstrap_data(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L143) |
-| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L104) |
+| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L106) |
 
 ### Typography, themes and component CSS
 
@@ -63,7 +63,7 @@ Help opens the illustrated walkthrough beside Appearance. Topics/steps live in w
 | Controller / service / domain | [AccountService.php · public function dismissWalkthrough(](../../../backend/src/Application/Account/AccountService.php#L66) |
 | Persistence | [PdoAccountRepository.php · public function walkthroughDismissed(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L93)<br>[PdoAccountRepository.php · public function dismissWalkthrough(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L108) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_walkthrough_dismissal_is_owned_idempotent_and_survives_a_new_login(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L177)<br>[AccountHttpTest.php · public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L216) |
-| HTTP | `POST /api/v1/walkthrough/dismiss` (`api.walkthrough.dismiss`) → [AccountController::dismissWalkthrough](../../../backend/src/Http/Controller/AccountController.php#L147) |
+| HTTP | `POST /api/v1/walkthrough/dismiss` (`api.walkthrough.dismiss`) → [AccountController::dismissWalkthrough](../../../backend/src/Http/Controller/AccountController.php#L149) |
 
 ### Floating editor for Tasks, Goals and Milestones
 

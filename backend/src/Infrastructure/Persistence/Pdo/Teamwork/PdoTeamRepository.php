@@ -80,7 +80,7 @@ SQL);
     /** @return list<array<string, mixed>> members in stable user order, with identity */
     public function members(string $goalId, bool $forUpdate = false): array
     {
-        $statement = $this->pdo->prepare('SELECT m.*, u.display_name, u.email, u.avatar_path, u.biography FROM team_members m JOIN users u ON u.id = m.user_id WHERE m.team_goal_id = :goal ORDER BY m.user_id'.($forUpdate ? ' FOR UPDATE' : ''));
+        $statement = $this->pdo->prepare('SELECT m.*, u.display_name, u.email, u.avatar_path, u.biography, u.locked_at FROM team_members m JOIN users u ON u.id = m.user_id WHERE m.team_goal_id = :goal ORDER BY m.user_id'.($forUpdate ? ' FOR UPDATE' : ''));
         $statement->execute(['goal' => $goalId]);
 
         return $statement->fetchAll();

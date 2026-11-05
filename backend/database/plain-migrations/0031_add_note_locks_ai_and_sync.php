@@ -7,7 +7,7 @@ use Planner\Infrastructure\Database\Migration;
 return new class implements Migration {
     public function name(): string
     {
-        return '0030_add_note_locks_ai_and_sync';
+        return '0031_add_note_locks_ai_and_sync';
     }
 
     public function up(PDO $pdo): void

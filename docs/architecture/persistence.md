@@ -20,7 +20,7 @@
 | Teamwork | team_goals, team_members, team_tasks, team_messages; [Team repository](../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php) |
 | Infrastructure | attachments, pending_file_deletions, user_backgrounds, notifications, ai_actions, rate_limit_buckets, scheduled_jobs, schema_migrations |
 
-The offline sync feed reads notes by the `(user_id, updated_at, id)` cursor index (migration 0030); tombstoned rows report deletions. AI summaries and embeddings store a SHA-256 of the title/content they describe, so pinning or recolouring does not make them stale. Password-reset rows also hold a hashed 6-digit code and its attempt counter (migration 0031).
+The offline sync feed reads notes by the `(user_id, updated_at, id)` cursor index (migration 0031); tombstoned rows report deletions. AI summaries and embeddings store a SHA-256 of the title/content they describe, so pinning or recolouring does not make them stale. Password-reset rows also hold a hashed 6-digit code and its attempt counter (migration 0032).
 
 Dashboard roadmap selection is stored in user_preferences.dashboard_roadmap_goal_id with a composite owner/Goal foreign key; [migration 0026](../../backend/database/plain-migrations/0026_add_dashboard_roadmap_preference.php) is the DDL source. Archived Goals are excluded on read without silently selecting another Goal.
 

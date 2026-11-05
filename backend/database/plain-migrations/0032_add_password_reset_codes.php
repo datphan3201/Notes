@@ -7,7 +7,7 @@ use Planner\Infrastructure\Database\Migration;
 return new class implements Migration {
     public function name(): string
     {
-        return '0031_add_password_reset_codes';
+        return '0032_add_password_reset_codes';
     }
 
     public function up(PDO $pdo): void

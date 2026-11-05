@@ -6,7 +6,7 @@ Known problems and pending decisions that are **not** resolved. When an issue is
 
 ## Reporting rules
 
-- One entry per problem, with a stable ID (continue numbering from the highest ID ever used: next is ISSUE-036).
+- One entry per problem, with a stable ID (continue numbering from the highest ID ever used: next is ISSUE-037).
 - State affected UI/source, observed versus expected behavior, impact, evidence type (reproduced / source-inspected / report), limits, and the proposed next step.
 - Severity: **High** (data loss, security, unusable core flow), **Medium** (wrong behavior with a workaround), **Low** (cosmetic, documentation or operational friction).
 - Status: **Open**, **Needs decision** or **In progress**.

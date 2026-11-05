@@ -37,6 +37,8 @@ final readonly class UserReportService
         private TransactionManager $transactions,
         private UuidGenerator $uuid,
         private Clock $clock,
+        private AccountLockService $locks,
+        private AdminActionLog $log,
     ) {
     }
 
@@ -128,6 +130,7 @@ final readonly class UserReportService
             'status' => (string) $row['status'],
             'reason' => (string) $row['reason'],
             'response' => $row['response'] === null ? null : (string) $row['response'],
+            'actions' => ReportOutcome::decode($row['actions'] ?? null),
             'reported_email' => (string) $row['target_email'],
             'reporter' => ['id' => (string) $row['reporter_id'], 'display_name' => (string) $row['reporter_name'], 'email' => (string) $row['reporter_email']],
             'target' => $row['target_user_id'] === null ? null : [
@@ -146,19 +149,46 @@ final readonly class UserReportService
         ], $this->reports->list($status));
     }
 
-    public function resolve(int $adminId, string $reportId, string $status, ?string $response): void
+    /**
+     * Resolving locks the matched account now or confirms it is already locked; dismissing
+     * takes no action. The reporter is told which.
+     *
+     * @param list<string> $actions warn_account, lock_account
+     */
+    public function resolve(int $adminId, string $reportId, string $status, ?string $response, array $actions = []): void
     {
-        $this->transactions->run(function () use ($adminId, $reportId, $status, $response): void {
+        $this->transactions->run(function () use ($adminId, $reportId, $status, $response, $actions): void {
             $report = $this->reports->find($reportId, true) ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
             if ($report['status'] !== 'open') {
                 throw new ValidationException(['status' => ['This report was already handled.']]);
             }
-            $this->reports->resolve($reportId, $status, $response, $adminId, $this->now());
+            $targetId = $report['target_user_id'] === null ? null : (int) $report['target_user_id'];
+            if ($targetId === null && $actions !== []) {
+                throw new ValidationException(['actions' => ['No account uses the reported email, so there is nothing to act on.']]);
+            }
+            ReportOutcome::assertConsistent($status, $actions, $targetId !== null && $this->locks->isLocked($targetId));
+            $taken = [];
+            if ($targetId !== null && in_array('warn_account', $actions, true)) {
+                // The warning never names the reporter.
+                $this->notifications->notify($targetId, 'admin_warning', $reportId, [
+                    'title' => 'An administrator reviewed a report about your account',
+                    'body' => 'Please follow the community rules when working with other people.',
+                    'url' => '/',
+                ], always: true);
+                $taken[] = 'warn_account';
+                $this->log->record($adminId, 'account.warn', 'user', (string) $targetId, (string) $report['target_email']);
+            }
+            if ($targetId !== null && in_array('lock_account', $actions, true)) {
+                $this->locks->lock($adminId, $targetId, 'User report: '.mb_substr((string) $report['reason'], 0, 200, 'UTF-8'));
+                $taken[] = 'lock_account';
+            }
+            $this->reports->resolve($reportId, $status, $response, $adminId, $this->now(), $taken);
+            $this->log->record($adminId, 'user_report.'.$status, 'user_report', $reportId, $report['target_email'].($taken === [] ? '' : ' — '.ReportOutcome::describe($taken)));
             foreach ($this->accounts->adminIds() as $admin) {
                 $this->notifications->resolveSubject($admin, 'report_new', $reportId);
             }
             $this->notifications->notify((int) $report['reporter_id'], 'report_resolved', $reportId, [
-                'title' => $status === 'resolved' ? 'Your report was reviewed and action was taken' : 'Your report was reviewed',
+                'title' => ReportOutcome::title($status),
                 'body' => $response ?? (string) $report['target_email'],
                 'url' => '/settings/reports',
             ]);

@@ -275,10 +275,10 @@ SQL);
     }
 
     /** Locking bumps auth_version so every existing session is rejected. */
-    public function setLocked(int $userId, ?string $lockedAt, ?string $reason, string $timestamp): void
+    public function setLocked(int $userId, ?string $lockedAt, ?string $reason, string $timestamp, ?int $lockedBy = null): void
     {
-        $statement = $this->pdo->prepare('UPDATE users SET locked_at = :locked_at, locked_reason = :reason, auth_version = auth_version + IF(:locking = 1, 1, 0), updated_at = :now WHERE id = :id');
-        $statement->execute(['locked_at' => $lockedAt, 'reason' => $reason, 'locking' => $lockedAt === null ? 0 : 1, 'now' => $timestamp, 'id' => $userId]);
+        $statement = $this->pdo->prepare('UPDATE users SET locked_at = :locked_at, locked_reason = :reason, locked_by = :locked_by, auth_version = auth_version + IF(:locking = 1, 1, 0), updated_at = :now WHERE id = :id');
+        $statement->execute(['locked_at' => $lockedAt, 'reason' => $reason, 'locked_by' => $lockedAt === null ? null : $lockedBy, 'locking' => $lockedAt === null ? 0 : 1, 'now' => $timestamp, 'id' => $userId]);
     }
 
     public function setTwoFactor(int $userId, ?string $method, ?string $secret, string $timestamp): void
@@ -327,7 +327,7 @@ SQL);
     public function adminUserList(string $query): array
     {
         $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $query);
-        $statement = $this->pdo->prepare("SELECT id, email, display_name, role, locked_at, locked_reason, created_at FROM users WHERE email LIKE :q_email ESCAPE '!' OR display_name LIKE :q_name ESCAPE '!' ORDER BY (locked_at IS NULL), id LIMIT 100");
+        $statement = $this->pdo->prepare("SELECT u.id, u.email, u.display_name, u.role, u.locked_at, u.locked_reason, locker.display_name AS locked_by_name, u.created_at FROM users u LEFT JOIN users locker ON locker.id = u.locked_by WHERE u.email LIKE :q_email ESCAPE '!' OR u.display_name LIKE :q_name ESCAPE '!' ORDER BY (u.locked_at IS NULL), u.id LIMIT 100");
         $statement->execute(['q_email' => '%'.$escaped.'%', 'q_name' => '%'.$escaped.'%']);
 
         return $statement->fetchAll();

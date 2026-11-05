@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Planner\Http\Controller;
 
 use Planner\Application\Account\AuthService;
+use Planner\Application\Admin\AdminActionLog;
+use Planner\Application\Admin\ReportOutcome;
 use Planner\Application\Admin\ReportService;
+use Planner\Infrastructure\Persistence\Pdo\Admin\PdoSystemSettingRepository;
 use Planner\Http\Request;
 use Planner\Http\Response;
 use Planner\Http\Validation\InputValidator;
@@ -18,6 +21,7 @@ final readonly class AdminController
         private ReportService $reports,
         private InputValidator $input,
         private AccountController $pages,
+        private AdminActionLog $log,
     ) {
     }
 
@@ -44,7 +48,8 @@ final readonly class AdminController
     {
         $admin = $this->auth->requireAdmin();
         $input = $request->input();
-        $this->input->rejectUnknown($input, ['status', 'response']);
+        $this->input->rejectUnknown($input, ['status', 'response', 'actions']);
+        $actions = ReportOutcome::parseActions($input['actions'] ?? null, ['revoke_shares', 'warn_owner', 'lock_owner']);
         $errors = [];
         $status = $input['status'] ?? null;
         if (! in_array($status, ['resolved', 'dismissed'], true)) {
@@ -56,7 +61,7 @@ final readonly class AdminController
         }
         $this->input->throwIfErrors($errors);
         $response = is_string($response) && trim($response) !== '' ? trim($response) : null;
-        $this->reports->resolve($admin->id, $parameters['id'], (string) $status, $response);
+        $this->reports->resolve($admin->id, $parameters['id'], (string) $status, $response, $actions);
 
         return Response::json(['data' => ['status' => $status]]);
     }
@@ -94,14 +99,69 @@ final readonly class AdminController
 
     public function updateSettings(Request $request): Response
     {
-        $this->auth->requireAdmin();
+        $admin = $this->auth->requireAdmin();
         $input = $request->input();
-        $this->input->rejectUnknown($input, ['history_limit']);
-        $limit = $input['history_limit'] ?? null;
-        if (! is_int($limit) || $limit < 100 || $limit > 10000) {
-            $this->input->throwIfErrors(['history_limit' => ['Choose a limit from 100 to 10000 tasks.']]);
+        $this->input->rejectUnknown($input, ['history_limit', 'registration_mode']);
+        $changes = [];
+        $errors = [];
+        if (array_key_exists('history_limit', $input)) {
+            $limit = $input['history_limit'];
+            if (! is_int($limit) || $limit < 100 || $limit > 10000) {
+                $errors['history_limit'][] = 'Choose a limit from 100 to 10000 tasks.';
+            } else {
+                $changes['history_limit'] = $limit;
+            }
+        }
+        if (array_key_exists('registration_mode', $input)) {
+            $mode = $input['registration_mode'];
+            if (! in_array($mode, PdoSystemSettingRepository::REGISTRATION_MODES, true)) {
+                $errors['registration_mode'][] = 'Choose open, invite or closed.';
+            } else {
+                $changes['registration_mode'] = $mode;
+            }
+        }
+        $this->input->throwIfErrors($errors);
+
+        return Response::json(['data' => $this->reports->updateSettings($admin->id, $changes)]);
+    }
+
+    public function actions(Request $request): Response
+    {
+        $this->auth->requireAdmin();
+
+        return Response::json(['data' => $this->log->recent()]);
+    }
+
+    public function invites(Request $request): Response
+    {
+        $this->auth->requireAdmin();
+
+        return Response::json(['data' => $this->reports->invites()]);
+    }
+
+    public function invite(Request $request): Response
+    {
+        $admin = $this->auth->requireAdmin();
+
+        return Response::json(['data' => $this->reports->invite($admin->id, $this->email($request))], 201);
+    }
+
+    public function removeInvite(Request $request): Response
+    {
+        $admin = $this->auth->requireAdmin();
+
+        return Response::json(['data' => $this->reports->removeInvite($admin->id, $this->email($request))]);
+    }
+
+    private function email(Request $request): string
+    {
+        $input = $request->input();
+        $this->input->rejectUnknown($input, ['email']);
+        $email = is_string($input['email'] ?? null) ? strtolower(trim($input['email'])) : '';
+        if (mb_strlen($email, 'UTF-8') > 254 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $this->input->throwIfErrors(['email' => ['Enter a valid email address.']]);
         }
 
-        return Response::json(['data' => $this->reports->updateSettings((int) $limit)]);
+        return $email;
     }
 }
