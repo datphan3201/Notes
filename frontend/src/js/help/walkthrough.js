@@ -1,8 +1,12 @@
 import { post } from '../lib/http.js';
 import { RecoveryStore } from '../lib/recovery-store.js';
 import { walkthroughSteps } from './walkthrough-content.js';
-import { visualThemes } from '../settings/theme-catalog.js';
 import { t } from '../lib/i18n.js';
+
+/** The screenshot shown for a step, in the given interface language. */
+export function walkthroughImage(step, language) {
+    return `/guide/${language === 'vi' ? 'vi' : 'en'}/${step.shot}.webp`;
+}
 
 export function initWalkthrough({ ready = Promise.resolve() } = {}) {
     const dialog = document.querySelector('[data-walkthrough]');
@@ -12,7 +16,6 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
     // Steps carry both languages; the account language picks one.
     const language = bootstrap.preferences?.locale === 'vi' ? 'vi' : 'en';
     const pick = (text) => (typeof text === 'string' ? text : text[language] || text.en);
-    const themeImages = Object.fromEntries(visualThemes.map((theme) => [theme.id, theme.image]));
 
     const topic = dialog.querySelector('[data-walkthrough-topic]');
     const title = dialog.querySelector('[data-walkthrough-title]');
@@ -80,14 +83,14 @@ export function initWalkthrough({ ready = Promise.resolve() } = {}) {
             }),
         );
         const image = dialog.querySelector('[data-walkthrough-image]');
-        // Theme scenery illustrates each topic; it is decorative, so alt stays empty.
-        image.src = step.image || themeImages[step.theme] || themeImages.mountain;
+        // A real screenshot of the topic, in the account's language.
+        image.src = walkthroughImage(step, language);
         image.alt = step.imageAlt ? pick(step.imageAlt) : '';
         const caption = dialog.querySelector('[data-walkthrough-caption]');
         caption.textContent = step.imageCaption ? pick(step.imageCaption) : '';
         caption.hidden = !step.imageCaption;
         back.disabled = index === 0;
-        next.textContent = index === walkthroughSteps.length - 1 ? t('Finish') : t('Next');
+        next.textContent = index === walkthroughSteps.length - 1 ? t('Finish') : t('Next step');
         status.textContent = `${t('Step')} ${index + 1} / ${walkthroughSteps.length}: ${pick(step.title)}`;
         dialog.querySelector('[data-walkthrough-content]').scrollTop = 0;
         if (focusTitle) title.focus({ preventScroll: true });

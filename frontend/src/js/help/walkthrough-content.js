@@ -1,407 +1,260 @@
-// Guide copy follows the browser workflows, in English and Vietnamese.
-// `theme` picks the illustration; a step may still set its own `image`.
+// The short tour behind the ? button, in English and Vietnamese. Each step shows a real
+// screenshot (`shot`, from backend/public/guide/<language>/<shot>.webp, made by tools/guide);
+// the full guide with every use case is the /help page.
 export const walkthroughSteps = [
     {
         id: 'welcome',
-        theme: 'mountain',
+        shot: 'dashboard',
         group: { en: 'Getting started', vi: 'Bắt đầu' },
-        title: { en: 'Make Planner your own', vi: 'Làm quen với Planner' },
+        title: { en: 'Welcome to Planner', vi: 'Chào mừng bạn đến với Planner' },
         intro: {
-            en: 'Turn goals into small steps, keep habits going, and look back on what changed.',
-            vi: 'Biến mục tiêu thành những bước nhỏ, duy trì thói quen và nhìn lại những gì đã thay đổi.',
+            en: 'Planner turns your goals into small steps you can take today, and keeps your habits, notes and look-backs in the same place.',
+            vi: 'Planner biến mục tiêu thành những bước nhỏ làm được hôm nay, và giữ thói quen, ghi chú, những lần nhìn lại ở cùng một nơi.',
         },
         instructions: [
             {
-                en: 'The sidebar opens Dashboard, Goals, Tasks, Calendar, Habits, Notes, Reviews and Teamwork. On a small screen, open the menu button first.',
-                vi: 'Thanh bên mở Dashboard, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú, Nhìn lại và Làm việc nhóm. Trên màn hình nhỏ, hãy mở nút menu trước.',
+                en: 'The sidebar opens Dashboard, Goals, Tasks, Calendar, Habits, Notes, Reviews and Teamwork. On a phone, open the menu button first.',
+                vi: 'Thanh bên mở Tổng quan, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú, Đánh giá và Làm việc nhóm. Trên điện thoại, mở nút menu trước.',
             },
             {
-                en: 'The bell shows invitations and due reminders. The ? button opens this guide at any time.',
-                vi: 'Chuông hiển thị lời mời và nhắc hẹn đến giờ. Nút ? mở lại hướng dẫn này bất cứ lúc nào.',
-            },
-            {
-                en: 'Change the language, theme and background in Settings → Appearance.',
-                vi: 'Đổi ngôn ngữ, giao diện và hình nền trong Cài đặt → Giao diện.',
+                en: 'The bell shows invitations and reminders, ? reopens this tour, and the sparkle button at the bottom right opens the AI assistant.',
+                vi: 'Chuông hiện lời mời và nhắc hẹn, nút ? mở lại vòng giới thiệu này, nút lấp lánh ở góc dưới bên phải mở trợ lý AI.',
             },
         ],
+        imageAlt: {
+            en: 'The Dashboard with the goal roadmap, today’s tasks and habits',
+            vi: 'Trang Tổng quan với lộ trình mục tiêu, việc hôm nay và thói quen',
+        },
     },
     {
-        id: 'capture',
-        theme: 'mountain',
+        id: 'structure',
+        shot: 'roadmap',
         group: { en: 'Getting started', vi: 'Bắt đầu' },
-        title: { en: 'Capture first, add detail later', vi: 'Ghi lại trước, bổ sung chi tiết sau' },
+        title: { en: 'How your plans fit together', vi: 'Kế hoạch được sắp xếp thế nào' },
         intro: {
-            en: 'Start with what you know. Every item can be enriched once it becomes clearer.',
-            vi: 'Bắt đầu với những gì bạn đã biết. Mọi mục đều có thể bổ sung khi bạn rõ hơn.',
+            en: 'Area → Goal → Milestone → Task. A goal is an outcome, milestones are its stages and tasks are the concrete steps.',
+            vi: 'Lĩnh vực → Mục tiêu → Cột mốc → Công việc. Mục tiêu là kết quả muốn đạt, cột mốc là các chặng, công việc là từng bước cụ thể.',
         },
         instructions: [
             {
-                en: 'Use New task for something actionable, New goal for an outcome you want, and New note for ideas or research.',
-                vi: 'Dùng Công việc mới cho việc cần làm, Mục tiêu mới cho kết quả bạn muốn đạt, và Ghi chú mới cho ý tưởng hay tài liệu.',
+                en: 'Each task lives in one place: a milestone, a goal or the Inbox. Habits and notes stand on their own and can be linked to a goal.',
+                vi: 'Mỗi công việc chỉ nằm ở một nơi: một cột mốc, một mục tiêu hoặc Hộp thư đến. Thói quen và ghi chú độc lập và có thể gắn với một mục tiêu.',
             },
             {
-                en: 'Creation dialogs keep what you typed when you close them, so you can come back and finish.',
-                vi: 'Hộp thoại tạo mới giữ lại nội dung khi bạn đóng, để bạn quay lại hoàn tất sau.',
+                en: 'Progress is calculated for you, but you decide when a goal or milestone is complete.',
+                vi: 'Tiến độ được tính sẵn, nhưng bạn là người quyết định khi nào mục tiêu hay cột mốc hoàn thành.',
             },
         ],
+        imageAlt: {
+            en: 'A goal roadmap with four milestones',
+            vi: 'Lộ trình của một mục tiêu với bốn cột mốc',
+        },
     },
     {
-        id: 'dashboard-today',
-        theme: 'ocean',
-        group: { en: 'Dashboard', vi: 'Dashboard' },
-        title: { en: 'See what needs attention today', vi: 'Xem việc cần làm hôm nay' },
+        id: 'dashboard',
+        shot: 'dashboard-week',
+        group: { en: 'Every day', vi: 'Mỗi ngày' },
+        title: { en: 'Plan your day and week', vi: 'Lên kế hoạch ngày và tuần' },
         intro: {
-            en: 'Dashboard → Today brings daily work and the weekly plan together. Overdue reminders quiet down when tasks enter History.',
-            vi: 'Dashboard → Hôm nay đặt công việc trong ngày cạnh kế hoạch tuần. Nhắc quá hạn tự ẩn khi công việc vào Lịch sử.',
+            en: 'The Dashboard shows today’s work, your habits and the plan for the week.',
+            vi: 'Tổng quan cho biết việc hôm nay, thói quen và kế hoạch của tuần.',
         },
         instructions: [
             {
-                en: 'Today and This week are checklists. Use Add for today on a weekly task without changing its dates; tick either list to complete it.',
-                vi: 'Hôm nay và Tuần này là danh sách kiểm tra. Chọn Thêm vào hôm nay ở một việc trong tuần mà không đổi ngày; đánh dấu ở một trong hai danh sách để hoàn thành.',
+                en: 'Daily: Add task picks today’s work; click the circle in front of a task to complete it.',
+                vi: 'Hằng ngày: Thêm công việc để chọn việc hôm nay; bấm vòng tròn trước tên việc để hoàn thành.',
             },
             {
-                en: 'The habit streak counts a day only when every daily habit was done or resting, with at least one done.',
-                vi: 'Chuỗi thói quen chỉ tính một ngày khi mọi thói quen hằng ngày đều đã làm hoặc đang nghỉ, và có ít nhất một thói quen đã làm.',
-            },
-            {
-                en: 'Today and This week each show progress above their checklist. Filters do not change the progress totals.',
-                vi: 'Hôm nay và Tuần này đều có tiến độ phía trên danh sách. Bộ lọc không thay đổi tổng tiến độ.',
+                en: 'Weekly lists the tasks picked for this week; + brings one into today. Activity shows your year at a glance.',
+                vi: 'Hằng tuần liệt kê việc đã chọn cho tuần; dấu + đưa một việc vào hôm nay. Hoạt động cho thấy cả năm của bạn.',
             },
         ],
-    },
-    {
-        id: 'dashboard-week',
-        theme: 'ocean',
-        group: { en: 'Dashboard', vi: 'Dashboard' },
-        title: {
-            en: 'Plan the week and read your activity',
-            vi: 'Lên kế hoạch tuần và xem hoạt động',
+        imageAlt: {
+            en: 'The Weekly tab of the Dashboard',
+            vi: 'Thẻ Hằng tuần của trang Tổng quan',
         },
-        intro: {
-            en: 'This week shows the tasks and milestones you pinned for the week and every habit with its own streak.',
-            vi: 'Tuần này hiển thị công việc và cột mốc bạn đã ghim cho tuần, cùng mọi thói quen với chuỗi riêng.',
-        },
-        instructions: [
-            {
-                en: 'Choose the roadmap below the header; the selection is saved to your account. The 30-day Activity card opens the full yearly view.',
-                vi: 'Chọn roadmap dưới header; lựa chọn được lưu theo tài khoản. Thẻ Hoạt động 30 ngày mở được bảng cả năm.',
-            },
-            {
-                en: 'Activity colours each day by completed tasks, checklist items, habit check-ins and milestones. Hover a day for details.',
-                vi: 'Hoạt động tô màu từng ngày theo số việc, mục kiểm tra, lần đánh dấu thói quen và cột mốc đã hoàn thành. Rê chuột lên một ngày để xem chi tiết.',
-            },
-        ],
-    },
-    {
-        id: 'goals',
-        theme: 'mountain',
-        group: { en: 'Goals', vi: 'Mục tiêu' },
-        title: { en: 'Give your goals a home', vi: 'Sắp xếp mục tiêu theo lĩnh vực' },
-        intro: {
-            en: 'Areas group goals by part of life. Rename the starting Areas to fit you.',
-            vi: 'Lĩnh vực nhóm các mục tiêu theo từng mảng cuộc sống. Hãy đổi tên các lĩnh vực ban đầu cho phù hợp.',
-        },
-        instructions: [
-            {
-                en: 'Manage areas renames, adds or removes an Area. An Area can be removed once its goals have moved or been removed.',
-                vi: 'Quản lý lĩnh vực cho phép đổi tên, thêm hoặc xóa lĩnh vực. Chỉ xóa được lĩnh vực khi không còn mục tiêu bên trong.',
-            },
-            {
-                en: 'New goal needs a name and an Area; the desired outcome and completion criteria are optional.',
-                vi: 'Mục tiêu mới cần tên và lĩnh vực; kết quả mong muốn và tiêu chí hoàn thành có thể bổ sung sau.',
-            },
-            {
-                en: 'Switch between Areas and Timeline. Main goal shows your most important open goal.',
-                vi: 'Chuyển giữa Lĩnh vực và Dòng thời gian. Mục tiêu chính là mục tiêu quan trọng nhất chưa hoàn thành.',
-            },
-        ],
-    },
-    {
-        id: 'roadmap',
-        theme: 'mountain',
-        group: { en: 'Goals', vi: 'Mục tiêu' },
-        title: { en: 'Shape a goal’s roadmap', vi: 'Xây dựng lộ trình cho mục tiêu' },
-        intro: {
-            en: 'Open a goal to see its milestones leading to the goal name.',
-            vi: 'Mở một mục tiêu để thấy các cột mốc dẫn tới tên mục tiêu.',
-        },
-        instructions: [
-            {
-                en: 'Select the goal name for its information: Edit goal, Strategy, Related work and Tags.',
-                vi: 'Chọn tên mục tiêu để xem thông tin: Sửa mục tiêu, Chiến lược, Công việc liên quan và Thẻ.',
-            },
-            {
-                en: 'Related work shows sub-goals (add one there), direct tasks, repeating work, habits and other goals this goal supports.',
-                vi: 'Công việc liên quan hiển thị mục tiêu con (có thể thêm ngay tại đó), việc trực tiếp, việc lặp lại, thói quen và các mục tiêu khác mà mục tiêu này hỗ trợ.',
-            },
-            {
-                en: 'Remove goal removes the goal with its sub-goals, milestones and tasks after you confirm.',
-                vi: 'Xóa mục tiêu sẽ xóa cả mục tiêu con, cột mốc và công việc bên trong sau khi bạn xác nhận.',
-            },
-        ],
-    },
-    {
-        id: 'milestones',
-        theme: 'mountain',
-        group: { en: 'Goals', vi: 'Mục tiêu' },
-        title: { en: 'Work inside a milestone', vi: 'Làm việc trong một cột mốc' },
-        intro: {
-            en: 'Select a milestone card to see its tasks.',
-            vi: 'Chọn một thẻ cột mốc để xem các công việc của nó.',
-        },
-        instructions: [
-            {
-                en: 'Add task, Edit, Remove and Select for week sit at the top. Complete milestone when its work is done.',
-                vi: 'Thêm công việc, Sửa, Xóa và Chọn cho tuần nằm ở phía trên. Hoàn thành cột mốc khi công việc đã xong.',
-            },
-            {
-                en: 'Prerequisites and related goals: a milestone can wait for others to finish first, and can also support other goals.',
-                vi: 'Điều kiện và mục tiêu liên quan: một cột mốc có thể chờ cột mốc khác xong trước, và có thể hỗ trợ thêm mục tiêu khác.',
-            },
-            {
-                en: 'Goal progress is the average of its sub-goals, milestones and direct tasks; a milestone counts once you complete it.',
-                vi: 'Tiến độ mục tiêu là trung bình của mục tiêu con, cột mốc và việc trực tiếp; một cột mốc được tính khi bạn hoàn thành nó.',
-            },
-        ],
     },
     {
         id: 'tasks',
-        theme: 'forest',
-        group: { en: 'Tasks', vi: 'Công việc' },
+        shot: 'tasks',
+        group: { en: 'Every day', vi: 'Mỗi ngày' },
         title: { en: 'Capture and find tasks', vi: 'Ghi lại và tìm công việc' },
         intro: {
-            en: 'New task can go to your Inbox or straight into a goal or milestone.',
-            vi: 'Công việc mới có thể vào Hộp chờ hoặc vào thẳng một mục tiêu hay cột mốc.',
+            en: 'New task captures anything in seconds: name first, details later.',
+            vi: 'Công việc mới ghi lại mọi việc trong vài giây: tên trước, chi tiết sau.',
         },
         instructions: [
             {
-                en: 'The calendar icon sets a due date, the clock a reminder, and the arrows a repeat. Drag the picker by its handle if it covers something.',
-                vi: 'Biểu tượng lịch đặt hạn, đồng hồ đặt nhắc hẹn, mũi tên đặt lặp lại. Kéo hộp chọn bằng thanh nắm nếu nó che mất nội dung.',
+                en: 'Today, Next, This week, Backlog, Overdue and All show the same tasks by time; Repeating holds your repeating series.',
+                vi: 'Hôm nay, Sắp tới, Tuần này, Chưa lên lịch, Quá hạn và Tất cả xem công việc theo thời gian; Lặp lại chứa các chuỗi lặp.',
             },
             {
-                en: 'Today, Next, This week (pinned), Backlog, All and Repeating filter the list; Filter and search adds status, tag and name.',
-                vi: 'Hôm nay, Sắp tới, Tuần này (đã ghim), Tồn đọng, Tất cả và Lặp lại giúp lọc danh sách; Lọc và tìm kiếm thêm trạng thái, thẻ và tên.',
-            },
-            {
-                en: 'Remove takes a task off your lists. Completed tasks move to Task history after the time set in Settings.',
-                vi: 'Xóa sẽ đưa công việc ra khỏi danh sách. Việc đã hoàn thành chuyển vào Lịch sử công việc sau thời gian bạn đặt trong Cài đặt.',
+                en: 'Click a task’s name to edit it on the side; the ⋯ menu sets a due date, reminder or repeat.',
+                vi: 'Bấm tên việc để sửa ngay bên cạnh; menu ⋯ đặt hạn, nhắc hẹn hoặc lặp lại.',
             },
         ],
-    },
-    {
-        id: 'task-detail',
-        theme: 'forest',
-        group: { en: 'Tasks', vi: 'Công việc' },
-        title: { en: 'Clarify and finish a task', vi: 'Làm rõ và hoàn thành công việc' },
-        intro: {
-            en: 'Open a task for its details, notes and checklist.',
-            vi: 'Mở một công việc để xem chi tiết, ghi chú và danh sách kiểm tra.',
+        imageAlt: {
+            en: 'The Tasks page grouped by goal',
+            vi: 'Trang Công việc nhóm theo mục tiêu',
         },
-        instructions: [
-            {
-                en: 'Edit task changes the name, criteria, dates and times (in your local time). Tags save as soon as you tick them.',
-                vi: 'Sửa công việc thay đổi tên, tiêu chí, ngày và giờ (theo giờ địa phương). Thẻ được lưu ngay khi bạn chọn.',
-            },
-            {
-                en: 'The checklist can be added to, renamed and cleaned up. Completing a task with open items asks you first.',
-                vi: 'Danh sách kiểm tra có thể thêm, đổi tên và xóa mục. Hoàn thành công việc khi còn mục chưa xong sẽ được hỏi lại.',
-            },
-            {
-                en: 'Related work links other goals this task also moves forward.',
-                vi: 'Công việc liên quan liên kết các mục tiêu khác mà công việc này cũng góp phần.',
-            },
-        ],
-    },
-    {
-        id: 'recurring',
-        theme: 'forest',
-        group: { en: 'Tasks', vi: 'Công việc' },
-        title: { en: 'Repeat work on a schedule', vi: 'Lặp lại công việc theo lịch' },
-        intro: {
-            en: 'The repeat icon creates a series that adds a task for each date.',
-            vi: 'Biểu tượng lặp lại tạo một chuỗi, tự thêm công việc cho từng ngày.',
-        },
-        instructions: [
-            {
-                en: 'Choose Daily, Weekdays, Weekly, Monthly, Yearly or Custom. A reminder repeats at the same time on every occurrence.',
-                vi: 'Chọn Hằng ngày, Ngày trong tuần, Hằng tuần, Hằng tháng, Hằng năm hoặc Tùy chỉnh. Nhắc hẹn lặp lại vào cùng giờ ở mỗi lần.',
-            },
-            {
-                en: 'Tasks → Repeating lists every series. Pause, Resume or End it there.',
-                vi: 'Công việc → Lặp lại liệt kê mọi chuỗi. Tạm dừng, Tiếp tục hoặc Kết thúc tại đó.',
-            },
-        ],
     },
     {
         id: 'calendar',
-        theme: 'mountain',
-        group: { en: 'Calendar', vi: 'Lịch' },
-        title: { en: 'Plan on the calendar', vi: 'Lên kế hoạch trên lịch' },
+        shot: 'calendar',
+        group: { en: 'Every day', vi: 'Mỗi ngày' },
+        title: { en: 'Move work on the Calendar', vi: 'Dời việc trên Lịch' },
         intro: {
-            en: 'See every Task date and every Milestone and Goal deadline by month or week.',
-            vi: 'Xem mọi ngày của công việc và mọi hạn chót của cột mốc, mục tiêu theo tháng hoặc tuần.',
+            en: 'The Calendar shows the dates of your tasks, milestones and goals by month or week.',
+            vi: 'Lịch hiện ngày của công việc, cột mốc và mục tiêu theo tháng hoặc tuần.',
         },
         instructions: [
             {
-                en: 'Drag an item to another day. With the keyboard, focus it and press Alt with an arrow key; on a phone, use the calendar button beside it in the day list.',
-                vi: 'Kéo một mục sang ngày khác. Với bàn phím, chọn mục đó rồi nhấn Alt cùng phím mũi tên; trên điện thoại, dùng nút lịch bên cạnh mục trong danh sách của ngày.',
+                en: 'Drag an item to another day, or use Move to another day on a phone. A work slot keeps its times.',
+                vi: 'Kéo một mục sang ngày khác, hoặc dùng Dời sang ngày khác trên điện thoại. Khung giờ làm việc giữ nguyên giờ.',
             },
             {
-                en: 'Moving a day moves every date of that item on it; a scheduled block keeps its times.',
-                vi: 'Dời một ngày sẽ dời mọi mốc của mục đó trong ngày ấy; khối giờ đã lên lịch giữ nguyên giờ.',
-            },
-            {
-                en: 'Double-click a day, or use Add task, to create a Task due that day. Drag a Task from Unscheduled to give it a due date.',
-                vi: 'Nhấp đúp vào một ngày, hoặc dùng Thêm công việc, để tạo công việc có hạn ngày đó. Kéo công việc từ Chưa có lịch để đặt hạn.',
+                en: 'Unscheduled lists tasks without a date: drag one onto a day to give it a due date.',
+                vi: 'Chưa có lịch liệt kê việc chưa có ngày: kéo vào một ngày để đặt hạn.',
             },
         ],
+        imageAlt: { en: 'The month calendar', vi: 'Lịch theo tháng' },
     },
     {
         id: 'habits',
-        theme: 'forest',
-        group: { en: 'Habits', vi: 'Thói quen' },
-        title: { en: 'Keep a habit going', vi: 'Duy trì thói quen' },
+        shot: 'habits',
+        group: { en: 'Every day', vi: 'Mỗi ngày' },
+        title: { en: 'Keep your habits', vi: 'Giữ thói quen' },
         intro: {
-            en: 'Create a daily or weekly habit, optionally linked to a goal and tagged.',
-            vi: 'Tạo thói quen hằng ngày hoặc hằng tuần, có thể gắn với một mục tiêu và gắn thẻ.',
+            en: 'Tick a habit each day to grow your streak.',
+            vi: 'Đánh dấu thói quen mỗi ngày để kéo dài chuỗi ngày.',
         },
         instructions: [
             {
-                en: 'The round tick opens Mark today as done, and Rest day for one of the next 3 days. Today and past days cannot become rest days.',
-                vi: 'Nút tích tròn mở Đánh dấu hoàn thành hôm nay, và Ngày nghỉ cho một trong 3 ngày tới. Không đặt ngày nghỉ cho hôm nay hoặc ngày đã qua.',
+                en: 'A habit is daily or 1–7 days a week. Click a day on its strip to check in a past day.',
+                vi: 'Thói quen có thể hằng ngày hoặc 1–7 ngày mỗi tuần. Bấm vào một ngày trên dải lịch để đánh dấu bù ngày đã qua.',
             },
             {
-                en: 'A rest day keeps your streak but never adds to it. Cancel a future rest day to move it.',
-                vi: 'Ngày nghỉ giữ chuỗi nhưng không cộng thêm. Hủy một ngày nghỉ tương lai để chuyển sang ngày khác.',
-            },
-            {
-                en: 'Dots show the last 7 days and the next 3; tap a past day to fix a check-in. Edit and Delete sit beside each habit.',
-                vi: 'Các chấm hiển thị 7 ngày qua và 3 ngày tới; chạm vào ngày đã qua để sửa đánh dấu. Sửa và Xóa nằm cạnh mỗi thói quen.',
+                en: 'Busy? More options → Rest day keeps the streak for tomorrow or the next few days.',
+                vi: 'Bận? Tùy chọn khác → Ngày nghỉ giữ chuỗi cho ngày mai hoặc vài ngày tới.',
             },
         ],
+        imageAlt: { en: 'The Habits page', vi: 'Trang Thói quen' },
     },
     {
         id: 'notes',
-        theme: 'stars',
+        shot: 'notes',
         group: { en: 'Notes', vi: 'Ghi chú' },
-        title: { en: 'Write and keep ideas', vi: 'Viết và lưu giữ ý tưởng' },
+        title: { en: 'Write notes', vi: 'Viết ghi chú' },
         intro: {
-            en: 'Notes save automatically once the server confirms them.',
-            vi: 'Ghi chú tự lưu khi máy chủ xác nhận.',
+            en: 'Notes save as you type. Add tick boxes, colours, labels and files, and pin what matters.',
+            vi: 'Ghi chú tự lưu khi bạn gõ. Thêm ô đánh dấu, màu, nhãn và tệp, ghim những gì quan trọng.',
         },
         instructions: [
             {
-                en: 'Add tags, colours, a pin and files. Check box turns lines into tickable items.',
-                vi: 'Thêm thẻ, màu, ghim và tệp đính kèm. Nút Ô đánh dấu biến dòng thành mục có thể tích.',
+                en: 'Linked to attaches a note to a goal or task. Ask AI answers questions from your notes and shows its sources.',
+                vi: 'Liên kết với gắn ghi chú vào một mục tiêu hay công việc. Hỏi AI trả lời từ ghi chú của bạn và chỉ rõ nguồn.',
             },
             {
-                en: 'Search, sort and filter by tag. If a draft was left unsaved, you can recover or discard it.',
-                vi: 'Tìm kiếm, sắp xếp và lọc theo thẻ. Nếu còn bản nháp chưa lưu, bạn có thể khôi phục hoặc bỏ đi.',
+                en: 'Notes also work offline; changes sync when you reconnect.',
+                vi: 'Ghi chú dùng được cả khi mất mạng; thay đổi tự đồng bộ khi có mạng lại.',
             },
         ],
+        imageAlt: { en: 'The Notes page', vi: 'Trang Ghi chú' },
     },
     {
         id: 'sharing',
-        theme: 'stars',
+        shot: 'note-share',
         group: { en: 'Notes', vi: 'Ghi chú' },
-        title: { en: 'Share a note', vi: 'Chia sẻ ghi chú' },
+        title: { en: 'Share or lock a note', vi: 'Chia sẻ hoặc khóa ghi chú' },
         intro: {
-            en: 'Share invites someone by email to view or edit a note.',
-            vi: 'Chia sẻ mời một người qua email để xem hoặc sửa ghi chú.',
+            en: 'Share a note with other Planner users to read or edit it together live, or protect it with its own password.',
+            vi: 'Chia sẻ ghi chú với người dùng Planner khác để cùng xem hoặc cùng sửa trực tiếp, hoặc bảo vệ nó bằng mật khẩu riêng.',
         },
         instructions: [
             {
-                en: 'They see it under Shared with me after accepting. Change their permission or remove them at any time.',
-                vi: 'Họ thấy ghi chú trong mục Được chia sẻ với tôi sau khi chấp nhận. Bạn có thể đổi quyền hoặc gỡ họ bất cứ lúc nào.',
+                en: 'Share → enter emails → View only or Can view and edit → Invite. They accept from the bell.',
+                vi: 'Chia sẻ → nhập email → Chỉ xem hoặc Xem và chỉnh sửa → Mời. Người nhận chấp nhận từ chuông thông báo.',
             },
             {
-                en: 'A shared note can be left or reported to the administrator.',
-                vi: 'Bạn có thể rời một ghi chú được chia sẻ hoặc báo cáo cho quản trị viên.',
+                en: 'Password locks one note. It cannot be recovered, so keep it somewhere safe.',
+                vi: 'Mật khẩu khóa riêng một ghi chú. Không thể lấy lại mật khẩu này, hãy cất giữ cẩn thận.',
             },
         ],
+        imageAlt: { en: 'The share dialog of a note', vi: 'Hộp thoại chia sẻ ghi chú' },
     },
     {
         id: 'reviews',
-        theme: 'pisces',
-        group: { en: 'Reviews', vi: 'Nhìn lại' },
-        title: { en: 'Look back and plan ahead', vi: 'Nhìn lại và lên kế hoạch' },
+        shot: 'reviews',
+        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        title: { en: 'Look back with Reviews', vi: 'Nhìn lại với Đánh giá' },
         intro: {
-            en: 'A review captures the facts of a day, week or month, plus your reflections.',
-            vi: 'Một lần nhìn lại ghi lại dữ kiện của một ngày, tuần hoặc tháng, cùng suy ngẫm của bạn.',
+            en: 'A daily, weekly or monthly review gathers what you did; add what went well, what went wrong and what to change next.',
+            vi: 'Bản đánh giá ngày, tuần hoặc tháng tổng hợp những gì bạn đã làm; ghi thêm điều đã làm tốt, điều chưa tốt và điều cần thay đổi.',
         },
         instructions: [
             {
-                en: 'Facts are a snapshot; Refresh facts updates them. Write the four reflections and Save.',
-                vi: 'Dữ kiện là ảnh chụp tại một thời điểm; Làm mới dữ kiện để cập nhật. Viết bốn phần suy ngẫm rồi Lưu.',
-            },
-            {
-                en: 'Finalize makes a review read-only until you Reopen it. Delete removes it for good.',
-                vi: 'Hoàn tất khiến bản nhìn lại chỉ đọc cho tới khi bạn Mở lại. Xóa sẽ xóa vĩnh viễn.',
+                en: 'Refresh facts updates the figures and keeps your words; Finalize closes the review.',
+                vi: 'Cập nhật dữ liệu làm mới số liệu mà vẫn giữ phần bạn viết; Hoàn tất để chốt bản đánh giá.',
             },
         ],
+        imageAlt: { en: 'A weekly review', vi: 'Một bản đánh giá tuần' },
     },
     {
         id: 'teamwork',
-        theme: 'ocean',
-        group: { en: 'Teamwork', vi: 'Làm việc nhóm' },
-        title: { en: 'Work towards a shared goal', vi: 'Cùng hướng tới mục tiêu chung' },
+        shot: 'teamwork',
+        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        title: { en: 'Work as a team', vi: 'Làm việc nhóm' },
         intro: {
-            en: 'A team goal has members, assigned tasks and a chat.',
-            vi: 'Mục tiêu nhóm có thành viên, công việc được giao và khung trò chuyện.',
+            en: 'A team goal has members, assigned tasks, progress and a chat, separate from your personal plans.',
+            vi: 'Mục tiêu nhóm có thành viên, công việc được giao, tiến độ và trò chuyện, tách khỏi kế hoạch cá nhân.',
         },
         instructions: [
             {
-                en: 'Invite members as Viewer, Editor or Admin. They join after accepting the invitation.',
-                vi: 'Mời thành viên với vai trò Người xem, Người sửa hoặc Quản trị. Họ tham gia sau khi chấp nhận lời mời.',
-            },
-            {
-                en: 'Assign tasks with due dates and reminders; members see completion per person.',
-                vi: 'Giao việc kèm hạn và nhắc hẹn; mọi người thấy mức hoàn thành của từng thành viên.',
+                en: 'Roles: Admin manages members, Editor manages tasks, Viewer reads and updates their own tasks.',
+                vi: 'Vai trò: Quản trị quản lý thành viên, Biên tập quản lý công việc, Người xem chỉ xem và cập nhật việc của mình.',
             },
         ],
+        imageAlt: { en: 'A team goal', vi: 'Một mục tiêu nhóm' },
     },
     {
-        id: 'reminders',
-        theme: 'stars',
-        group: { en: 'Notifications', vi: 'Thông báo' },
-        title: { en: 'Stay on top of reminders', vi: 'Không bỏ lỡ nhắc hẹn' },
+        id: 'assistant',
+        shot: 'assistant',
+        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        title: { en: 'Ask the AI assistant', vi: 'Nhờ trợ lý AI' },
         intro: {
-            en: 'Due reminders and invitations appear in the bell.',
-            vi: 'Nhắc hẹn đến giờ và lời mời xuất hiện trong chuông thông báo.',
+            en: 'Ask about your plans, or have the assistant create, move or reschedule things for you.',
+            vi: 'Hỏi về kế hoạch, hoặc nhờ trợ lý tạo, di chuyển hay dời lịch giúp bạn.',
         },
         instructions: [
             {
-                en: 'Opening a reminder dismisses it; Mark all read clears the bell. A new reminder time brings it back.',
-                vi: 'Mở một nhắc hẹn sẽ ẩn nó; Đánh dấu đã đọc tất cả sẽ dọn chuông. Đặt giờ nhắc mới thì nhắc hẹn hiện lại.',
-            },
-            {
-                en: 'Settings → Notifications turns notifications and email reminders on or off.',
-                vi: 'Cài đặt → Thông báo bật hoặc tắt thông báo và nhắc hẹn qua email.',
+                en: 'Nothing changes until you click Apply on its confirmation card; Cancel drops the proposal.',
+                vi: 'Không có gì thay đổi cho đến khi bạn bấm Áp dụng trên thẻ xác nhận; Hủy để bỏ qua.',
             },
         ],
+        imageAlt: {
+            en: 'The AI assistant with a confirmation card',
+            vi: 'Trợ lý AI với thẻ xác nhận thay đổi',
+        },
     },
     {
-        id: 'account',
-        theme: 'pisces',
-        group: { en: 'Account', vi: 'Tài khoản' },
-        title: { en: 'Profile, security and appearance', vi: 'Hồ sơ, bảo mật và giao diện' },
+        id: 'more',
+        shot: 'archive',
+        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        title: { en: 'Settings and the full guide', vi: 'Cài đặt và hướng dẫn đầy đủ' },
         intro: {
-            en: 'Your name in the sidebar opens your profile and settings.',
-            vi: 'Tên của bạn ở thanh bên mở hồ sơ và cài đặt.',
+            en: 'The gear at the bottom left opens Profile, Appearance, Security, Notifications, Task history, Archive and the User guide.',
+            vi: 'Nút bánh răng ở góc dưới bên trái mở Hồ sơ, Giao diện, Bảo mật, Thông báo, Lịch sử công việc, Lưu trữ và Hướng dẫn sử dụng.',
         },
         instructions: [
             {
-                en: 'Profile: picture, name, a short bio for teammates, email verification and changing your email.',
-                vi: 'Hồ sơ: ảnh, tên, giới thiệu ngắn cho đồng đội, xác minh email và đổi email.',
+                en: 'Archived items keep their data: restore them from Settings → Archive.',
+                vi: 'Mục đã lưu trữ vẫn giữ dữ liệu: khôi phục trong Cài đặt → Lưu trữ.',
             },
             {
-                en: 'Security: change your password and turn on two-step verification by email or an authenticator app.',
-                vi: 'Bảo mật: đổi mật khẩu và bật xác minh hai bước qua email hoặc ứng dụng xác thực.',
-            },
-            {
-                en: 'Appearance: themes, light or dark, your own images or colour, the quote, and the language.',
-                vi: 'Giao diện: chủ đề, sáng hoặc tối, ảnh hay màu của riêng bạn, câu trích dẫn và ngôn ngữ.',
+                en: 'The User guide explains every feature step by step, with screenshots.',
+                vi: 'Hướng dẫn sử dụng giải thích từng tính năng theo từng bước, kèm ảnh minh họa.',
             },
         ],
+        imageAlt: { en: 'The Archive page', vi: 'Trang Lưu trữ' },
     },
 ];

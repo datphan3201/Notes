@@ -32,7 +32,7 @@ Tasks defaults to All unless a valid view query is supplied. Visible search, Sta
 | Controller / service / domain | [PlanningController.php · public function index(](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 | Persistence | [PdoPlanningRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L51) |
 | Relevant tests (not a pass claim) | [collection-page.test.js · task filtering](../../../frontend/tests/js/collection-page.test.js#L10)<br>[collection-page.test.js · page shrinks](../../../frontend/tests/js/collection-page.test.js#L21)<br>[tasks-collection.test.js · test('sorting uses account-local scheduled time, keeps undated work last and is independent of filtering'](../../../frontend/tests/js/tasks-collection.test.js#L30) |
-| HTTP | `GET /tasks` (`planning.tasks`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L188)<br>`GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23) |
+| HTTP | `GET /tasks` (`planning.tasks`) → [AccountController::planningPage](../../../backend/src/Http/Controller/AccountController.php#L194)<br>`GET /api/v1/tasks` (`api.tasks.index`) → [PlanningController::index](../../../backend/src/Http/Controller/PlanningController.php#L23) |
 
 ### Task row: completion, Today, week, importance stars and the ⋯ menu
 

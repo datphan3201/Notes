@@ -1,6 +1,8 @@
+import { t } from './i18n.js';
+
 export class HttpError extends Error {
     constructor(status, payload = null, response = null) {
-        super(payload?.message || 'The request failed.');
+        super(payload?.message || t('The request failed.'));
         this.name = 'HttpError';
         this.status = status;
         this.payload = payload;
@@ -60,8 +62,8 @@ export async function request(path, options = {}) {
             code: 'NETWORK_ERROR',
             message:
                 error.name === 'AbortError'
-                    ? 'The request timed out.'
-                    : 'Unable to connect to the server.',
+                    ? t('The request timed out.')
+                    : t('Unable to connect to the server.'),
         });
     } finally {
         window.clearTimeout(timeoutId);

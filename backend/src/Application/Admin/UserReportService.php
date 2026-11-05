@@ -96,6 +96,7 @@ final readonly class UserReportService
                         'title' => $reporter->displayName.' reported a user',
                         'body' => $email.' — '.mb_substr($reason, 0, 200, 'UTF-8'),
                         'url' => '/admin',
+                        'params' => ['actor' => $reporter->displayName, 'kind' => 'user', 'subject' => $email, 'reason' => mb_substr($reason, 0, 200, 'UTF-8')],
                     ], always: true);
                 }
             });
@@ -174,6 +175,7 @@ final readonly class UserReportService
                     'title' => 'An administrator reviewed a report about your account',
                     'body' => 'Please follow the community rules when working with other people.',
                     'url' => '/',
+                    'params' => ['kind' => 'account'],
                 ], always: true);
                 $taken[] = 'warn_account';
                 $this->log->record($adminId, 'account.warn', 'user', (string) $targetId, (string) $report['target_email']);
@@ -191,6 +193,7 @@ final readonly class UserReportService
                 'title' => ReportOutcome::title($status),
                 'body' => $response ?? (string) $report['target_email'],
                 'url' => '/settings/reports',
+                'params' => ['status' => $status],
             ]);
         });
     }

@@ -185,6 +185,12 @@ final readonly class AccountController
         return Response::html($this->renderApplicationPage(...$page));
     }
 
+    /** The user guide, written separately for each interface language. */
+    public function helpPage(Request $request): Response
+    {
+        return Response::html($this->renderApplicationPage('help/index', 'User guide', 'help.index'));
+    }
+
     public function planningPage(Request $request): Response
     {
         [$template, $title, $route] = match (true) {

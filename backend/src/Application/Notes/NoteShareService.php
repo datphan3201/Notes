@@ -81,6 +81,8 @@ final readonly class NoteShareService
                     'url' => '/?shared=1',
                     'share_id' => $shareId,
                     'permission' => $permission,
+                    // Facts the bell words in the reader's language; title/body stay for email and older clients.
+                    'params' => ['actor' => $owner->displayName, 'note' => $note->title, 'permission' => $permission],
                 ]);
             }
 
@@ -165,6 +167,7 @@ final readonly class NoteShareService
                 'title' => $recipient->displayName.' joined your shared note',
                 'body' => $note?->title ?? '',
                 'url' => '/',
+                'params' => ['actor' => $recipient->displayName, 'note' => $note?->title ?? ''],
             ]);
         });
     }
@@ -275,6 +278,7 @@ final readonly class NoteShareService
                 'title' => $actorName.' updated a shared note',
                 'body' => $note->title,
                 'url' => $userId === $note->userId ? '/' : '/?shared=1',
+                'params' => ['actor' => $actorName, 'note' => $note->title],
             ], coalesce: true);
         }
     }

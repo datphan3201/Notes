@@ -273,6 +273,7 @@ final class FullFeedbackHttpTest extends TestCase
             '/settings/password' => ['data-two-factor-settings'],
             '/settings/preferences' => ['personal-background-dialog'],
             '/settings/archive' => ['data-archive-settings', 'data-archive-type'],
+            '/help' => ['data-guide-page', 'guide-toc', 'data-walkthrough-full-guide'],
         ];
         foreach ($expectations as $path => $needles) {
             $page = $this->request('GET', $path, cookie: $user[0]);
@@ -367,6 +368,31 @@ final class FullFeedbackHttpTest extends TestCase
         $extra = array_values(array_filter($planning->list('area', $userId), static fn (array $area): bool => str_starts_with($area['name'], 'Extra')))[0];
         $planning->archive('area', $userId, $extra['id'], ['base_version' => (int) $extra['version']]);
         self::assertSame(200, $this->api('POST', '/api/v1/archive/area/'.$item['id'].'/restore', ['base_version' => $item['version']], $owner)->status);
+    }
+
+    public function test_user_guide_is_written_per_language_and_every_screenshot_exists(): void
+    {
+        self::assertSame(302, $this->request('GET', '/help')->status);
+        $user = $this->registerAccount('guide-reader@example.test', 'Reader');
+        $public = dirname(__DIR__, 3).'/public';
+        foreach (['en' => 'What is Planner?', 'vi' => 'Planner là gì?'] as $language => $heading) {
+            $this->pdo->exec("UPDATE user_preferences SET locale = '$language' WHERE user_id = (SELECT id FROM users WHERE email = 'guide-reader@example.test')");
+            $page = $this->request('GET', '/help', cookie: $user[0]);
+            self::assertSame(200, $page->status);
+            self::assertStringContainsString('lang="'.$language.'"', $page->body);
+            self::assertStringContainsString($heading, $page->body);
+            self::assertStringContainsString('href="/help"', $page->body);
+            preg_match_all('#src="(/guide/'.$language.'/[a-z-]+\.webp)"#', $page->body, $images);
+            self::assertGreaterThan(20, count(array_unique($images[1])));
+            foreach (array_unique($images[1]) as $image) {
+                self::assertFileExists($public.$image);
+            }
+            // Every table-of-contents link points at a section on the page.
+            preg_match_all('#<a href="\#([a-z-]+)">#', $page->body, $anchors);
+            foreach ($anchors[1] as $anchor) {
+                self::assertStringContainsString('id="'.$anchor.'"', $page->body);
+            }
+        }
     }
 
     /** @return array{0:string,1:string} cookie and CSRF token */

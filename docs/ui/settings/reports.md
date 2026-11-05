@@ -31,7 +31,7 @@ Lists the reporter's reports with status and the administrator reply; never show
 | --- | --- |
 | UI / DOM | [reports.php · data-user-report-list](../../../frontend/src/views/settings/reports.php#L34) |
 | Browser logic | [user-reports.js · const loadReports](../../../frontend/src/js/settings/user-reports.js#L47) |
-| Controller / service / domain | [UserReportService.php · public function mine(](../../../backend/src/Application/Admin/UserReportService.php#L111) |
+| Controller / service / domain | [UserReportService.php · public function mine(](../../../backend/src/Application/Admin/UserReportService.php#L112) |
 | Persistence | [PdoUserReportRepository.php · public function forReporter(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php#L37) |
 | Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_user_reports_with_image_evidence_are_private_to_administrators(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L304) |
 | HTTP | `GET /api/v1/user-reports` (`api.user-reports.index`) → [UserReportController::mine](../../../backend/src/Http/Controller/UserReportController.php#L38) |

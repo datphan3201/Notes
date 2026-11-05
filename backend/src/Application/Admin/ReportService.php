@@ -60,6 +60,7 @@ final readonly class ReportService
                     'title' => $reporter->displayName.' reported a note',
                     'body' => $note->title.' — '.mb_substr($reason, 0, 200, 'UTF-8'),
                     'url' => '/admin',
+                    'params' => ['actor' => $reporter->displayName, 'kind' => 'note', 'subject' => $note->title, 'reason' => mb_substr($reason, 0, 200, 'UTF-8')],
                 ], always: true);
             }
         });
@@ -109,6 +110,7 @@ final readonly class ReportService
                     'title' => 'An administrator reviewed a report about your shared note',
                     'body' => (string) $report['note_title'].' — please follow the community rules when sharing.',
                     'url' => '/',
+                    'params' => ['kind' => 'note', 'subject' => (string) $report['note_title']],
                 ], always: true);
                 $taken[] = 'warn_owner';
                 $this->log->record($adminId, 'account.warn', 'user', (string) $ownerId, (string) $report['note_title']);
@@ -126,6 +128,7 @@ final readonly class ReportService
                 'title' => ReportOutcome::title($status),
                 'body' => $response ?? (string) $report['note_title'],
                 'url' => '/',
+                'params' => ['status' => $status],
             ]);
         });
     }

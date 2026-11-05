@@ -9,6 +9,77 @@ export function unreadLabel(count) {
     return count > 99 ? '99+' : String(count);
 }
 
+const fill = (template, params) =>
+    template.replace(/:(actor|note|team|task|subject|role|permission)\b/g, (_, key) =>
+        String(params[key] ?? ''),
+    );
+const ROLE_LABELS = { admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
+
+/**
+ * The bell's title and detail for a stored notification, in the reader's language. New
+ * notifications carry params (who, which note or team); older ones only have the English text
+ * stored when they were created, shown as before.
+ */
+export function notificationText(notification) {
+    const { type, payload = {} } = notification;
+    const params = payload.params;
+    const stored = {
+        title: t(payload.title || type),
+        body: payload.body ? t(payload.body) : '',
+    };
+    if (!params || typeof params !== 'object') return stored;
+    switch (type) {
+        case 'share_invite':
+            return {
+                title: fill(t(':actor shared a note with you'), params),
+                body: `${params.note} (${params.permission === 'edit' ? t('Can edit') : t('View only')})`,
+            };
+        case 'share_joined':
+            return { title: fill(t(':actor joined your shared note'), params), body: params.note };
+        case 'shared_note_updated':
+            return { title: fill(t(':actor updated a shared note'), params), body: params.note };
+        case 'team_joined':
+            return { title: fill(t(':actor joined :team'), params), body: '' };
+        case 'team_invite':
+            return {
+                title: fill(t(':actor invited you to :team'), params),
+                body: `${t('Role')}: ${t(ROLE_LABELS[params.role] || params.role)}`,
+            };
+        case 'team_task_assigned':
+            return { title: fill(t('New task in :team'), params), body: params.task };
+        case 'report_new':
+            return {
+                title: fill(
+                    params.kind === 'user'
+                        ? t(':actor reported a user')
+                        : t(':actor reported a note'),
+                    params,
+                ),
+                body: `${params.subject} — ${params.reason}`,
+            };
+        case 'admin_warning':
+            return params.kind === 'account'
+                ? {
+                      title: t('An administrator reviewed a report about your account'),
+                      body: t('Please follow the community rules when working with other people.'),
+                  }
+                : {
+                      title: t('An administrator reviewed a report about your shared note'),
+                      body: `${params.subject} — ${t('please follow the community rules when sharing.')}`,
+                  };
+        case 'report_resolved':
+            return {
+                title:
+                    params.status === 'resolved'
+                        ? t('Your report was reviewed and action was taken')
+                        : t('Your report was reviewed. No action was needed'),
+                body: payload.body || '',
+            };
+        default:
+            return stored;
+    }
+}
+
 export function initNotifications(root = document.querySelector('[data-notifications]')) {
     if (!root) return;
     const toggle = root.querySelector('[data-notifications-toggle]');
@@ -66,8 +137,7 @@ export function initNotifications(root = document.querySelector('[data-notificat
             for (const notification of items) {
                 list.append(
                     item({
-                        title: t(notification.payload.title || notification.type),
-                        body: notification.payload.body ? t(notification.payload.body) : '',
+                        ...notificationText(notification),
                         url: notification.payload.url,
                         unread: !notification.read_at,
                         onOpen: () => {
