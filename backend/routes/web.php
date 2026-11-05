@@ -84,6 +84,7 @@ return static function (
     \Planner\Http\Controller\NoteLockController $noteLocks,
     \Planner\Http\Controller\NoteAIController $noteAi,
     \Planner\Http\Controller\RealtimeController $realtime,
+    \Planner\Http\Controller\ArchiveController $archive,
 ) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
@@ -197,6 +198,9 @@ return static function (
         new Route(['GET'], '/settings/preferences', 'settings.preferences', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/password', 'settings.password', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/reports', 'settings.reports', $handler([$account, 'settingsPage']), auth: true),
+        new Route(['GET'], '/settings/archive', 'settings.archive', $handler([$account, 'settingsPage']), auth: true),
+        new Route(['GET'], '/api/v1/archive', 'api.archive.index', $handler([$archive, 'index']), auth: true),
+        new Route(['POST'], '/api/v1/archive/{type}/{id}/restore', 'api.archive.restore', $handler([$archive, 'restore']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/goals', 'planning.goals', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/goals/{id}', 'planning.goal', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/tasks', 'planning.tasks', $handler([$account, 'planningPage']), auth: true),

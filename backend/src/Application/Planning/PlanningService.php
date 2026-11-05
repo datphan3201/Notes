@@ -258,6 +258,8 @@ final readonly class PlanningService
             $this->repository->lockOwner($userId);
             $current = $this->owned($type, $userId, $id, true);
             $this->assertVersion($current, $baseVersion);
+            // One timestamp for the item and everything archived with it, so Archive can restore them together.
+            $now = $this->now();
 
             if ($type === 'area') {
                 if (count($this->repository->list('area', $userId)) <= 1) {
@@ -266,13 +268,13 @@ final readonly class PlanningService
 
                 $this->requireEmpty('goal', $userId, 'area_id', $id, 'The Area still contains active Goals.');
             } elseif ($type === 'goal' && $cascade) {
-                $this->archiveGoalContents($userId, $id);
+                $this->archiveGoalContents($userId, $id, $now);
             } elseif ($type === 'goal') {
                 $this->requireEmpty('goal', $userId, 'parent_goal_id', $id, 'The Goal still has child Goals.');
                 $this->requireEmpty('milestone', $userId, 'goal_id', $id, 'The Goal still has Milestones.');
                 $this->requireEmpty('task', $userId, 'goal_id', $id, 'The Goal still has Tasks.');
             } elseif ($type === 'milestone' && $cascade) {
-                $this->archiveMilestoneContents($userId, $id);
+                $this->archiveMilestoneContents($userId, $id, $now);
             } elseif ($type === 'milestone') {
                 $this->requireEmpty('task', $userId, 'milestone_id', $id, 'The Milestone still has Tasks.');
 
@@ -281,12 +283,12 @@ final readonly class PlanningService
                 }
             }
 
-            return $this->serialize($this->repository->archive($type, $userId, $id, $this->now()));
+            return $this->serialize($this->repository->archive($type, $userId, $id, $now));
         });
     }
 
     /** Archives child Goals, Milestones, Tasks and repeating series beneath a Goal (not the Goal itself). */
-    private function archiveGoalContents(int $userId, string $goalId): void
+    private function archiveGoalContents(int $userId, string $goalId, string $now): void
     {
         $children = [];
         foreach ($this->repository->list('goal', $userId) as $goal) {
@@ -301,11 +303,10 @@ final readonly class PlanningService
             }
         }
         $milestones = $this->repository->list('milestone', $userId);
-        $now = $this->now();
         foreach ($goals as $current) {
             foreach ($milestones as $milestone) {
                 if ((string) $milestone['goal_id'] === $current) {
-                    $this->archiveMilestoneContents($userId, (string) $milestone['id']);
+                    $this->archiveMilestoneContents($userId, (string) $milestone['id'], $now);
                     $this->repository->archive('milestone', $userId, (string) $milestone['id'], $now);
                 }
             }
@@ -318,9 +319,8 @@ final readonly class PlanningService
     }
 
     /** Archives a Milestone's Tasks and repeating series and drops its prerequisite links. */
-    private function archiveMilestoneContents(int $userId, string $milestoneId): void
+    private function archiveMilestoneContents(int $userId, string $milestoneId, string $now): void
     {
-        $now = $this->now();
         $this->repository->removeMilestoneDependencies($userId, $milestoneId);
         $this->repository->archiveWhere('task', $userId, 'milestone_id', $milestoneId, $now);
         $this->series->archiveForParent($userId, 'milestone_id', $milestoneId, $now);

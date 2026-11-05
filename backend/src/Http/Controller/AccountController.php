@@ -178,6 +178,7 @@ final readonly class AccountController
             '/settings/password' => ['settings/password', 'Security', 'settings.password'],
             '/settings/history' => ['settings/history', 'Task history', 'settings.history'],
             '/settings/reports' => ['settings/reports', 'Report a user', 'settings.reports'],
+            '/settings/archive' => ['settings/archive', 'Archive', 'settings.archive'],
             default => throw new \LogicException('Unexpected settings route.'),
         };
 

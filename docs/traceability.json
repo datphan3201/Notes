@@ -4806,6 +4806,121 @@
       ]
     },
     {
+      "document": "docs/ui/settings/archive.md",
+      "title": "/settings/archive — Archive",
+      "components": [
+        {
+          "id": "archive.list",
+          "label": "Archived items, type filter and search",
+          "behavior": "Lists the owner's archived Areas, Goals, Milestones, Tasks and Habits newest first (up to 500 per type) with kind, status, archive time and where each lived. Contents archived together with a Goal or Milestone are folded into it as a count. A type filter (Everything, Areas, Goals, Milestones, Tasks, Habits) and a name search page through 12 items at a time; items inside an archived parent say which parent to restore first and their Restore button is disabled.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/archive.php",
+              "symbol": "data-archive-list"
+            },
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "['Archive', '/settings/archive'"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "export function initArchivePage"
+            },
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "export function archiveMatches"
+            },
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "export function restoreBlocker"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Archive/ArchiveService.php",
+              "symbol": "public function list("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php",
+              "symbol": "public function archived("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it("
+            },
+            {
+              "path": "frontend/tests/js/archive.test.js",
+              "symbol": "test('archive filters by type and name"
+            }
+          ],
+          "routes": [
+            "settings.archive",
+            "api.archive.index"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/feedback.css",
+              "symbol": "/* Settings › Archive */"
+            }
+          ]
+        },
+        {
+          "id": "archive.restore",
+          "label": "Restore with its group, parents first",
+          "behavior": "Restore sends the item's version. The server locks the owner, refuses an item that is not archived, changed (409), belongs to someone else (404) or lives inside an archived parent (422 naming it), and an Area while four are active. A Goal or Milestone comes back with the sub-Goals, Milestones and Tasks archived with it; the page reports how many items returned and reloads. Archiving with contents uses one timestamp for the whole group so the group can be restored exactly.",
+          "client": [
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "restore.addEventListener"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Archive/ArchiveService.php",
+              "symbol": "public function restore("
+            },
+            {
+              "path": "backend/src/Application/Archive/ArchiveService.php",
+              "symbol": "private function bundle("
+            },
+            {
+              "path": "backend/src/Application/Planning/PlanningService.php",
+              "symbol": "public function archive(string $type, int $userId, string $id, array $input): array"
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php",
+              "symbol": "public function restore("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it("
+            },
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_archive_restores_an_area_only_below_the_active_area_limit("
+            },
+            {
+              "path": "frontend/tests/js/archive.test.js",
+              "symbol": "test('only items inside an archived parent wait for it"
+            }
+          ],
+          "routes": [
+            "api.archive.restore"
+          ]
+        }
+      ]
+    },
+    {
       "document": "docs/ui/auth/README.md",
       "title": "Authentication routes",
       "components": [
@@ -6539,6 +6654,9 @@
     "api.admin.actions": "docs/ui/admin/README.md",
     "api.admin.invites": "docs/ui/admin/README.md",
     "api.admin.invites.store": "docs/ui/admin/README.md",
-    "api.admin.invites.destroy": "docs/ui/admin/README.md"
+    "api.admin.invites.destroy": "docs/ui/admin/README.md",
+    "settings.archive": "docs/ui/settings/archive.md",
+    "api.archive.index": "docs/ui/settings/archive.md",
+    "api.archive.restore": "docs/ui/settings/archive.md"
   }
 }

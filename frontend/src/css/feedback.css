@@ -1662,3 +1662,17 @@
 .team-carousel.is-single-page .team-carousel-arrow {
     display: none;
 }
+
+/* Settings › Archive */
+.archive-filters {
+    display: grid;
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: end;
+}
+
+@media (max-width: 600px) {
+    .archive-filters {
+        grid-template-columns: 1fr;
+    }
+}

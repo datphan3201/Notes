@@ -272,6 +272,7 @@ final class FullFeedbackHttpTest extends TestCase
             '/settings/history' => ['data-history-rules'],
             '/settings/password' => ['data-two-factor-settings'],
             '/settings/preferences' => ['personal-background-dialog'],
+            '/settings/archive' => ['data-archive-settings', 'data-archive-type'],
         ];
         foreach ($expectations as $path => $needles) {
             $page = $this->request('GET', $path, cookie: $user[0]);
@@ -289,6 +290,83 @@ final class FullFeedbackHttpTest extends TestCase
         $admin = $this->request('GET', '/admin', cookie: $user[0]);
         self::assertSame(200, $admin->status);
         self::assertStringContainsString('data-admin-page', $admin->body);
+    }
+
+    public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(): void
+    {
+        $owner = $this->registerAccount('archive@example.test', 'Archive owner');
+        $stranger = $this->registerAccount('archive-stranger@example.test', 'Stranger');
+        $userId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'archive@example.test'")->fetchColumn();
+        $planning = $this->runtime['planning_service'];
+        $area = $planning->list('area', $userId)[0];
+        $goal = $planning->create('goal', $userId, ['name' => 'Learn Rust', 'area_id' => $area['id']]);
+        $milestone = $planning->create('milestone', $userId, ['name' => 'Basics', 'goal_id' => $goal['id']]);
+        $inside = $planning->create('task', $userId, ['name' => 'Read the book', 'milestone_id' => $milestone['id']]);
+        $direct = $planning->create('task', $userId, ['name' => 'Install rustup', 'goal_id' => $goal['id']]);
+        $earlier = $planning->create('task', $userId, ['name' => 'Old idea', 'goal_id' => $goal['id']]);
+        $inbox = $planning->create('task', $userId, ['name' => 'Inbox chore']);
+        // Archived on its own an hour before the Goal: it must not come back with the Goal.
+        $planning->archive('task', $userId, $earlier['id'], ['base_version' => (int) $earlier['version']]);
+        $this->pdo->exec("UPDATE tasks SET archived_at = archived_at - INTERVAL 1 HOUR WHERE id = '{$earlier['id']}'");
+        $planning->archive('task', $userId, $inbox['id'], ['base_version' => (int) $inbox['version']]);
+        $goal = $planning->show('goal', $userId, $goal['id']);
+        self::assertSame(200, $this->api('DELETE', '/api/v1/goals/'.$goal['id'], ['base_version' => (int) $goal['version'], 'include_contents' => true], $owner)->status);
+
+        $page = $this->request('GET', '/settings/archive', cookie: $owner[0]);
+        self::assertSame(200, $page->status);
+        self::assertStringContainsString('data-archive-list', $page->body);
+        self::assertStringContainsString('href="/settings/archive"', $page->body);
+
+        $items = $this->data($this->api('GET', '/api/v1/archive', [], $owner));
+        $byName = array_column($items, null, 'name');
+        // The Milestone and its Tasks are folded into the Goal; separately archived Tasks are listed.
+        self::assertSame(['Learn Rust', 'Inbox chore', 'Old idea'], array_column($items, 'name'));
+        self::assertSame(3, $byName['Learn Rust']['contents']);
+        self::assertSame(['type' => 'area', 'id' => $area['id'], 'name' => $area['name'], 'archived' => false], $byName['Learn Rust']['parent']);
+        self::assertTrue($byName['Old idea']['parent']['archived']);
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/archive', [], $stranger)));
+
+        // Inside an archived Goal, a stale version, a foreign owner: nothing is restored.
+        $blocked = $this->api('POST', '/api/v1/archive/task/'.$earlier['id'].'/restore', ['base_version' => $byName['Old idea']['version']], $owner);
+        self::assertSame(422, $blocked->status);
+        self::assertStringContainsString('Learn Rust', $blocked->body);
+        self::assertSame(409, $this->api('POST', '/api/v1/archive/goal/'.$goal['id'].'/restore', ['base_version' => 1], $owner)->status);
+        self::assertSame(404, $this->api('POST', '/api/v1/archive/goal/'.$goal['id'].'/restore', ['base_version' => $byName['Learn Rust']['version']], $stranger)->status);
+        self::assertSame(404, $this->api('POST', '/api/v1/archive/note/'.$goal['id'].'/restore', ['base_version' => 1], $owner)->status);
+        self::assertSame(419, $this->request('POST', '/api/v1/archive/goal/'.$goal['id'].'/restore', ['base_version' => $byName['Learn Rust']['version']], $owner[0], null, true)->status);
+
+        $restored = $this->api('POST', '/api/v1/archive/goal/'.$goal['id'].'/restore', ['base_version' => $byName['Learn Rust']['version']], $owner);
+        self::assertSame(200, $restored->status);
+        self::assertSame(4, $this->data($restored)['restored']);
+        foreach ([['goal', $goal['id']], ['milestone', $milestone['id']], ['task', $inside['id']], ['task', $direct['id']]] as [$type, $id]) {
+            self::assertNull($planning->show($type, $userId, $id)['archived_at'], "$type $id");
+        }
+        self::assertSame(['Inbox chore', 'Old idea'], array_column($this->data($this->api('GET', '/api/v1/archive', [], $owner)), 'name'));
+        // Now its Goal is active, the earlier Task can come back on its own.
+        self::assertSame(200, $this->api('POST', '/api/v1/archive/task/'.$earlier['id'].'/restore', ['base_version' => $byName['Old idea']['version']], $owner)->status);
+        self::assertSame(422, $this->api('POST', '/api/v1/archive/task/'.$earlier['id'].'/restore', ['base_version' => $byName['Old idea']['version'] + 1], $owner)->status);
+    }
+
+    public function test_archive_restores_an_area_only_below_the_active_area_limit(): void
+    {
+        $owner = $this->registerAccount('areas@example.test', 'Areas');
+        $userId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'areas@example.test'")->fetchColumn();
+        $planning = $this->runtime['planning_service'];
+        $areas = $planning->list('area', $userId);
+        $planning->archive('area', $userId, $areas[0]['id'], ['base_version' => (int) $areas[0]['version']]);
+        for ($count = count($areas) - 1; $count < 4; $count++) {
+            $planning->create('area', $userId, ['name' => 'Extra '.$count]);
+        }
+        $item = $this->data($this->api('GET', '/api/v1/archive', [], $owner))[0];
+        self::assertSame(['area', $areas[0]['id']], [$item['type'], $item['id']]);
+
+        $full = $this->api('POST', '/api/v1/archive/area/'.$item['id'].'/restore', ['base_version' => $item['version']], $owner);
+        self::assertSame(422, $full->status);
+        self::assertStringContainsString('four active Areas', $full->body);
+
+        $extra = array_values(array_filter($planning->list('area', $userId), static fn (array $area): bool => str_starts_with($area['name'], 'Extra')))[0];
+        $planning->archive('area', $userId, $extra['id'], ['base_version' => (int) $extra['version']]);
+        self::assertSame(200, $this->api('POST', '/api/v1/archive/area/'.$item['id'].'/restore', ['base_version' => $item['version']], $owner)->status);
     }
 
     /** @return array{0:string,1:string} cookie and CSRF token */

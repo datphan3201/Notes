@@ -29,6 +29,7 @@ import { initAdminPage } from './admin/admin-page.js';
 import { initTwoFactor } from './settings/two-factor.js';
 import { initTaskHistory } from './settings/task-history.js';
 import { initUserReports } from './settings/user-reports.js';
+import { initArchivePage } from './settings/archive.js';
 import { initNavigation } from './lib/navigation';
 import { initWorkspaceUI } from './lib/workspace-ui';
 import { initDialogBackdropClose } from './lib/dialog-backdrop.js';
@@ -163,6 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (history) initTaskHistory(history);
     const userReports = document.querySelector('[data-user-report-settings]');
     if (userReports) initUserReports(userReports);
+    const archive = document.querySelector('[data-archive-settings]');
+    if (archive) initArchivePage(archive);
     initWalkthrough({ ready: notesReady });
 
     document.querySelectorAll('[data-avatar-fallback]').forEach((avatar) => {

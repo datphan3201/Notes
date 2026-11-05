@@ -313,6 +313,14 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] HISTORY05 — Admin cap applies in addition to optional user retention; no fabricated retention test result is inferred from a list refresh.
 - [ ] HISTORY06 — History shows search/results before collapsed rules; completed time/due date sorts newest first, 12-row paging clamps after changes and searching descriptions resets the page. Back to Tasks returns to All.
 
+## Archive — ARCHIVE
+
+[Behavior and source trace](../ui/settings/archive.md)
+
+- [ ] ARCHIVE01 — Archive a Goal with its Milestones and Tasks: Settings › Archive shows only the Goal with “comes back with N items”; Restore brings the Goal, Milestones and Tasks back to Goals, Tasks and Calendar with their data.
+- [ ] ARCHIVE02 — A Task archived on its own inside a Goal that was archived later stays archived after the Goal is restored, and its Restore is disabled (naming the Goal) until then.
+- [ ] ARCHIVE03 — With four active Areas, restoring an archived Area shows the four-Area message; after archiving another it succeeds. Type filter and name search page through 12 items; restoring in a second tab after the item changed shows a reload message without restoring.
+
 ## Email links — EMAIL
 
 [Behavior and source trace](../ui/auth/email.md)

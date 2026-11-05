@@ -4,6 +4,9 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 
 ## 2026-11-05
 
+### Added
+- **Archive** in Settings: every archived Area, Goal, Milestone, Task and Habit, filterable by type and name, with *Restore*. A Goal or Milestone comes back with everything archived together with it; items inside an archived parent ask for the parent first, and Areas respect the four-active limit. ([docs](docs/ui/settings/archive.md))
+
 ### Changed
 - Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).
 - Summit trail (formerly Mountain journey) now uses its own sharp watercolour illustration for the background, page headers, roadmap and previews like the other sceneries; the blurry enlarged crops of a reference screenshot were removed from every theme.

@@ -88,6 +88,8 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `history.list` | [Search, detail navigation and Reopen](../ui/settings/history.md#search-detail-navigation-and-reopen) | /settings/history — Task history and retention |
 | `user-reports.form` | [Report form with image evidence](../ui/settings/reports.md#report-form-with-image-evidence) | /settings/reports — Report a user |
 | `user-reports.mine` | [The reporter's own reports and replies](../ui/settings/reports.md#the-reporters-own-reports-and-replies) | /settings/reports — Report a user |
+| `archive.list` | [Archived items, type filter and search](../ui/settings/archive.md#archived-items-type-filter-and-search) | /settings/archive — Archive |
+| `archive.restore` | [Restore with its group, parents first](../ui/settings/archive.md#restore-with-its-group-parents-first) | /settings/archive — Archive |
 | `auth.login` | [/login — Sign in](../ui/auth/README.md#login--sign-in) | Authentication routes |
 | `auth.register` | [/register — Create account](../ui/auth/README.md#register--create-account) | Authentication routes |
 | `auth.logout` | [Logout and account/session changes](../ui/auth/README.md#logout-and-accountsession-changes) | Authentication routes |
