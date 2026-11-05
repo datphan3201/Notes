@@ -44,7 +44,7 @@ Logout is POST with CSRF. Clear this account/tab recovery state and notify other
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [app.php · data-leave-guard-form](../../../frontend/src/views/layouts/app.php#L94) |
+| UI / DOM | [app.php · data-leave-guard-form](../../../frontend/src/views/layouts/app.php#L95) |
 | Browser logic | [app.js · new BroadcastChannel(](../../../frontend/src/js/app.js#L61) |
 | Controller / service / domain | [AccountController.php · public function logout(](../../../backend/src/Http/Controller/AccountController.php#L99)<br>[AuthService.php · public function logout(](../../../backend/src/Application/Account/AuthService.php#L180)<br>[SessionManager.php · public function invalidate(](../../../backend/src/Infrastructure/Session/SessionManager.php#L94) |
 | Persistence | [PdoSessionHandler.php · public function destroy(](../../../backend/src/Infrastructure/Session/PdoSessionHandler.php#L104) |

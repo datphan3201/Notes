@@ -199,7 +199,7 @@ export class NoteEditor {
         this.title.readOnly = true;
         this.contentEditor.setReadOnly(true);
         this.heading.textContent = t('Opening note…');
-        this.eyebrow.textContent = 'Note';
+        this.eyebrow.textContent = t('Note');
         this.setStatus('Loading…');
         try {
             const known = this.getNoteSummary(noteId);

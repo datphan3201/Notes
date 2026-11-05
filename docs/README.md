@@ -30,6 +30,7 @@ Start with the URL or visible label, not a historical implementation phase. Ever
 | `/settings/history` | History rules, retained Tasks and Reopen | [Task history](ui/settings/history.md) |
 | `/settings/reports` | Report a user with description and image evidence | [Report a user](ui/settings/reports.md) |
 | `/settings/archive` | Archived Areas, Goals, Milestones, Tasks, Habits and Restore | [Archive](ui/settings/archive.md) |
+| `/help` | User guide for everyone, with screenshots, per language | [User guide](ui/help/README.md) |
 | `/login`, `/register`, POST `/logout` | Authentication/session | [Authentication](ui/auth/README.md) |
 | `/forgot-password`, `/reset-password` | Password recovery | [Recovery](ui/auth/recovery.md) |
 | `/two-factor` | Pending login challenge | [2FA challenge](ui/auth/two-factor.md) |

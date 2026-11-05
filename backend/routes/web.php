@@ -199,6 +199,7 @@ return static function (
         new Route(['GET'], '/settings/password', 'settings.password', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/reports', 'settings.reports', $handler([$account, 'settingsPage']), auth: true),
         new Route(['GET'], '/settings/archive', 'settings.archive', $handler([$account, 'settingsPage']), auth: true),
+        new Route(['GET'], '/help', 'help.index', $handler([$account, 'helpPage']), auth: true),
         new Route(['GET'], '/api/v1/archive', 'api.archive.index', $handler([$archive, 'index']), auth: true),
         new Route(['POST'], '/api/v1/archive/{type}/{id}/restore', 'api.archive.restore', $handler([$archive, 'restore']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/goals', 'planning.goals', $handler([$account, 'planningPage']), auth: true),

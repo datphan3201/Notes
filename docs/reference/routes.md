@@ -97,6 +97,7 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/settings/password` | `settings.password` | yes | no | — | [password.md](../ui/settings/password.md) |
 | GET | `/settings/reports` | `settings.reports` | yes | no | — | [reports.md](../ui/settings/reports.md) |
 | GET | `/settings/archive` | `settings.archive` | yes | no | — | [archive.md](../ui/settings/archive.md) |
+| GET | `/help` | `help.index` | yes | no | — | [README.md](../ui/help/README.md) |
 | GET | `/api/v1/archive` | `api.archive.index` | yes | no | — | [archive.md](../ui/settings/archive.md) |
 | POST | `/api/v1/archive/{type}/{id}/restore` | `api.archive.restore` | yes | yes | mutations | [archive.md](../ui/settings/archive.md) |
 | GET | `/goals` | `planning.goals` | yes | no | — | [README.md](../ui/goals/README.md) |

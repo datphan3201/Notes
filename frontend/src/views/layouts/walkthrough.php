@@ -12,7 +12,7 @@
     </div>
     <section class="walkthrough-content" data-walkthrough-content tabindex="-1" aria-labelledby="walkthrough-title">
         <figure class="walkthrough-figure">
-            <img data-walkthrough-image alt="" width="800" height="360">
+            <img data-walkthrough-image alt="" width="1280" height="800">
             <figcaption data-walkthrough-caption hidden></figcaption>
         </figure>
         <h2 id="walkthrough-title" data-walkthrough-title tabindex="-1"></h2>
@@ -25,10 +25,13 @@
             <button class="text-button" type="button" data-walkthrough-close-now><?= $view->e($view->t('Close for now')) ?></button>
         </div>
         <div class="walkthrough-actions">
-            <button class="button button-quiet" type="button" data-walkthrough-dismiss><?= $view->e($view->t('Skip guide')) ?></button>
+            <div class="action-row">
+                <button class="button button-quiet" type="button" data-walkthrough-dismiss><?= $view->e($view->t('Skip guide')) ?></button>
+                <a class="text-button" href="/help" data-walkthrough-full-guide><?= $view->e($view->t('Open the full guide')) ?></a>
+            </div>
             <div class="action-row">
                 <button class="button button-quiet" type="button" data-walkthrough-back><?= $view->e($view->t('Back')) ?></button>
-                <button class="button button-primary" type="button" data-walkthrough-next><?= $view->e($view->t('Next')) ?></button>
+                <button class="button button-primary" type="button" data-walkthrough-next><?= $view->e($view->t('Next step')) ?></button>
             </div>
         </div>
         <span class="sr-only" role="status" data-walkthrough-status></span>

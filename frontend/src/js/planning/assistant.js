@@ -1,5 +1,6 @@
 import { get, post } from '../lib/http.js';
 import { t } from '../lib/i18n.js';
+import { formatDay, intlLocale } from '../lib/format.js';
 
 // The assistant is a non-modal panel so the rest of Planner stays usable while
 // it is open. Its open state and conversation survive page navigation within
@@ -118,7 +119,26 @@ function proposalItems(message) {
         .map(({ fields }) => ({ action: 'create_task', label: fields.name, changes: [] }));
 }
 
+/**
+ * Dates on the card read like the rest of Planner: a due date "Nov 7" and a local time slot
+ * (the server sends wall-clock YYYY-MM-DDTHH:MM) "Nov 7, 7:00 PM".
+ */
+export function changeValue(value, { now = new Date(), locale = intlLocale() } = {}) {
+    if (typeof value !== 'string') return value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return formatDay(value, { now, locale });
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+        const time = new Intl.DateTimeFormat(locale, {
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZone: 'UTC',
+        }).format(new Date(`${value}:00Z`));
+        return `${formatDay(value.slice(0, 10), { now, locale })}, ${time}`;
+    }
+    return value;
+}
+
 function shorten(value) {
+    value = changeValue(value);
     if (value === null || value === undefined || value === '') return '';
     const text = String(value).replace(/\s+/g, ' ');
     return text.length > 120 ? `${text.slice(0, 117)}…` : text;
@@ -330,9 +350,10 @@ export function initAssistant(doc = document) {
         say('user', question);
         form.elements.question.value = '';
         try {
-            const { answer, proposal, preview } = (
-                await post('/api/v1/ai/chat', { question, history })
-            ).payload.data;
+            const { answer, proposal, preview } =
+                // One message may take several model rounds; allow as long as Notes AI does.
+                (await post('/api/v1/ai/chat', { question, history }, { timeout: 90000 })).payload
+                    .data;
             // A tool call (proposal) often arrives without text; the card speaks for it.
             if (answer) say('assistant', answer);
             else if (!proposal) say('error', t('The assistant could not answer right now.'));

@@ -62,7 +62,8 @@ export function applyAppearance(preferences) {
         root.dataset[attribute] = String(preferences[key] !== false);
     }
     document.querySelectorAll('[data-theme-quote]').forEach((element) => {
-        element.textContent = preferences.custom_quote?.trim() || theme.quote;
+        // The preset quote follows the interface language; a personal quote is shown as written.
+        element.textContent = preferences.custom_quote?.trim() || t(theme.quote);
     });
     document.querySelectorAll('[data-theme-preview]').forEach((image) => {
         // Every scenery, Summit trail included, previews its own illustration.

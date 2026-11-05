@@ -357,13 +357,16 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] AI06 — Chat reads are owner-scoped; editing an object after proposal generation returns 409 without applying it. Conversation history includes earlier proposal outcomes and does not silently repeat handled requests.
 - [ ] AI07 — With a live provider, ask to put a Task into a time slot and to move a Task, a Milestone and an overdue item ("move them to tomorrow", "push the Milestone back a week"). The card shows *Reschedule* with local before → after times; nothing moves on the Calendar until Apply, then each item lands on the expected day with unchanged clock times. Asking to move done work or to a past time queues nothing.
 
-## Help walkthrough — HELP
+## Help tour and user guide — HELP
 
-[Behavior and source trace](../ui/shared/shell.md)
+[Tour trace](../ui/shared/shell.md) · [User guide](../ui/help/README.md)
 
 - [ ] HELP01 — First authenticated visit introduces Help only when recovery/other dialogs permit.
 - [ ] HELP02 — Topic/step navigation, keyboard, images and responsive text remain usable.
 - [ ] HELP03 — Skip/Close/Escape/Finish dismiss account-wide and reopening Help does not erase current work.
+- [ ] HELP04 — Each tour step shows a real screenshot in the account language (not a scenery), with alternative text; Open the full guide goes to /help.
+- [ ] HELP05 — Settings › User guide opens /help in the account language; every table-of-contents link jumps to its section and every screenshot loads and opens full size.
+- [ ] HELP06 — At 390px wide the guide has no horizontal page scroll: the contents stack above the article and the relationships table scrolls inside its card. Light and dark themes stay readable.
 
 ## Administration (requires C) — ADMIN
 

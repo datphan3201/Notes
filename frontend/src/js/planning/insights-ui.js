@@ -1,5 +1,6 @@
 import { lineIcon } from '../lib/line-icons.js';
 import { t } from '../lib/i18n.js';
+import { formatDay } from '../lib/format.js';
 import { checkMark, crossMark } from '../lib/check-mark.js';
 import { habitDayDescriptions, habitDayState } from '../lib/habit-days.js';
 export function renderRing(container, percentage, label) {
@@ -88,7 +89,7 @@ export function renderStreak(container, streak, today) {
     description.className = 'subtle-copy';
     description.textContent =
         streak.through_date && streak.through_date !== today
-            ? `${t('Through')} ${streak.through_date} · ${t('finish every daily habit today')}`
+            ? `${t('Through')} ${formatDay(streak.through_date)} · ${t('finish every daily habit today')}`
             : t('A day counts only when every daily habit is done or on a rest day.');
     const days = document.createElement('div');
     days.className = 'streak-days';

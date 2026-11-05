@@ -16,6 +16,7 @@ Built with framework-free PHP 8.5, MySQL 8.4, vanilla JavaScript modules with Al
 | Planning | Areas, Goal hierarchy and fishbone roadmap, Milestones with prerequisites, Tasks, Today/Week plans, Calendar, repeating Tasks, Habits with streaks, Reviews |
 | Teams | Team Goals with members, roles, assigned Tasks and chat |
 | Accounts | Email verification, password reset by link or code, two-factor authentication (email or TOTP), profile/avatar, preferences, admin reports and locking |
+| Help | A user guide for everyone at `/help` in Vietnamese and English, with real screenshots from demo accounts, and a short tour behind **?** |
 
 ## Architecture
 
@@ -70,4 +71,4 @@ Integration tests refuse to run unless the connected database is `goals_test`. S
 
 ## Documentation
 
-Start at the [documentation index](docs/README.md): find the page or label you see and follow its trace from template to browser module, HTTP route, service, SQL and tests. Also: [product decisions](docs/architecture/decisions.md), [open issues](docs/issues.md), [changelog](CHANGELOG.md), [contributor and agent rules](AGENTS.md), [documentation maintenance](docs/maintenance.md).
+Users read the in-app [user guide](docs/ui/help/README.md) (Settings › User guide); its screenshots are rebuilt with `tools/guide`. Developers start at the [documentation index](docs/README.md): find the page or label you see and follow its trace from template to browser module, HTTP route, service, SQL and tests. Also: [product decisions](docs/architecture/decisions.md), [open issues](docs/issues.md), [changelog](CHANGELOG.md), [contributor and agent rules](AGENTS.md), [documentation maintenance](docs/maintenance.md).

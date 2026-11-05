@@ -5,12 +5,17 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 ## 2026-11-05
 
 ### Added
+- **User guide** at Settings › User guide (`/help`), written for everyday users in Vietnamese and English: what Planner is for, how goals, milestones, tasks, habits, notes and the calendar fit together, every use case step by step with real screenshots, and common questions. The **?** tour is rewritten around the same screenshots and links to the full guide. Screenshots are reproducible with `tools/guide`. ([docs](docs/ui/help/README.md))
 - **AI on the Calendar:** the assistant can put Tasks into a time slot, set start dates, remove a slot and reschedule Tasks, Milestones and Goals by a number of days or to a date (Calendar move rule, local times kept across daylight saving); every change is previewed as *Reschedule* and applied only on confirmation. ([docs](docs/ui/shared/ai.md#calendar-scheduling-from-the-chat))
 - **Archive** in Settings: every archived Area, Goal, Milestone, Task and Habit, filterable by type and name, with *Restore*. A Goal or Milestone comes back with everything archived together with it; items inside an archived parent ask for the parent first, and Areas respect the four-active limit. ([docs](docs/ui/settings/archive.md))
 
 ### Changed
+- The notification bell, the AI proposal card, the habit streak date, preset quotes, network errors and the note editor heading now follow the interface language; proposal dates read like the rest of Planner and the assistant waits up to 90 seconds for long answers.
 - Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).
 - Summit trail (formerly Mountain journey) now uses its own sharp watercolour illustration for the background, page headers, roadmap and previews like the other sceneries; the blurry enlarged crops of a reference screenshot were removed from every theme.
+
+### Fixed
+- The sender's avatar in a note share invitation no longer stretches across the row.
 
 ## 2026-11-04
 

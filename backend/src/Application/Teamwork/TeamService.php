@@ -208,6 +208,7 @@ final readonly class TeamService
                         'title' => $user->displayName.' joined '.$goal['name'],
                         'body' => '',
                         'url' => '/teamwork?goal='.$goalId,
+                        'params' => ['actor' => $user->displayName, 'team' => (string) $goal['name']],
                     ]);
                 }
             }
@@ -355,6 +356,7 @@ final readonly class TeamService
             'title' => $actorName.' invited you to '.$goalName,
             'body' => 'Role: '.$role,
             'url' => '/teamwork?goal='.$goalId,
+            'params' => ['actor' => $actorName, 'team' => $goalName, 'role' => $role],
         ]);
     }
 
@@ -368,6 +370,7 @@ final readonly class TeamService
             'title' => 'New task in '.$goal['name'],
             'body' => $taskName,
             'url' => '/teamwork?goal='.$goal['id'],
+            'params' => ['team' => (string) $goal['name'], 'task' => $taskName],
         ]);
     }
 

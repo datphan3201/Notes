@@ -5380,8 +5380,8 @@
         },
         {
           "id": "shell.help",
-          "label": "Help walkthrough and first-visit dismissal",
-          "behavior": "Help opens the illustrated walkthrough beside Appearance. Topics/steps live in walkthrough-content; other dialogs/recovery take priority. Skip/Close/Escape/Finish persist account-wide dismissal once.",
+          "label": "Help tour and first-visit dismissal",
+          "behavior": "The ? button opens a short tour of twelve steps, each with a real screenshot in the account language (walkthrough-content shot names, /guide/<language>/<shot>.webp) and alternative text; Open the full guide leads to /help. Other dialogs and draft recovery take priority. Skip/Close/Escape/Finish persist account-wide dismissal once.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/walkthrough.php",
@@ -5422,6 +5422,10 @@
             {
               "path": "backend/tests/Plain/Http/AccountHttpTest.php",
               "symbol": "public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal("
+            },
+            {
+              "path": "frontend/tests/js/walkthrough-content.test.js",
+              "symbol": "test('every tour step is written in both languages"
             }
           ],
           "routes": [
@@ -5510,13 +5514,94 @@
       ]
     },
     {
+      "document": "docs/ui/help/README.md",
+      "title": "/help — User guide",
+      "components": [
+        {
+          "id": "help.guide",
+          "label": "User guide page per language",
+          "behavior": "A signed-in article with a sticky table of contents: overview and purpose, getting started, the screen, how the parts fit together (a table of what each item is, where it lives and its rules, plus what Planner promises), one section per use case with numbered steps and screenshots, administration and frequently asked questions. The account language picks guide-vi or guide-en; screenshots come from /guide/<language>/ and open full size. Below 900px the contents stack above the article and wide tables scroll inside their section.",
+          "ui": [
+            {
+              "path": "frontend/src/views/help/index.php",
+              "symbol": "data-guide-page"
+            },
+            {
+              "path": "frontend/src/views/help/guide-vi.php",
+              "symbol": "id=\"lien-ket\""
+            },
+            {
+              "path": "frontend/src/views/help/guide-en.php",
+              "symbol": "id=\"how-it-fits\""
+            },
+            {
+              "path": "frontend/src/views/layouts/app.php",
+              "symbol": "['User guide', '/help'"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Http/Controller/AccountController.php",
+              "symbol": "public function helpPage("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_user_guide_is_written_per_language_and_every_screenshot_exists("
+            }
+          ],
+          "routes": [
+            "help.index"
+          ],
+          "styles": [
+            {
+              "path": "frontend/src/css/help.css",
+              "symbol": "/* User guide (/help)"
+            }
+          ]
+        },
+        {
+          "id": "help.screenshots",
+          "label": "Demo accounts and screenshot pipeline",
+          "behavior": "seed-demo.php builds the Vietnamese and English demo accounts through the ordinary services (with helper accounts for sharing and Teamwork) and refuses to run twice; capture.mjs signs in with Playwright and captures each listed shot per language; publish.php converts them to WebP under backend/public/guide and removes stale ones. Tests fail when the guide or the tour references a screenshot that was not published.",
+          "client": [
+            {
+              "path": "tools/guide/capture.mjs",
+              "symbol": "export const SHOTS"
+            }
+          ],
+          "server": [
+            {
+              "path": "tools/guide/seed-demo.php",
+              "symbol": "$account = function"
+            },
+            {
+              "path": "tools/guide/publish.php",
+              "symbol": "imagewebp("
+            }
+          ],
+          "tests": [
+            {
+              "path": "frontend/tests/js/walkthrough-content.test.js",
+              "symbol": "test('every tour step is written in both languages"
+            },
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_user_guide_is_written_per_language_and_every_screenshot_exists("
+            }
+          ]
+        }
+      ]
+    },
+    {
       "document": "docs/ui/shared/notifications.md",
       "title": "Shared — Notification bell and reminders",
       "components": [
         {
           "id": "bell.list",
           "label": "Unread count, list, mark read and invitations",
-          "behavior": "The bell polls every 60s while visible, displays the latest 50 and routes invitation actions through sharing/team APIs. Notifications are user-owned; admin report notifications bypass ordinary opt-out.",
+          "behavior": "The bell polls every 60s while visible, displays the latest 50 and routes invitation actions through sharing/team APIs. Notifications are user-owned; admin report notifications bypass ordinary opt-out. New notifications carry params (who, which note or team, permission, role, report outcome) and the bell words them in the reader's language; older ones without params show their stored text.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5527,6 +5612,10 @@
             {
               "path": "frontend/src/js/lib/notifications.js",
               "symbol": "export function initNotifications"
+            },
+            {
+              "path": "frontend/src/js/lib/notifications.js",
+              "symbol": "export function notificationText("
             }
           ],
           "server": [
@@ -5557,6 +5646,10 @@
             {
               "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
               "symbol": "public function test_owner_controls_note_sharing_permissions_and_notifications("
+            },
+            {
+              "path": "frontend/tests/js/notification-text.test.js",
+              "symbol": "test('notifications are worded in the reader language from their params'"
             }
           ],
           "routes": [
@@ -5694,7 +5787,7 @@
         {
           "id": "ai.proposal",
           "label": "Chat proposal preview, Apply and Cancel",
-          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Milestones/Tasks/Habits, Task moves, Milestone order and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically, appending new Milestones and Tasks in proposal order. Cancel calls Reject; replay retains stored outcomes. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
+          "behavior": "The chat card previews queued supported create/update/transition/archive operations for Goals/Milestones/Tasks/Habits, Task moves, Milestone order and create/update/delete for Notes. Apply sends the exact version/hash; AIActionService validates ownership, context versions and expiry before ordinary services run atomically, appending new Milestones and Tasks in proposal order. Cancel calls Reject; replay retains stored outcomes. Dates and local time slots on the card read like the rest of Planner (for example “Nov 7, 7:00 PM”); the chat waits up to 90 seconds for a multi-round answer. No queued write executes just because the model proposed it. Existing standalone structured creation APIs remain available.",
           "ui": [
             {
               "path": "frontend/src/views/layouts/app.php",
@@ -5752,6 +5845,10 @@
             {
               "path": "backend/tests/Plain/Integration/AIActionTest.php",
               "symbol": "public function test_chat_roadmap_queues_goal_milestones_tasks_and_order_in_one_proposal("
+            },
+            {
+              "path": "frontend/tests/js/assistant-values.test.js",
+              "symbol": "test('proposal cards show dates and local time slots like the rest of Planner'"
             }
           ],
           "routes": [
@@ -6706,6 +6803,7 @@
     "api.admin.invites.destroy": "docs/ui/admin/README.md",
     "settings.archive": "docs/ui/settings/archive.md",
     "api.archive.index": "docs/ui/settings/archive.md",
-    "api.archive.restore": "docs/ui/settings/archive.md"
+    "api.archive.restore": "docs/ui/settings/archive.md",
+    "help.index": "docs/ui/help/README.md"
   }
 }

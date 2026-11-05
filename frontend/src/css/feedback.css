@@ -74,8 +74,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
 }
-.share-invitation > span,
-.share-row > span {
+/* Text grows; the round avatar keeps its size. */
+.share-invitation > span:not(.mini-avatar),
+.share-row > span:not(.mini-avatar) {
     flex: 1 1 200px;
 }
 .share-form {

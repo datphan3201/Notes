@@ -23,11 +23,11 @@ Lists the owner's archived Areas, Goals, Milestones, Tasks and Habits newest fir
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [archive.php · data-archive-list](../../../frontend/src/views/settings/archive.php#L28)<br>[app.php · &#91;'Archive', '/settings/archive'](../../../frontend/src/views/layouts/app.php#L21) |
-| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1666) |
+| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1667) |
 | Browser logic | [archive.js · export function initArchivePage](../../../frontend/src/js/settings/archive.js#L32)<br>[archive.js · export function archiveMatches](../../../frontend/src/js/settings/archive.js#L15)<br>[archive.js · export function restoreBlocker](../../../frontend/src/js/settings/archive.js#L25) |
 | Controller / service / domain | [ArchiveService.php · public function list(](../../../backend/src/Application/Archive/ArchiveService.php#L44) |
 | Persistence | [PdoArchiveRepository.php · public function archived(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php#L28) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L295)<br>[archive.test.js · test('archive filters by type and name](../../../frontend/tests/js/archive.test.js#L16) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L296)<br>[archive.test.js · test('archive filters by type and name](../../../frontend/tests/js/archive.test.js#L16) |
 | HTTP | `GET /settings/archive` (`settings.archive`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L172)<br>`GET /api/v1/archive` (`api.archive.index`) → [ArchiveController::index](../../../backend/src/Http/Controller/ArchiveController.php#L21) |
 
 ### Restore with its group, parents first
@@ -41,7 +41,7 @@ Restore sends the item's version. The server locks the owner, refuses an item th
 | Browser logic | [archive.js · restore.addEventListener](../../../frontend/src/js/settings/archive.js#L89) |
 | Controller / service / domain | [ArchiveService.php · public function restore(](../../../backend/src/Application/Archive/ArchiveService.php#L81)<br>[ArchiveService.php · private function bundle(](../../../backend/src/Application/Archive/ArchiveService.php#L139)<br>[PlanningService.php · public function archive(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L247) |
 | Persistence | [PdoArchiveRepository.php · public function restore(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php#L69) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L295)<br>[FullFeedbackHttpTest.php · public function test_archive_restores_an_area_only_below_the_active_area_limit(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L350)<br>[archive.test.js · test('only items inside an archived parent wait for it](../../../frontend/tests/js/archive.test.js#L31) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L296)<br>[FullFeedbackHttpTest.php · public function test_archive_restores_an_area_only_below_the_active_area_limit(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L351)<br>[archive.test.js · test('only items inside an archived parent wait for it](../../../frontend/tests/js/archive.test.js#L31) |
 | HTTP | `POST /api/v1/archive/{type}/{id}/restore` (`api.archive.restore`) → [ArchiveController::restore](../../../backend/src/Http/Controller/ArchiveController.php#L27) |
 
 <!-- END GENERATED TRACE -->

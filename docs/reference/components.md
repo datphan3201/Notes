@@ -99,8 +99,10 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `shell.layout` | [Sidebar, topbar, mobile navigation and page bootstrap](../ui/shared/shell.md#sidebar-topbar-mobile-navigation-and-page-bootstrap) | Shared — Layout, CSS, navigation and Help |
 | `shell.styles` | [Typography, themes and component CSS](../ui/shared/shell.md#typography-themes-and-component-css) | Shared — Layout, CSS, navigation and Help |
 | `shell.dialogs` | [Dialogs, sections, Escape, backdrop and leave guards](../ui/shared/shell.md#dialogs-sections-escape-backdrop-and-leave-guards) | Shared — Layout, CSS, navigation and Help |
-| `shell.help` | [Help walkthrough and first-visit dismissal](../ui/shared/shell.md#help-walkthrough-and-first-visit-dismissal) | Shared — Layout, CSS, navigation and Help |
+| `shell.help` | [Help tour and first-visit dismissal](../ui/shared/shell.md#help-tour-and-first-visit-dismissal) | Shared — Layout, CSS, navigation and Help |
 | `shell.quick-editor` | [Floating editor for Tasks, Goals and Milestones](../ui/shared/shell.md#floating-editor-for-tasks-goals-and-milestones) | Shared — Layout, CSS, navigation and Help |
+| `help.guide` | [User guide page per language](../ui/help/README.md#user-guide-page-per-language) | /help — User guide |
+| `help.screenshots` | [Demo accounts and screenshot pipeline](../ui/help/README.md#demo-accounts-and-screenshot-pipeline) | /help — User guide |
 | `bell.list` | [Unread count, list, mark read and invitations](../ui/shared/notifications.md#unread-count-list-mark-read-and-invitations) | Shared — Notification bell and reminders |
 | `bell.reminders` | [Due personal/assigned team reminders and dismissal](../ui/shared/notifications.md#due-personalassigned-team-reminders-and-dismissal) | Shared — Notification bell and reminders |
 | `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |

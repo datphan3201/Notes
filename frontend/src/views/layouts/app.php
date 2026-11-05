@@ -19,6 +19,7 @@ $accountNavigation = [
     ['Notifications', '/settings/notifications', 'calendar', ['settings.notifications']],
     ['Task history', '/settings/history', 'tasks', ['settings.history']],
     ['Archive', '/settings/archive', 'refresh', ['settings.archive']],
+    ['User guide', '/help', 'notes', ['help.index']],
     ['Report a user', '/settings/reports', 'lock', ['settings.reports']],
 ];
 ?>
