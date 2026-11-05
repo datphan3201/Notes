@@ -1,4 +1,4 @@
-import { referenceDecoration } from './reference-decoration.js';
+import { t } from '../lib/i18n.js';
 import mountain from '../../images/themes/mountain.webp';
 import forest from '../../images/themes/forest.webp';
 import ocean from '../../images/themes/ocean.webp';
@@ -8,31 +8,31 @@ import stars from '../../images/themes/stars.webp';
 export const visualThemes = [
     {
         id: 'mountain',
-        name: 'Mountain journey',
+        name: 'Summit trail',
         image: mountain,
         quote: 'Small steps compound into big results.',
     },
     {
         id: 'forest',
-        name: 'Forest',
+        name: 'Forest path',
         image: forest,
         quote: 'Consistency grows quietly, one day at a time.',
     },
     {
         id: 'ocean',
-        name: 'Ocean',
+        name: 'Coastal cove',
         image: ocean,
         quote: 'Find your rhythm. Let each small wave move you forward.',
     },
     {
         id: 'pisces',
-        name: 'Pisces · Song Ngư',
+        name: 'Pisces',
         image: pisces,
         quote: 'Let curiosity guide you, and practice give it direction.',
     },
     {
         id: 'stars',
-        name: 'Starry sky',
+        name: 'Starlit lake',
         image: stars,
         quote: 'Keep your direction in sight. Take the next small step.',
     },
@@ -65,19 +65,9 @@ export function applyAppearance(preferences) {
         element.textContent = preferences.custom_quote?.trim() || theme.quote;
     });
     document.querySelectorAll('[data-theme-preview]').forEach((image) => {
+        // Every scenery, Summit trail included, previews its own illustration.
         image.src = theme.image;
-        image.alt = `${theme.name} illustration`;
-        image.classList.toggle('is-hidden', theme.id === 'mountain');
-        let preview = image.parentElement.querySelector('.reference-theme-preview');
-        if (!preview) {
-            preview = referenceDecoration('landscape');
-            preview.classList.add('reference-theme-preview');
-            preview.removeAttribute('aria-hidden');
-            preview.setAttribute('role', 'img');
-            preview.setAttribute('aria-label', 'Mountain journey illustration from UI.png');
-            image.after(preview);
-        }
-        preview.classList.toggle('is-hidden', theme.id !== 'mountain');
+        image.alt = `${t(theme.name)} — ${t('illustration')}`;
     });
     document.dispatchEvent(new CustomEvent('planner:appearance-changed'));
 }

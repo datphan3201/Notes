@@ -1,5 +1,5 @@
 <section class="planning-page" data-tasks-page aria-labelledby="tasks-title">
-    <header class="workspace-header scene-header" data-reference-decoration="corner">
+    <header class="workspace-header scene-header">
         <div>
             <h1 id="tasks-title"><?= $view->e($view->t('Tasks')) ?></h1>
             <p><?= $view->e($view->t('A place for the next step, and the one after that.')) ?></p>

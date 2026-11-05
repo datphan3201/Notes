@@ -4,7 +4,6 @@ import { taskCaptureValues, createCapturedTask, seriesPayload } from './task-cap
 import { openScheduleMenu } from './schedule-picker.js';
 import { renderSeriesList } from './series-list.js';
 import { addDays, localDateTime } from '../lib/calendar.js';
-import { referenceDecoration } from '../settings/reference-decoration.js';
 import { get, patch, post, remove } from '../lib/http.js';
 import { renderEmptyState } from '../lib/empty-state.js';
 import { LatestRequest } from '../lib/read-coordinator.js';
@@ -208,7 +207,6 @@ export function initGoalsPage(root) {
         const primary = byId.get(focusId) || null;
         const card = document.createElement('div');
         card.className = 'main-goal-card scene-card';
-        card.append(referenceDecoration('summit'));
         const label = document.createElement('span');
         label.className = 'context-chip';
         label.textContent = `★ ${t('Main goal')}`;

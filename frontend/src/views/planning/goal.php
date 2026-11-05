@@ -1,5 +1,5 @@
 <section class="planning-page" data-goal-detail data-goal-id="<?= $view->e($goal_id) ?>" aria-labelledby="goal-detail-title">
-    <header class="workspace-header scene-header" data-reference-decoration="corner">
+    <header class="workspace-header scene-header">
         <div>
             <p class="eyebrow">
                 <a href="/goals"><?= $view->e($view->t('Goals')) ?></a>

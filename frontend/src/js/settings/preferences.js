@@ -1,5 +1,4 @@
 import { t } from '../lib/i18n.js';
-import { referenceDecoration } from './reference-decoration.js';
 import { patch, upload, remove, get } from '../lib/http';
 import { applyAppearance, visualThemes } from './theme-catalog.js';
 import { guardWorkspaceLeave } from '../lib/workspace-ui.js';
@@ -28,12 +27,8 @@ export function initPreferences(root) {
         image.width = 320;
         image.height = 126;
         const label = document.createElement('strong');
-        label.textContent = theme.name;
-        if (theme.id === 'mountain') {
-            const illustration = referenceDecoration('landscape');
-            illustration.classList.add('reference-theme-thumbnail');
-            button.append(illustration, label);
-        } else button.append(image, label);
+        label.textContent = t(theme.name);
+        button.append(image, label);
         picker.append(button);
     }
     // "Add" opens the personal background dialog: an uploaded image or an RGB color.
