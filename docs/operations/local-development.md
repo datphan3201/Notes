@@ -66,6 +66,10 @@ Health returns data.status=ok; login/register render 200. A protected page redir
 
 After a pull, install dependencies only when lockfiles changed, migrate when new migrations exist, and rebuild when using production assets. Existing user data is not automatically reseeded.
 
+## Share the local app through Cloudflare quick tunnels
+
+From the repository root, `bash tools/dev/tunnel.sh` serves this checkout publicly in one step: it checks migrations (asking before applying pending ones, after a `mysqldump` backup into private storage), builds the frontend, opens one quick tunnel for the site and one for live collaboration, and starts `php -S` and `bin/realtime.php` with the public URLs as environment overrides. backend/.env is not edited and nothing is installed. Options: `--port`, `--realtime-port`, `--no-build`, `--no-realtime`, `--yes`. Ctrl+C stops every process; logs are in backend/storage/logs/tunnel. URLs change on every run, and all visitors share one client address for rate limits, so use [the server setup](deployment.md) for real hosting.
+
 ## Existing Cloudflare Tunnel session
 
 When the owner is already serving this checkout through a Cloudflare Tunnel, reuse that running origin for browser checks instead of starting another host/port. Keep the server, tunnel, database and startup overrides intact. The PHP process may explicitly override APP_URL, VITE_DEV_URL and SESSION_SECURE_COOKIE from backend/.env; inspect only the needed non-secret keys, never dump the entire environment. Read a quick tunnel's active hostname from its configured loopback metrics /quicktunnel endpoint. Use the public HTTPS origin for login/CSRF checks; a local HTTP check does not establish public-origin correctness.
