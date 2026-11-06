@@ -77,7 +77,7 @@ From the repository root, `bash tools/dev/tunnel.sh` serves this checkout public
 One-time setup on the machine (needs sudo and the owner's Tailscale account):
 
 1. Install and sign in: `curl -fsSL https://tailscale.com/install.sh | sh`, then `sudo tailscale up`.
-2. In the Tailscale admin console turn on MagicDNS and HTTPS certificates, and allow Funnel for this machine in the access-control policy (the console offers this the first time Funnel is used).
+2. In the Tailscale admin console turn on MagicDNS and HTTPS certificates. Funnel itself is approved on first use: funnel.sh shows the link Tailscale prints and continues once it is opened and confirmed. Public DNS for the new name can then take a few minutes (a browser shows NXDOMAIN meanwhile).
 3. `sudo tailscale set --operator=$USER`, so the script can configure Funnel without sudo.
 
 The machine must stay on; behind Funnel every visitor reaches PHP from loopback, so rate limits are shared as with quick tunnels. A Vercel or other HTTP-only proxy in front of the `.ts.net` name would break live collaboration (no WebSocket forwarding) and can cut long AI requests and large uploads, so link to the `.ts.net` name directly or use a domain with [the server setup](deployment.md).

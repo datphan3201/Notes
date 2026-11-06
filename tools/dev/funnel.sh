@@ -68,9 +68,10 @@ funnel_off() {
 CLEANUP_HOOK=funnel_off
 
 say "Opening Tailscale Funnel at https://${HOST} …"
+say "If Tailscale prints a link to enable Funnel, open it; this continues once Funnel is on."
 funnel_error="${LOG_DIR}/funnel.log"
-if ! tailscale funnel --bg --https=443 "http://127.0.0.1:${APP_PORT}" >"${funnel_error}" 2>&1; then
-    cat "${funnel_error}" >&2
+# Shown as well as logged: on first use Tailscale prints an approval link and waits for it.
+if ! tailscale funnel --bg --https=443 "http://127.0.0.1:${APP_PORT}" 2>&1 | tee "${funnel_error}"; then
     die "Tailscale refused to open the Funnel. Check that HTTPS certificates and Funnel are enabled for this tailnet, and run once: sudo tailscale set --operator=\$USER"
 fi
 if [ "${REALTIME}" = true ]; then
@@ -83,6 +84,7 @@ wait_until_up
 cat <<EOF
 
   Planner is public at:  ${APP_URL}   (fixed for this machine)
+                         The first time, public DNS can take a few minutes to know this name.
   Live collaboration:    $([ "${REALTIME}" = true ] && echo "on (wss://${HOST}/realtime)" || echo off)
   Local:                 http://127.0.0.1:${APP_PORT} (sign in through the public URL; cookies are HTTPS-only)
   Logs:                  ${LOG_DIR}
