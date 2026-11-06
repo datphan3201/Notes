@@ -735,7 +735,7 @@
         {
           "id": "tasks.capture.schedule",
           "label": "Due date, reminder and repeat picker",
-          "behavior": "The schedule toolbar supplies presets and a draggable date picker. One-off capture POSTs a Task; repeat capture POSTs a TaskSeries. seriesPayload is the exact mapping boundary: do not assume every one-off field is copied into a series.",
+          "behavior": "The schedule toolbar supplies presets and a draggable date picker. Reminders offer Later today, Tomorrow and Next week, moments tied to the task (when it starts, 15 minutes or 1 hour before its scheduled start, 9:00 on or the day before its due date; only future ones), and any date with any minute of the day in the device clock format. One-off capture POSTs a Task; repeat capture POSTs a TaskSeries. seriesPayload is the exact mapping boundary: do not assume every one-off field is copied into a series.",
           "ui": [
             {
               "path": "frontend/src/views/planning/task-capture-fields.php",
@@ -754,6 +754,10 @@
             {
               "path": "frontend/src/js/planning/task-capture.js",
               "symbol": "export function seriesPayload"
+            },
+            {
+              "path": "frontend/src/js/lib/calendar.js",
+              "symbol": "export function relativeReminders("
             }
           ],
           "server": [
@@ -778,6 +782,10 @@
               "path": "frontend/tests/js/calendar.test.js",
               "symbol": "test('reminder presets use 7 PM later today and 9 AM for tomorrow and next week'",
               "label": "reminder presets"
+            },
+            {
+              "path": "frontend/tests/js/calendar.test.js",
+              "symbol": "test('reminders can be tied to the task start and due date, only in the future'"
             }
           ],
           "routes": [

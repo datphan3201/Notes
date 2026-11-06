@@ -3,9 +3,9 @@ import {
     addDays,
     monthMatrix,
     nextWeek,
+    relativeReminders,
     reminderPreset,
     shiftMonth,
-    to24Hour,
     weekday,
 } from '../lib/calendar.js';
 
@@ -53,32 +53,22 @@ function calendarView(menu, { today, initial, withTime, onSave }) {
     const grid = document.createElement('div');
     grid.className = 'schedule-calendar-grid';
     grid.setAttribute('role', 'grid');
-    const time = document.createElement('div');
+    // Any minute of the day, in the device's own clock format (24-hour in Vietnamese), like the
+    // scheduled start and end fields.
+    const time = document.createElement('label');
     time.className = 'schedule-time';
-    const hour = document.createElement('select');
-    const minute = document.createElement('select');
-    const meridiem = document.createElement('select');
-    for (let value = 1; value <= 12; value++) hour.append(new Option(String(value), String(value)));
-    for (let value = 0; value < 60; value += 5)
-        minute.append(new Option(String(value).padStart(2, '0'), String(value)));
-    meridiem.append(new Option('AM', 'AM'), new Option('PM', 'PM'));
-    const initialTime = initial && initial.length > 10 ? initial.slice(11, 16) : '19:00';
-    const [initialHour, initialMinute] = initialTime.split(':').map(Number);
-    hour.value = String(initialHour % 12 || 12);
-    minute.value = String(Math.floor(initialMinute / 5) * 5);
-    meridiem.value = initialHour >= 12 ? 'PM' : 'AM';
-    hour.setAttribute('aria-label', t('Hour'));
-    minute.setAttribute('aria-label', t('Minute'));
-    meridiem.setAttribute('aria-label', 'AM/PM');
-    time.append(hour, minute, meridiem);
+    const clock = document.createElement('input');
+    clock.type = 'time';
+    clock.step = 60;
+    clock.required = true;
+    clock.value = initial && initial.length > 10 ? initial.slice(11, 16) : '19:00';
+    time.append(t('Time'), clock);
     time.hidden = !withTime;
     const footer = document.createElement('div');
     footer.className = 'schedule-footer';
     const cancel = button(t('Cancel'), null, closeScheduleMenu);
     const save = button(t('Save'), null, () => {
-        onSave(
-            withTime ? `${chosen}T${to24Hour(hour.value, minute.value, meridiem.value)}` : chosen,
-        );
+        onSave(withTime ? `${chosen}T${clock.value || '09:00'}` : chosen);
         closeScheduleMenu();
     });
     save.classList.add('is-primary');
@@ -247,9 +237,10 @@ function dragHandle(menu) {
 /**
  * Opens a menu under `anchor`. kind: 'date' (YYYY-MM-DD), 'reminder'
  * (YYYY-MM-DDTHH:MM local) or 'repeat' ({kind, unit, interval, weekdays, end}).
- * onSelect receives the new value, or null to clear it.
+ * onSelect receives the new value, or null to clear it. For reminders, `task` may carry the
+ * task's local scheduled `start` and its `due` date to offer reminders tied to them.
  */
-export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }) {
+export function openScheduleMenu(anchor, kind, { today, value = null, onSelect, task = {} }) {
     closeScheduleMenu();
     const menu = document.createElement('div');
     menu.className = 'schedule-menu';
@@ -289,6 +280,10 @@ export function openScheduleMenu(anchor, kind, { today, value = null, onSelect }
             button(t('Later today'), describe(presets[0]), () => choose(presets[0])),
             button(t('Tomorrow'), describe(presets[1]), () => choose(presets[1])),
             button(t('Next week'), describe(presets[2]), () => choose(presets[2])),
+            // Moments tied to the task's own start time and due date, when it has them.
+            ...relativeReminders(task).map((option) =>
+                button(t(option.label), describe(option.value), () => choose(option.value)),
+            ),
             button(t('Pick a date & time'), null, () =>
                 calendarView(menu, { today, initial: value, withTime: true, onSave: onSelect }),
             ),
@@ -416,6 +411,10 @@ export function initScheduleToolbar(form, todayProvider) {
             openScheduleMenu(trigger, kind, {
                 today,
                 value,
+                task: {
+                    start: field('scheduled_start')?.value || null,
+                    due: field('deadline').value || null,
+                },
                 onSelect: (next) => {
                     if (kind === 'date') set('deadline', next);
                     else if (kind === 'reminder') set('reminder_at', next);

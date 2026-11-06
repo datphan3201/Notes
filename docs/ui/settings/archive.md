@@ -23,7 +23,7 @@ Lists the owner's archived Areas, Goals, Milestones, Tasks and Habits newest fir
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [archive.php · data-archive-list](../../../frontend/src/views/settings/archive.php#L28)<br>[app.php · &#91;'Archive', '/settings/archive'](../../../frontend/src/views/layouts/app.php#L21) |
-| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1667) |
+| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1673) |
 | Browser logic | [archive.js · export function initArchivePage](../../../frontend/src/js/settings/archive.js#L32)<br>[archive.js · export function archiveMatches](../../../frontend/src/js/settings/archive.js#L15)<br>[archive.js · export function restoreBlocker](../../../frontend/src/js/settings/archive.js#L25) |
 | Controller / service / domain | [ArchiveService.php · public function list(](../../../backend/src/Application/Archive/ArchiveService.php#L44) |
 | Persistence | [PdoArchiveRepository.php · public function archived(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php#L28) |

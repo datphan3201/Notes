@@ -6,8 +6,8 @@ import {
     nextWeek,
     reminderPreset,
     repeatRule,
+    relativeReminders,
     shiftMonth,
-    to24Hour,
 } from '../../src/js/lib/calendar.js';
 
 test('month matrix shows six Sunday-first weeks like the reference picker', () => {
@@ -39,8 +39,25 @@ test('reminder presets use 7 PM later today and 9 AM for tomorrow and next week'
     assert.equal(reminderPreset('later', new Date(2026, 9, 16, 20, 10)), '2026-10-16T21:00');
     assert.equal(reminderPreset('tomorrow', friday), '2026-10-17T09:00');
     assert.equal(reminderPreset('week', friday), '2026-10-19T09:00');
-    assert.equal(to24Hour('12', '0', 'AM'), '00:00');
-    assert.equal(to24Hour('7', '30', 'PM'), '19:30');
+});
+
+test('reminders can be tied to the task start and due date, only in the future', () => {
+    const now = new Date(2026, 10, 5, 8, 0);
+    assert.deepEqual(relativeReminders({ start: '2026-11-05T14:07', due: '2026-11-07' }, now), [
+        { label: 'When it starts', value: '2026-11-05T14:07' },
+        { label: '15 minutes before it starts', value: '2026-11-05T13:52' },
+        { label: '1 hour before it starts', value: '2026-11-05T13:07' },
+        { label: 'On the due date at 9:00', value: '2026-11-07T09:00' },
+        { label: 'The day before it is due at 9:00', value: '2026-11-06T09:00' },
+    ]);
+    // Moments already past are left out; a task without times offers none.
+    assert.deepEqual(
+        relativeReminders({ start: '2026-11-05T08:10', due: '2026-11-05' }, now).map(
+            (o) => o.value,
+        ),
+        ['2026-11-05T08:10', '2026-11-05T09:00'],
+    );
+    assert.deepEqual(relativeReminders({}, now), []);
 });
 
 test('repeat choices become task-series rules, including custom intervals', () => {

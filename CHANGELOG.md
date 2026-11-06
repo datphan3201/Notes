@@ -14,6 +14,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 - **Archive** in Settings: every archived Area, Goal, Milestone, Task and Habit, filterable by type and name, with *Restore*. A Goal or Milestone comes back with everything archived together with it; items inside an archived parent ask for the parent first, and Areas respect the four-active limit. ([docs](docs/ui/settings/archive.md))
 
 ### Changed
+- Reminders can be set to any minute (a full time field in the device's clock format instead of 12-hour, 5-minute steps) and to moments tied to the task: when it starts, 15 minutes or 1 hour before, or 9:00 on or before its due date.
 - The notification bell, the AI proposal card, the habit streak date, preset quotes, network errors and the note editor heading now follow the interface language; proposal dates read like the rest of Planner and the assistant waits up to 90 seconds for long answers.
 - Sceneries renamed to describe their illustrations: Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (Vietnamese names added; stored theme ids unchanged).
 - Summit trail (formerly Mountain journey) now uses its own sharp watercolour illustration for the background, page headers, roadmap and previews like the other sceneries; the blurry enlarged crops of a reference screenshot were removed from every theme.
