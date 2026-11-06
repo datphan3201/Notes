@@ -47,14 +47,48 @@ export function reminderPreset(kind, now = new Date()) {
     return localDateTime(value);
 }
 
-export function localDateTime(value) {
-    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+/**
+ * Reminder moments tied to a Task's own times: its scheduled start (local YYYY-MM-DDTHH:MM)
+ * and its due date (YYYY-MM-DD). Only moments still ahead of `now` are offered.
+ * @returns {{label: string, value: string}[]} English labels, translated by the caller
+ */
+export function relativeReminders({ start = null, due = null } = {}, now = new Date()) {
+    const options = [];
+    const at = (date) => localDateTime(date);
+    if (start) {
+        const begin = new Date(start);
+        if (!Number.isNaN(begin.getTime()))
+            options.push(
+                { label: 'When it starts', value: at(begin) },
+                {
+                    label: '15 minutes before it starts',
+                    value: at(new Date(begin.getTime() - 15 * 60000)),
+                },
+                {
+                    label: '1 hour before it starts',
+                    value: at(new Date(begin.getTime() - 60 * 60000)),
+                },
+            );
+    }
+    if (due && /^\d{4}-\d{2}-\d{2}$/.test(due)) {
+        const morning = new Date(`${due}T09:00`);
+        const before = new Date(morning.getTime());
+        before.setDate(before.getDate() - 1);
+        options.push(
+            { label: 'On the due date at 9:00', value: at(morning) },
+            { label: 'The day before it is due at 9:00', value: at(before) },
+        );
+    }
+    const seen = new Set();
+    return options.filter((option) => {
+        if (new Date(option.value) <= now || seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+    });
 }
 
-/** Converts a 12-hour picker choice to 24-hour "HH:MM". */
-export function to24Hour(hour, minute, meridiem) {
-    const base = Number(hour) % 12;
-    return `${pad(meridiem === 'PM' ? base + 12 : base)}:${pad(minute)}`;
+export function localDateTime(value) {
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
 
 /**

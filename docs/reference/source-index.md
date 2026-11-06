@@ -142,7 +142,7 @@ Use this index when a changed source file is known and the affected UI component
 | [frontend/src/js/app.js](../../frontend/src/js/app.js) | [auth.logout](../ui/auth/README.md#logout-and-accountsession-changes)<br>[shell.layout](../ui/shared/shell.md#sidebar-topbar-mobile-navigation-and-page-bootstrap)<br>[shell.styles](../ui/shared/shell.md#typography-themes-and-component-css) |
 | [frontend/src/js/help/walkthrough-content.js](../../frontend/src/js/help/walkthrough-content.js) | [shell.help](../ui/shared/shell.md#help-tour-and-first-visit-dismissal) |
 | [frontend/src/js/help/walkthrough.js](../../frontend/src/js/help/walkthrough.js) | [shell.help](../ui/shared/shell.md#help-tour-and-first-visit-dismissal) |
-| [frontend/src/js/lib/calendar.js](../../frontend/src/js/lib/calendar.js) | [tasks.repeating.rule](../ui/tasks/repeating.md#daily-weekly-monthly-and-yearly-rules) |
+| [frontend/src/js/lib/calendar.js](../../frontend/src/js/lib/calendar.js) | [tasks.capture.schedule](../ui/tasks/capture.md#due-date-reminder-and-repeat-picker)<br>[tasks.repeating.rule](../ui/tasks/repeating.md#daily-weekly-monthly-and-yearly-rules) |
 | [frontend/src/js/lib/dialog-backdrop.js](../../frontend/src/js/lib/dialog-backdrop.js) | [shell.dialogs](../ui/shared/shell.md#dialogs-sections-escape-backdrop-and-leave-guards) |
 | [frontend/src/js/lib/entity-icons.js](../../frontend/src/js/lib/entity-icons.js) | [planning.icons](../ui/goals/README.md#icons-colours-and-importance-stars) |
 | [frontend/src/js/lib/habit-days.js](../../frontend/src/js/lib/habit-days.js) | [habits.checkins](../ui/habits/README.md#check-in-undo-and-streak) |

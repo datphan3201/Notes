@@ -646,6 +646,12 @@ export function initTasksPage(root) {
                 openScheduleMenu(event.currentTarget, 'reminder', {
                     today,
                     value: task.reminder_at ? localDateTime(new Date(task.reminder_at)) : null,
+                    task: {
+                        start: task.scheduled_start
+                            ? localDateTime(new Date(task.scheduled_start))
+                            : null,
+                        due: task.deadline,
+                    },
                     onSelect: (reminder) =>
                         mutate(reminderButton, () =>
                             patch(`/api/v1/tasks/${task.id}`, {

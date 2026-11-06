@@ -17,7 +17,7 @@ A Task has at most one Goal or Milestone parent; no parent is Inbox. Completed f
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [tasks.php · data-task-parent&gt;](../../../frontend/src/views/planning/tasks.php#L124) |
-| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L1007) |
+| Browser logic | [planning-page.js · parent.addEventListener](../../../frontend/src/js/planning/planning-page.js#L1013) |
 | Controller / service / domain | [PlanningService.php · private function validateParents(](../../../backend/src/Application/Planning/PlanningService.php#L1020) |
 | Persistence | [PdoPlanningRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L63)<br>[PdoPlanningRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L77) |
 | Relevant tests (not a pass claim) | [PlanningCoreTest.php · public function test_completed_goal_rejects_new_or_moved_work_but_allows_strategy_edits(](../../../backend/tests/Plain/Integration/PlanningCoreTest.php#L389) |
@@ -42,15 +42,15 @@ The shared PHP partial renders schedule-related fields. Browser input is normali
 
 **Trace ID:** `tasks.capture.schedule`
 
-The schedule toolbar supplies presets and a draggable date picker. One-off capture POSTs a Task; repeat capture POSTs a TaskSeries. seriesPayload is the exact mapping boundary: do not assume every one-off field is copied into a series.
+The schedule toolbar supplies presets and a draggable date picker. Reminders offer Later today, Tomorrow and Next week, moments tied to the task (when it starts, 15 minutes or 1 hour before its scheduled start, 9:00 on or the day before its due date; only future ones), and any date with any minute of the day in the device clock format. One-off capture POSTs a Task; repeat capture POSTs a TaskSeries. seriesPayload is the exact mapping boundary: do not assume every one-off field is copied into a series.
 
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [task-capture-fields.php · data-schedule-toolbar](../../../frontend/src/views/planning/task-capture-fields.php#L6) |
-| Browser logic | [schedule-picker.js · export function initScheduleToolbar](../../../frontend/src/js/planning/schedule-picker.js#L359)<br>[task-capture.js · export async function createCapturedTask](../../../frontend/src/js/planning/task-capture.js#L80)<br>[task-capture.js · export function seriesPayload](../../../frontend/src/js/planning/task-capture.js#L48) |
+| Browser logic | [schedule-picker.js · export function initScheduleToolbar](../../../frontend/src/js/planning/schedule-picker.js#L354)<br>[task-capture.js · export async function createCapturedTask](../../../frontend/src/js/planning/task-capture.js#L80)<br>[task-capture.js · export function seriesPayload](../../../frontend/src/js/planning/task-capture.js#L48)<br>[calendar.js · export function relativeReminders(](../../../frontend/src/js/lib/calendar.js#L55) |
 | Controller / service / domain | [TaskSeriesService.php · public function createAndMaterialize(](../../../backend/src/Application/Recurrence/TaskSeriesService.php#L71) |
 | Persistence | [PdoTaskSeriesRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php#L49) |
-| Relevant tests (not a pass claim) | [calendar.test.js · repeat choices](../../../frontend/tests/js/calendar.test.js#L46)<br>[calendar.test.js · reminder presets](../../../frontend/tests/js/calendar.test.js#L36) |
+| Relevant tests (not a pass claim) | [calendar.test.js · repeat choices](../../../frontend/tests/js/calendar.test.js#L63)<br>[calendar.test.js · reminder presets](../../../frontend/tests/js/calendar.test.js#L36)<br>[calendar.test.js · test('reminders can be tied to the task start and due date, only in the future'](../../../frontend/tests/js/calendar.test.js#L44) |
 | HTTP | `POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`POST /api/v1/task-series` (`api.task-series.store`) → [TaskSeriesController::store](../../../backend/src/Http/Controller/TaskSeriesController.php#L22) |
 
 ### Name-first capture, Today/Week plan and result
