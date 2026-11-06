@@ -2,7 +2,7 @@
 # Run Planner from this checkout and expose it at a fixed public HTTPS address with Tailscale
 # Funnel (https://<machine>.<tailnet>.ts.net), in one command.
 #
-#   bash tools/dev/funnel.sh [--port 8000] [--realtime-port 8090] [--no-build] [--no-realtime] [--yes]
+#   bash tools/dev/funnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--yes]
 #
 # Unlike tools/dev/tunnel.sh the address does not change between runs, so links in emails keep
 # working. One Funnel serves both the site and live collaboration (/realtime on the same name).
@@ -16,13 +16,14 @@ set -euo pipefail
 
 APP_PORT=8000
 RT_PORT=8090
-BUILD=true
+BUILD=auto
 REALTIME=true
 ASSUME_YES=false
 while [ $# -gt 0 ]; do
     case "$1" in
         --port) APP_PORT="$2"; shift 2 ;;
         --realtime-port) RT_PORT="$2"; shift 2 ;;
+        --build) BUILD=true; shift ;;
         --no-build) BUILD=false; shift ;;
         --no-realtime) REALTIME=false; shift ;;
         --yes | -y) ASSUME_YES=true; shift ;;
