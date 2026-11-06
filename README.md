@@ -51,6 +51,8 @@ php bin/realtime.php             # optional, second terminal: live co-editing
 
 Open http://localhost:8000 (it must match `APP_URL`) and register. Full setup, hot reload and troubleshooting: [installation](docs/operations/installation.md) and [local development](docs/operations/local-development.md).
 
+To share it publicly from this machine, run `bash tools/dev/install-command.sh` once and then `planner`: it serves the checkout at a fixed Tailscale Funnel address (or `planner tunnel` for a Cloudflare quick tunnel). See [sharing the local app](docs/operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel).
+
 ## Configuration
 
 All settings are environment variables documented in [backend/.env.example](backend/.env.example): database, session key, mail (SMTP or a local outbox), AI provider (`AI_ENABLED`, `GOOGLE_AI_API_KEY`, `AI_MODEL`, `AI_EMBEDDING_MODEL`) and live collaboration (`REALTIME_*`). Never commit `.env` files or keys.

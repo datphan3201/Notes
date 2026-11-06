@@ -35,7 +35,13 @@ The first inspects actual route factory declarations using uninitialized control
 
 ## Quick public preview
 
-From the repository root, `bash tools/dev/tunnel.sh` runs this checkout behind two Cloudflare quick tunnels (site and live collaboration); see [local development](../operations/local-development.md#share-the-local-app-through-cloudflare-quick-tunnels).
+| Command | What it does |
+| --- | --- |
+| `bash tools/dev/install-command.sh` | Installs `planner` in ~/.local/bin (run once, again after moving the checkout) |
+| `planner` or `bash tools/dev/funnel.sh` | Serves this checkout at the machine's fixed Tailscale Funnel address `https://<machine>.<tailnet>.ts.net`, live collaboration included |
+| `planner tunnel` or `bash tools/dev/tunnel.sh` | Serves it behind two Cloudflare quick tunnels (random address each run) |
+
+Both start a user-level MySQL that is down, back up and apply pending migrations (asking unless `--yes`), build the frontend only when it changed (`--build` / `--no-build`), and stop everything on Ctrl+C. Options: `--port`, `--realtime-port`, `--no-realtime`. Setup and limits: [local development](../operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel).
 
 ## Existing running host
 
