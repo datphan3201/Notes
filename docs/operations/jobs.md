@@ -10,7 +10,7 @@ Run one scheduler through cron every minute, for example (replace installation p
 * * * * * cd /srv/planner/backend && flock -n /tmp/planner-scheduler.lock php bin/console schedule:run
 ```
 
-Alternatively supervise `php bin/console schedule:work`; it checks the schedule every minute. [Scheduler](../../backend/src/Application/Scheduling/Scheduler.php) and [its repository](../../backend/src/Infrastructure/Persistence/Pdo/Scheduling/PdoScheduledJobRepository.php) track due jobs/outcomes. Inspect command status/logs; do not assume invoking the scheduler proves all deliveries succeeded.
+Alternatively supervise `php bin/console schedule:work`; it checks the schedule every minute. On a development machine `planner` (tools/dev/funnel.sh and tunnel.sh) runs `schedule:work` for as long as it serves the app. [Scheduler](../../backend/src/Application/Scheduling/Scheduler.php) and [its repository](../../backend/src/Infrastructure/Persistence/Pdo/Scheduling/PdoScheduledJobRepository.php) track due jobs/outcomes. Inspect command status/logs; do not assume invoking the scheduler proves all deliveries succeeded.
 
 | Job | Due interval | Observable effect |
 | --- | --- | --- |

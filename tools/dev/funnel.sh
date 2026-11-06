@@ -2,7 +2,7 @@
 # Run Planner from this checkout and expose it at a fixed public HTTPS address with Tailscale
 # Funnel (https://<machine>.<tailnet>.ts.net), in one command.
 #
-#   bash tools/dev/funnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--yes]
+#   bash tools/dev/funnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--no-scheduler] [--yes]
 #
 # Unlike tools/dev/tunnel.sh the address does not change between runs, so links in emails keep
 # working. One Funnel serves both the site and live collaboration (/realtime on the same name).
@@ -18,6 +18,7 @@ APP_PORT=8000
 RT_PORT=8090
 BUILD=auto
 REALTIME=true
+SCHEDULER=true
 ASSUME_YES=false
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -26,6 +27,7 @@ while [ $# -gt 0 ]; do
         --build) BUILD=true; shift ;;
         --no-build) BUILD=false; shift ;;
         --no-realtime) REALTIME=false; shift ;;
+        --no-scheduler) SCHEDULER=false; shift ;;
         --yes | -y) ASSUME_YES=true; shift ;;
         -h | --help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -87,6 +89,7 @@ cat <<EOF
   Planner is public at:  ${APP_URL}   (fixed for this machine)
                          The first time, public DNS can take a few minutes to know this name.
   Live collaboration:    $([ "${REALTIME}" = true ] && echo "on (wss://${HOST}/realtime)" || echo off)
+  Scheduler:             ${SCHEDULER_STATE}
   Local:                 http://127.0.0.1:${APP_PORT} (sign in through the public URL; cookies are HTTPS-only)
   Logs:                  ${LOG_DIR}
 
