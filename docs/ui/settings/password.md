@@ -36,4 +36,19 @@ TOTP secret is encrypted and setup becomes active only after a valid code. Email
 | Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_totp_two_factor_login_requires_a_valid_code(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L137) |
 | HTTP | `GET /api/v1/two-factor` (`api.two-factor.show`) → [TwoFactorController::status](../../../backend/src/Http/Controller/TwoFactorController.php#L83)<br>`POST /api/v1/two-factor/totp` (`api.two-factor.totp.begin`) → [TwoFactorController::beginTotp](../../../backend/src/Http/Controller/TwoFactorController.php#L88)<br>`POST /api/v1/two-factor/totp/confirm` (`api.two-factor.totp.confirm`) → [TwoFactorController::confirmTotp](../../../backend/src/Http/Controller/TwoFactorController.php#L95)<br>`POST /api/v1/two-factor/email` (`api.two-factor.email.send`) → [TwoFactorController::sendSetupEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L102)<br>`POST /api/v1/two-factor/email/confirm` (`api.two-factor.email.confirm`) → [TwoFactorController::confirmEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L110)<br>`POST /api/v1/two-factor/disable` (`api.two-factor.disable`) → [TwoFactorController::disable](../../../backend/src/Http/Controller/TwoFactorController.php#L117) |
 
+### Delete my account
+
+**Trace ID:** `security.delete-account`
+
+Settings › Security ends with Delete account: the current password, a tick that the data cannot be recovered and a final confirmation delete the account and everything it owns for good, then the browser returns to sign-in. Administrator accounts see an explanation instead (their role is removed with the server console first). Wrong passwords are refused; the route uses the password-change rate limit.
+
+| Layer | Entry point |
+| --- | --- |
+| UI / DOM | [password.php · data-account-delete-form](../../../frontend/src/views/settings/password.php#L73) |
+| Browser logic | [account-deletion.js · export function initAccountDeletion](../../../frontend/src/js/settings/account-deletion.js#L5) |
+| Controller / service / domain | [AccountDeletionService.php · public function deleteOwn(](../../../backend/src/Application/Account/AccountDeletionService.php#L78)<br>[AccountDeletionController.php · public function own(](../../../backend/src/Http/Controller/AccountDeletionController.php#L23) |
+| Persistence | [PdoCascadeDeleter.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php#L42) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_people_delete_their_own_account_with_their_password(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L475) |
+| HTTP | `POST /api/v1/account/delete` (`api.account.delete`) → [AccountDeletionController::own](../../../backend/src/Http/Controller/AccountDeletionController.php#L23) |
+
 <!-- END GENERATED TRACE -->

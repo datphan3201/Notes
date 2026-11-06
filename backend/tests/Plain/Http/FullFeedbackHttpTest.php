@@ -395,6 +395,106 @@ final class FullFeedbackHttpTest extends TestCase
         }
     }
 
+    public function test_archive_deletes_an_item_with_its_contents_for_good_and_can_empty_the_rest(): void
+    {
+        $owner = $this->registerAccount('purge@example.test', 'Purge');
+        $stranger = $this->registerAccount('purge-stranger@example.test', 'Stranger');
+        $userId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'purge@example.test'")->fetchColumn();
+        $planning = $this->runtime['planning_service'];
+        $area = $planning->list('area', $userId)[0];
+        $goal = $planning->create('goal', $userId, ['name' => 'Old plan', 'area_id' => $area['id']]);
+        $milestone = $planning->create('milestone', $userId, ['name' => 'Old stage', 'goal_id' => $goal['id']]);
+        $task = $planning->create('task', $userId, ['name' => 'Old step', 'milestone_id' => $milestone['id']]);
+        $planning->createChecklist($userId, (string) $task['id'], ['title' => 'Sub-step']);
+        $habit = $this->runtime['habit_service']->create($userId, ['name' => 'Keep going', 'timezone' => 'UTC', 'primary_goal_id' => $goal['id']]);
+        $this->runtime['dashboard_service']->updateRoadmap($userId, ['goal_id' => $goal['id']]);
+        $kept = $planning->create('goal', $userId, ['name' => 'Current plan', 'area_id' => $area['id']]);
+        $keptTask = $planning->create('task', $userId, ['name' => 'Current step', 'goal_id' => $kept['id']]);
+        $loose = $planning->create('task', $userId, ['name' => 'Loose end']);
+        $planning->archive('task', $userId, (string) $loose['id'], ['base_version' => (int) $loose['version']]);
+        $goal = $planning->show('goal', $userId, (string) $goal['id']);
+        self::assertSame(200, $this->api('DELETE', '/api/v1/goals/'.$goal['id'], ['base_version' => (int) $goal['version'], 'include_contents' => true], $owner)->status);
+        $items = array_column($this->data($this->api('GET', '/api/v1/archive', [], $owner)), null, 'name');
+
+        // Refused: an active item, a stale version, another account, a missing confirmation.
+        self::assertSame(422, $this->api('DELETE', '/api/v1/archive/goal/'.$kept['id'], ['base_version' => (int) $kept['version']], $owner)->status);
+        self::assertSame(409, $this->api('DELETE', '/api/v1/archive/goal/'.$goal['id'], ['base_version' => 1], $owner)->status);
+        self::assertSame(404, $this->api('DELETE', '/api/v1/archive/goal/'.$goal['id'], ['base_version' => $items['Old plan']['version']], $stranger)->status);
+        self::assertSame(422, $this->api('POST', '/api/v1/archive/empty', [], $owner)->status);
+
+        $deleted = $this->api('DELETE', '/api/v1/archive/goal/'.$goal['id'], ['base_version' => $items['Old plan']['version']], $owner);
+        self::assertSame(200, $deleted->status);
+        self::assertSame(3, $this->data($deleted)['deleted']);
+        foreach (['goals' => $goal['id'], 'milestones' => $milestone['id'], 'tasks' => $task['id']] as $table => $id) {
+            self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM $table WHERE id = '$id'")->fetchColumn(), $table);
+        }
+        self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM checklist_items WHERE task_id = '{$task['id']}'")->fetchColumn());
+        // What stays only loses its link: the Habit and the Dashboard roadmap choice.
+        self::assertNull($this->pdo->query("SELECT primary_goal_id FROM habits WHERE id = '{$habit['id']}'")->fetchColumn() ?: null);
+        self::assertNull($this->pdo->query("SELECT dashboard_roadmap_goal_id FROM user_preferences WHERE user_id = $userId")->fetchColumn() ?: null);
+        self::assertSame(['Loose end'], array_column($this->data($this->api('GET', '/api/v1/archive', [], $owner)), 'name'));
+
+        $emptied = $this->api('POST', '/api/v1/archive/empty', ['confirm' => true], $owner);
+        self::assertSame(['deleted' => 1], $this->data($emptied));
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/archive', [], $owner)));
+        self::assertSame('Current step', $planning->show('task', $userId, (string) $keptTask['id'])['name']);
+    }
+
+    public function test_an_administrator_deletes_an_ordinary_account_after_typing_its_email(): void
+    {
+        $admin = $this->registerAccount('chief@example.test', 'Chief');
+        $member = $this->registerAccount('leaving@example.test', 'Leaving');
+        $this->pdo->exec("UPDATE users SET role = 'admin' WHERE email = 'chief@example.test'");
+        $adminId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'chief@example.test'")->fetchColumn();
+        $memberId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'leaving@example.test'")->fetchColumn();
+        // The leaving account shares a Note with the administrator and leads a team they joined.
+        $noteId = $this->runtime['uuid']->generate();
+        $this->runtime['note_service']->create($memberId, ['id' => $noteId, 'title' => 'Shared plan', 'content' => 'x']);
+        $share = $this->runtime['note_share_service']->shareMany($memberId, $noteId, ['chief@example.test'], 'view');
+        $this->runtime['note_share_service']->respond($adminId, $share[0]['id'], true);
+        $team = $this->runtime['team_service']->create($memberId, ['name' => 'Their team', 'description' => '', 'due_date' => null]);
+        $this->runtime['team_service']->invite($memberId, (string) $team['id'], 'chief@example.test', 'editor');
+        $this->runtime['team_service']->respond($adminId, (string) $team['id'], true);
+
+        self::assertSame(404, $this->api('DELETE', '/api/v1/admin/users/'.$adminId, ['confirm_email' => 'chief@example.test'], $member)->status);
+        self::assertSame(422, $this->api('DELETE', '/api/v1/admin/users/'.$memberId, ['confirm_email' => 'someone@example.test'], $admin)->status);
+        self::assertSame(422, $this->api('DELETE', '/api/v1/admin/users/'.$adminId, ['confirm_email' => 'chief@example.test'], $admin)->status);
+
+        $deleted = $this->api('DELETE', '/api/v1/admin/users/'.$memberId, ['confirm_email' => ' LEAVING@example.test '], $admin);
+        self::assertSame(200, $deleted->status);
+        self::assertSame(['deleted' => 'leaving@example.test'], $this->data($deleted));
+        self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE id = $memberId")->fetchColumn());
+        foreach (['notes' => "id = '$noteId'", 'note_shares' => "note_id = '$noteId'", 'team_goals' => "id = '{$team['id']}'", 'team_members' => "team_goal_id = '{$team['id']}'", 'sessions' => "user_id = $memberId"] as $table => $where) {
+            self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM $table WHERE $where")->fetchColumn(), $table);
+        }
+        self::assertSame('leaving@example.test', $this->pdo->query("SELECT summary FROM admin_actions WHERE action = 'account.delete'")->fetchColumn());
+        // The deleted account's session no longer works.
+        self::assertSame(401, $this->api('GET', '/api/v1/notes', [], $member)->status);
+    }
+
+    public function test_people_delete_their_own_account_with_their_password(): void
+    {
+        $user = $this->registerAccount('goodbye@example.test', 'Goodbye');
+        $userId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'goodbye@example.test'")->fetchColumn();
+        $this->runtime['planning_service']->create('task', $userId, ['name' => 'Last task']);
+
+        self::assertSame(422, $this->api('POST', '/api/v1/account/delete', ['password' => 'wrong password here'], $user)->status);
+        self::assertSame(1, (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE id = $userId")->fetchColumn());
+        $deleted = $this->api('POST', '/api/v1/account/delete', ['password' => 'correct horse battery staple'], $user);
+        self::assertSame(200, $deleted->status);
+        self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE id = $userId")->fetchColumn());
+        self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM tasks WHERE user_id = $userId")->fetchColumn());
+        self::assertSame(401, $this->api('GET', '/api/v1/notes', [], $user)->status);
+        // Signing in again fails: it returns to the sign-in page instead of the Dashboard.
+        $login = $this->login('goodbye@example.test');
+        self::assertStringNotContainsString('/dashboard', (string) ($login->headers['Location'] ?? $login->headers['location'] ?? ''));
+
+        // An administrator cannot delete their own account this way.
+        $admin = $this->registerAccount('lastadmin@example.test', 'Last admin');
+        $this->pdo->exec("UPDATE users SET role = 'admin' WHERE email = 'lastadmin@example.test'");
+        self::assertSame(422, $this->api('POST', '/api/v1/account/delete', ['password' => 'correct horse battery staple'], $admin)->status);
+    }
+
     /** @return array{0:string,1:string} cookie and CSRF token */
     private function registerAccount(string $email, string $name): array
     {

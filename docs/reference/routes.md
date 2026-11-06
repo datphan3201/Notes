@@ -100,6 +100,10 @@ Use the owning UI document to understand behavior; API URLs are not browser page
 | GET | `/help` | `help.index` | yes | no | — | [README.md](../ui/help/README.md) |
 | GET | `/api/v1/archive` | `api.archive.index` | yes | no | — | [archive.md](../ui/settings/archive.md) |
 | POST | `/api/v1/archive/{type}/{id}/restore` | `api.archive.restore` | yes | yes | mutations | [archive.md](../ui/settings/archive.md) |
+| DELETE | `/api/v1/archive/{type}/{id}` | `api.archive.destroy` | yes | yes | mutations | [archive.md](../ui/settings/archive.md) |
+| POST | `/api/v1/archive/empty` | `api.archive.empty` | yes | yes | mutations | [archive.md](../ui/settings/archive.md) |
+| POST | `/api/v1/account/delete` | `api.account.delete` | yes | yes | password-change | [password.md](../ui/settings/password.md) |
+| DELETE | `/api/v1/admin/users/{id}` | `api.admin.users.delete` | yes | yes | mutations | [README.md](../ui/admin/README.md) |
 | GET | `/goals` | `planning.goals` | yes | no | — | [README.md](../ui/goals/README.md) |
 | GET | `/goals/{id}` | `planning.goal` | yes | no | — | [roadmap.md](../ui/goals/roadmap.md) |
 | GET | `/tasks` | `planning.tasks` | yes | no | — | [README.md](../ui/tasks/README.md) |

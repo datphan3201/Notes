@@ -354,10 +354,23 @@ $realtimeController = new \Planner\Http\Controller\RealtimeController(
     $auth, $noteRepository, $noteShareRepository, $noteLockGate, $realtimeTickets,
     $config->nullableString('realtime.public_url'), $services['clock'],
 );
+$cascadeDeleter = new \Planner\Infrastructure\Persistence\Pdo\PdoCascadeDeleter($services['pdo']);
 $archiveService = new \Planner\Application\Archive\ArchiveService(
     new \Planner\Infrastructure\Persistence\Pdo\Planning\PdoArchiveRepository($services['pdo']),
     $planningRepository,
     $services['transactions'],
+    $services['clock'],
+    $cascadeDeleter,
+    $pendingDeletionRepository,
+    $cleanup,
+);
+$accountDeletionService = new \Planner\Application\Account\AccountDeletionService(
+    $accountRepository,
+    $cascadeDeleter,
+    $services['transactions'],
+    $cleanup,
+    $pendingDeletionRepository,
+    $adminActionLog,
     $services['clock'],
 );
 $routeFactory = require dirname(__DIR__).'/routes/web.php';
@@ -388,6 +401,7 @@ $router = new Router($routeFactory(
     $noteAIController,
     $realtimeController,
     new \Planner\Http\Controller\ArchiveController($auth, $archiveService),
+    new \Planner\Http\Controller\AccountDeletionController($auth, $accountDeletionService, $inputValidator),
 ));
 $application = new Application(
     $router,
@@ -438,6 +452,7 @@ return [
     'planning_repository' => $planningRepository,
     'planning_service' => $planningService,
     'archive_service' => $archiveService,
+    'account_deletion_service' => $accountDeletionService,
     'activity_repository' => $activityRepository,
     'habit_repository' => $habitRepository,
     'habit_service' => $habitService,

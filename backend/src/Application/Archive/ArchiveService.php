@@ -9,7 +9,10 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Planner\Http\HttpException;
 use Planner\Http\ValidationException;
+use Planner\Application\Files\ProcessFileDeletion;
 use Planner\Infrastructure\Database\TransactionManager;
+use Planner\Infrastructure\Persistence\Pdo\Files\PendingDeletionRepository;
+use Planner\Infrastructure\Persistence\Pdo\PdoCascadeDeleter;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoArchiveRepository;
 use Planner\Infrastructure\Persistence\Pdo\Planning\PdoPlanningRepository;
 use Planner\Support\Clock;
@@ -31,12 +34,18 @@ final readonly class ArchiveService
     private const BUNDLE_SECONDS = 5;
     private const MAX_ACTIVE_AREAS = 4;
     private const LABELS = ['area' => 'Area', 'goal' => 'Goal', 'milestone' => 'Milestone'];
+    private const TABLES = ['area' => 'areas', 'goal' => 'goals', 'milestone' => 'milestones', 'task' => 'tasks', 'habit' => 'habits'];
+    /** Links from things that stay (a Habit's Goal, the Dashboard roadmap) are cleared, not followed. */
+    private const KEEP = ['habits' => ['primary_goal_id'], 'user_preferences' => ['dashboard_roadmap_goal_id']];
 
     public function __construct(
         private PdoArchiveRepository $archive,
         private PdoPlanningRepository $planning,
         private TransactionManager $transactions,
         private Clock $clock,
+        private PdoCascadeDeleter $deleter,
+        private PendingDeletionRepository $pending,
+        private ProcessFileDeletion $files,
     ) {
     }
 
@@ -127,6 +136,126 @@ final readonly class ArchiveService
 
             return ['type' => $type, 'id' => $id, 'restored' => count($restore)];
         });
+    }
+
+    /**
+     * Deletes an archived item for good, with everything beneath it (all of which is archived,
+     * since an archived parent cannot hold active work). Habits that supported a deleted Goal
+     * and a Dashboard roadmap pointing at it only lose that link. Activity facts stay.
+     *
+     * @param array<string, mixed> $input {base_version} @return array{type:string,id:string,deleted:int}
+     */
+    public function destroy(string $type, int $userId, string $id, array $input): array
+    {
+        $version = $this->target($type, $id, $input);
+
+        return $this->purging(function (array &$paths) use ($type, $userId, $id, $version): array {
+            $row = $this->archive->find($type, $userId, $id, true)
+                ?? throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            if ($row['archived_at'] === null) {
+                throw new ValidationException(['archive' => ['This item is not archived.']]);
+            }
+            if ((int) $row['version'] !== $version) {
+                throw new HttpException(409, 'VERSION_CONFLICT', 'The item changed after you loaded it. Reload and try again.');
+            }
+
+            return ['type' => $type, 'id' => $id, 'deleted' => $this->purge($userId, [$type => [$id]], $paths)];
+        });
+    }
+
+    /**
+     * Deletes everything archived for good.
+     *
+     * @param array<string, mixed> $input {confirm: true} @return array{deleted:int}
+     */
+    public function empty(int $userId, array $input): array
+    {
+        if (array_diff(array_keys($input), ['confirm']) !== [] || ($input['confirm'] ?? null) !== true) {
+            throw new ValidationException(['confirm' => ['Confirm that everything archived should be deleted for good.']]);
+        }
+
+        return $this->purging(function (array &$paths) use ($userId): array {
+            $ids = [];
+            foreach (self::TYPES as $type) {
+                $ids[$type] = array_map(static fn (array $row): string => (string) $row['id'], $this->archive->archived($type, $userId, null));
+            }
+
+            return ['deleted' => $this->purge($userId, $ids, $paths)];
+        });
+    }
+
+    /**
+     * Runs a purge in one transaction and removes the private files it queued after the commit.
+     *
+     * @param callable(list<string>&): array<string, mixed> $work
+     * @return array<string, mixed>
+     */
+    private function purging(callable $work): array
+    {
+        $paths = [];
+        $result = $this->transactions->run(static function () use ($work, &$paths): array {
+            return $work($paths);
+        });
+        $this->files->handle($paths);
+
+        return $result;
+    }
+
+    /**
+     * @param array<string, list<string>> $ids archived ids by type
+     * @param list<string> $paths receives the private files queued for removal
+     * @return int Areas, Goals, Milestones, Tasks and Habits deleted
+     */
+    private function purge(int $userId, array $ids, array &$paths): int
+    {
+        $this->planning->lockOwner($userId);
+        $now = Timestamp::database($this->clock->now());
+        $deleted = 0;
+        $guard = static function (string $table, array $row) use ($userId): void {
+            if (($row['user_id'] ?? null) !== null && (int) $row['user_id'] !== $userId) {
+                throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+            }
+            // Never take active work along: everything deleted from these tables must be archived.
+            if (in_array($table, ['areas', 'goals', 'milestones', 'tasks', 'habits', 'task_series'], true) && array_key_exists('archived_at', $row) && $row['archived_at'] === null) {
+                throw new ValidationException(['archive' => ['Something inside this item is still active. Restore or archive it first.']]);
+            }
+        };
+        foreach ($ids as $type => $list) {
+            $rows = array_values(array_filter(
+                $this->deleter->rows(self::TABLES[$type], 'id', $list),
+                static fn (array $row): bool => (int) $row['user_id'] === $userId,
+            ));
+            if ($rows === []) {
+                continue;
+            }
+            $result = $this->deleter->delete(self::TABLES[$type], $rows, self::KEEP, ['attachments' => 'path'], $guard);
+            foreach (self::TABLES as $table) {
+                $deleted += $result['counts'][$table] ?? 0;
+            }
+            foreach ($result['files'] as $path) {
+                $this->pending->queue($userId, $path, $now);
+                $paths[] = $path;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /** @param array<string, mixed> $input @return int the base version */
+    private function target(string $type, string $id, array $input): int
+    {
+        if (!in_array($type, self::TYPES, true) || preg_match('/^[0-9a-f-]{36}$/D', $id) !== 1) {
+            throw new HttpException(404, 'NOT_FOUND', 'The requested resource was not found.');
+        }
+        if (array_diff(array_keys($input), ['base_version']) !== []) {
+            throw new ValidationException(['_unknown' => ['The request contains an unsupported field.']]);
+        }
+        $version = $input['base_version'] ?? null;
+        if (!is_int($version) || $version < 1) {
+            throw new ValidationException(['base_version' => ['The version is invalid.']]);
+        }
+
+        return $version;
     }
 
     /**

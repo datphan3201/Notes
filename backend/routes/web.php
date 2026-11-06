@@ -85,6 +85,7 @@ return static function (
     \Planner\Http\Controller\NoteAIController $noteAi,
     \Planner\Http\Controller\RealtimeController $realtime,
     \Planner\Http\Controller\ArchiveController $archive,
+    \Planner\Http\Controller\AccountDeletionController $accountDeletion,
 ) use ($planningRoutes): array {
     $handler = static fn (callable $callable): Closure => Closure::fromCallable($callable);
 
@@ -202,6 +203,10 @@ return static function (
         new Route(['GET'], '/help', 'help.index', $handler([$account, 'helpPage']), auth: true),
         new Route(['GET'], '/api/v1/archive', 'api.archive.index', $handler([$archive, 'index']), auth: true),
         new Route(['POST'], '/api/v1/archive/{type}/{id}/restore', 'api.archive.restore', $handler([$archive, 'restore']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['DELETE'], '/api/v1/archive/{type}/{id}', 'api.archive.destroy', $handler([$archive, 'destroy']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/archive/empty', 'api.archive.empty', $handler([$archive, 'empty']), auth: true, csrf: true, rateLimit: 'mutations'),
+        new Route(['POST'], '/api/v1/account/delete', 'api.account.delete', $handler([$accountDeletion, 'own']), auth: true, csrf: true, rateLimit: 'password-change'),
+        new Route(['DELETE'], '/api/v1/admin/users/{id}', 'api.admin.users.delete', $handler([$accountDeletion, 'admin']), auth: true, csrf: true, rateLimit: 'mutations'),
         new Route(['GET'], '/goals', 'planning.goals', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/goals/{id}', 'planning.goal', $handler([$account, 'planningPage']), auth: true),
         new Route(['GET'], '/tasks', 'planning.tasks', $handler([$account, 'planningPage']), auth: true),
