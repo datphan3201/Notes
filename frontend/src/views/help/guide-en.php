@@ -361,6 +361,8 @@
             </ol>
             <?= $shot('archive', 'The Archive page with a goal that comes back with 3 items') ?>
             <p class="guide-note">An area can only be restored while fewer than 4 areas are active. Notes and reviews have no archive: deleting them is permanent.</p>
+            <h3>Delete for good</h3>
+            <p>To clear things out completely, click <em>Delete for good</em> on an item (it goes with everything inside it), or <em>Empty archive</em> to delete all of it. Planner asks first and it <strong>cannot be undone</strong>. Habits that supported a deleted goal stay and only lose that link; the activity map and finalized reviews keep their figures.</p>
         </section>
 
         <section id="settings">
@@ -369,7 +371,7 @@
             <ul>
                 <li><strong>Profile</strong> – display name, short bio and picture; change your email (needs your current password and a confirmation sent to the new address).</li>
                 <li><strong>Appearance</strong> – light or dark, five sceneries (Summit trail, Forest path, Coastal cove, Pisces, Starlit lake), your own background image or colour, your own quote and the language.</li>
-                <li><strong>Security</strong> – change your password (your other sessions are signed out) and turn on <em>Two-step verification</em> with emailed codes or an authenticator app.</li>
+                <li><strong>Security</strong> – change your password (your other sessions are signed out), turn on <em>Two-step verification</em> with emailed codes or an authenticator app, and <em>Delete account</em>: enter your password, tick the box and confirm once more. All your data is deleted for good, including team goals you created.</li>
                 <li><strong>Notifications</strong> – in-app and email notifications on or off.</li>
                 <li><strong>Task history</strong> and <strong>Archive</strong> – see the sections above.</li>
                 <li><strong>Report a user</strong> – tell the administrators about someone breaking the rules, with up to 3 images as evidence. The person reported never learns who reported them.</li>
@@ -384,7 +386,7 @@
             <p>Administrator accounts (granted by whoever runs the server) have an extra <em>Administration</em> page in the sidebar to:</p>
             <ul>
                 <li>Handle reports about notes and users: stop sharing a note, warn, lock the account or dismiss, with a reply to the person who reported.</li>
-                <li>Find users and lock or unlock accounts (a locked account cannot sign in).</li>
+                <li>Find users, lock or unlock accounts (a locked account cannot sign in), or <em>Delete account</em> for good after typing its email. Administrator accounts cannot be deleted.</li>
                 <li>Decide who can register: anyone, only invited emails, or nobody for now, and manage the invitation list.</li>
                 <li>Set the system's task history limit and read the log of every administrator action.</li>
             </ul>
@@ -410,6 +412,8 @@
                 <dd>AI is switched on by the administrator on the server and has an hourly limit. Try again later or contact your administrator.</dd>
                 <dt>I can't invite someone to a note or a team.</dt>
                 <dd>They need a Planner account with exactly the email you entered. Ask them to register first.</dd>
+                <dt>I want to delete my account.</dt>
+                <dd>Open <em>Settings → Security → Delete account</em>, enter your password and confirm. The data cannot be recovered, so copy anything you want to keep first.</dd>
                 <dt>I archived a goal by mistake.</dt>
                 <dd>Open <em>Settings → Archive</em> and click <em>Restore</em>. Everything archived together with the goal comes back.</dd>
             </dl>

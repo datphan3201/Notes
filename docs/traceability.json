@@ -4598,6 +4598,48 @@
             "api.two-factor.email.confirm",
             "api.two-factor.disable"
           ]
+        },
+        {
+          "id": "security.delete-account",
+          "label": "Delete my account",
+          "behavior": "Settings › Security ends with Delete account: the current password, a tick that the data cannot be recovered and a final confirmation delete the account and everything it owns for good, then the browser returns to sign-in. Administrator accounts see an explanation instead (their role is removed with the server console first). Wrong passwords are refused; the route uses the password-change rate limit.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/password.php",
+              "symbol": "data-account-delete-form"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/account-deletion.js",
+              "symbol": "export function initAccountDeletion"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountDeletionService.php",
+              "symbol": "public function deleteOwn("
+            },
+            {
+              "path": "backend/src/Http/Controller/AccountDeletionController.php",
+              "symbol": "public function own("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_people_delete_their_own_account_with_their_password("
+            }
+          ],
+          "routes": [
+            "api.account.delete"
+          ]
         }
       ]
     },
@@ -4992,6 +5034,53 @@
           ],
           "routes": [
             "api.archive.restore"
+          ]
+        },
+        {
+          "id": "archive.delete",
+          "label": "Delete for good and Empty archive",
+          "behavior": "Each archived item has Delete for good, and Empty archive deletes everything archived; both ask first and cannot be undone. An item goes with everything beneath it, all of which is archived (an active row reached on the way stops and rolls back the whole deletion). Habits that supported a deleted Goal and a Dashboard roadmap pointing at it only lose that link; Activity facts stay. Deletion follows the schema's foreign keys in one transaction with checks on, queues private files and removes them after the commit. Owner-only (404), version-checked (409), the empty call needs confirm=true.",
+          "ui": [
+            {
+              "path": "frontend/src/views/settings/archive.php",
+              "symbol": "data-archive-empty"
+            }
+          ],
+          "client": [
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "erase.addEventListener"
+            },
+            {
+              "path": "frontend/src/js/settings/archive.js",
+              "symbol": "emptyButton.addEventListener('click'"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Archive/ArchiveService.php",
+              "symbol": "public function destroy("
+            },
+            {
+              "path": "backend/src/Application/Archive/ArchiveService.php",
+              "symbol": "public function empty("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_archive_deletes_an_item_with_its_contents_for_good_and_can_empty_the_rest("
+            }
+          ],
+          "routes": [
+            "api.archive.destroy",
+            "api.archive.empty"
           ]
         }
       ]
@@ -6314,6 +6403,42 @@
           "routes": [
             "api.admin.actions"
           ]
+        },
+        {
+          "id": "admin.users.delete",
+          "label": "Delete an account",
+          "behavior": "Beside Lock, Delete account removes an ordinary account for good after the administrator types its email (case and spaces ignored). Administrators, including oneself, cannot be deleted here. Everything the account owns goes, with its files; so do its shares with others and team goals it created (for their members too). Reports about it and administrator history stay with the link cleared. Recorded in Administrator activity as Deleted an account.",
+          "client": [
+            {
+              "path": "frontend/src/js/admin/admin-page.js",
+              "symbol": "const deleteButton = (account) =>"
+            }
+          ],
+          "server": [
+            {
+              "path": "backend/src/Application/Account/AccountDeletionService.php",
+              "symbol": "public function deleteByAdmin("
+            },
+            {
+              "path": "backend/src/Http/Controller/AccountDeletionController.php",
+              "symbol": "public function admin("
+            }
+          ],
+          "storage": [
+            {
+              "path": "backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php",
+              "symbol": "public function delete("
+            }
+          ],
+          "tests": [
+            {
+              "path": "backend/tests/Plain/Http/FullFeedbackHttpTest.php",
+              "symbol": "public function test_an_administrator_deletes_an_ordinary_account_after_typing_its_email("
+            }
+          ],
+          "routes": [
+            "api.admin.users.delete"
+          ]
         }
       ]
     },
@@ -6880,6 +7005,10 @@
     "settings.archive": "docs/ui/settings/archive.md",
     "api.archive.index": "docs/ui/settings/archive.md",
     "api.archive.restore": "docs/ui/settings/archive.md",
-    "help.index": "docs/ui/help/README.md"
+    "help.index": "docs/ui/help/README.md",
+    "api.archive.destroy": "docs/ui/settings/archive.md",
+    "api.archive.empty": "docs/ui/settings/archive.md",
+    "api.admin.users.delete": "docs/ui/admin/README.md",
+    "api.account.delete": "docs/ui/settings/password.md"
   }
 }

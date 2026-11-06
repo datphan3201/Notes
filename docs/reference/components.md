@@ -84,6 +84,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `appearance.quote` | [Personal quote, preset restore and locale](../ui/settings/preferences.md#personal-quote-preset-restore-and-locale) | /settings/preferences — Appearance and preferences |
 | `security.password` | [Change password and visibility toggle](../ui/settings/password.md#change-password-and-visibility-toggle) | /settings/password — Security |
 | `security.twofactor` | [Set up email codes or TOTP, confirm and disable](../ui/settings/password.md#set-up-email-codes-or-totp-confirm-and-disable) | /settings/password — Security |
+| `security.delete-account` | [Delete my account](../ui/settings/password.md#delete-my-account) | /settings/password — Security |
 | `notifications.preferences` | [Notifications, invitation emails and Task reminders](../ui/settings/notifications.md#notifications-invitation-emails-and-task-reminders) | /settings/notifications — Delivery preferences |
 | `history.rules` | [Completed-hours, overdue-days and retention settings](../ui/settings/history.md#completed-hours-overdue-days-and-retention-settings) | /settings/history — Task history and retention |
 | `history.list` | [Search, detail navigation and Reopen](../ui/settings/history.md#search-detail-navigation-and-reopen) | /settings/history — Task history and retention |
@@ -91,6 +92,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `user-reports.mine` | [The reporter's own reports and replies](../ui/settings/reports.md#the-reporters-own-reports-and-replies) | /settings/reports — Report a user |
 | `archive.list` | [Archived items, type filter and search](../ui/settings/archive.md#archived-items-type-filter-and-search) | /settings/archive — Archive |
 | `archive.restore` | [Restore with its group, parents first](../ui/settings/archive.md#restore-with-its-group-parents-first) | /settings/archive — Archive |
+| `archive.delete` | [Delete for good and Empty archive](../ui/settings/archive.md#delete-for-good-and-empty-archive) | /settings/archive — Archive |
 | `auth.login` | [/login — Sign in](../ui/auth/README.md#login--sign-in) | Authentication routes |
 | `auth.register` | [/register — Create account](../ui/auth/README.md#register--create-account) | Authentication routes |
 | `auth.logout` | [Logout and account/session changes](../ui/auth/README.md#logout-and-accountsession-changes) | Authentication routes |
@@ -115,6 +117,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `admin.history` | [System Task history limit](../ui/admin/README.md#system-task-history-limit) | /admin — System reports, users and settings |
 | `admin.registration` | [Registration mode and invitations](../ui/admin/README.md#registration-mode-and-invitations) | /admin — System reports, users and settings |
 | `admin.activity` | [Administrator activity](../ui/admin/README.md#administrator-activity) | /admin — System reports, users and settings |
+| `admin.users.delete` | [Delete an account](../ui/admin/README.md#delete-an-account) | /admin — System reports, users and settings |
 | `notes.locks` | [Password: turn on, change, remove and unlock](../ui/notes/locks.md#password-turn-on-change-remove-and-unlock) | / — Note passwords |
 | `notes.collaboration` | [Live co-editing of shared Notes](../ui/notes/collaboration.md#live-co-editing-of-shared-notes) | / — Live collaboration |
 | `notes.ai.summary` | [AI summary of one Note](../ui/notes/ai.md#ai-summary-of-one-note) | / — AI summary and questions |

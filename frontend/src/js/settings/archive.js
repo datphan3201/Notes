@@ -1,5 +1,5 @@
 import { formatMoment } from '../lib/format.js';
-import { get, post } from '../lib/http.js';
+import { get, post, remove } from '../lib/http.js';
 import { t, statusLabel } from '../lib/i18n.js';
 import { collectionPage, renderPagination } from '../planning/collection-page.js';
 
@@ -110,7 +110,42 @@ export function initArchivePage(root) {
                 restore.disabled = false;
             }
         });
-        article.append(copy, restore);
+        // Deleting is for good: the item and everything archived beneath it.
+        const erase = Object.assign(document.createElement('button'), {
+            type: 'button',
+            className: 'button button-danger-quiet',
+            textContent: t('Delete for good'),
+        });
+        erase.setAttribute('aria-label', `${t('Delete for good')} ${item.name}`);
+        erase.addEventListener('click', async () => {
+            const question = item.contents
+                ? t(
+                      'Delete “:name” and the :count items archived with it for good? This cannot be undone.',
+                  )
+                : t('Delete “:name” for good? This cannot be undone.');
+            if (
+                !window.confirm(
+                    question.replace(':name', item.name).replace(':count', item.contents),
+                )
+            )
+                return;
+            erase.disabled = true;
+            try {
+                await remove(`/api/v1/archive/${item.type}/${encodeURIComponent(item.id)}`, {
+                    base_version: item.version,
+                });
+                status.textContent = t('Deleted “:name” for good.').replace(':name', item.name);
+                await load();
+            } catch (error) {
+                status.textContent =
+                    Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+                erase.disabled = false;
+            }
+        });
+        const actions = document.createElement('div');
+        actions.className = 'action-row';
+        actions.append(restore, erase);
+        article.append(copy, actions);
         return article;
     };
 
@@ -132,10 +167,36 @@ export function initArchivePage(root) {
         list.append(...result.items.map(row));
     };
 
+    const emptyButton = root.querySelector('[data-archive-empty]');
     const load = async () => {
         items = (await get('/api/v1/archive')).payload.data;
+        emptyButton.hidden = !items.length;
         render();
     };
+    emptyButton.addEventListener('click', async () => {
+        if (
+            !window.confirm(
+                t(
+                    'Delete everything in the archive for good? Habits and the Dashboard roadmap only lose their link to deleted goals. This cannot be undone.',
+                ),
+            )
+        )
+            return;
+        emptyButton.disabled = true;
+        try {
+            const result = (await post('/api/v1/archive/empty', { confirm: true })).payload.data;
+            status.textContent = t('Deleted :count archived items for good.').replace(
+                ':count',
+                result.deleted,
+            );
+            await load();
+        } catch (error) {
+            status.textContent =
+                Object.values(error.payload?.errors || {})[0]?.[0] || error.message;
+        } finally {
+            emptyButton.disabled = false;
+        }
+    });
 
     type.addEventListener('change', () => {
         page = 0;

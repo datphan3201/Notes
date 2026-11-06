@@ -24,6 +24,22 @@ final readonly class ArchiveController
     }
 
     /** @param array<string, string> $parameters */
+    public function destroy(Request $request, array $parameters): Response
+    {
+        return Response::json(['data' => $this->archive->destroy(
+            $parameters['type'] ?? '',
+            $this->auth->requireUser()->id,
+            $parameters['id'] ?? '',
+            $request->input(),
+        )]);
+    }
+
+    public function empty(Request $request): Response
+    {
+        return Response::json(['data' => $this->archive->empty($this->auth->requireUser()->id, $request->input())]);
+    }
+
+    /** @param array<string, string> $parameters */
     public function restore(Request $request, array $parameters): Response
     {
         return Response::json(['data' => $this->archive->restore(

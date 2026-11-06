@@ -361,6 +361,8 @@
             </ol>
             <?= $shot('archive', 'Trang Lưu trữ với một mục tiêu sẽ khôi phục kèm 3 mục') ?>
             <p class="guide-note">Chỉ khôi phục được lĩnh vực khi đang có ít hơn 4 lĩnh vực hoạt động. Ghi chú và đánh giá không có lưu trữ: xóa là mất hẳn.</p>
+            <h3>Xóa vĩnh viễn</h3>
+            <p>Muốn dọn hẳn, bấm <em>Xóa vĩnh viễn</em> ở một mục (mục đó cùng mọi thứ bên trong bị xóa), hoặc <em>Dọn sạch lưu trữ</em> để xóa tất cả. Planner hỏi lại trước khi xóa và <strong>không thể hoàn tác</strong>. Thói quen từng gắn với mục tiêu bị xóa vẫn còn, chỉ mất liên kết; bản đồ hoạt động và các bản đánh giá đã chốt giữ nguyên số liệu.</p>
         </section>
 
         <section id="cai-dat">
@@ -369,7 +371,7 @@
             <ul>
                 <li><strong>Hồ sơ</strong> – tên hiển thị, giới thiệu ngắn, ảnh đại diện; đổi email (cần mật khẩu hiện tại và xác nhận qua email mới).</li>
                 <li><strong>Giao diện</strong> – sáng/tối, năm phong cảnh nền (Đường lên đỉnh, Lối mòn trong rừng, Vịnh ven biển, Song Ngư, Hồ dưới trời sao), ảnh nền riêng hoặc màu riêng, câu trích dẫn của bạn và ngôn ngữ.</li>
-                <li><strong>Bảo mật</strong> – đổi mật khẩu (các phiên đăng nhập khác sẽ bị đăng xuất) và bật <em>Xác thực hai bước</em> bằng mã gửi qua email hoặc ứng dụng tạo mã.</li>
+                <li><strong>Bảo mật</strong> – đổi mật khẩu (các phiên đăng nhập khác sẽ bị đăng xuất), bật <em>Xác thực hai bước</em> bằng mã gửi qua email hoặc ứng dụng tạo mã, và <em>Xóa tài khoản</em>: nhập mật khẩu, đánh dấu ô xác nhận, rồi xác nhận lần cuối. Toàn bộ dữ liệu bị xóa vĩnh viễn, kể cả mục tiêu nhóm do bạn tạo.</li>
                 <li><strong>Thông báo</strong> – bật/tắt thông báo trong ứng dụng và email.</li>
                 <li><strong>Lịch sử công việc</strong> và <strong>Lưu trữ</strong> – xem các phần ở trên.</li>
                 <li><strong>Báo cáo người dùng</strong> – báo cho quản trị viên về người vi phạm, có thể kèm tối đa 3 ảnh bằng chứng. Người bị báo cáo không biết ai đã báo cáo.</li>
@@ -384,7 +386,7 @@
             <p>Tài khoản quản trị (do người vận hành máy chủ cấp) có thêm trang <em>Quản trị</em> trên thanh bên để:</p>
             <ul>
                 <li>Xử lý báo cáo về ghi chú và người dùng: ngừng chia sẻ ghi chú, cảnh cáo, khóa tài khoản hoặc bỏ qua, kèm lời phản hồi cho người báo cáo.</li>
-                <li>Tìm người dùng và khóa/mở khóa tài khoản (người bị khóa không đăng nhập được).</li>
+                <li>Tìm người dùng, khóa/mở khóa tài khoản (người bị khóa không đăng nhập được) hoặc <em>Xóa tài khoản</em> vĩnh viễn sau khi gõ lại email của tài khoản đó. Không xóa được tài khoản quản trị.</li>
                 <li>Chọn ai được đăng ký: mọi người, chỉ email được mời hoặc tạm đóng đăng ký, và quản lý danh sách lời mời.</li>
                 <li>Đặt giới hạn lịch sử công việc của hệ thống và xem nhật ký mọi thao tác quản trị.</li>
             </ul>
@@ -410,6 +412,8 @@
                 <dd>Tính năng AI do quản trị viên bật trên máy chủ, và có giới hạn số lần mỗi giờ. Hãy thử lại sau hoặc liên hệ quản trị viên.</dd>
                 <dt>Tôi không mời được một người vào ghi chú hay nhóm.</dt>
                 <dd>Người đó cần có tài khoản Planner với đúng email bạn nhập. Hãy nhờ họ đăng ký trước.</dd>
+                <dt>Tôi muốn xóa tài khoản của mình.</dt>
+                <dd>Vào <em>Cài đặt → Bảo mật → Xóa tài khoản</em>, nhập mật khẩu và xác nhận. Dữ liệu không khôi phục được, nên hãy chép lại những gì cần giữ trước.</dd>
                 <dt>Tôi lưu trữ nhầm một mục tiêu.</dt>
                 <dd>Vào <em>Cài đặt → Lưu trữ</em> và bấm <em>Khôi phục</em>. Mọi thứ đã được lưu trữ chung với mục tiêu sẽ trở lại.</dd>
             </dl>

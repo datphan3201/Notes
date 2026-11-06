@@ -5,6 +5,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 ## 2026-11-05
 
 ### Added
+- **Deleting for good:** *Delete for good* and *Empty archive* in Settings › Archive; *Delete account* for administrators (type the email; ordinary accounts only) and for everyone in Settings › Security (password). Deletion follows the database's foreign keys in one transaction and removes the account's private files. ([archive](docs/ui/settings/archive.md), [admin](docs/ui/admin/README.md), [security](docs/ui/settings/password.md))
 - `planner` now also runs the scheduler while it serves the app, so Task reminder emails and periodic jobs work without a server (`--no-scheduler` to skip).
 - `planner` command (`tools/dev/install-command.sh`): one word to serve the checkout; the serve scripts now start the user-level database themselves and rebuild the frontend only when it changed.
 - `tools/dev/funnel.sh`: serve this checkout at a fixed `https://<machine>.<tailnet>.ts.net` address through Tailscale Funnel, with live collaboration on the same name; shares its setup steps with `tunnel.sh` through `tools/dev/lib.sh`. ([docs](docs/operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel))

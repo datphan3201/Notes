@@ -30,6 +30,7 @@ import { initTwoFactor } from './settings/two-factor.js';
 import { initTaskHistory } from './settings/task-history.js';
 import { initUserReports } from './settings/user-reports.js';
 import { initArchivePage } from './settings/archive.js';
+import { initAccountDeletion } from './settings/account-deletion.js';
 import { initNavigation } from './lib/navigation';
 import { initWorkspaceUI } from './lib/workspace-ui';
 import { initDialogBackdropClose } from './lib/dialog-backdrop.js';
@@ -166,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userReports) initUserReports(userReports);
     const archive = document.querySelector('[data-archive-settings]');
     if (archive) initArchivePage(archive);
+    const accountDelete = document.querySelector('[data-account-delete]');
+    if (accountDelete) initAccountDeletion(accountDelete);
     initWalkthrough({ ready: notesReady });
 
     document.querySelectorAll('[data-avatar-fallback]').forEach((avatar) => {

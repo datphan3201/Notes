@@ -64,4 +64,26 @@
         </form>
         <p class="save-status" data-two-factor-status role="status"></p>
     </div>
+    <div class="settings-panel settings-panel-narrow danger-zone" data-account-delete>
+        <h2><?= $view->e($view->t('Delete account')) ?></h2>
+        <?php if (($user['role'] ?? 'user') === 'admin'): ?>
+            <p class="subtle-copy"><?= $view->e($view->t('An administrator account cannot be deleted here. The server operator removes the admin role first.')) ?></p>
+        <?php else: ?>
+            <p class="subtle-copy"><?= $view->e($view->t('Deletes your account and everything in it for good: goals, tasks, habits, notes and their files, reviews and shares. Team goals you created are deleted for their members too. This cannot be undone.')) ?></p>
+            <form class="settings-form" data-account-delete-form novalidate>
+                <div class="field">
+                    <label for="delete-password"><?= $view->e($view->t('Current password')) ?></label>
+                    <input id="delete-password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <label class="checkbox-field">
+                    <input type="checkbox" name="understood" required>
+                    <span><?= $view->e($view->t('I understand that my data cannot be recovered.')) ?></span>
+                </label>
+                <div class="form-actions">
+                    <button class="button button-danger" type="submit"><?= $view->e($view->t('Delete my account')) ?></button>
+                    <span class="save-status" data-account-delete-status role="status"></span>
+                </div>
+            </form>
+        <?php endif; ?>
+    </div>
 </section>

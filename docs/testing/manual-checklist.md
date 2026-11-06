@@ -330,6 +330,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] ARCHIVE01 — Archive a Goal with its Milestones and Tasks: Settings › Archive shows only the Goal with “comes back with N items”; Restore brings the Goal, Milestones and Tasks back to Goals, Tasks and Calendar with their data.
 - [ ] ARCHIVE02 — A Task archived on its own inside a Goal that was archived later stays archived after the Goal is restored, and its Restore is disabled (naming the Goal) until then.
 - [ ] ARCHIVE03 — With four active Areas, restoring an archived Area shows the four-Area message; after archiving another it succeeds. Type filter and name search page through 12 items; restoring in a second tab after the item changed shows a reload message without restoring.
+- [ ] ARCHIVE04 — Delete for good asks first and removes the item with everything beneath it; a Habit that supported a deleted Goal stays with no Goal and the Dashboard roadmap asks for a new choice. Empty archive deletes everything archived and nothing active.
 
 ## Email links — EMAIL
 
@@ -354,6 +355,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] SECURITY07 — Request allowed email fallback for TOTP and verify intended challenge behavior.
 - [ ] SECURITY08 — Disable 2FA with current password on QA account; restore intended final access settings.
 - [ ] SECURITY09 — Recovery by code: the email's 6-digit code leads to the new-password form once; five wrong codes spend it.
+- [ ] SECURITY10 — On a disposable account, Delete account in Security refuses a wrong password, then deletes the account and its data, signs out and the email can no longer sign in. An administrator account shows an explanation instead of the form.
 
 ## AI — AI
 
@@ -387,6 +389,7 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] ADMIN03 — C searches users and locks/unlocks QA B; active sessions and sign-in reflect lock state.
 - [ ] ADMIN04 — Self-lock is rejected; team-admin membership does not grant system-admin rights.
 - [ ] ADMIN05 — Update valid system history limit; reject out-of-range settings and verify cap in a controlled maintenance case.
+- [ ] ADMIN06 — Delete account on a disposable ordinary account: a wrong email changes nothing; the right email deletes it with its notes, shares and team goals it created, and Administrator activity shows Deleted an account. Administrators have no Delete button.
 
 ## Cross-cutting UI/API checks — COMMON
 

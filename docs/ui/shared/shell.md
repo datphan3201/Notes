@@ -19,7 +19,7 @@ AccountController renders page shell/bootstrap; page modules load their own data
 | Layer | Entry point |
 | --- | --- |
 | UI / DOM | [app.php · data-app-body](../../../frontend/src/views/layouts/app.php#L104)<br>[guest.php · $view-&gt;assets()](../../../frontend/src/views/layouts/guest.php#L12)<br>[icons.php · &lt;svg](../../../frontend/src/views/layouts/icons.php#L2) |
-| Browser logic | [app.js · DOMContentLoaded](../../../frontend/src/js/app.js#L91)<br>[navigation.js · export function initNavigation](../../../frontend/src/js/lib/navigation.js#L3) |
+| Browser logic | [app.js · DOMContentLoaded](../../../frontend/src/js/app.js#L92)<br>[navigation.js · export function initNavigation](../../../frontend/src/js/lib/navigation.js#L3) |
 | Controller / service / domain | [AccountController.php · private function renderApplicationPage(](../../../backend/src/Http/Controller/AccountController.php#L242) |
 | Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_php_templates_preserve_dom_contract_and_escape_bootstrap_data(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L143) |
 | HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L106) |

@@ -24,7 +24,10 @@
                 <input id="archive-search" type="search" placeholder="<?= $view->e($view->t('Search names')) ?>" data-archive-search>
             </div>
         </div>
-        <p class="save-status" data-archive-status role="status"></p>
+        <div class="archive-tools">
+            <p class="save-status" data-archive-status role="status"></p>
+            <button class="button button-danger-quiet" type="button" data-archive-empty hidden><?= $view->e($view->t('Empty archive')) ?></button>
+        </div>
         <div class="planning-list" data-archive-list aria-live="polite"></div>
         <div class="collection-pagination" data-archive-pagination></div>
     </div>

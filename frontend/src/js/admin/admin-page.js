@@ -12,6 +12,7 @@ const element = (tag, className, text) => {
 const ACTIVITY_LABELS = {
     'account.lock': 'Locked an account',
     'account.unlock': 'Unlocked an account',
+    'account.delete': 'Deleted an account',
     'account.role': 'Changed an account role',
     'account.warn': 'Warned an account',
     'note.revoke_shares': 'Stopped sharing a note',
@@ -129,6 +130,29 @@ export function initAdminPage(root) {
                     locked ? {} : { reason },
                 );
                 status.textContent = locked ? t('Account unlocked.') : t('Account locked.');
+                reloadAll();
+            } catch (error) {
+                fail(error);
+            }
+        });
+        return button;
+    };
+
+    // Deleting is for good, so the administrator types the account's email to confirm.
+    const deleteButton = (account) => {
+        const button = element('button', 'button button-danger-quiet', t('Delete account'));
+        button.type = 'button';
+        button.addEventListener('click', async () => {
+            const typed = window.prompt(
+                t(
+                    'This deletes :email and all of their data for good. Type the email to confirm.',
+                ).replace(':email', account.email),
+                '',
+            );
+            if (typed === null) return;
+            try {
+                await remove(`/api/v1/admin/users/${account.id}`, { confirm_email: typed });
+                status.textContent = t('Account deleted.');
                 reloadAll();
             } catch (error) {
                 fail(error);
@@ -303,7 +327,11 @@ export function initAdminPage(root) {
                     row.append(
                         element('span', 'context-chip', t('Admin · managed in the server console')),
                     );
-                else row.append(lockButton(account, account.locked));
+                else {
+                    const actions = element('div', 'action-row');
+                    actions.append(lockButton(account, account.locked), deleteButton(account));
+                    row.append(actions);
+                }
                 userList.append(row);
             }
         } catch (error) {
