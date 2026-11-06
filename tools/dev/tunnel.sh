@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run Planner from this checkout and expose it through Cloudflare quick tunnels, in one command.
 #
-#   bash tools/dev/tunnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--yes]
+#   bash tools/dev/tunnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--no-scheduler] [--yes]
 #
 # For a development machine that already runs the app (backend/.env and its database). It installs
 # nothing and does not edit backend/.env: the public URLs are passed to PHP as environment
@@ -16,6 +16,7 @@ APP_PORT=8000
 RT_PORT=8090
 BUILD=auto
 REALTIME=true
+SCHEDULER=true
 ASSUME_YES=false
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -24,6 +25,7 @@ while [ $# -gt 0 ]; do
         --build) BUILD=true; shift ;;
         --no-build) BUILD=false; shift ;;
         --no-realtime) REALTIME=false; shift ;;
+        --no-scheduler) SCHEDULER=false; shift ;;
         --yes | -y) ASSUME_YES=true; shift ;;
         -h | --help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -76,6 +78,7 @@ cat <<EOF
 
   Planner is public at:  ${APP_URL}
   Live collaboration:    $([ "${REALTIME}" = true ] && echo "on (wss://${RT_HOST})" || echo off)
+  Scheduler:             ${SCHEDULER_STATE}
   Local:                 http://127.0.0.1:${APP_PORT} (sign in through the public URL; cookies are HTTPS-only)
   Logs:                  ${LOG_DIR}
 

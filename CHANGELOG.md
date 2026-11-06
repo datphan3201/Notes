@@ -5,6 +5,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 ## 2026-11-05
 
 ### Added
+- `planner` now also runs the scheduler while it serves the app, so Task reminder emails and periodic jobs work without a server (`--no-scheduler` to skip).
 - `planner` command (`tools/dev/install-command.sh`): one word to serve the checkout; the serve scripts now start the user-level database themselves and rebuild the frontend only when it changed.
 - `tools/dev/funnel.sh`: serve this checkout at a fixed `https://<machine>.<tailnet>.ts.net` address through Tailscale Funnel, with live collaboration on the same name; shares its setup steps with `tunnel.sh` through `tools/dev/lib.sh`. ([docs](docs/operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel))
 - **Gantt view** in the Calendar: Goals, Milestones or Tasks as bars on a timeline that slides sideways and keeps growing, with Days/Weeks/Months zoom, expandable Goal → Milestone → Task rows, prerequisite links, and drag (or Alt+arrow) to move a bar or change its start or deadline. Goals and Milestones gain an optional **start date** (migration 0033), also editable in the floating editor and by the AI assistant. ([docs](docs/ui/calendar/README.md))

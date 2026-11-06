@@ -1,5 +1,5 @@
 # Shared steps of the "serve this checkout publicly" scripts (tunnel.sh, funnel.sh).
-# Sourced, not run. The caller sets APP_PORT, RT_PORT, BUILD, REALTIME and ASSUME_YES first.
+# Sourced, not run. The caller sets APP_PORT, RT_PORT, BUILD, REALTIME, SCHEDULER and ASSUME_YES first.
 # shellcheck shell=bash
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -123,11 +123,14 @@ build_frontend() {
     [ -f "${BACKEND}/public/build/manifest.json" ] || die "No built assets; run without --no-build."
 }
 
-# Starts the realtime server (when enabled) and the PHP server with the environment overrides the
-# caller exported (APP_URL, REALTIME_*); backend/.env is never edited.
+# Starts the realtime server (when enabled), the scheduler (when enabled) and the PHP server with
+# the environment overrides the caller exported (APP_URL, REALTIME_*); backend/.env is never edited.
 start_app() {
     cd "${BACKEND}"
     export VITE_DEV_URL="" SESSION_SECURE_COOKIE=true
+    if [ "${SCHEDULER:-false}" = true ]; then
+        start_scheduler
+    fi
     if [ "${REALTIME}" = true ]; then
         php bin/realtime.php >"${LOG_DIR}/realtime.log" 2>&1 &
         PIDS+=("$!")
@@ -135,6 +138,24 @@ start_app() {
     PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -S "127.0.0.1:${APP_PORT}" -t public dev-router.php \
         >"${LOG_DIR}/php.log" 2>&1 &
     PIDS+=("$!")
+}
+
+# The periodic jobs a server runs from cron (reminder emails every minute, repeating Tasks,
+# Task history, cleanup); see docs/operations/jobs.md. One scheduler per checkout: the lock is held
+# while this script runs, so a second copy, or a cron entry using the same lock, does not double up.
+SCHEDULER_STATE="off"
+start_scheduler() {
+    local lock="${LOG_DIR}/scheduler.lock"
+    mkdir -p "$(dirname "${lock}")"
+    exec {SCHEDULER_LOCK_FD}>"${lock}"
+    if ! command -v flock >/dev/null || ! flock -n "${SCHEDULER_LOCK_FD}"; then
+        SCHEDULER_STATE="already running elsewhere; not started"
+        say "A scheduler is already running for this checkout; not starting another."
+        return 0
+    fi
+    php bin/console schedule:work >"${LOG_DIR}/scheduler.log" 2>&1 &
+    PIDS+=("$!")
+    SCHEDULER_STATE="on (reminder emails every minute; log: ${LOG_DIR}/scheduler.log)"
 }
 
 wait_until_up() {
