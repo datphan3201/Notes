@@ -68,7 +68,19 @@ After a pull, install dependencies only when lockfiles changed, migrate when new
 
 ## Share the local app through Cloudflare quick tunnels
 
-From the repository root, `bash tools/dev/tunnel.sh` serves this checkout publicly in one step: it checks migrations (asking before applying pending ones, after a `mysqldump` backup into private storage), builds the frontend, opens one quick tunnel for the site and one for live collaboration, and starts `php -S` and `bin/realtime.php` with the public URLs as environment overrides. backend/.env is not edited and nothing is installed. Options: `--port`, `--realtime-port`, `--no-build`, `--no-realtime`, `--yes`. Ctrl+C stops every process; logs are in backend/storage/logs/tunnel. URLs change on every run, and all visitors share one client address for rate limits, so use [the server setup](deployment.md) for real hosting.
+From the repository root, `bash tools/dev/tunnel.sh` serves this checkout publicly in one step: it checks migrations (asking before applying pending ones, after a `mysqldump` backup into private storage), builds the frontend, opens one quick tunnel for the site and one for live collaboration, and starts `php -S` and `bin/realtime.php` with the public URLs as environment overrides. backend/.env is not edited and nothing is installed. Options: `--port`, `--realtime-port`, `--no-build`, `--no-realtime`, `--yes`. Ctrl+C stops every process; logs are in backend/storage/logs/tunnel. URLs change on every run (use funnel.sh below for a fixed one), and all visitors share one client address for rate limits, so use [the server setup](deployment.md) for real hosting.
+
+## Share the local app at a fixed address with Tailscale Funnel
+
+`bash tools/dev/funnel.sh` does the same as tunnel.sh but publishes the app at this machine's fixed Tailscale name, `https://<machine>.<tailnet>.ts.net`, so the address and links in emails survive restarts. One Funnel serves the site and forwards `/realtime` to the live collaboration server on the same name; Ctrl+C stops the app and turns off only the Funnel handlers the script added. Options are the same as tunnel.sh. The shared steps (database check and backup before migrations, frontend build, starting PHP and realtime) live in [tools/dev/lib.sh](../../tools/dev/lib.sh).
+
+One-time setup on the machine (needs sudo and the owner's Tailscale account):
+
+1. Install and sign in: `curl -fsSL https://tailscale.com/install.sh | sh`, then `sudo tailscale up`.
+2. In the Tailscale admin console turn on MagicDNS and HTTPS certificates, and allow Funnel for this machine in the access-control policy (the console offers this the first time Funnel is used).
+3. `sudo tailscale set --operator=$USER`, so the script can configure Funnel without sudo.
+
+The machine must stay on; behind Funnel every visitor reaches PHP from loopback, so rate limits are shared as with quick tunnels. A Vercel or other HTTP-only proxy in front of the `.ts.net` name would break live collaboration (no WebSocket forwarding) and can cut long AI requests and large uploads, so link to the `.ts.net` name directly or use a domain with [the server setup](deployment.md).
 
 ## Existing Cloudflare Tunnel session
 
