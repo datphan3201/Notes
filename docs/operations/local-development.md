@@ -72,6 +72,8 @@ From the repository root, `bash tools/dev/tunnel.sh` serves this checkout public
 
 ## Share the local app at a fixed address with Tailscale Funnel
 
+Short form: run `bash tools/dev/install-command.sh` once; afterwards `planner` runs funnel.sh and `planner tunnel` runs tunnel.sh from any folder. Both scripts start a user-level MySQL by themselves when the database is down and `~/.local/share/planner/mysql/my.cnf` (or `PLANNER_MYSQL_CNF`) exists, and build the frontend only when its sources or lockfile changed since the last build (`--build` forces a build, `--no-build` skips it).
+
 `bash tools/dev/funnel.sh` does the same as tunnel.sh but publishes the app at this machine's fixed Tailscale name, `https://<machine>.<tailnet>.ts.net`, so the address and links in emails survive restarts. One Funnel serves the site and forwards `/realtime` to the live collaboration server on the same name; Ctrl+C stops the app and turns off only the Funnel handlers the script added. Options are the same as tunnel.sh. The shared steps (database check and backup before migrations, frontend build, starting PHP and realtime) live in [tools/dev/lib.sh](../../tools/dev/lib.sh).
 
 One-time setup on the machine (needs sudo and the owner's Tailscale account):

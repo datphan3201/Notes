@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run Planner from this checkout and expose it through Cloudflare quick tunnels, in one command.
 #
-#   bash tools/dev/tunnel.sh [--port 8000] [--realtime-port 8090] [--no-build] [--no-realtime] [--yes]
+#   bash tools/dev/tunnel.sh [--port 8000] [--realtime-port 8090] [--build | --no-build] [--no-realtime] [--yes]
 #
 # For a development machine that already runs the app (backend/.env and its database). It installs
 # nothing and does not edit backend/.env: the public URLs are passed to PHP as environment
@@ -14,13 +14,14 @@ set -euo pipefail
 
 APP_PORT=8000
 RT_PORT=8090
-BUILD=true
+BUILD=auto
 REALTIME=true
 ASSUME_YES=false
 while [ $# -gt 0 ]; do
     case "$1" in
         --port) APP_PORT="$2"; shift 2 ;;
         --realtime-port) RT_PORT="$2"; shift 2 ;;
+        --build) BUILD=true; shift ;;
         --no-build) BUILD=false; shift ;;
         --no-realtime) REALTIME=false; shift ;;
         --yes | -y) ASSUME_YES=true; shift ;;

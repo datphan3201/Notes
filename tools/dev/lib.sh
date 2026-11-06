@@ -46,11 +46,29 @@ require_runtime() {
     fi
 }
 
+# A MySQL that runs under the user's own account (not a system service) does not start with the
+# machine. When the database is down and such a configuration exists, start it and wait for it.
+MYSQL_CNF="${PLANNER_MYSQL_CNF:-${HOME}/.local/share/planner/mysql/my.cnf}"
+start_local_database() {
+    [ -f "${MYSQL_CNF}" ] && command -v mysqld >/dev/null || return 1
+    say "Starting the database (${MYSQL_CNF})…"
+    # setsid: the server keeps running after this script and its terminal end.
+    setsid mysqld --defaults-file="${MYSQL_CNF}" --daemonize >/dev/null 2>&1 </dev/null || return 1
+    for _ in $(seq 1 30); do
+        php bin/console migrate:status >/dev/null 2>&1 && return 0
+        sleep 1
+    done
+    return 1
+}
+
 # Refuses to serve an outdated schema: pending migrations are applied after a backup (asked first
 # unless --yes).
 prepare_database() {
     cd "${BACKEND}"
     local status pending db_name backup answer
+    if ! php bin/console migrate:status >/dev/null 2>&1; then
+        start_local_database || true
+    fi
     # Checked on its own: inside a pipeline a failure would end the script without a word.
     if ! status="$(php bin/console migrate:status 2>/dev/null)"; then
         local target
@@ -86,7 +104,17 @@ prepare_database() {
     php bin/console migrate:check
 }
 
+# BUILD is true (always), false (never) or auto: build only when there are no built assets or the
+# frontend sources or lockfile changed after the last build.
 build_frontend() {
+    local manifest="${BACKEND}/public/build/manifest.json"
+    if [ "${BUILD}" = auto ]; then
+        if [ ! -f "${manifest}" ] || [ -n "$(find "${ROOT}/frontend/src" "${ROOT}/frontend/package-lock.json" -newer "${manifest}" -print -quit 2>/dev/null)" ]; then
+            BUILD=true
+        else
+            say "Frontend unchanged since the last build; skipping the build (--build forces one)."
+        fi
+    fi
     if [ "${BUILD}" = true ]; then
         command -v npm >/dev/null || die "npm is not on PATH (or pass --no-build)."
         say "Building the frontend…"
