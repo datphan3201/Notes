@@ -1,6 +1,6 @@
 # Repository instructions
 
-The Next.js/FastAPI migration is developed on `feat/personal-ai-planner-v1` under `apps/`. Read [the migration plan](docs/migration/personal-ai-planner.md) and [.ai/rules/modern.md](.ai/rules/modern.md) for those paths. Keep the PHP/JS baseline and private data until the documented cutover gates pass.
+The Next.js/FastAPI system is deployed on `main` under `apps/`. Read [the migration plan](docs/migration/personal-ai-planner.md), [cloud operations](docs/operations/cloud.md) and [.ai/rules/modern.md](.ai/rules/modern.md) for those paths. The legacy PHP/JS baseline has been retired and removed.
 
 ## Read before work
 
@@ -13,7 +13,7 @@ The Next.js/FastAPI migration is developed on `feat/personal-ai-planner-v1` unde
 
 - **No tech-stack or architecture lock-in:** Previous restrictions mandating framework-free PHP 8.5, raw PDO without an ORM, no dependency-injection container, or vanilla JavaScript/PHP views are **lifted**.
 - Agents are explicitly authorized to introduce new frameworks, runtimes, languages, ORMs, build tools, state managers, or directory structures when migrating or refactoring the tech stack as requested by the user.
-- The current code under [backend](backend/) and [frontend](frontend/) serves as the functional baseline and reference specification for product features and domain behavior during migration.
+- The active runtime is under [apps/api](apps/api/) (FastAPI) and [apps/web](apps/web/) (Next.js 16). The legacy PHP and vanilla JavaScript codebase has been retired and removed per user directive.
 
 ## Karpathy Coding Guidelines
 
