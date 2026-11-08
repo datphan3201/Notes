@@ -5,6 +5,7 @@ services:
     name: planner-api
     runtime: docker
     plan: free
+    region: singapore
     branch: feat/personal-ai-planner-v1
     rootDir: apps/api
     dockerfilePath: ./Dockerfile
@@ -19,9 +20,9 @@ services:
       - key: PLANNER_DATABASE_SCHEMA
         value: planner
       - key: PLANNER_POOL_SIZE
-        value: "2"
+        value: "4"
       - key: PLANNER_POOL_OVERFLOW
-        value: "1"
+        value: "2"
       - key: PLANNER_WEB_ORIGIN
         sync: false
       - key: PLANNER_SUPABASE_URL
