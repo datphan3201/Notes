@@ -2,9 +2,7 @@
 
 [Routes](deployment-routes.md) · [Status](status.md) · [Open issues](../issues.md)
 
-The user selected this cloud combination on 2026-11-08. The repository includes a free-tier trial configuration; account/project linking, public endpoints, credentials and hosted acceptance are still required. No cloud resources or user-data transfer were performed during preparation. Funnel remains the working local fallback. Assistant context selection remains deferred under ISSUE-063.
-
-**Work is paused at the user's request.** See the [handoff](deployment-handoff.md) for verified changes, missing account configuration and the exact resume point.
+The user selected this cloud combination on 2026-11-08. The system was provisioned and deployed to production on 2026-11-08: Vercel frontend (`https://planner-t1.vercel.app`), Render Singapore backend (`https://planner-api-sg.onrender.com`), and Supabase PostgreSQL (schema `planner`). For live operations, environment variables, health checks and incident runbooks, see the [Cloud operations guide](../operations/cloud.md).
 
 ## Topology and Free limitations
 

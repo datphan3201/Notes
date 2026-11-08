@@ -1,6 +1,6 @@
 # UI-to-code documentation
 
-Current migrated runtime: [approved UI integration](migration/ui-integration.md) · [deployment routes](migration/deployment-routes.md).
+Current migrated runtime: [approved UI integration](migration/ui-integration.md) · [deployment routes](migration/deployment-routes.md) · [cloud operations](operations/cloud.md).
 
 The Next.js/FastAPI migration has its own [plan](migration/personal-ai-planner.md), [development guide](migration/development.md), [status](migration/status.md) and [cloud runbook](migration/cloud.md). The route/source traces below describe the retained PHP/JavaScript baseline until migration parity is verified.
 

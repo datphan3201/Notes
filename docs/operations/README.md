@@ -8,6 +8,7 @@
 | Run the existing database/app with hot reload | [Local development](local-development.md) |
 | Release, serve with PHP-FPM, back up and restore | [Production](deployment.md) |
 | Reuse an existing tunnel and deploy green main without another host | [Existing runtime](deployment.md#reuse-an-already-running-php-server-and-cloudflare-tunnel) |
+| Cloud operations (Render, Vercel & Supabase) | [Cloud operations](cloud.md) |
 | Recurrence, reminders, snapshots and cleanup | [Jobs and mail](jobs.md) |
 | Live collaboration server (`planner-realtime`) | [Jobs and processes](jobs.md#realtime-server) |
 | Console command navigation | [CLI reference](../reference/cli.md) |
