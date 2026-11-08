@@ -69,7 +69,7 @@
         <?php if (($user['role'] ?? 'user') === 'admin'): ?>
             <p class="subtle-copy"><?= $view->e($view->t('An administrator account cannot be deleted here. The server operator removes the admin role first.')) ?></p>
         <?php else: ?>
-            <p class="subtle-copy"><?= $view->e($view->t('Deletes your account and everything in it for good: goals, tasks, habits, notes and their files, reviews and shares. Team goals you created are deleted for their members too. This cannot be undone.')) ?></p>
+            <p class="subtle-copy"><?= $view->e($view->t('Deletes your account and everything in it for good: goals, tasks, habits, notes and their files, reviews and shares. This cannot be undone.')) ?></p>
             <form class="settings-form" data-account-delete-form novalidate>
                 <div class="field">
                     <label for="delete-password"><?= $view->e($view->t('Current password')) ?></label>

@@ -54,9 +54,6 @@ HTTP creation materializes immediately. The scheduler materializes hourly; Task 
 
 <!-- END GENERATED TRACE -->
 
-## Personal recurrence versus Teamwork
-
-Personal Tasks use TaskSeries and a forward materialization horizon. Team Tasks use `TeamTaskRepeat` to create a next Task after completion. Use [Teamwork](../teamwork/README.md), not the personal series service, when changing that behavior.
 
 ## Terminal state and request precedence
 

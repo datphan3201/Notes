@@ -13,8 +13,8 @@ export const walkthroughSteps = [
         },
         instructions: [
             {
-                en: 'The sidebar opens Dashboard, Goals, Tasks, Calendar, Habits, Notes, Reviews and Teamwork. On a phone, open the menu button first.',
-                vi: 'Thanh bên mở Tổng quan, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú, Đánh giá và Làm việc nhóm. Trên điện thoại, mở nút menu trước.',
+                en: 'The sidebar opens Dashboard, Goals, Tasks, Calendar, Habits, Notes and Reviews. On a phone, open the menu button first.',
+                vi: 'Thanh bên mở Tổng quan, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú và Đánh giá. Trên điện thoại, mở nút menu trước.',
             },
             {
                 en: 'The bell shows invitations and reminders, ? reopens this tour, and the sparkle button at the bottom right opens the AI assistant.',
@@ -185,7 +185,7 @@ export const walkthroughSteps = [
     {
         id: 'reviews',
         shot: 'reviews',
-        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        group: { en: 'Look back and plan ahead', vi: 'Nhìn lại và lên kế hoạch' },
         title: { en: 'Look back with Reviews', vi: 'Nhìn lại với Đánh giá' },
         intro: {
             en: 'A daily, weekly or monthly review gathers what you did; add what went well, what went wrong and what to change next.',
@@ -199,27 +199,11 @@ export const walkthroughSteps = [
         ],
         imageAlt: { en: 'A weekly review', vi: 'Một bản đánh giá tuần' },
     },
-    {
-        id: 'teamwork',
-        shot: 'teamwork',
-        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
-        title: { en: 'Work as a team', vi: 'Làm việc nhóm' },
-        intro: {
-            en: 'A team goal has members, assigned tasks, progress and a chat, separate from your personal plans.',
-            vi: 'Mục tiêu nhóm có thành viên, công việc được giao, tiến độ và trò chuyện, tách khỏi kế hoạch cá nhân.',
-        },
-        instructions: [
-            {
-                en: 'Roles: Admin manages members, Editor manages tasks, Viewer reads and updates their own tasks.',
-                vi: 'Vai trò: Quản trị quản lý thành viên, Biên tập quản lý công việc, Người xem chỉ xem và cập nhật việc của mình.',
-            },
-        ],
-        imageAlt: { en: 'A team goal', vi: 'Một mục tiêu nhóm' },
-    },
+
     {
         id: 'assistant',
         shot: 'assistant',
-        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        group: { en: 'Look back and plan ahead', vi: 'Nhìn lại và lên kế hoạch' },
         title: { en: 'Ask the AI assistant', vi: 'Nhờ trợ lý AI' },
         intro: {
             en: 'Ask about your plans, or have the assistant create, move or reschedule things for you.',
@@ -239,7 +223,7 @@ export const walkthroughSteps = [
     {
         id: 'more',
         shot: 'archive',
-        group: { en: 'Look back and together', vi: 'Nhìn lại và làm cùng nhau' },
+        group: { en: 'Look back and plan ahead', vi: 'Nhìn lại và lên kế hoạch' },
         title: { en: 'Settings and the full guide', vi: 'Cài đặt và hướng dẫn đầy đủ' },
         intro: {
             en: 'The gear at the bottom left opens Profile, Appearance, Security, Notifications, Task history, Archive and the User guide.',

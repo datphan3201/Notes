@@ -48,7 +48,7 @@ Settings › Security ends with Delete account: the current password, a tick tha
 | Browser logic | [account-deletion.js · export function initAccountDeletion](../../../frontend/src/js/settings/account-deletion.js#L5) |
 | Controller / service / domain | [AccountDeletionService.php · public function deleteOwn(](../../../backend/src/Application/Account/AccountDeletionService.php#L78)<br>[AccountDeletionController.php · public function own(](../../../backend/src/Http/Controller/AccountDeletionController.php#L23) |
 | Persistence | [PdoCascadeDeleter.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php#L42) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_people_delete_their_own_account_with_their_password(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L475) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_people_delete_their_own_account_with_their_password(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L424) |
 | HTTP | `POST /api/v1/account/delete` (`api.account.delete`) → [AccountDeletionController::own](../../../backend/src/Http/Controller/AccountDeletionController.php#L23) |
 
 <!-- END GENERATED TRACE -->

@@ -1,0 +1,69 @@
+/* Habits actions retain the existing theme, calendar and secondary popover. */
+[data-habits-page] .habit-row {
+    grid-template-columns: 44px minmax(0, 1fr) max-content max-content;
+    align-items: start;
+}
+[data-habits-page] .habit-row-copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+[data-habits-page] .habit-row-copy .context-chip {
+    display: inline-block;
+    justify-self: start;
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
+}
+[data-habits-page] .habit-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+[data-habits-page] .habit-row > .habit-tick {
+    grid-column: 1;
+    grid-row: 1;
+}
+[data-habits-page] .habit-dialog-footer {
+    position: sticky;
+    bottom: -1px;
+    padding-block: 1rem;
+    background: var(--surface);
+    z-index: 1;
+}
+@media (max-width: 1100px) {
+    [data-habits-page] .habit-row {
+        grid-template-columns: 44px minmax(0, 1fr) max-content;
+    }
+    [data-habits-page] .habit-row > .habit-checkin-days {
+        grid-column: 2 / -1;
+        grid-row: 2;
+    }
+    [data-habits-page] .habit-row-actions {
+        grid-column: 3;
+        grid-row: 1;
+    }
+}
+@media (max-width: 600px) {
+    [data-habits-page] .habit-row {
+        grid-template-columns: 44px minmax(0, 1fr);
+    }
+    [data-habits-page] .habit-row > .habit-checkin-days {
+        grid-column: 1 / -1;
+        gap: 0;
+        min-width: 0;
+        overflow-x: auto;
+    }
+    [data-habits-page] .habit-checkin-days button {
+        min-width: 28px;
+        flex: 1 0 28px;
+        padding-inline: 0;
+    }
+    [data-habits-page] .habit-row-actions {
+        grid-column: 2;
+        grid-row: 3;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+    }
+}

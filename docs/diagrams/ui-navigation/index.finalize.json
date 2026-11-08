@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "tree",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:45:21.268Z",
+  "startedAt": "2026-11-07T13:55:07.440Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/candidate.json",
-    "sha256": "c6df31bbeccc0a240bd6510c614e83c91377a9bb8b3560b757d16aa9171e20c7",
-    "bytes": 6879
+    "sha256": "69f6c6fee63be77ddb9fae2095f110e1650b2badff28e005a9c2311f6cb062e9",
+    "bytes": 3407
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
-    "sha256": "9e269f59ef3d8c09691f7416fb1825e7629479ed09bde8f6aeb006cf0ddf48d7",
-    "bytes": 859097
+    "sha256": "ebc9e2f22c6d52fd021d9495b738c6b36b998e64b0819055455b4e4c6b99bc91",
+    "bytes": 852739
   },
   "stages": {
     "validate": {
@@ -31,8 +31,6 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
         "--quality",
         "showcase",
-        "--repo-root",
-        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
@@ -40,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "c6df31bbeccc0a240bd6510c614e83c91377a9bb8b3560b757d16aa9171e20c7",
-          "bytes": 6879
+          "sha256": "69f6c6fee63be77ddb9fae2095f110e1650b2badff28e005a9c2311f6cb062e9",
+          "bytes": 3407
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 298,
+      "durationMs": 329,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -66,25 +64,23 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
         "--quality",
         "showcase",
-        "--repo-root",
-        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "b3ad58d5-5e2a-402b-a18c-404aa45e53e3",
+        "receiptId": "c3b993aa-4114-4dfd-bc02-297411f2821a",
         "ok": true,
         "command": "deliver",
         "type": "tree",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
         "specification": {
-          "sha256": "c6df31bbeccc0a240bd6510c614e83c91377a9bb8b3560b757d16aa9171e20c7",
-          "bytes": 6879
+          "sha256": "69f6c6fee63be77ddb9fae2095f110e1650b2badff28e005a9c2311f6cb062e9",
+          "bytes": 3407
         },
         "artifact": {
-          "sha256": "9e269f59ef3d8c09691f7416fb1825e7629479ed09bde8f6aeb006cf0ddf48d7",
-          "bytes": 859097
+          "sha256": "ebc9e2f22c6d52fd021d9495b738c6b36b998e64b0819055455b4e4c6b99bc91",
+          "bytes": 852739
         },
         "validation": {
           "checksPassed": 9,
@@ -93,12 +89,6 @@
           "compositionStatus": "pass",
           "errors": 0,
           "warnings": 0
-        },
-        "evidence": {
-          "verified": true,
-          "repository": "https://github.com/datphan3201/Notes",
-          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
-          "references": 23
         },
         "update": {
           "status": "unavailable",
@@ -116,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 122,
+      "durationMs": 127,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,8 +118,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
         "artifact": {
-          "sha256": "9e269f59ef3d8c09691f7416fb1825e7629479ed09bde8f6aeb006cf0ddf48d7",
-          "bytes": 859097
+          "sha256": "ebc9e2f22c6d52fd021d9495b738c6b36b998e64b0819055455b4e4c6b99bc91",
+          "bytes": 852739
         },
         "checks": [
           {
@@ -243,18 +233,18 @@
             },
             "minimumSourceTextPx": 11,
             "minimumProjectedTextPx": 11,
-            "semanticTextCount": 25
+            "semanticTextCount": 24
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "b3ad58d5-5e2a-402b-a18c-404aa45e53e3"
+        "deliveryReceiptId": "c3b993aa-4114-4dfd-bc02-297411f2821a"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1702,
+      "durationMs": 2697,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -263,7 +253,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-goals-ui-20261104"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-teamwork-removal"
       ],
       "execution": "in-process",
       "receipt": {
@@ -274,11 +264,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "b3ad58d5-5e2a-402b-a18c-404aa45e53e3",
+        "deliveryReceiptId": "c3b993aa-4114-4dfd-bc02-297411f2821a",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.html",
-          "sha256": "9e269f59ef3d8c09691f7416fb1825e7629479ed09bde8f6aeb006cf0ddf48d7",
-          "bytes": 859097
+          "sha256": "ebc9e2f22c6d52fd021d9495b738c6b36b998e64b0819055455b4e4c6b99bc91",
+          "bytes": 852739
         },
         "state": {
           "detail": "read",
@@ -300,7 +290,7 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1158,
+              "scrollHeight": 933,
               "overflowX": false,
               "overflowY": true,
               "verticalScrollAccepted": true,
@@ -315,9 +305,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 68,
                 "diagramChromePx": 78,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -350,13 +340,13 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1224,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
@@ -365,9 +355,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -400,28 +390,28 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 1224,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 480,
+              "diagramWidth": 523,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 844,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 7.5106685633001415,
-              "minimumProjectedNonEdgeTextPx": 7.5106685633001415,
+              "minimumProjectedNodeTextPx": 8.183499288762448,
+              "minimumProjectedNonEdgeTextPx": 8.183499288762448,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -460,18 +450,18 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 512,
+              "diagramWidth": 660,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 84,
                 "diagramChromePx": 94,
                 "svgPx": 1066,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 8.011379800853485,
-              "minimumProjectedNonEdgeTextPx": 8.011379800853485,
+              "minimumProjectedNodeTextPx": 10.327169274537695,
+              "minimumProjectedNonEdgeTextPx": 10.327169274537695,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -553,7 +543,7 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1158,
+              "scrollHeight": 933,
               "overflowX": false,
               "overflowY": true,
               "verticalScrollAccepted": true,
@@ -568,9 +558,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 68,
                 "diagramChromePx": 78,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -603,13 +593,13 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1224,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
@@ -618,9 +608,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -653,28 +643,28 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 1224,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 480,
+              "diagramWidth": 523,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 844,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 7.5106685633001415,
-              "minimumProjectedNonEdgeTextPx": 7.5106685633001415,
+              "minimumProjectedNodeTextPx": 8.183499288762448,
+              "minimumProjectedNonEdgeTextPx": 8.183499288762448,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -713,18 +703,18 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 512,
+              "diagramWidth": 660,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 84,
                 "diagramChromePx": 94,
                 "svgPx": 1066,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 8.011379800853485,
-              "minimumProjectedNonEdgeTextPx": 8.011379800853485,
+              "minimumProjectedNodeTextPx": 10.327169274537695,
+              "minimumProjectedNonEdgeTextPx": 10.327169274537695,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -758,7 +748,7 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1158,
+              "scrollHeight": 933,
               "overflowX": false,
               "overflowY": true,
               "verticalScrollAccepted": true,
@@ -773,9 +763,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 68,
                 "diagramChromePx": 78,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -808,13 +798,13 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1224,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
@@ -823,9 +813,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 775,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
               "minimumProjectedNodeTextPx": 7.5106685633001415,
@@ -858,28 +848,28 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 1224,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
+              "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 480,
+              "diagramWidth": 523,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 76,
                 "diagramChromePx": 84,
-                "svgPx": 1000,
+                "svgPx": 844,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 7.5106685633001415,
-              "minimumProjectedNonEdgeTextPx": 7.5106685633001415,
+              "minimumProjectedNodeTextPx": 8.183499288762448,
+              "minimumProjectedNonEdgeTextPx": 8.183499288762448,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -918,18 +908,18 @@
               "readerFit": "intrinsic-height",
               "ok": true,
               "readerWidth": 960,
-              "diagramWidth": 512,
+              "diagramWidth": 660,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 84,
                 "diagramChromePx": 94,
                 "svgPx": 1066,
                 "cardsPx": 0,
-                "viewBoxHeight": 1464
+                "viewBoxHeight": 1135
               },
               "viewBoxWidth": 703,
-              "minimumProjectedNodeTextPx": 8.011379800853485,
-              "minimumProjectedNonEdgeTextPx": 8.011379800853485,
+              "minimumProjectedNodeTextPx": 10.327169274537695,
+              "minimumProjectedNonEdgeTextPx": 10.327169274537695,
               "minimumProjectedEdgeTextPx": null,
               "minimumProjectedNodeText": "Routes andin-page controls",
               "minimumProjectedNodeTextDetail": "context",
@@ -959,7 +949,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-goals-ui-20261104",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-teamwork-removal",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -974,18 +964,18 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-goals-ui-20261104/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/ui-navigation/review-teamwork-removal/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:45:23.500Z",
-  "durationMs": 2232,
+  "finishedAt": "2026-11-07T13:55:10.708Z",
+  "durationMs": 3267,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-04T03:09:42.399Z",
-    "source": "cache",
+    "checkedAt": "2026-11-07T13:55:07.523Z",
+    "source": "network",
     "noticeRequired": false,
     "noticeText": null
   }

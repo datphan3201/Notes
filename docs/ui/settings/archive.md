@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-Archiving alone never deletes planning data: it hides an Area, Goal, Milestone, Task or Habit from every active list (Goals, Tasks, Calendar, Dashboard, Habits, the AI assistant) and keeps its history, check-ins and Activity. Task history retention also archives old Tasks, so they appear here. The Archive page lists everything archived and restores it; Notes are deleted rather than archived and do not appear, and Team Goals have their own owner controls in [Teamwork](../teamwork/README.md).
+Archiving alone never deletes planning data: it hides an Area, Goal, Milestone, Task or Habit from every active list (Goals, Tasks, Calendar, Dashboard, Habits, the AI assistant) and keeps its history, check-ins and Activity. Task history retention also archives old Tasks, so they appear here. The Archive page lists everything archived and restores it; Notes are deleted rather than archived and do not appear.
 
 ## Restore rules
 
@@ -23,12 +23,12 @@ Lists the owner's archived Areas, Goals, Milestones, Tasks and Habits newest fir
 
 | Layer | Entry point |
 | --- | --- |
-| UI / DOM | [archive.php · data-archive-list](../../../frontend/src/views/settings/archive.php#L31)<br>[app.php · &#91;'Archive', '/settings/archive'](../../../frontend/src/views/layouts/app.php#L21) |
-| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1673) |
+| UI / DOM | [archive.php · data-archive-list](../../../frontend/src/views/settings/archive.php#L31)<br>[app.php · &#91;'Archive', '/settings/archive'](../../../frontend/src/views/layouts/app.php#L20) |
+| CSS | [feedback.css · /* Settings › Archive */](../../../frontend/src/css/feedback.css#L1364) |
 | Browser logic | [archive.js · export function initArchivePage](../../../frontend/src/js/settings/archive.js#L32)<br>[archive.js · export function archiveMatches](../../../frontend/src/js/settings/archive.js#L15)<br>[archive.js · export function restoreBlocker](../../../frontend/src/js/settings/archive.js#L25) |
 | Controller / service / domain | [ArchiveService.php · public function list(](../../../backend/src/Application/Archive/ArchiveService.php#L53) |
 | Persistence | [PdoArchiveRepository.php · public function archived(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php#L28) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L296)<br>[archive.test.js · test('archive filters by type and name](../../../frontend/tests/js/archive.test.js#L16) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L244)<br>[archive.test.js · test('archive filters by type and name](../../../frontend/tests/js/archive.test.js#L16) |
 | HTTP | `GET /settings/archive` (`settings.archive`) → [AccountController::settingsPage](../../../backend/src/Http/Controller/AccountController.php#L172)<br>`GET /api/v1/archive` (`api.archive.index`) → [ArchiveController::index](../../../backend/src/Http/Controller/ArchiveController.php#L21) |
 
 ### Restore with its group, parents first
@@ -42,7 +42,7 @@ Restore sends the item's version. The server locks the owner, refuses an item th
 | Browser logic | [archive.js · restore.addEventListener](../../../frontend/src/js/settings/archive.js#L89) |
 | Controller / service / domain | [ArchiveService.php · public function restore(](../../../backend/src/Application/Archive/ArchiveService.php#L90)<br>[ArchiveService.php · private function bundle(](../../../backend/src/Application/Archive/ArchiveService.php#L268)<br>[PlanningService.php · public function archive(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L256) |
 | Persistence | [PdoArchiveRepository.php · public function restore(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoArchiveRepository.php#L69) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L296)<br>[FullFeedbackHttpTest.php · public function test_archive_restores_an_area_only_below_the_active_area_limit(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L351)<br>[archive.test.js · test('only items inside an archived parent wait for it](../../../frontend/tests/js/archive.test.js#L31) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_lists_archived_items_and_restores_a_goal_with_what_was_archived_with_it(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L244)<br>[FullFeedbackHttpTest.php · public function test_archive_restores_an_area_only_below_the_active_area_limit(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L299)<br>[archive.test.js · test('only items inside an archived parent wait for it](../../../frontend/tests/js/archive.test.js#L31) |
 | HTTP | `POST /api/v1/archive/{type}/{id}/restore` (`api.archive.restore`) → [ArchiveController::restore](../../../backend/src/Http/Controller/ArchiveController.php#L43) |
 
 ### Delete for good and Empty archive
@@ -57,7 +57,7 @@ Each archived item has Delete for good, and Empty archive deletes everything arc
 | Browser logic | [archive.js · erase.addEventListener](../../../frontend/src/js/settings/archive.js#L120)<br>[archive.js · emptyButton.addEventListener('click'](../../../frontend/src/js/settings/archive.js#L176) |
 | Controller / service / domain | [ArchiveService.php · public function destroy(](../../../backend/src/Application/Archive/ArchiveService.php#L148)<br>[ArchiveService.php · public function empty(](../../../backend/src/Application/Archive/ArchiveService.php#L171) |
 | Persistence | [PdoCascadeDeleter.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php#L42) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_deletes_an_item_with_its_contents_for_good_and_can_empty_the_rest(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L398) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_archive_deletes_an_item_with_its_contents_for_good_and_can_empty_the_rest(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L346) |
 | HTTP | `DELETE /api/v1/archive/{type}/{id}` (`api.archive.destroy`) → [ArchiveController::destroy](../../../backend/src/Http/Controller/ArchiveController.php#L27)<br>`POST /api/v1/archive/empty` (`api.archive.empty`) → [ArchiveController::empty](../../../backend/src/Http/Controller/ArchiveController.php#L37) |
 
 <!-- END GENERATED TRACE -->

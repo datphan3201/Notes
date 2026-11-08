@@ -23,10 +23,7 @@ final readonly class TaskReminderService
             return [];
         }
         $now = Timestamp::database($this->clock->now());
-        $personal = array_map(static fn (array $row): array => [...$row, 'reminder_at' => Timestamp::api($row['reminder_at']), 'url' => '/tasks/'.$row['id']], $this->reminders->due($userId, $now));
-        $team = array_map(static fn (array $row): array => ['id' => $row['id'], 'name' => $row['name'], 'reminder_at' => Timestamp::api($row['reminder_at']), 'url' => '/teamwork?goal='.$row['team_goal_id']], $this->reminders->teamDue($userId, $now));
-
-        return [...$personal, ...$team];
+        return array_map(static fn (array $row): array => [...$row, 'reminder_at' => Timestamp::api($row['reminder_at']), 'url' => '/tasks/'.$row['id']], $this->reminders->due($userId, $now));
     }
 
     /** Dismisses one due reminder from the bell, or every due reminder when $taskId is null. */

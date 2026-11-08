@@ -1,0 +1,53 @@
+# Free trial: one service, with a durable polling worker in the same container.
+# Sleep suspends both processes. See docs/migration/render-vercel-supabase.md.
+services:
+  - type: web
+    name: planner-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /ready
+    autoDeployTrigger: "off"
+    envVars:
+      - key: PLANNER_ENVIRONMENT
+        value: production
+      - key: PLANNER_DATABASE_URL
+        sync: false
+      - key: PLANNER_DATABASE_SCHEMA
+        value: planner
+      - key: PLANNER_POOL_SIZE
+        value: "4"
+      - key: PLANNER_POOL_OVERFLOW
+        value: "2"
+      - key: PLANNER_WEB_ORIGIN
+        sync: false
+      - key: PLANNER_SUPABASE_URL
+        sync: false
+      - key: PLANNER_SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PLANNER_SUPABASE_STORAGE_BUCKET
+        value: planner-private
+      - key: PLANNER_WORKER_MODE
+        value: poll
+      - key: PLANNER_RUN_WORKER
+        value: "true"
+      - key: PLANNER_MIGRATE_ON_START
+        value: "true"
+      - key: PLANNER_ENCRYPTION_KEY
+        generateValue: true
+      - key: PLANNER_SMTP_FROM
+        value: "Planner <onboarding@resend.dev>"
+      - key: PLANNER_RESEND_API_KEY
+        sync: false
+      - key: PLANNER_AI_BASE_URL
+        sync: false
+      - key: PLANNER_AI_API_KEY
+        sync: false
+      - key: PLANNER_AI_MODEL
+        sync: false
+      - key: PLANNER_EMBEDDING_MODEL
+        sync: false

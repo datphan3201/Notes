@@ -5,12 +5,7 @@
     "title": "Personal TaskSeries: terminal lifecycle",
     "output": "docs/diagrams/task-series-lifecycle/index.html",
     "quality_profile": "showcase",
-    "locale": "en",
-    "repository": {
-      "url": "https://github.com/datphan3201/Notes.git",
-      "revision": "2e9e68d690e77c581806917de2f6678984de5249",
-      "link_mode": "web"
-    }
+    "locale": "en"
   },
   "mainPath": [
     "active",
@@ -21,40 +16,19 @@
       "id": "active",
       "type": "start",
       "label": "Active",
-      "sublabel": "Eligible for materialization",
-      "sources": [
-        {
-          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
-          "line": 110,
-          "end_line": 145
-        }
-      ]
+      "sublabel": "Eligible for materialization"
     },
     {
       "id": "ended",
       "type": "neutral",
       "label": "Ended",
-      "sublabel": "Terminal; create new for future work",
-      "sources": [
-        {
-          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
-          "line": 110,
-          "end_line": 145
-        }
-      ]
+      "sublabel": "Terminal; create new for future work"
     },
     {
       "id": "paused",
       "type": "waiting",
       "label": "Paused",
-      "sublabel": "Existing occurrences remain",
-      "sources": [
-        {
-          "path": "backend/src/Application/Recurrence/TaskSeriesService.php",
-          "line": 110,
-          "end_line": 145
-        }
-      ]
+      "sublabel": "Existing occurrences remain"
     }
   ],
   "transitions": [
@@ -105,9 +79,9 @@
     },
     {
       "dot": "slate",
-      "title": "Committed lifecycle scope",
+      "title": "Personal recurrence contract",
       "items": [
-        "Source snapshot 2e9e68d: personal TaskSeries only; Teamwork has a separate completion-driven repeat path.",
+        "Approved personal TaskSeries contract; this is not a committed implementation snapshot. Current source and tests are linked from the Task recurrence documentation.",
         "Active series materialize on scheduled jobs or due reads. Paused/Ended series do not generate new occurrences."
       ]
     }

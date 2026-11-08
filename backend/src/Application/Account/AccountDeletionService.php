@@ -19,7 +19,7 @@ use Planner\Support\Timestamp;
 /**
  * Deletes an account for good: the user, everything they own (planning, habits, notes and
  * their files, reviews, shares, sessions) and what only existed for them (their shares with
- * others, team goals they created, reports they filed). Reports about them and administrator
+ * others, reports they filed). Reports about them and administrator
  * history stay, with the link to the account cleared.
  *
  * An administrator deletes other ordinary accounts after typing the account's email; anyone may

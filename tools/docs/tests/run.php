@@ -14,10 +14,17 @@ mkdir($fixture, 0o700);
 function copyFixture(string $source, string $target): void
 {
     if (is_link($source)) {
+        // Retain repository-local skill discovery links in the isolated tree.
+        global $root;
+        $resolved = realpath($source);
+        if ($resolved !== false && str_starts_with($resolved, $root.DIRECTORY_SEPARATOR)) {
+            symlink(readlink($source), $target);
+        }
+
         return;
     }
     if (is_dir($source)) {
-        if (in_array(basename($source), ['vendor', 'node_modules', 'storage', 'build', '.phpunit.cache'], true)) {
+        if (in_array(basename($source), ['vendor', 'node_modules', 'storage', 'build', '.phpunit.cache', '.venv', '.next', '__pycache__', '.pytest_cache', '.ruff_cache', '.private', 'test-results', 'playwright-report'], true)) {
             return;
         }
         if (!is_dir($target)) {
@@ -102,7 +109,7 @@ $scenario = static function (string $name, callable $edit, string $expected, boo
 };
 
 try {
-    foreach (['docs', 'frontend', 'backend', 'tools', '.github', 'AGENTS.md', 'README.md', 'CHANGELOG.md', 'CLAUDE.md'] as $path) {
+    foreach (['docs', 'frontend', 'backend', 'apps', 'tools', '.github', '.agents', '.claude', 'compose.yaml', 'AGENTS.md', 'README.md', 'CHANGELOG.md', 'CLAUDE.md'] as $path) {
         copyFixture($root.'/'.$path, $fixture.'/'.$path);
     }
     symlink('backend/.ai', $fixture.'/.ai');

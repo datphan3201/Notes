@@ -1,6 +1,8 @@
 # Planner
 
-Planner is a personal planning and notes web application: Goals with roadmaps and Milestones, Tasks with schedules and repeats, Habits, a Calendar, Reviews, team Goals, and a Notes workspace with sharing, live co-editing, per-Note passwords, AI summaries and offline use. The interface is available in English and Vietnamese and works on phones, tablets and desktops in light and dark themes.
+The **Personal AI Planner migration** is implemented separately under [apps](apps/) on `feat/personal-ai-planner-v1`: Next.js/React/TypeScript, FastAPI/Python and PostgreSQL/pgvector. Start with the [plan](docs/migration/personal-ai-planner.md), [new runtime setup](docs/migration/development.md), [implementation status and remaining release gates](docs/migration/status.md), and [Funnel/Vercel deployment routes](docs/migration/deployment-routes.md). The PHP/MySQL application described below is retained as the behavior reference and rollback baseline; production cutover has not occurred.
+
+Planner is a personal planning and notes web application: Goals with roadmaps and Milestones, Tasks with schedules and repeats, Habits, a Calendar, Reviews, and a Notes workspace with sharing, live co-editing, per-Note passwords, AI summaries and offline use. The interface is available in English and Vietnamese and works on phones, tablets and desktops in light and dark themes.
 
 Built with framework-free PHP 8.5, MySQL 8.4, vanilla JavaScript modules with Alpine.js, and Vite.
 
@@ -14,7 +16,6 @@ Built with framework-free PHP 8.5, MySQL 8.4, vanilla JavaScript modules with Al
 | AI | Note summaries, questions answered from your Notes with cited sources, and an assistant that proposes planning changes for confirmation |
 | Offline | Installable PWA; Notes can be read, searched, edited and created offline and sync on reconnect |
 | Planning | Areas, Goal hierarchy and fishbone roadmap, Milestones with prerequisites, Tasks, Today/Week plans, Calendar, repeating Tasks, Habits with streaks, Reviews |
-| Teams | Team Goals with members, roles, assigned Tasks and chat |
 | Accounts | Email verification, password reset by link or code, two-factor authentication (email or TOTP), profile/avatar, preferences, admin reports and locking |
 | Help | A user guide for everyone at `/help` in Vietnamese and English, with real screenshots from demo accounts, and a short tour behind **?** |
 

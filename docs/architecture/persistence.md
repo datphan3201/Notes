@@ -17,7 +17,6 @@
 | Activity/Review | activities, goal_daily_snapshots, reviews, daily_task_selections, weekly_task_selections, weekly_milestone_selections; [repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
 | Notes | notes (incl. lock_hash/locked_at for per-Note passwords), label_note, attachments, note_links, note_summaries, note_embeddings; [Note repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php), [AI repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteAIRepository.php) |
 | Shared Notes / reports | note_shares, note_reports; [sharing](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php), [reports](../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php) |
-| Teamwork | team_goals, team_members, team_tasks, team_messages; [Team repository](../../backend/src/Infrastructure/Persistence/Pdo/Teamwork/PdoTeamRepository.php) |
 | Infrastructure | attachments, pending_file_deletions, user_backgrounds, notifications, ai_actions, rate_limit_buckets, scheduled_jobs, schema_migrations |
 
 The offline sync feed reads notes by the `(user_id, updated_at, id)` cursor index (migration 0031); tombstoned rows report deletions. AI summaries and embeddings store a SHA-256 of the title/content they describe, so pinning or recolouring does not make them stale. Password-reset rows also hold a hashed 6-digit code and its attempt counter (migration 0032).

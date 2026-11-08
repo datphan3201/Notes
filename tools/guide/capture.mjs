@@ -42,7 +42,7 @@ const DEMO = {
         task: 'Làm 2 đề Listening Cambridge 15',
         milestone: 'Luyện Listening và Reading',
         plan: 'Kế hoạch ôn IELTS tuần này',
-        team: 'Phân công đồ án nhóm',
+        shared: 'Ghi chú dự án được chia sẻ',
         locked: 'Thông tin tài khoản ngân hàng',
         ask: 'Tôi đã ghi những từ vựng nào về môi trường?',
         assistant:
@@ -52,7 +52,7 @@ const DEMO = {
         task: 'Do two listening papers',
         milestone: 'Listening and reading practice',
         plan: 'Spanish plan for this week',
-        team: 'Team project roles',
+        shared: 'Shared project notes',
         locked: 'Bank account details',
         ask: 'Which environment words did I write down?',
         assistant:
@@ -136,7 +136,7 @@ export const SHOTS = [
     {
         name: 'note-share',
         path: '/',
-        steps: [noteCard('team'), press('[data-editor-share]')],
+        steps: [noteCard('shared'), press('[data-editor-share]')],
     },
     { name: 'note-locked', path: '/', steps: [noteCard('locked')] },
     { name: 'notes-shared', path: '/', steps: [press('[data-filter-shared]')] },
@@ -156,11 +156,6 @@ export const SHOTS = [
         ],
     },
     { name: 'reviews', path: '/reviews', steps: [press('[data-review-id]')] },
-    {
-        name: 'teamwork',
-        path: '/teamwork',
-        steps: [press('.team-goal-card'), scrollTo('[data-team-detail]')],
-    },
     {
         name: 'bell',
         path: '/dashboard',

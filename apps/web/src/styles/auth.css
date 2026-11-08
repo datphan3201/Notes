@@ -1,0 +1,56 @@
+/* Guest forms retain the original layout; these rules bridge the React fieldset. */
+.auth-refined .auth-fields {
+    display: grid;
+    min-width: 0;
+    gap: 18px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+.auth-refined .auth-fields > .button {
+    justify-self: start;
+}
+.auth-refined .auth-fields > .button-wide {
+    justify-self: stretch;
+}
+.auth-refined a {
+    text-decoration: underline;
+}
+.auth-refined .skip-link,
+.auth-refined a.button {
+    text-decoration: none;
+}
+.auth-refined .auth-card > .field-error {
+    margin-bottom: 18px;
+}
+.auth-refined input[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+.auth-refined .guest-path .ui-icon {
+    flex-shrink: 0;
+}
+
+.auth-refined .field label {
+    color: var(--text);
+}
+
+.auth-preview-toolbar {
+    padding: 12px 24px;
+    color: var(--text);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: var(--font-size-meta);
+}
+.auth-preview-toolbar p {
+    margin: 0 0 6px;
+    color: var(--muted);
+}
+.auth-preview-toolbar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+}
+.auth-preview-toolbar a[aria-current="page"] {
+    font-weight: 600;
+    text-decoration: underline;
+}

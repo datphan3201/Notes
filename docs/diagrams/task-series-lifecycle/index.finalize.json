@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "lifecycle",
   "quality": "showcase",
-  "startedAt": "2026-11-04T03:45:17.063Z",
+  "startedAt": "2026-11-07T13:55:08.605Z",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
-    "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
-    "bytes": 3024
+    "sha256": "fe38a4b7fa3deade520bd6057683d687ffd0906814e18a403b2e9cc1d49fc86c",
+    "bytes": 2389
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
-    "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
-    "bytes": 830817
+    "sha256": "95337a6b4f8a6af144b868d05557570b85085597daa7c7310e3b0f47c9b34d70",
+    "bytes": 829687
   },
   "stages": {
     "validate": {
@@ -31,8 +31,6 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "--quality",
         "showcase",
-        "--repo-root",
-        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
@@ -40,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
-          "bytes": 3024
+          "sha256": "fe38a4b7fa3deade520bd6057683d687ffd0906814e18a403b2e9cc1d49fc86c",
+          "bytes": 2389
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 301,
+      "durationMs": 368,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -66,25 +64,23 @@
         "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "--quality",
         "showcase",
-        "--repo-root",
-        "/home/thanhdat/code/tdtu/web-app",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b",
+        "receiptId": "2fc37c99-5647-474f-bfa0-b08d2dd0a83f",
         "ok": true,
         "command": "deliver",
         "type": "lifecycle",
         "input": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
         "output": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "specification": {
-          "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
-          "bytes": 3024
+          "sha256": "fe38a4b7fa3deade520bd6057683d687ffd0906814e18a403b2e9cc1d49fc86c",
+          "bytes": 2389
         },
         "artifact": {
-          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
-          "bytes": 830817
+          "sha256": "95337a6b4f8a6af144b868d05557570b85085597daa7c7310e3b0f47c9b34d70",
+          "bytes": 829687
         },
         "validation": {
           "checksPassed": 9,
@@ -93,12 +89,6 @@
           "compositionStatus": "pass",
           "errors": 0,
           "warnings": 0
-        },
-        "evidence": {
-          "verified": true,
-          "repository": "https://github.com/datphan3201/Notes",
-          "revision": "2e9e68d690e77c581806917de2f6678984de5249",
-          "references": 3
         },
         "update": {
           "status": "unavailable",
@@ -116,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 133,
+      "durationMs": 144,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -128,8 +118,8 @@
         "ok": true,
         "file": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
         "artifact": {
-          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
-          "bytes": 830817
+          "sha256": "95337a6b4f8a6af144b868d05557570b85085597daa7c7310e3b0f47c9b34d70",
+          "bytes": 829687
         },
         "checks": [
           {
@@ -246,13 +236,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b"
+        "deliveryReceiptId": "2fc37c99-5647-474f-bfa0-b08d2dd0a83f"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1336,
+      "durationMs": 1490,
       "command": [
         "/home/thanhdat/.nvm/versions/node/v22.22.2/bin/node",
         "/home/thanhdat/code/tools/archify/archify/bin/archify.mjs",
@@ -261,7 +251,7 @@
         "--json",
         "--require-provenance",
         "--out-dir",
-        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104"
+        "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-teamwork-removal"
       ],
       "execution": "in-process",
       "receipt": {
@@ -272,11 +262,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "ec2a3ce9-c0a2-4018-86f2-cbf751922d0b",
+        "deliveryReceiptId": "2fc37c99-5647-474f-bfa0-b08d2dd0a83f",
         "artifact": {
           "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
-          "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
-          "bytes": 830817
+          "sha256": "95337a6b4f8a6af144b868d05557570b85085597daa7c7310e3b0f47c9b34d70",
+          "bytes": 829687
         },
         "state": {
           "detail": "read",
@@ -957,7 +947,7 @@
           "contactSheet": null
         },
         "sidecars": {
-          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104",
+          "directory": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-teamwork-removal",
           "receipt": "index.browser-check.json",
           "files": []
         }
@@ -972,17 +962,17 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-teamwork-removal/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-04T03:45:18.946Z",
-  "durationMs": 1883,
+  "finishedAt": "2026-11-07T13:55:10.742Z",
+  "durationMs": 2136,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-04T03:09:42.399Z",
+    "checkedAt": "2026-11-07T13:55:07.523Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null

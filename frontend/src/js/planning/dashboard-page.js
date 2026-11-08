@@ -482,44 +482,6 @@ export function initDashboardPage(root) {
         if (event.key === 'Escape') hideTooltip();
     });
 
-    // Open team Tasks assigned to the user; the card stays hidden when there are none.
-    const loadTeamTasks = async () => {
-        const panel = root.querySelector('[data-dashboard-team]');
-        if (!panel) return;
-        try {
-            const tasks = (await get('/api/v1/team-tasks/assigned')).payload.data;
-            panel.hidden = tasks.length === 0;
-            root.querySelector('[data-dashboard-team-count]').textContent = String(tasks.length);
-            const list = root.querySelector('[data-dashboard-team-list]');
-            list.replaceChildren(
-                ...tasks.slice(0, 6).map((task) => {
-                    const row = document.createElement('a');
-                    row.className = 'dashboard-team-task';
-                    row.href = `/teamwork?goal=${encodeURIComponent(task.team_goal.id)}`;
-                    const overdue = Boolean(
-                        task.due_date && taskData?.today && task.due_date < taskData.today,
-                    );
-                    row.classList.toggle('is-overdue', overdue);
-                    const name = document.createElement('strong');
-                    name.textContent = task.name;
-                    const meta = document.createElement('small');
-                    meta.textContent = [
-                        task.team_goal.name,
-                        t(task.status === 'in_progress' ? 'In progress' : 'To do'),
-                        task.due_date
-                            ? `${t(overdue ? 'Overdue' : 'Due')} ${formatDay(task.due_date)}`
-                            : '',
-                    ]
-                        .filter(Boolean)
-                        .join(' · ');
-                    row.append(name, meta);
-                    return row;
-                }),
-            );
-        } catch {
-            panel.hidden = true;
-        }
-    };
     const load = async (requestedMonth = displayedMonth) => {
         if (loading) {
             reloadRequested = true;
@@ -538,7 +500,6 @@ export function initDashboardPage(root) {
             const data = payload.data;
             taskData = data;
             displayedMonth = data.month;
-            loadTeamTasks();
             root.querySelector('[data-dashboard-timezone]').textContent = data.timezone;
             root.querySelector('[data-dashboard-date]').textContent = new Intl.DateTimeFormat(
                 window.notesBootstrap?.preferences?.locale === 'vi' ? 'vi-VN' : 'en-US',

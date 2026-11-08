@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/candidate.json",
-    "sha256": "5df098456f0bfa017502a68232070c33477224e698f258d05ae313269e25fedf",
-    "bytes": 3024
+    "sha256": "fe38a4b7fa3deade520bd6057683d687ffd0906814e18a403b2e9cc1d49fc86c",
+    "bytes": 2389
   },
   "artifact": {
     "path": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.html",
-    "sha256": "da6ae536b479bb5bb93c046f0a42d2a903ab4506514ada7622186e927f749302",
-    "bytes": 830817
+    "sha256": "95337a6b4f8a6af144b868d05557570b85085597daa7c7310e3b0f47c9b34d70",
+    "bytes": 829687
   },
   "gates": {
     "validate": "pass",
@@ -30,20 +30,20 @@
   "evidence": {
     "receipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize.json",
     "summaryReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/index.finalize-summary.json",
-    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-goals-ui-20261104/index.browser-check.json"
+    "browserCheckReceipt": "/home/thanhdat/code/tdtu/web-app/docs/diagrams/task-series-lifecycle/review-teamwork-removal/index.browser-check.json"
   },
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-11-04T03:09:42.399Z",
+    "checkedAt": "2026-11-07T13:55:07.523Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 1883,
+  "durationMs": 2136,
   "browserCheck": {
     "requested": true,
     "ran": true

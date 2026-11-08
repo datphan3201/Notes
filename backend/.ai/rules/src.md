@@ -5,6 +5,6 @@ paths:
 
 # Backend source layers
 
-Keep the existing Config, Support, Http, Application, Domain and Infrastructure tree. Controllers parse/serialize, application services own transactions, domain functions own invariants and PDO repositories own SQL. Do not create parallel framework-style source trees or a service locator.
+The current PHP tree organizes code under Config, Support, Http, Application, Domain and Infrastructure as a reference baseline, but architectural and tech-stack constraints are lifted for migration. You may adopt framework conventions, ORMs, containers, or a new project layout when migrating the stack.
 
-Use explicit dependencies, strict types, typed contracts, DateTimeImmutable/injected Clock, prepared scoped SQL and endpoint-specific validation. Trace each UI change to its source/test owners through [the route map](../../../docs/README.md).
+Maintain clear separation of concerns, strict typing where supported, UTC timestamps versus user-facing dates, scoped queries, and authoritative server-side validation. See [the route map](../../../docs/README.md) for existing feature behavior.

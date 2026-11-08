@@ -87,18 +87,6 @@
                     </div>
                     <p class="dashboard-overdue-reminder" data-overdue-reminder aria-live="polite" hidden></p>
                 </section>
-                <?php /* Team work assigned to you, so personal planning shows everything you owe today. */ ?>
-                <section class="planning-panel dashboard-team-panel" aria-labelledby="dashboard-team-title" data-dashboard-team hidden>
-                    <div class="section-heading">
-                        <h2 id="dashboard-team-title">
-                            <svg class="ui-icon" aria-hidden="true"><use href="#icon-profile"/></svg>
-                            <?= $view->e($view->t('Team tasks')) ?>
-                            <span class="count-badge" data-dashboard-team-count></span>
-                        </h2>
-                        <a class="section-link" href="/teamwork"><?= $view->e($view->t('Open Teamwork')) ?> →</a>
-                    </div>
-                    <div class="dashboard-team-list" data-dashboard-team-list></div>
-                </section>
             </div>
             <div class="dashboard-split-side">
                 <article class="planning-panel dashboard-habits-panel" aria-labelledby="dashboard-habits-title">

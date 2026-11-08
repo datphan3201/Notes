@@ -14,7 +14,7 @@ use Planner\Infrastructure\Database\MigrationRunner;
 use Planner\Infrastructure\Session\SessionManager;
 use RuntimeException;
 
-/** Sharing, reports/locking, two-factor login, Teamwork and notifications. */
+/** Sharing, reports/locking, two-factor login and notifications. */
 final class FullFeedbackHttpTest extends TestCase
 {
     /** @var array<string, mixed> */
@@ -158,105 +158,52 @@ final class FullFeedbackHttpTest extends TestCase
         self::assertSame(200, $this->request('GET', '/api/v1/session', cookie: $this->session->id())->status);
     }
 
-    public function test_teamwork_roles_tasks_chat_and_member_isolation(): void
+    public function test_retired_teamwork_routes_return_404_for_guests_and_signed_in_accounts(): void
     {
-        $lead = $this->registerAccount('lead@example.test', 'Lead');
-        $viewer = $this->registerAccount('viewer@example.test', 'Viewer');
-        $outsider = $this->registerAccount('outsider@example.test', 'Outsider');
-        $goal = $this->data($this->api('POST', '/api/v1/team-goals', [
-            'name' => 'Project Phoenix', 'description' => 'Launch', 'due_date' => '2026-11-30',
-            'members' => [['email' => 'viewer@example.test', 'role' => 'viewer'], ['email' => 'ghost@example.test', 'role' => 'editor']],
-        ], $lead));
-        self::assertCount(2, $goal['members']);
-        $goalId = $goal['id'];
-        self::assertSame(404, $this->api('GET', "/api/v1/team-goals/$goalId", [], $outsider)->status);
-        self::assertSame(404, $this->api('GET', "/api/v1/team-goals/$goalId", [], $viewer)->status);
-        self::assertSame('team_invite', $this->data($this->api('GET', '/api/v1/notifications', [], $viewer))['items'][0]['type']);
-        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $viewer);
-        $viewerId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'viewer@example.test'")->fetchColumn();
-        $leadId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'lead@example.test'")->fetchColumn();
-
-        self::assertSame(403, $this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Sneaky'], $viewer)->status);
-        $detail = $this->data($this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Design mockups', 'assignee_id' => $viewerId], $lead));
-        $task = $detail['tasks'][0];
-        self::assertSame('team_task_assigned', $this->data($this->api('GET', '/api/v1/notifications', [], $viewer))['items'][0]['type']);
-        // Assigned team work reaches the assignee's personal views, and nobody else's.
-        $assigned = $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $viewer));
-        self::assertSame([['id' => $task['id'], 'name' => 'Design mockups', 'team_goal' => ['id' => $goalId, 'name' => 'Project Phoenix']]], array_map(static fn (array $row): array => array_intersect_key($row, array_flip(['id', 'name', 'team_goal'])), $assigned));
-        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $lead)));
-        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $outsider)));
-        $done = $this->data($this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$task['id']}", ['base_version' => 1, 'status' => 'done'], $viewer));
-        self::assertSame(['done' => 1, 'total' => 1], $done['progress']);
-        self::assertSame([], $this->data($this->api('GET', '/api/v1/team-tasks/assigned', [], $viewer)));
-        self::assertSame(403, $this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$task['id']}", ['base_version' => 2, 'name' => 'Renamed'], $viewer)->status);
-        self::assertSame(422, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$leadId", ['role' => 'viewer'], $lead)->status);
-
-        $this->api('POST', "/api/v1/team-goals/$goalId/messages", ['body' => 'Hello team'], $viewer);
-        $messages = $this->data($this->api('GET', "/api/v1/team-goals/$goalId/messages?after=0", [], $lead));
-        self::assertSame('Hello team', $messages[0]['body']);
-        self::assertFalse($messages[0]['mine']);
-        self::assertSame(404, $this->api('GET', "/api/v1/team-goals/$goalId/messages?after=0", [], $outsider)->status);
-        self::assertSame(204, $this->api('DELETE', "/api/v1/team-goals/$goalId/members/$viewerId", [], $viewer)->status);
-        self::assertSame(404, $this->api('GET', "/api/v1/team-goals/$goalId", [], $viewer)->status);
+        $owner = $this->registerAccount('personal@example.test', 'Personal');
+        foreach (['/teamwork', '/api/v1/team-goals', '/api/v1/team-tasks/assigned', '/api/v1/team-goals/old', '/api/v1/team-goals/old/tasks', '/api/v1/team-goals/old/members', '/api/v1/team-goals/old/messages', '/api/v1/team-goals/old/invitation/accept'] as $path) {
+            foreach (['GET', 'POST', 'PATCH', 'DELETE'] as $method) {
+                self::assertSame(404, $this->api($method, $path, [], $owner)->status, "$method $path");
+                self::assertSame(404, $this->request($method, $path)->status, "guest $method $path");
+            }
+        }
     }
 
-    public function test_promoted_admins_cannot_change_or_remove_the_team_goal_creator(): void
+    public function test_note_sharing_contacts_remain_scoped_without_teamwork(): void
     {
-        $creator = $this->registerAccount('creator@example.test', 'Creator');
-        $deputy = $this->registerAccount('deputy@example.test', 'Deputy');
-        $member = $this->registerAccount('member@example.test', 'Member');
-        $goal = $this->data($this->api('POST', '/api/v1/team-goals', [
-            'name' => 'Project Atlas', 'description' => '', 'due_date' => null,
-            'members' => [['email' => 'deputy@example.test', 'role' => 'admin'], ['email' => 'member@example.test', 'role' => 'viewer']],
-        ], $creator));
-        $goalId = $goal['id'];
-        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $deputy);
-        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $member);
-        $creatorId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'creator@example.test'")->fetchColumn();
-        $memberId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'member@example.test'")->fetchColumn();
-
-        $seenByDeputy = $this->data($this->api('GET', "/api/v1/team-goals/$goalId", [], $deputy));
-        self::assertFalse($seenByDeputy['i_am_creator']);
-        self::assertSame([$creatorId], array_column(array_filter($seenByDeputy['members'], static fn (array $m): bool => $m['is_creator']), 'id'));
-        self::assertTrue($this->data($this->api('GET', "/api/v1/team-goals/$goalId", [], $creator))['i_am_creator']);
-
-        // Another admin cannot demote or remove the creator, but still manages everyone else.
-        self::assertSame(403, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$creatorId", ['role' => 'viewer'], $deputy)->status);
-        self::assertSame(403, $this->api('DELETE', "/api/v1/team-goals/$goalId/members/$creatorId", [], $deputy)->status);
-        self::assertSame('admin', $this->pdo->query("SELECT role FROM team_members WHERE team_goal_id = '$goalId' AND user_id = $creatorId")->fetchColumn());
-        self::assertSame(200, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$memberId", ['role' => 'editor'], $deputy)->status);
-        self::assertSame(204, $this->api('DELETE', "/api/v1/team-goals/$goalId/members/$memberId", [], $deputy)->status);
-
-        // The creator can still step down while another admin remains.
-        self::assertSame(200, $this->api('PATCH', "/api/v1/team-goals/$goalId/members/$creatorId", ['role' => 'editor'], $creator)->status);
+        $owner = $this->registerAccount('contact-owner@example.test', 'Owner');
+        $friend = $this->registerAccount('contact-friend@example.test', 'Friend');
+        $stranger = $this->registerAccount('contact-stranger@example.test', 'Stranger');
+        $noteId = $this->runtime['uuid']->generate();
+        $this->api('POST', '/api/v1/notes', ['id' => $noteId, 'title' => 'Shared note', 'content' => 'x'], $owner);
+        $share = $this->data($this->api('POST', "/api/v1/notes/$noteId/shares", ['email' => 'contact-friend@example.test'], $owner))[0];
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/contacts', [], $owner)));
+        $this->api('POST', '/api/v1/shared-notes/invitations/'.$share['id'].'/accept', [], $friend);
+        self::assertSame(['contact-friend@example.test'], array_column($this->data($this->api('GET', '/api/v1/contacts', [], $owner)), 'email'));
+        self::assertSame(['contact-owner@example.test'], array_column($this->data($this->api('GET', '/api/v1/contacts', [], $friend)), 'email'));
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/contacts', [], $stranger)));
+        $this->api('DELETE', "/api/v1/notes/$noteId/shares/".$share['id'], [], $owner);
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/contacts', [], $owner)));
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/contacts', [], $friend)));
+        self::assertSame(401, $this->request('GET', '/api/v1/contacts')->status);
     }
 
-    public function test_team_tasks_capture_planning_fields_repeat_and_remind_the_assignee(): void
+    public function test_retired_notifications_are_preserved_without_entering_the_bell_or_badge(): void
     {
-        $lead = $this->registerAccount('planner-lead@example.test', 'Lead');
-        $goalId = $this->data($this->api('POST', '/api/v1/team-goals', ['name' => 'Launch', 'description' => '', 'due_date' => null, 'members' => []], $lead))['id'];
-        $leadId = (string) $this->pdo->query("SELECT id FROM users WHERE email = 'planner-lead@example.test'")->fetchColumn();
-        $reminder = $this->runtime['clock']->now()->modify('-1 hour')->format(DATE_ATOM);
-
-        self::assertSame(422, $this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Bad', 'importance' => 9], $lead)->status);
-        self::assertSame(422, $this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Bad', 'repeat' => ['frequency' => 'hourly']], $lead)->status);
-        $detail = $this->data($this->api('POST', "/api/v1/team-goals/$goalId/tasks", [
-            'name' => 'Weekly sync', 'description' => 'Agenda', 'assignee_id' => $leadId, 'importance' => 5,
-            'start_date' => '2026-11-02', 'due_date' => '2026-11-02', 'estimated_minutes' => 30, 'reminder_at' => $reminder,
-            'repeat' => ['frequency' => 'weekly', 'interval_count' => 1, 'weekdays' => [1], 'end_date' => '2026-11-10'],
-        ], $lead));
-        $task = $detail['tasks'][0];
-        self::assertSame([5, '2026-11-02', 30, 'weekly'], [$task['importance'], $task['due_date'], $task['estimated_minutes'], $task['repeat']['frequency']]);
-        $bell = $this->data($this->api('GET', '/api/v1/notifications', [], $lead))['reminders'];
-        self::assertSame("/teamwork?goal=$goalId", $bell[0]['url']);
-
-        $next = $this->data($this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$task['id']}", ['base_version' => 1, 'status' => 'done'], $lead));
-        $open = array_values(array_filter($next['tasks'], static fn (array $row): bool => $row['status'] === 'todo'));
-        self::assertCount(1, $open);
-        self::assertSame(['Weekly sync', '2026-11-09', 5], [$open[0]['name'], $open[0]['due_date'], $open[0]['importance']]);
-        $after = $this->data($this->api('PATCH', "/api/v1/team-goals/$goalId/tasks/{$open[0]['id']}", ['base_version' => 1, 'status' => 'done'], $lead));
-        // The following Monday is after end_date, so the series stops.
-        self::assertCount(0, array_filter($after['tasks'], static fn (array $row): bool => $row['status'] === 'todo'));
+        $owner = $this->registerAccount('old-notifications@example.test', 'Owner');
+        $stranger = $this->registerAccount('other-notifications@example.test', 'Other');
+        $id = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'old-notifications@example.test'")->fetchColumn();
+        $insert = $this->pdo->prepare('INSERT INTO notifications (id, user_id, type, payload, created_at) VALUES (?, ?, ?, ?, UTC_TIMESTAMP(6))');
+        foreach (['team_invite', 'team_joined', 'team_task_assigned', 'share_invite'] as $type) {
+            $insert->execute([$this->runtime['uuid']->generate(), $id, $type, json_encode(['title' => 'Saved notification', 'url' => '/'], JSON_THROW_ON_ERROR)]);
+        }
+        $inbox = $this->data($this->api('GET', '/api/v1/notifications', [], $owner));
+        self::assertSame(['share_invite'], array_column($inbox['items'], 'type'));
+        self::assertSame(1, $inbox['unread']);
+        self::assertSame([], $this->data($this->api('GET', '/api/v1/notifications', [], $stranger))['items']);
+        $this->api('POST', '/api/v1/notifications/read', [], $owner);
+        self::assertSame(0, $this->data($this->api('GET', '/api/v1/notifications', [], $owner))['unread']);
+        self::assertSame(3, (int) $this->pdo->query("SELECT COUNT(*) FROM notifications WHERE user_id = $id AND LEFT(type, 5) = 'team_' AND read_at IS NULL")->fetchColumn());
     }
 
     public function test_changed_pages_render_their_new_controls(): void
@@ -268,7 +215,6 @@ final class FullFeedbackHttpTest extends TestCase
             '/calendar' => ['data-calendar-page', 'data-calendar-grid', 'data-calendar-unscheduled', 'data-calendar-day-add'],
             '/habits' => ['habit-description'],
             '/dashboard' => ['data-activity-years'],
-            '/teamwork' => ['data-teamwork-page', 'team-goal-dialog', 'data-team-search', 'data-team-page="1"', 'team-task-dialog', 'data-schedule-open="repeat"', 'team-invite-dialog'],
             '/settings/history' => ['data-history-rules'],
             '/settings/password' => ['data-two-factor-settings'],
             '/settings/preferences' => ['personal-background-dialog'],
@@ -280,6 +226,8 @@ final class FullFeedbackHttpTest extends TestCase
             self::assertSame(200, $page->status, $path);
             self::assertStringContainsString('data-notifications-toggle', $page->body, $path);
             self::assertStringContainsString('data-assistant-open', $page->body, $path);
+            self::assertStringNotContainsString('href="/teamwork"', $page->body, $path);
+            self::assertStringNotContainsString('data-dashboard-team', $page->body, $path);
             self::assertStringNotContainsString('href="/ai" data-leave-guard>'."\n".'                        <svg', $page->body, $path);
             foreach ($needles as $needle) {
                 self::assertStringContainsString($needle, $page->body, "$path lacks $needle");
@@ -447,14 +395,15 @@ final class FullFeedbackHttpTest extends TestCase
         $this->pdo->exec("UPDATE users SET role = 'admin' WHERE email = 'chief@example.test'");
         $adminId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'chief@example.test'")->fetchColumn();
         $memberId = (int) $this->pdo->query("SELECT id FROM users WHERE email = 'leaving@example.test'")->fetchColumn();
-        // The leaving account shares a Note with the administrator and leads a team they joined.
+        // The leaving account shares a Note with the administrator and owns a personal Goal and Task.
         $noteId = $this->runtime['uuid']->generate();
         $this->runtime['note_service']->create($memberId, ['id' => $noteId, 'title' => 'Shared plan', 'content' => 'x']);
         $share = $this->runtime['note_share_service']->shareMany($memberId, $noteId, ['chief@example.test'], 'view');
         $this->runtime['note_share_service']->respond($adminId, $share[0]['id'], true);
-        $team = $this->runtime['team_service']->create($memberId, ['name' => 'Their team', 'description' => '', 'due_date' => null]);
-        $this->runtime['team_service']->invite($memberId, (string) $team['id'], 'chief@example.test', 'editor');
-        $this->runtime['team_service']->respond($adminId, (string) $team['id'], true);
+        $planning = $this->runtime['planning_service'];
+        $area = $planning->list('area', $memberId)[0];
+        $goal = $planning->create('goal', $memberId, ['name' => 'Their goal', 'area_id' => $area['id']]);
+        $task = $planning->create('task', $memberId, ['name' => 'Their task', 'goal_id' => $goal['id']]);
 
         self::assertSame(404, $this->api('DELETE', '/api/v1/admin/users/'.$adminId, ['confirm_email' => 'chief@example.test'], $member)->status);
         self::assertSame(422, $this->api('DELETE', '/api/v1/admin/users/'.$memberId, ['confirm_email' => 'someone@example.test'], $admin)->status);
@@ -464,7 +413,7 @@ final class FullFeedbackHttpTest extends TestCase
         self::assertSame(200, $deleted->status);
         self::assertSame(['deleted' => 'leaving@example.test'], $this->data($deleted));
         self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM users WHERE id = $memberId")->fetchColumn());
-        foreach (['notes' => "id = '$noteId'", 'note_shares' => "note_id = '$noteId'", 'team_goals' => "id = '{$team['id']}'", 'team_members' => "team_goal_id = '{$team['id']}'", 'sessions' => "user_id = $memberId"] as $table => $where) {
+        foreach (['notes' => "id = '$noteId'", 'note_shares' => "note_id = '$noteId'", 'goals' => "id = '{$goal['id']}'", 'tasks' => "id = '{$task['id']}'", 'sessions' => "user_id = $memberId"] as $table => $where) {
             self::assertSame(0, (int) $this->pdo->query("SELECT COUNT(*) FROM $table WHERE $where")->fetchColumn(), $table);
         }
         self::assertSame('leaving@example.test', $this->pdo->query("SELECT summary FROM admin_actions WHERE action = 'account.delete'")->fetchColumn());

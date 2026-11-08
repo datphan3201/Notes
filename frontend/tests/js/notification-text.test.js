@@ -28,30 +28,23 @@ test('notifications are worded in the reader language from their params', () => 
         vi(() => notificationText(invite)),
         { title: 'Lan đã chia sẻ một ghi chú với bạn', body: 'Plan (Được sửa)' },
     );
-    const team = {
-        type: 'team_invite',
-        payload: { params: { actor: 'An', team: 'Team 5', role: 'viewer' } },
-    };
-    assert.deepEqual(
-        vi(() => notificationText(team)),
-        { title: 'An đã mời bạn vào Team 5', body: 'Vai trò: Người xem' },
-    );
+
 });
 
 test('older notifications without params keep their stored text', () => {
     assert.deepEqual(
         notificationText({
-            type: 'team_joined',
-            payload: { title: 'Sam joined Team 5', body: '' },
+            type: 'share_joined',
+            payload: { title: 'Sam joined your shared note', body: '' },
         }),
-        { title: 'Sam joined Team 5', body: '' },
+        { title: 'Sam joined your shared note', body: '' },
     );
     // A name that looks like a placeholder is inserted literally, never re-expanded.
     assert.equal(
         notificationText({
-            type: 'team_joined',
-            payload: { params: { actor: ':team', team: 'X' } },
+            type: 'share_joined',
+            payload: { params: { actor: ':note', note: 'X' } },
         }).title,
-        ':team joined X',
+        ':note joined your shared note',
     );
 });

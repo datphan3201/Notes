@@ -493,9 +493,3 @@ body.navigation-open {
 .sidebar-user .avatar-small {
     flex: 0 0 auto;
 }
-/* Team work is shared, so it sits apart from the personal planning pages. */
-.sidebar-nav-divider {
-    height: 1px;
-    margin: 8px 12px;
-    background: var(--border);
-}
