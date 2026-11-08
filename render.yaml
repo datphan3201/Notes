@@ -6,7 +6,7 @@ services:
     runtime: docker
     plan: free
     region: singapore
-    branch: feat/personal-ai-planner-v1
+    branch: main
     rootDir: apps/api
     dockerfilePath: ./Dockerfile
     dockerContext: .
