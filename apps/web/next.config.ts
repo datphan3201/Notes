@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
-const api = process.env.API_ORIGIN || "http://127.0.0.1:8001";
+const api = (process.env.API_ORIGIN || "http://127.0.0.1:8001")
+    .trim()
+    .replace(/\/+$/, "");
 const upstream = new URL(api);
 if (
     upstream.origin !== api ||
