@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-e2e
+.next-vercel-check
+.env*.local
+test-results
+playwright-report
+tests
+tsconfig.tsbuildinfo
