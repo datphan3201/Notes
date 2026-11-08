@@ -45,16 +45,21 @@ Supply these `sync: false` fields through Render's secret settings:
 
 | Setting | Value |
 | --- | --- |
-| `PLANNER_DATABASE_URL` | Supabase Session pooler Psycopg URL with TLS |
-| `PLANNER_WEB_ORIGIN` | Exact stable Vercel/custom HTTPS origin, no trailing slash |
-| `PLANNER_SUPABASE_URL` | Exact project origin, e.g. `https://PROJECT.supabase.co` |
+| `PLANNER_DATABASE_URL` | Supabase Session pooler URL with TLS (e.g. `postgresql+psycopg://...` or `postgresql://...`, automatically normalized) |
+| `PLANNER_WEB_ORIGIN` | Stable Vercel/custom HTTPS origin (trailing slashes automatically trimmed) |
+| `PLANNER_SUPABASE_URL` | Project HTTPS origin, e.g. `https://PROJECT.supabase.co` |
 | `PLANNER_SUPABASE_SERVICE_ROLE_KEY` | Server-only legacy `service_role` JWT |
-| `PLANNER_ENCRYPTION_KEY` | Stable Fernet key; retain across releases/migrations |
-| `PLANNER_SMTP_FROM` | Sender address approved by the email provider |
 | `PLANNER_RESEND_API_KEY` | Server-only Resend API key for HTTPS delivery |
-| `PLANNER_AI_BASE_URL`, `PLANNER_AI_API_KEY`, `PLANNER_AI_MODEL`, `PLANNER_EMBEDDING_MODEL` | Actual compatible-provider endpoint, credentials and models |
+| `PLANNER_AI_BASE_URL`, `PLANNER_AI_API_KEY`, `PLANNER_AI_MODEL`, `PLANNER_EMBEDDING_MODEL` | (Optional) Compatible-provider endpoint, credentials and models |
 
-The blueprint supplies production mode, schema `planner`, private bucket, polling, colocated worker and migration-on-start. Polling requires no Google worker identity/Cloud Tasks queue. Production still requires HTTPS, private storage, encryption and email delivery.
+The blueprint automatically manages:
+- `PLANNER_ENCRYPTION_KEY`: Auto-generated persistently by Render via `generateValue: true` (or accepts custom 32+ character / Fernet keys).
+- `PLANNER_SMTP_FROM`: Pre-configured to `Planner <onboarding@resend.dev>` (can be overridden with an approved custom domain sender).
+- `PLANNER_ENVIRONMENT`: `production`.
+- `PLANNER_DATABASE_SCHEMA`: `planner`.
+- `PLANNER_SUPABASE_STORAGE_BUCKET`: `planner-private`.
+- `PLANNER_WORKER_MODE`: `poll`, colocated worker and migration-on-start.
+- Failures on startup aggregate all missing/invalid production requirements in a single clear diagnostic checklist.
 
 Render Free blocks SMTP ports **25, 465 and 587**. The new HTTPS [Resend adapter](../../apps/api/planner/accounts.py) supports account/security messages and reminders, with retry idempotency bound to the durable job ID. Configure an approved sender/domain and verify actual delivery/quotas. Free hosting does not include unlimited mail or AI usage. Existing local SMTP and GCS/Cloud Tasks configurations remain supported.
 

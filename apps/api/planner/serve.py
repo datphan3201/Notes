@@ -43,7 +43,14 @@ def supervise(commands):
 
 
 def main():
-    config = settings()
+    try:
+        config = settings()
+    except Exception as exc:
+        print(
+            f"\n{'='*70}\nPLANNER CONFIGURATION ERROR ON STARTUP:\n{exc}\n{'='*70}\n",
+            file=sys.stderr,
+        )
+        raise
     if config.migrate_on_start:
         subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], check=True)
     commands = [

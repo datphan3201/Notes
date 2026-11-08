@@ -1,10 +1,13 @@
+import base64
+import hashlib
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlsplit
 
-from pydantic import SecretStr, model_validator
+from cryptography.fernet import Fernet
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -45,13 +48,95 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: SecretStr = SecretStr("")
-    smtp_from: str = ""
+    smtp_from: str = "Planner <onboarding@resend.dev>"
     resend_api_key: SecretStr = SecretStr("")
     max_user_storage_bytes: int = 100 * 1024 * 1024
     cloud_tasks_queue: str = ""
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("postgres://"):
+                return "postgresql+psycopg://" + v[len("postgres://") :]
+            if v.startswith("postgresql://"):
+                return "postgresql+psycopg://" + v[len("postgresql://") :]
+        return v
+
+    @field_validator("web_origin", mode="before")
+    @classmethod
+    def normalize_web_origin(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = v.strip()
+            parsed = urlsplit(v)
+            if parsed.scheme in ("http", "https") and parsed.path == "/":
+                return v.rstrip("/")
+        return v
+
+    @field_validator("development_origins", mode="before")
+    @classmethod
+    def normalize_development_origins(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = (
+                [item.strip() for item in v.split(",") if item.strip()]
+                if not v.strip().startswith("[")
+                else v
+            )
+        if isinstance(v, list):
+            cleaned = []
+            for item in v:
+                if isinstance(item, str):
+                    item = item.strip()
+                    parsed = urlsplit(item)
+                    if parsed.scheme in ("http", "https") and parsed.path == "/":
+                        item = item.rstrip("/")
+                    cleaned.append(item)
+                else:
+                    cleaned.append(item)
+            return cleaned
+        return v
+
+    @field_validator("supabase_url", mode="before")
+    @classmethod
+    def normalize_supabase_url(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = v.strip()
+            parsed = urlsplit(v)
+            if parsed.scheme in ("http", "https") and parsed.path == "/":
+                return v.rstrip("/")
+        return v
+
+    @field_validator("encryption_key", mode="before")
+    @classmethod
+    def normalize_encryption_key(cls, v: Any) -> Any:
+        if not v:
+            return SecretStr("")
+        raw = v.get_secret_value() if isinstance(v, SecretStr) else str(v)
+        raw = raw.strip()
+        if not raw:
+            return SecretStr("")
+        try:
+            Fernet(raw.encode("ascii"))
+            return SecretStr(raw)
+        except Exception:
+            pass
+        urlsafe = raw.replace("+", "-").replace("/", "_")
+        try:
+            Fernet(urlsafe.encode("ascii"))
+            return SecretStr(urlsafe)
+        except Exception:
+            pass
+        if len(raw) >= 32:
+            derived = base64.urlsafe_b64encode(hashlib.sha256(raw.encode("utf-8")).digest()).decode("ascii")
+            return SecretStr(derived)
+        raise ValueError(
+            "PLANNER_ENCRYPTION_KEY must be a valid 32-byte urlsafe base64 Fernet key or a random secret of at least 32 characters"
+        )
+
     @model_validator(mode="after")
     def production_settings(self):
+        errors: list[str] = []
         for origin in [self.web_origin, *self.development_origins]:
             parsed = urlsplit(origin)
             if (
@@ -83,23 +168,38 @@ class Settings(BaseSettings):
         )
         if any(supabase):
             parsed = urlsplit(self.supabase_url)
-            if (
-                not all(supabase)
-                or parsed.scheme != "https"
-                or not parsed.hostname
-                or parsed.netloc != parsed.hostname
-                or parsed.path
-                or parsed.query
-                or parsed.fragment
-            ):
-                raise ValueError(
-                    "Supabase storage requires an exact HTTPS origin, bucket and server-only service role key"
-                )
+            missing = []
+            if not self.supabase_url:
+                missing.append("PLANNER_SUPABASE_URL")
+            if not self.supabase_storage_bucket:
+                missing.append("PLANNER_SUPABASE_STORAGE_BUCKET")
+            if not self.supabase_service_role_key.get_secret_value():
+                missing.append("PLANNER_SUPABASE_SERVICE_ROLE_KEY")
+            supabase_valid = (
+                not missing
+                and parsed.scheme == "https"
+                and bool(parsed.hostname)
+                and parsed.netloc == parsed.hostname
+                and not parsed.path
+                and not parsed.query
+                and not parsed.fragment
+            )
+            if not supabase_valid:
+                detail = f" (missing: {', '.join(missing)})" if missing else ""
+                err = f"Supabase storage requires an exact HTTPS origin, bucket and server-only service role key{detail}"
+                if self.environment == "production":
+                    errors.append(err)
+                else:
+                    raise ValueError(err)
             if (
                 not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", self.supabase_storage_bucket)
                 or self.storage_bucket
             ):
-                raise ValueError("Use one storage provider and a valid Supabase bucket name")
+                err = "Use one storage provider and a valid Supabase bucket name"
+                if self.environment == "production":
+                    errors.append(err)
+                else:
+                    raise ValueError(err)
         if self.run_worker and self.worker_mode != "poll":
             raise ValueError("A colocated worker requires polling delivery")
         if self.worker_mode == "poll" and self.cloud_tasks_queue:
@@ -108,23 +208,37 @@ class Settings(BaseSettings):
             raise ValueError("Changing vector dimensions requires a schema/index migration")
         if self.environment == "production":
             if self.development_origins:
-                raise ValueError("Development origins must be empty in production")
+                errors.append("Development origins must be empty in production")
             if not self.web_origin.startswith("https://") or not (
                 self.storage_bucket or self.supabase_storage_bucket
             ):
-                raise ValueError("Production requires HTTPS and private object storage")
+                errors.append("Production requires HTTPS and private object storage")
             if self.supabase_storage_bucket and self.database_schema == "public":
-                raise ValueError("Supabase production requires a non-exposed application schema")
+                errors.append("Supabase production requires a non-exposed application schema")
             if self.worker_mode == "cloud_tasks" and (
                 not self.worker_audience or not self.worker_service_account
             ):
-                raise ValueError("Production requires authenticated worker delivery")
+                errors.append("Production requires authenticated worker delivery")
             if (
                 not self.encryption_key.get_secret_value()
                 or not (self.smtp_host or self.resend_api_key.get_secret_value())
                 or not self.smtp_from
             ):
-                raise ValueError("Production requires an encryption key and account email delivery")
+                missing_sec = []
+                if not self.encryption_key.get_secret_value():
+                    missing_sec.append("PLANNER_ENCRYPTION_KEY")
+                if not (self.smtp_host or self.resend_api_key.get_secret_value()):
+                    missing_sec.append("PLANNER_RESEND_API_KEY (or PLANNER_SMTP_HOST)")
+                if not self.smtp_from:
+                    missing_sec.append("PLANNER_SMTP_FROM")
+                errors.append(
+                    f"Production requires an encryption key and account email delivery (missing: {', '.join(missing_sec)})"
+                )
+            if errors:
+                raise ValueError(
+                    f"Production configuration incomplete ({len(errors)} error{'s' if len(errors) > 1 else ''}):\n"
+                    + "\n".join(f"  • {e}" for e in errors)
+                )
         return self
 
 

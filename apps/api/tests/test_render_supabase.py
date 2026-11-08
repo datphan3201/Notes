@@ -133,7 +133,7 @@ def test_storage_errors_do_not_disclose_provider_body_or_key(monkeypatch, supaba
 
 
 def production(**values):
-    return Settings(
+    defaults = dict(
         _env_file=None,
         environment="production",
         web_origin="https://planner.vercel.app",
@@ -145,8 +145,9 @@ def production(**values):
         encryption_key=Fernet.generate_key().decode(),
         smtp_from="Planner <planner@example.com>",
         resend_api_key="synthetic-resend",
-        **values,
     )
+    defaults.update(values)
+    return Settings(**defaults)
 
 
 def test_production_polling_and_private_storage_need_no_google_delivery_identity():
@@ -174,6 +175,57 @@ def test_invalid_cloud_configuration_is_rejected_without_secret_disclosure(value
     with pytest.raises(ValueError) as failure:
         Settings(_env_file=None, **base)
     assert "synthetic-service-role" not in str(failure.value)
+
+
+def test_config_auto_normalizes_urls_and_database_schemes():
+    config = production(
+        web_origin="  https://planner.vercel.app/  ",
+        supabase_url="  https://project.supabase.co/  ",
+        database_url="postgres://user:pass@aws.supabase.com:5432/postgres",
+    )
+    assert config.web_origin == "https://planner.vercel.app"
+    assert config.supabase_url == "https://project.supabase.co"
+    assert config.database_url == "postgresql+psycopg://user:pass@aws.supabase.com:5432/postgres"
+
+    config2 = production(
+        database_url="postgresql://user:pass@aws.supabase.com:5432/postgres",
+    )
+    assert config2.database_url == "postgresql+psycopg://user:pass@aws.supabase.com:5432/postgres"
+
+
+def test_config_normalizes_encryption_keys():
+    # 1. 32-character random string (e.g. from Render generateValue: true)
+    render_generated = "aB3dE5gH7iJ9kL1mN3oP5qR7sT9uV1wX"
+    config = production(encryption_key=render_generated)
+    fernet_key = config.encryption_key.get_secret_value()
+    # Must be valid 32-byte urlsafe base64 Fernet key
+    cipher = Fernet(fernet_key.encode("ascii"))
+    token = cipher.encrypt(b"secret payload")
+    assert cipher.decrypt(token) == b"secret payload"
+
+    # 2. Too short key must be rejected
+    with pytest.raises(ValueError, match="at least 32 characters"):
+        production(encryption_key="too-short")
+
+
+def test_production_reports_all_missing_settings_in_single_error():
+    with pytest.raises(ValueError) as failure:
+        Settings(
+            _env_file=None,
+            environment="production",
+            web_origin="http://localhost:3000",
+            encryption_key="",
+            smtp_from="",
+            supabase_storage_bucket="planner-private",
+            supabase_url="",
+            supabase_service_role_key="",
+        )
+    msg = str(failure.value)
+    assert "Production configuration incomplete" in msg
+    assert "PLANNER_ENCRYPTION_KEY" in msg
+    assert "PLANNER_SUPABASE_URL" in msg
+    assert "PLANNER_SUPABASE_SERVICE_ROLE_KEY" in msg
+    assert "PLANNER_SMTP_FROM" in msg
 
 
 def test_https_email_retries_keep_job_identity_and_failures_are_retried(monkeypatch):
