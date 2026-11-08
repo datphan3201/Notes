@@ -202,7 +202,11 @@ def reminders(db, job):
         if (
             inserted
             and user.preferences.get("email_notifications", True)
-            and (settings().smtp_host or settings().resend_api_key.get_secret_value())
+            and (
+                settings().smtp_host
+                or settings().resend_api_key.get_secret_value()
+                or settings().brevo_api_key.get_secret_value()
+            )
         ):
             enqueue(
                 db,

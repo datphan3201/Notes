@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     smtp_password: SecretStr = SecretStr("")
     smtp_from: str = "Planner <onboarding@resend.dev>"
     resend_api_key: SecretStr = SecretStr("")
+    brevo_api_key: SecretStr = SecretStr("")
     max_user_storage_bytes: int = 100 * 1024 * 1024
     cloud_tasks_queue: str = ""
 
@@ -221,14 +222,14 @@ class Settings(BaseSettings):
                 errors.append("Production requires authenticated worker delivery")
             if (
                 not self.encryption_key.get_secret_value()
-                or not (self.smtp_host or self.resend_api_key.get_secret_value())
+                or not (self.smtp_host or self.resend_api_key.get_secret_value() or self.brevo_api_key.get_secret_value())
                 or not self.smtp_from
             ):
                 missing_sec = []
                 if not self.encryption_key.get_secret_value():
                     missing_sec.append("PLANNER_ENCRYPTION_KEY")
-                if not (self.smtp_host or self.resend_api_key.get_secret_value()):
-                    missing_sec.append("PLANNER_RESEND_API_KEY (or PLANNER_SMTP_HOST)")
+                if not (self.smtp_host or self.resend_api_key.get_secret_value() or self.brevo_api_key.get_secret_value()):
+                    missing_sec.append("PLANNER_BREVO_API_KEY (or PLANNER_RESEND_API_KEY / PLANNER_SMTP_HOST)")
                 if not self.smtp_from:
                     missing_sec.append("PLANNER_SMTP_FROM")
                 errors.append(

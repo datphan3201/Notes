@@ -8,7 +8,9 @@ import ssl
 import struct
 from datetime import timedelta
 from email.message import EmailMessage
+from email.utils import parseaddr
 from urllib.parse import quote
+from uuid import NAMESPACE_URL, uuid5
 
 import httpx
 from cryptography.fernet import Fernet
@@ -131,6 +133,37 @@ def queue_email(db, user: User, purpose: str):
 
 def send_email(payload, delivery_key=None):
     config = settings()
+    if config.brevo_api_key.get_secret_value():
+        name, address = parseaddr(config.smtp_from)
+        if not address or "@" not in address:
+            raise RuntimeError("EMAIL_NOT_CONFIGURED")
+        identity = delivery_key or json.dumps(payload, sort_keys=True)
+        with httpx.Client(timeout=20) as client:
+            response = client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": config.brevo_api_key.get_secret_value()},
+                json={
+                    "sender": {"name": name or "Planner", "email": address},
+                    "to": [{"email": payload["to"]}],
+                    "subject": payload["subject"],
+                    "textContent": payload["body"],
+                    "headers": {"idempotencyKey": str(uuid5(NAMESPACE_URL, "planner:" + identity))},
+                },
+            )
+        if response.is_success:
+            return
+        if response.status_code == 400:
+            try:
+                error = response.json()
+            except ValueError:
+                error = {}
+            if (
+                isinstance(error, dict)
+                and error.get("code") == "duplicate_parameter"
+                and "idempotency" in str(error.get("message", "")).lower()
+            ):
+                return
+        raise RuntimeError("EMAIL_DELIVERY_FAILED")
     if config.resend_api_key.get_secret_value():
         if not config.smtp_from:
             raise RuntimeError("EMAIL_NOT_CONFIGURED")

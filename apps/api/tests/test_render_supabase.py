@@ -157,6 +157,12 @@ def test_production_polling_and_private_storage_need_no_google_delivery_identity
     assert "synthetic-service-role" not in repr(config)
 
 
+def test_production_accepts_brevo_without_resend_or_smtp():
+    config = production(brevo_api_key="synthetic-brevo", resend_api_key="", smtp_host="")
+    assert config.brevo_api_key.get_secret_value() == "synthetic-brevo"
+    assert "synthetic-brevo" not in repr(config)
+
+
 @pytest.mark.parametrize(
     "values",
     [
@@ -360,3 +366,42 @@ def test_container_supervisor_stops_siblings_on_signal_or_worker_exit(tmp_path, 
         if process.poll() is None:
             process.kill()
             process.wait()
+
+
+def test_brevo_email_payload_retry_identity_and_provider_priority(monkeypatch):
+    monkeypatch.setattr(settings(), "brevo_api_key", SecretStr("synthetic-brevo"))
+    monkeypatch.setattr(settings(), "resend_api_key", SecretStr("synthetic-resend"))
+    monkeypatch.setattr(settings(), "smtp_from", "Planner <planner@example.com>")
+    requests = []
+    status, result = 201, {"messageId": "synthetic-email"}
+
+    def respond(request):
+        requests.append(request)
+        assert request.url == "https://api.brevo.com/v3/smtp/email"
+        assert request.headers["api-key"] == "synthetic-brevo"
+        return httpx.Response(status, json=result)
+
+    original = httpx.Client
+    monkeypatch.setattr(accounts.httpx, "Client", lambda **kwargs: original(
+        **kwargs, transport=httpx.MockTransport(respond),
+    ))
+    payload = {"to": "user@example.com", "subject": "Verify", "body": "Synthetic test link"}
+    for job_id in ["job1", "job1", "job2"]:
+        accounts.send_email(payload, delivery_key=job_id)
+    bodies = [json.loads(request.content) for request in requests]
+    assert bodies[0]["sender"] == {"name": "Planner", "email": "planner@example.com"}
+    assert bodies[0]["to"] == [{"email": "user@example.com"}]
+    assert bodies[0]["textContent"] == payload["body"]
+    assert bodies[0]["headers"] == bodies[1]["headers"]
+    assert bodies[0]["headers"] != bodies[2]["headers"]
+    status, result = 400, {"code": "duplicate_parameter", "message": "Email for the idempotency key has already been processed"}
+    accounts.send_email(payload, delivery_key="job1")
+    result = {"code": "duplicate_parameter", "message": "Duplicate sender"}
+    with pytest.raises(RuntimeError, match="EMAIL_DELIVERY_FAILED"):
+        accounts.send_email(payload, delivery_key="job3")
+    status, result = 429, {"code": "rate_limit"}
+    with pytest.raises(RuntimeError, match="EMAIL_DELIVERY_FAILED"):
+        accounts.send_email(payload, delivery_key="job3")
+    monkeypatch.setattr(settings(), "smtp_from", "")
+    with pytest.raises(RuntimeError, match="EMAIL_NOT_CONFIGURED"):
+        accounts.send_email(payload, delivery_key="job4")

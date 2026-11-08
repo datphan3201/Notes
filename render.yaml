@@ -43,6 +43,8 @@ services:
         value: "Planner <onboarding@resend.dev>"
       - key: PLANNER_RESEND_API_KEY
         sync: false
+      - key: PLANNER_BREVO_API_KEY
+        sync: false
       - key: PLANNER_AI_BASE_URL
         sync: false
       - key: PLANNER_AI_API_KEY

@@ -9,6 +9,7 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 - Converted `.ai` symlink into a standalone root repository directory preserving agent rules and Karpathy guidelines.
 
 ### Added
+- Added Brevo HTTPS transactional email delivery, production configuration and reminder support. Brevo takes priority over Resend/SMTP when its private API key is configured; retries retain a provider idempotency key.
 - Prepared the selected Render + Vercel + Supabase cloud trial: a Free Render blueprint, supervised API/polling-worker container with forward migrations, private application schema and Supabase Storage adapter, and HTTPS Resend email delivery for Render Free's SMTP restrictions. Vercel command plans accept the Render backend. Hosted accounts, secrets, mail/provider acceptance and data cutover remain unperformed; Free sleep delays background jobs. See the [deployment guide](docs/migration/render-vercel-supabase.md).
 - Safe plan/execute/check helpers for the selected Funnel and Vercel routes. Vercel proxies the existing Funnel backend; the launcher accepts its exact primary origin for CSRF and email links, preserves localhost/Funnel access and supports a Docker Desktop CLI override. Added proxied readiness and a Vercel project configuration. This was the earlier deployment selection; the current Render/Vercel/Supabase target is recorded above. Actual hosting trials remain pending.
 

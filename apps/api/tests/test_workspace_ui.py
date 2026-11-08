@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
+import pytest
 from sqlalchemy import func, select
 
 from planner.config import settings
@@ -149,10 +150,16 @@ def test_schedule_interval_and_completion_history_have_authoritative_timestamps(
     )
 
 
-def test_reminder_email_setting_and_replay_do_not_duplicate_delivery(client, db, monkeypatch):
+@pytest.mark.parametrize("provider", ["smtp", "brevo"])
+def test_reminder_email_setting_and_replay_do_not_duplicate_delivery(client, db, monkeypatch, provider):
     owner = client.get("/api/v1/auth/me").json()["user"]["id"]
     make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
-    monkeypatch.setattr(settings(), "smtp_host", "fake.smtp.invalid")
+    if provider == "smtp":
+        monkeypatch.setattr(settings(), "smtp_host", "fake.smtp.invalid")
+    else:
+        from pydantic import SecretStr
+
+        monkeypatch.setattr(settings(), "brevo_api_key", SecretStr("synthetic-brevo"))
     reminders(db, SimpleNamespace(user_id=owner))
     reminders(db, SimpleNamespace(user_id=owner))
     emails = db.scalar(
