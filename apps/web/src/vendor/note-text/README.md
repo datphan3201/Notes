@@ -1,0 +1,3 @@
+# Plain-text Note editor
+
+The editor and four behavior helpers are retained verbatim from `frontend/src/js/notes/note-content-editor.js` and its pure/DOM helpers. The translation helper only changes its import to the shared baseline dictionary. `components/note-document.tsx` owns their React lifecycle through the typed declaration. This deliberately preserves checkbox prefixes, selection, composition, paste and undo behavior while the surrounding application moves to React/TypeScript. User HTML is never interpreted as markup. Keep fixes synchronized with the baseline until its retirement; the UI migration does not activate collaborative editing.

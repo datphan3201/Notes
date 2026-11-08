@@ -30,7 +30,7 @@ final readonly class PdoNotificationRepository
     /** @return list<array{id:string,type:string,subject_id:?string,payload:array<string,mixed>,read_at:?string,created_at:string}> */
     public function latest(int $userId, int $limit = 50): array
     {
-        $statement = $this->pdo->prepare('SELECT id, type, subject_id, payload, read_at, created_at FROM notifications WHERE user_id = :user ORDER BY created_at DESC, id DESC LIMIT :limit');
+        $statement = $this->pdo->prepare('SELECT id, type, subject_id, payload, read_at, created_at FROM notifications WHERE user_id = :user AND LEFT(type, 5) <> \'team_\' ORDER BY created_at DESC, id DESC LIMIT :limit');
         $statement->bindValue(':user', $userId, PDO::PARAM_INT);
         $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
         $statement->execute();
@@ -47,7 +47,7 @@ final readonly class PdoNotificationRepository
 
     public function unreadCount(int $userId): int
     {
-        $statement = $this->pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = :user AND read_at IS NULL');
+        $statement = $this->pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = :user AND LEFT(type, 5) <> \'team_\' AND read_at IS NULL');
         $statement->execute(['user' => $userId]);
 
         return (int) $statement->fetchColumn();
@@ -55,7 +55,7 @@ final readonly class PdoNotificationRepository
 
     public function markRead(int $userId, ?string $id, string $now): void
     {
-        $sql = 'UPDATE notifications SET read_at = :now WHERE user_id = :user AND read_at IS NULL'.($id === null ? '' : ' AND id = :id');
+        $sql = 'UPDATE notifications SET read_at = :now WHERE user_id = :user AND LEFT(type, 5) <> \'team_\' AND read_at IS NULL'.($id === null ? '' : ' AND id = :id');
         $bindings = ['now' => $now, 'user' => $userId];
         if ($id !== null) {
             $bindings['id'] = $id;

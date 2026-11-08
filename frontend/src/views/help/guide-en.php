@@ -25,7 +25,6 @@
             <li><a href="#ask-ai">Ask AI about your notes</a></li>
             <li><a href="#offline">Use Planner offline</a></li>
             <li><a href="#reviews">Look back with Reviews</a></li>
-            <li><a href="#teamwork">Teamwork</a></li>
             <li><a href="#assistant">The AI assistant</a></li>
             <li><a href="#notifications">Notifications and reminders</a></li>
             <li><a href="#archive">Archive and restore</a></li>
@@ -46,12 +45,11 @@
                 <li><strong>Keep habits</strong> – check in each day, watch your streak and plan rest days.</li>
                 <li><strong>Keep ideas safe</strong> – notes with colours, labels, tick boxes, attachments, passwords and sharing.</li>
                 <li><strong>Look back and adjust</strong> – each day, week or month, Planner gathers what you did so you can write down what went well, what didn't and what you'll change.</li>
-                <li><strong>Work with others</strong> – team goals with assignments, progress and chat.</li>
                 <li><strong>Ask the AI assistant</strong> – ask about your plans, have it draft a roadmap or reschedule work; nothing changes until you confirm.</li>
             </ul>
-            <p>Planner is for anyone who wants to live and work with a plan: students preparing for exams, people at work, someone building a new habit or a small project team. It is available in English and Vietnamese, on computers and phones.</p>
+            <p>Planner is for anyone who wants to live and work with a plan: students preparing for exams, people at work, someone building a new habit or someone planning a personal project. It is available in English and Vietnamese, on computers and phones.</p>
             <?= $shot('dashboard', 'The Dashboard with the goal roadmap, today\'s task list and habits', 'The Dashboard: your main goal\'s roadmap at the top, today\'s work on the left, habits on the right.') ?>
-            <p><strong>Your data is yours.</strong> Other people only see notes you choose to share and team goals they belong to. System administrators cannot read your private plans or notes either.</p>
+            <p><strong>Your data is yours.</strong> Other people only see notes you choose to share. System administrators cannot read your private plans or notes either.</p>
         </section>
 
         <section id="start">
@@ -69,7 +67,7 @@
         <section id="screen">
             <h2>Find your way around</h2>
             <ul>
-                <li><strong>The left sidebar</strong> opens the main pages: Dashboard, Goals, Tasks, Calendar, Habits, Notes, Reviews and Teamwork. At the bottom are your name, <em>Settings</em> (the gear) and sign out.</li>
+                <li><strong>The left sidebar</strong> opens the main pages: Dashboard, Goals, Tasks, Calendar, Habits, Notes and Reviews. At the bottom are your name, <em>Settings</em> (the gear) and sign out.</li>
                 <li><strong>At the top right</strong> are the notification bell (a red number means unread items), the <strong>?</strong> tour and a quick light/dark switch.</li>
                 <li><strong>The sparkle button at the bottom right</strong> opens the AI assistant on every page.</li>
                 <li><em>New task</em> at the top of several pages captures a task immediately.</li>
@@ -103,7 +101,6 @@
                         <tr><th scope="row">Note</th><td>Free text: ideas, study material, lists.</td><td>On its own; can be linked to one goal <em>or</em> one task</td><td>Has labels, colours, its own password and can be shared. Deleting a note removes it for good.</td></tr>
                         <tr><th scope="row">Calendar</th><td>A day-by-day view, not a separate store.</td><td>Shows the dates of tasks, milestones and goals</td><td>Dragging an item to another day changes that item's own dates.</td></tr>
                         <tr><th scope="row">Review</th><td>A summary of a day, week or month with your reflections.</td><td>On its own</td><td>Figures are captured when it is created; click <em>Refresh facts</em> to update them.</td></tr>
-                        <tr><th scope="row">Team goal</th><td>A goal shared by a few people, with assignments and chat.</td><td>The Teamwork page, separate from personal plans</td><td>Permissions follow roles: Admin, Editor, Viewer.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -264,7 +261,7 @@
 
         <section id="sharing">
             <h2>Share a note and edit it together</h2>
-            <p><strong>When to use it:</strong> when friends or a team should read or write a note with you.</p>
+            <p><strong>When to use it:</strong> when friends or colleagues should read or write a note with you.</p>
             <ol class="guide-steps">
                 <li>Open the note and click <em>Share</em>. Enter one or more emails (separated by commas), choose <em>View only</em> or <em>Can view and edit</em>, and click <em>Invite</em>. Only people who already have a Planner account can be invited.</li>
                 <li>They see the invitation in the bell and at the top of Notes, and choose <em>Accept</em> or <em>Decline</em>.</li>
@@ -311,19 +308,6 @@
             <p class="guide-note">Deleting a review is permanent.</p>
         </section>
 
-        <section id="teamwork">
-            <h2>Teamwork</h2>
-            <p><strong>When to use it:</strong> a class project, a small project or shared chores with a few people.</p>
-            <ol class="guide-steps">
-                <li>Open <em>Teamwork</em>, click <em>Add goal</em> and give it a name, description and deadline.</li>
-                <li>Click <em>Invite</em> to add members by email and choose a role: <strong>Admin</strong> (manages members), <strong>Editor</strong> (creates and edits tasks), <strong>Viewer</strong> (reads, and updates the status of tasks assigned to them).</li>
-                <li>Click <em>Add task</em> to create work, assign it to a member and set a due date, reminder or repeat. The assignee moves it through To do, In progress and Completed.</li>
-                <li>Use <em>Team chat</em> to talk; new messages appear within a few seconds.</li>
-            </ol>
-            <?= $shot('teamwork', 'A team goal with members, assigned tasks and team chat') ?>
-            <p>Team tasks assigned to you also appear on the Dashboard's Daily tab. Team goals are separate from your personal plans and don't count towards your own goal progress.</p>
-            <p class="guide-note">The person who created a team goal is protected: nobody else can demote them or remove them from the team.</p>
-        </section>
 
         <section id="assistant">
             <h2>The AI assistant</h2>
@@ -338,13 +322,13 @@
             </ul>
             <p><strong>Nothing changes until you confirm.</strong> When the assistant wants to create, edit, reschedule or delete, it shows an <em>Apply these changes?</em> card listing every change (old → new). Click <em>Apply</em> to go ahead or <em>Cancel</em> to drop it. If you changed one of the items in the meantime, Planner refuses to apply so nothing is overwritten; just ask again.</p>
             <?= $shot('assistant', 'The AI assistant with a confirmation card containing a schedule change and a reschedule') ?>
-            <p class="guide-note">The assistant cannot read password-protected notes and does not change Reviews, Teamwork or Settings. AI can be wrong; read the confirmation card before you apply it.</p>
+            <p class="guide-note">The assistant cannot read password-protected notes and does not change Reviews or Settings. AI can be wrong; read the confirmation card before you apply it.</p>
         </section>
 
         <section id="notifications">
             <h2>Notifications and reminders</h2>
             <ul>
-                <li>The bell shows share invitations, team invitations, assigned tasks and reminders that are due. Click an item to go to the right place.</li>
+                <li>The bell shows share invitations and reminders that are due. Click an item to go to the right place.</li>
                 <li>Set a reminder on a task with <em>Remind me</em> in the <em>⋯</em> menu, or the <em>Reminder</em> field when editing.</li>
                 <li>In <em>Settings → Notifications</em> choose whether you get in-app notifications and whether you also get emails.</li>
             </ul>
@@ -371,7 +355,7 @@
             <ul>
                 <li><strong>Profile</strong> – display name, short bio and picture; change your email (needs your current password and a confirmation sent to the new address).</li>
                 <li><strong>Appearance</strong> – light or dark, five sceneries (Summit trail, Forest path, Coastal cove, Pisces, Starlit lake), your own background image or colour, your own quote and the language.</li>
-                <li><strong>Security</strong> – change your password (your other sessions are signed out), turn on <em>Two-step verification</em> with emailed codes or an authenticator app, and <em>Delete account</em>: enter your password, tick the box and confirm once more. All your data is deleted for good, including team goals you created.</li>
+                <li><strong>Security</strong> – change your password (your other sessions are signed out), turn on <em>Two-step verification</em> with emailed codes or an authenticator app, and <em>Delete account</em>: enter your password, tick the box and confirm once more. All your data is deleted for good.</li>
                 <li><strong>Notifications</strong> – in-app and email notifications on or off.</li>
                 <li><strong>Task history</strong> and <strong>Archive</strong> – see the sections above.</li>
                 <li><strong>Report a user</strong> – tell the administrators about someone breaking the rules, with up to 3 images as evidence. The person reported never learns who reported them.</li>
@@ -410,7 +394,7 @@
                 <dd>It requires an earlier milestone to be completed first. Complete that one, or open <em>Prerequisites and related goals</em> to see what it depends on.</dd>
                 <dt>The assistant or Ask AI says it is unavailable.</dt>
                 <dd>AI is switched on by the administrator on the server and has an hourly limit. Try again later or contact your administrator.</dd>
-                <dt>I can't invite someone to a note or a team.</dt>
+                <dt>I can't invite someone to a note.</dt>
                 <dd>They need a Planner account with exactly the email you entered. Ask them to register first.</dd>
                 <dt>I want to delete my account.</dt>
                 <dd>Open <em>Settings → Security → Delete account</em>, enter your password and confirm. The data cannot be recovered, so copy anything you want to keep first.</dd>

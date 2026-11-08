@@ -202,7 +202,6 @@ final readonly class AccountController
             $request->path === '/habits' => ['planning/habits', 'Habits', 'planning.habits'],
             $request->path === '/dashboard' => ['planning/dashboard', 'Dashboard', 'planning.dashboard'],
             $request->path === '/reviews' => ['planning/reviews', 'Reviews', 'planning.reviews'],
-            $request->path === '/teamwork' => ['planning/teamwork', 'Teamwork', 'planning.teamwork'],
             default => throw new \LogicException('Unexpected planning page route.'),
         };
         $extra = [];

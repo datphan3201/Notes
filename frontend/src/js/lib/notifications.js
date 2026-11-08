@@ -10,14 +10,13 @@ export function unreadLabel(count) {
 }
 
 const fill = (template, params) =>
-    template.replace(/:(actor|note|team|task|subject|role|permission)\b/g, (_, key) =>
+    template.replace(/:(actor|note|task|subject|permission)\b/g, (_, key) =>
         String(params[key] ?? ''),
     );
-const ROLE_LABELS = { admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
 
 /**
  * The bell's title and detail for a stored notification, in the reader's language. New
- * notifications carry params (who, which note or team); older ones only have the English text
+ * notifications carry params (who, which note); older ones only have the English text
  * stored when they were created, shown as before.
  */
 export function notificationText(notification) {
@@ -38,15 +37,6 @@ export function notificationText(notification) {
             return { title: fill(t(':actor joined your shared note'), params), body: params.note };
         case 'shared_note_updated':
             return { title: fill(t(':actor updated a shared note'), params), body: params.note };
-        case 'team_joined':
-            return { title: fill(t(':actor joined :team'), params), body: '' };
-        case 'team_invite':
-            return {
-                title: fill(t(':actor invited you to :team'), params),
-                body: `${t('Role')}: ${t(ROLE_LABELS[params.role] || params.role)}`,
-            };
-        case 'team_task_assigned':
-            return { title: fill(t('New task in :team'), params), body: params.task };
         case 'report_new':
             return {
                 title: fill(

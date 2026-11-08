@@ -1,0 +1,39 @@
+# Tasks UI refinement
+
+Current status: this is a historical UI-only review record. The user subsequently accepted the revised interface and authorized full integration; see [the current integration record](ui-integration.md) for connected behavior and checks. Earlier deferral/pending statements below apply to that earlier pass.
+
+Current handoff: the [combined UI review](full-ui-review.md) now includes all remaining listed clusters. Its shared data/editors/navigation supersede earlier statements below about placeholders, independent Dashboard capture or queued Notes/History screens. Earlier screenshots remain evidence of their original focused pass.
+
+
+UI-only work for ISSUE-053 on `feat/personal-ai-planner-v1`, following the user's request to continue after the shared-shell and Dashboard previews. Tests and backend integration remain deferred until the interface is accepted.
+
+## Plan before implementation
+
+1. Follow the retained Task collection, capture, editor and detail guide screenshots and `frontend/src/views/planning/{tasks,task,task-capture-fields}.php`. Retain the existing Be Vietnam Pro, illustrated header and palette: canvas `#f3f7ff`, surface `#ffffff`, text `#142849`, muted `#55708e`, accent `#067287`, border `#e1ebf5`. Use left-aligned rows, compact controls and stacked mobile panels.
+2. Replace the shared preview's minimal Task list with a dedicated fixture-based collection: time views/counts, search/status/sort/grouping, collapsed extra filters, stars, Today/Week controls and a row action menu. Keep real application routes/APIs separate.
+3. Match the retained distinction between a centered compact creation dialog and a right-side edit sheet. Include parent/planning choices, collapsed description/criteria, dates, schedule, reminder, importance/tags/estimate, and recurrence controls with readable next-date examples. Keep Cancel/Save reachable and dirty-draft/conflict choices explicit.
+4. Restore in-preview Task detail Overview/Notes/Related tabs: context and outcome, editable completion checklist, separate explicitly saved working-note draft/resources, related Goal links and move/plan actions. Completion asks about unchecked checklist items; reopen resolves an old due date. Preserve drafts while switching detail tabs and preview navigation.
+5. Add a Repeating fixture view with localized states, complete template editing, calendar-rule date preview, Pause/Resume and confirmed terminal End. Existing Task examples remain distinct from series templates. End preserves started/Done work and asks separately about future not-started examples; no scheduler/materialization is introduced.
+6. Inspect rendered desktop/mobile and light/dark/localized compositions and representative local interactions. Record actual visual observations; do not run automated tests, build/type checks, backend mutations or live-provider calls. Leave issues in progress pending user visual approval and later integration/verification.
+
+## Boundary
+
+Open `/preview/workspace?section=tasks&lang=vi`. All fixtures and changes are in React memory; reload resets them. Date previews are local calendar examples, not proof of scheduler parity. This pass does not claim that the API-backed Task/series screens have been updated or that the other queued UI clusters are complete.
+
+## Implemented preview
+
+- Collection: time-view counts, name/status/tag filters, importance/schedule sort, Goal/status grouping with independent disclosure, paging, row stars, Today/Week choices, pin/edit/move/archive actions and a separate localized Repeating collection. The retained minimal shared Task list and its unused styling were removed; the shell, notifications and Dashboard prototype stay available.
+- Capture/edit: centered compact creation versus right-side editing, parent/planning, collapsed description/criteria/outcome, dates/schedule/reminders, tags/estimate/importance and daily/weekly/monthly/yearly rule examples. The footer stays available while content scrolls. Dirty-close and a labelled version-conflict simulation let the user choose keep/discard or saved/draft. Series templates also include checklist text and date previews; editing an occurrence remains separate from editing its template.
+- Details: Overview/Notes/Related tabs, editable/reorderable completion checklist, separate retained working-note draft with the existing text/checkbox editor, resources derived from that draft, local linked-note capture and related Goal choices. Completion acknowledges unchecked items without checking them automatically. Reopen demonstrates clearing/rescheduling an old due date and acknowledging a completed parent Goal. A series End confirmation separately offers to archive future not-started sample occurrences.
+
+The demo date is fixed at 2026-11-07 in Asia/Ho_Chi_Minh. Collection membership and recurrence examples are illustrative local state; they do not replace the actual application classifiers, retention policy or materializer. Ended templates expose creation of a new series instead of Pause/Resume. Current API pages and the Dashboard's earlier minimal capture fixture remain separate until the shared UI is accepted. Full History/Archive and Notes-workspace refinement remain in their own queued issues.
+
+## Rendered review, 2026-11-07
+
+Compared retained Vietnamese collection/new-task/edit/detail guide images and inspected the rendered preview using the Playwright CLI as a browser at desktop 1440×1000 and mobile 390×844. Reviewed the collection, centered creation, side-sheet/advanced rule editing, detail panels, working-note draft across tab switches, related Goal links, completion acknowledgement, old-due-date/parent reopen, dirty discard and the saved/draft simulation. Inspected English dark mobile collection, recurrence capture and empty/error examples. Adjusted row-star color, form spacing, radio/checkbox alignment, mobile series actions, dark scenery contrast, native control theme and the shared empty-state selector after inspection.
+
+For the local lifecycle example, Pause/Resume preserved the existing Task examples. Ending the first series with future-not-started archival removed the `Read for fifteen minutes` future example while retaining `Read today's chapter` (In progress). A name search for `Read` still included the independent `Review the first reading draft` Task. These are observed fixture interactions, not automated tests or proof of real scheduler/transaction behavior. The existing HTTPS Funnel URL returned HTTP 200 and rendered the preview; one browser load waited beyond its load-event timeout before a later snapshot showed the page. The Next.js frontend remains running with Fast Refresh.
+
+Local ignored artifacts under `output/playwright/` include `tasks-collection-desktop.png`, `tasks-capture-desktop.png`, `tasks-detail-overview-desktop.png`, `tasks-detail-note-desktop.png`, `tasks-working-draft-desktop.png`, `tasks-related-desktop.png`, `tasks-completion-confirm-desktop.png`, `tasks-template-desktop.png`, `tasks-repeating-desktop.png`, `tasks-end-series-desktop.png`, `tasks-collection-mobile.png`, `tasks-detail-mobile.png`, `tasks-editor-mobile.png`, `tasks-discard-mobile.png`, `tasks-conflict-mobile.png`, `tasks-reopen-mobile.png`, `tasks-repeating-mobile.png`, `tasks-dark-mobile.png`, `tasks-repeat-capture-dark-mobile.png`, `tasks-ended-series-dark-mobile.png`, `tasks-retained-occurrence-dark-mobile.png`, `tasks-empty-dark-mobile.png` and `tasks-error-dark-mobile.png`. Images capture successive review states and may predate the final spacing/text adjustments.
+
+No automated tests, type check, production build, exhaustive accessibility/keyboard review, database mutations, actual conflict resolution, reminders or recurrence materialization were run for this UI pass. No backend/API or test source was changed. ISSUE-053 remains in progress pending user visual approval and later integration/verification.

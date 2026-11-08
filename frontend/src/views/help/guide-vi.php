@@ -25,7 +25,6 @@
             <li><a href="#hoi-ai">Hỏi AI về ghi chú</a></li>
             <li><a href="#ngoai-tuyen">Dùng khi mất mạng</a></li>
             <li><a href="#danh-gia">Nhìn lại với Đánh giá</a></li>
-            <li><a href="#nhom">Làm việc nhóm</a></li>
             <li><a href="#tro-ly">Trợ lý AI</a></li>
             <li><a href="#thong-bao">Thông báo và nhắc hẹn</a></li>
             <li><a href="#luu-tru">Lưu trữ và khôi phục</a></li>
@@ -46,12 +45,11 @@
                 <li><strong>Giữ thói quen</strong> – đánh dấu mỗi ngày, xem chuỗi ngày liên tiếp và đặt ngày nghỉ khi cần.</li>
                 <li><strong>Lưu lại ý tưởng</strong> – ghi chú có màu, nhãn, danh sách đánh dấu, tệp đính kèm, mật khẩu và chia sẻ.</li>
                 <li><strong>Nhìn lại và điều chỉnh</strong> – mỗi ngày, tuần hoặc tháng, Planner tổng hợp những gì bạn đã làm để bạn ghi lại điều tốt, điều chưa tốt và điều sẽ thay đổi.</li>
-                <li><strong>Làm cùng người khác</strong> – mục tiêu nhóm có phân công, tiến độ và trò chuyện.</li>
                 <li><strong>Nhờ trợ lý AI</strong> – hỏi về kế hoạch, nhờ lập lộ trình hoặc dời lịch; mọi thay đổi chỉ xảy ra khi bạn bấm xác nhận.</li>
             </ul>
-            <p>Planner dành cho bất kỳ ai muốn sống và làm việc có kế hoạch hơn: học sinh, sinh viên ôn thi, người đi làm, người đang rèn một thói quen mới hay một nhóm nhỏ làm đồ án. Ứng dụng có tiếng Việt và tiếng Anh, chạy trên máy tính lẫn điện thoại.</p>
+            <p>Planner dành cho bất kỳ ai muốn sống và làm việc có kế hoạch hơn: học sinh, sinh viên ôn thi, người đi làm, người đang rèn một thói quen mới hay người đang lên kế hoạch cho dự án cá nhân. Ứng dụng có tiếng Việt và tiếng Anh, chạy trên máy tính lẫn điện thoại.</p>
             <?= $shot('dashboard', 'Trang Tổng quan với lộ trình mục tiêu, danh sách việc hôm nay và thói quen', 'Trang Tổng quan: lộ trình mục tiêu chính ở trên, việc hôm nay bên trái, thói quen bên phải.') ?>
-            <p><strong>Dữ liệu của bạn là của riêng bạn.</strong> Người khác chỉ thấy những ghi chú bạn chủ động chia sẻ và những mục tiêu nhóm họ tham gia. Quản trị viên hệ thống cũng không đọc được kế hoạch hay ghi chú riêng của bạn.</p>
+            <p><strong>Dữ liệu của bạn là của riêng bạn.</strong> Người khác chỉ thấy những ghi chú bạn chủ động chia sẻ. Quản trị viên hệ thống cũng không đọc được kế hoạch hay ghi chú riêng của bạn.</p>
         </section>
 
         <section id="bat-dau">
@@ -69,7 +67,7 @@
         <section id="man-hinh">
             <h2>Làm quen màn hình</h2>
             <ul>
-                <li><strong>Thanh bên trái</strong> mở các trang chính: Tổng quan, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú, Đánh giá và Làm việc nhóm. Ở dưới cùng là tên bạn, nút <em>Cài đặt</em> (hình bánh răng) và nút đăng xuất.</li>
+                <li><strong>Thanh bên trái</strong> mở các trang chính: Tổng quan, Mục tiêu, Công việc, Lịch, Thói quen, Ghi chú và Đánh giá. Ở dưới cùng là tên bạn, nút <em>Cài đặt</em> (hình bánh răng) và nút đăng xuất.</li>
                 <li><strong>Góc trên bên phải</strong> có chuông thông báo (số đỏ là thông báo chưa đọc), nút <strong>?</strong> mở vòng giới thiệu và nút đổi nhanh sáng/tối.</li>
                 <li><strong>Nút tròn lấp lánh ở góc dưới bên phải</strong> mở trợ lý AI ở mọi trang.</li>
                 <li>Nút <em>Công việc mới</em> ở đầu nhiều trang giúp ghi lại một việc ngay lập tức.</li>
@@ -103,7 +101,6 @@
                         <tr><th scope="row">Ghi chú</th><td>Văn bản tự do: ý tưởng, tài liệu, danh sách.</td><td>Độc lập; có thể liên kết với một mục tiêu <em>hoặc</em> một công việc</td><td>Có nhãn, màu, mật khẩu riêng và chia sẻ được. Xóa ghi chú là xóa hẳn.</td></tr>
                         <tr><th scope="row">Lịch</th><td>Cách xem theo ngày, không phải một nơi lưu riêng.</td><td>Lấy ngày từ công việc, cột mốc và mục tiêu</td><td>Kéo một mục sang ngày khác là đổi ngày của chính mục đó.</td></tr>
                         <tr><th scope="row">Đánh giá</th><td>Bản tổng kết một ngày, tuần hoặc tháng kèm suy ngẫm của bạn.</td><td>Độc lập</td><td>Số liệu được chụp lại tại thời điểm tạo; bấm <em>Cập nhật dữ liệu</em> để làm mới.</td></tr>
-                        <tr><th scope="row">Mục tiêu nhóm</th><td>Mục tiêu chung của vài người, có phân công và trò chuyện.</td><td>Trang Làm việc nhóm, tách khỏi kế hoạch cá nhân</td><td>Quyền theo vai trò: Quản trị, Biên tập, Người xem.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -311,19 +308,6 @@
             <p class="guide-note">Xóa một bản đánh giá là xóa vĩnh viễn.</p>
         </section>
 
-        <section id="nhom">
-            <h2>Làm việc nhóm</h2>
-            <p><strong>Khi nào dùng:</strong> làm đồ án, dự án nhỏ hay việc chung với vài người.</p>
-            <ol class="guide-steps">
-                <li>Vào <em>Làm việc nhóm</em>, bấm <em>Thêm mục tiêu</em>, đặt tên, mô tả và hạn.</li>
-                <li>Bấm <em>Mời</em> để mời thành viên bằng email và chọn vai trò: <strong>Quản trị</strong> (quản lý thành viên), <strong>Biên tập</strong> (tạo và sửa công việc), <strong>Người xem</strong> (chỉ xem, và cập nhật trạng thái việc được giao cho mình).</li>
-                <li>Bấm <em>Thêm công việc</em> để tạo việc, giao cho một thành viên, đặt hạn, nhắc hẹn hoặc lặp lại. Người được giao đổi trạng thái: Cần làm, Đang thực hiện, Đã hoàn thành.</li>
-                <li>Dùng khung <em>Trò chuyện nhóm</em> để trao đổi; tin nhắn mới tự hiện sau vài giây.</li>
-            </ol>
-            <?= $shot('teamwork', 'Mục tiêu nhóm với thành viên, công việc được giao và trò chuyện nhóm') ?>
-            <p>Việc nhóm giao cho bạn cũng hiện ở thẻ Hằng ngày của trang Tổng quan. Mục tiêu nhóm tách biệt với kế hoạch cá nhân: chúng không tính vào tiến độ mục tiêu riêng của bạn.</p>
-            <p class="guide-note">Người tạo mục tiêu nhóm luôn được bảo vệ: người khác không thể hạ quyền hay xóa họ khỏi nhóm.</p>
-        </section>
 
         <section id="tro-ly">
             <h2>Trợ lý AI</h2>
@@ -338,13 +322,13 @@
             </ul>
             <p><strong>Không có gì thay đổi cho đến khi bạn xác nhận.</strong> Khi trợ lý muốn tạo, sửa, dời lịch hay xóa, nó hiện một thẻ <em>Áp dụng các thay đổi này?</em> liệt kê từng thay đổi (giá trị cũ → mới). Bấm <em>Áp dụng</em> để thực hiện hoặc <em>Hủy</em> để bỏ qua. Nếu trong lúc đó bạn đã sửa một mục liên quan, Planner sẽ từ chối áp dụng để không ghi đè, và bạn chỉ cần hỏi lại.</p>
             <?= $shot('assistant', 'Trợ lý AI với thẻ xác nhận gồm một thay đổi lịch và một lần dời ngày') ?>
-            <p class="guide-note">Trợ lý không đọc ghi chú có mật khẩu và không thay đổi phần Đánh giá, Làm việc nhóm hay Cài đặt. Câu trả lời của AI có thể sai, hãy đọc kỹ thẻ xác nhận trước khi bấm Áp dụng.</p>
+            <p class="guide-note">Trợ lý không đọc ghi chú có mật khẩu và không thay đổi phần Đánh giá hay Cài đặt. Câu trả lời của AI có thể sai, hãy đọc kỹ thẻ xác nhận trước khi bấm Áp dụng.</p>
         </section>
 
         <section id="thong-bao">
             <h2>Thông báo và nhắc hẹn</h2>
             <ul>
-                <li>Chuông ở góc trên hiện lời mời chia sẻ, lời mời vào nhóm, việc được giao và nhắc hẹn đến giờ. Bấm vào một dòng để mở đúng nơi liên quan.</li>
+                <li>Chuông ở góc trên hiện lời mời chia sẻ và nhắc hẹn đến giờ. Bấm vào một dòng để mở đúng nơi liên quan.</li>
                 <li>Đặt nhắc hẹn cho công việc bằng <em>Nhắc tôi</em> trong menu <em>⋯</em> hoặc trường <em>Nhắc hẹn</em> khi chỉnh sửa.</li>
                 <li>Trong <em>Cài đặt → Thông báo</em>, bạn chọn có nhận thông báo trong ứng dụng và có nhận thêm email hay không.</li>
             </ul>
@@ -371,7 +355,7 @@
             <ul>
                 <li><strong>Hồ sơ</strong> – tên hiển thị, giới thiệu ngắn, ảnh đại diện; đổi email (cần mật khẩu hiện tại và xác nhận qua email mới).</li>
                 <li><strong>Giao diện</strong> – sáng/tối, năm phong cảnh nền (Đường lên đỉnh, Lối mòn trong rừng, Vịnh ven biển, Song Ngư, Hồ dưới trời sao), ảnh nền riêng hoặc màu riêng, câu trích dẫn của bạn và ngôn ngữ.</li>
-                <li><strong>Bảo mật</strong> – đổi mật khẩu (các phiên đăng nhập khác sẽ bị đăng xuất), bật <em>Xác thực hai bước</em> bằng mã gửi qua email hoặc ứng dụng tạo mã, và <em>Xóa tài khoản</em>: nhập mật khẩu, đánh dấu ô xác nhận, rồi xác nhận lần cuối. Toàn bộ dữ liệu bị xóa vĩnh viễn, kể cả mục tiêu nhóm do bạn tạo.</li>
+                <li><strong>Bảo mật</strong> – đổi mật khẩu (các phiên đăng nhập khác sẽ bị đăng xuất), bật <em>Xác thực hai bước</em> bằng mã gửi qua email hoặc ứng dụng tạo mã, và <em>Xóa tài khoản</em>: nhập mật khẩu, đánh dấu ô xác nhận, rồi xác nhận lần cuối. Toàn bộ dữ liệu bị xóa vĩnh viễn.</li>
                 <li><strong>Thông báo</strong> – bật/tắt thông báo trong ứng dụng và email.</li>
                 <li><strong>Lịch sử công việc</strong> và <strong>Lưu trữ</strong> – xem các phần ở trên.</li>
                 <li><strong>Báo cáo người dùng</strong> – báo cho quản trị viên về người vi phạm, có thể kèm tối đa 3 ảnh bằng chứng. Người bị báo cáo không biết ai đã báo cáo.</li>
@@ -410,7 +394,7 @@
                 <dd>Cột mốc này yêu cầu một cột mốc trước phải xong. Hoàn thành cột mốc trước, hoặc mở <em>Điều kiện và mục tiêu liên quan</em> để xem nó phụ thuộc vào đâu.</dd>
                 <dt>Trợ lý AI hoặc Hỏi AI báo không khả dụng.</dt>
                 <dd>Tính năng AI do quản trị viên bật trên máy chủ, và có giới hạn số lần mỗi giờ. Hãy thử lại sau hoặc liên hệ quản trị viên.</dd>
-                <dt>Tôi không mời được một người vào ghi chú hay nhóm.</dt>
+                <dt>Tôi không mời được một người vào ghi chú.</dt>
                 <dd>Người đó cần có tài khoản Planner với đúng email bạn nhập. Hãy nhờ họ đăng ký trước.</dd>
                 <dt>Tôi muốn xóa tài khoản của mình.</dt>
                 <dd>Vào <em>Cài đặt → Bảo mật → Xóa tài khoản</em>, nhập mật khẩu và xác nhận. Dữ liệu không khôi phục được, nên hãy chép lại những gì cần giữ trước.</dd>

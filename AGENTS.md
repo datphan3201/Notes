@@ -1,40 +1,63 @@
 # Repository instructions
 
+The Next.js/FastAPI migration is developed on `feat/personal-ai-planner-v1` under `apps/`. Read [the migration plan](docs/migration/personal-ai-planner.md) and [.ai/rules/modern.md](.ai/rules/modern.md) for those paths. Keep the PHP/JS baseline and private data until the documented cutover gates pass.
+
 ## Read before work
 
-1. Start at [the UI/route documentation index](docs/README.md) and [current decisions](docs/architecture/decisions.md).
+1. Start at [the UI/route documentation index](docs/README.md), [current decisions](docs/architecture/decisions.md), and [open issues](docs/issues.md).
 2. Read [the rule index](.ai/rules/index.md) and rules matching the paths in scope.
-3. Locate the visible route/component; follow its template/DOM, browser symbol, HTTP, service/domain, repository and test links. Read relevant shared architecture/operations guidance.
-4. Inspect sibling source/tests before choosing structure or names. Documentation describes current source; report discrepancies explicitly instead of silently changing behavior.
+3. Activate and follow the [Karpathy Guidelines skill](.ai/skills/karpathy-guidelines/SKILL.md) (also installed at `.agents/skills/karpathy-guidelines/SKILL.md` and `.claude/skills/karpathy-guidelines/SKILL.md`).
+4. Inspect existing source/tests to understand current product behavior before modifying or migrating features.
 
-## Runtime
+## Architecture & Tech Stack Policy (Unrestricted Migration)
 
-The canonical runtime is framework-free PHP 8.5 under [backend/src](backend/src/) with namespace `Planner\`. No Laravel, application framework, ORM, Blade or Artisan. Use focused Composer utilities and explicit constructor/bootstrap wiring; no automatic container or service locator.
+- **No tech-stack or architecture lock-in:** Previous restrictions mandating framework-free PHP 8.5, raw PDO without an ORM, no dependency-injection container, or vanilla JavaScript/PHP views are **lifted**.
+- Agents are explicitly authorized to introduce new frameworks, runtimes, languages, ORMs, build tools, state managers, or directory structures when migrating or refactoring the tech stack as requested by the user.
+- The current code under [backend](backend/) and [frontend](frontend/) serves as the functional baseline and reference specification for product features and domain behavior during migration.
 
-Keep frontend sources/PHP views in [frontend](frontend/), deployable public files in [backend/public](backend/public/), uploads in private storage and backend tests in [backend/tests](backend/tests/). Only backend/public is exposed by a web server.
+## Karpathy Coding Guidelines
 
-## Implementation
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-- Preserve existing HTTP/browser contracts and unrelated uncommitted work until an approved change replaces behavior. Do not edit attached read-only snapshots.
-- Controllers parse/serialize HTTP. Application services own transactions, domain services own invariants, repositories own prepared PDO SQL.
-- Owned reads/writes take user_id; membership features authorize explicitly. Return 404 for inaccessible identifiers.
-- Lock the owner first, aggregates in stable ID order, then relationship/activity rows. Keep graph validation and writes atomic.
-- Use UTC DATETIME(6), explicit serialization, separate user-facing DATE values and DateTimeImmutable. Inject a Clock when time affects behavior.
-- Reject unknown fields and keep backend validation authoritative. Preserve endpoint-specific version/replay/acknowledgement behavior.
-- Use strict types, explicit parameter/return types, curly braces and TitleCase enum cases. Use constructor promotion where clear and PHPDoc for array shapes/non-obvious contracts. Comments explain invariants/boundaries/tricky SQL.
+### 1. Think Before Coding
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+**Minimum code that solves the problem. Nothing speculative.**
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+### 3. Surgical Changes
+**Touch only what you must. Clean up only your own mess.**
+- When editing existing code, don't "improve" adjacent code, comments, or formatting unrelated to the task.
+- Match the style of the target stack/module.
+- When your changes create orphans, remove imports/variables/functions that YOUR changes made unused.
+- Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+**Define success criteria. Loop until verified.**
+- Transform imperative tasks into verifiable goals with concrete checks.
+- For multi-step tasks, state a brief plan (`[Step] → verify: [check]`) and verify each step.
+
+## Domain & Security Invariants
+
+Regardless of the tech stack or framework used:
+- Owned reads/writes must scope data to the authenticated user (`user_id`); team/shared features must authorize membership/share permissions explicitly and return `404` for inaccessible identifiers.
+- Keep multi-entity graph validation and writes atomic inside database transactions.
+- Store timestamps in UTC and keep user-facing `DATE` values separate from instants.
+- Keep server-side validation authoritative and never expose private storage files without authorization.
 
 ## Verification
 
-Use PHPUnit for backend tests, Node's test runner for pure browser modules and Playwright for critical browser flows. Real MySQL integration tests must verify the actual database is goals_test before cleanup. Never run destructive tests against the running app database. Do not rewrite tests to accept incorrect behavior.
-
-Run the narrowest relevant checks, then broader checks when their scope warrants it. [Testing](docs/testing/README.md) and [operations/CLI](docs/reference/cli.md) give actual commands. Never report a command/result without current evidence. Keep fake-provider tests separate from live SMTP/AI checks.
+Run the narrowest relevant automated checks for the active stack, then broader integration/browser checks when warranted. Never run destructive tests against a live development/production database (verify isolated test database configuration first). Never report a command/result without current execution evidence.
 
 ## Documentation
 
-Record every newly discovered, still-unresolved bug, inconsistency, operational defect or requirement ambiguity in [the open-issue list](docs/issues.md) during the same task (affected UI/source, observed versus expected behavior, impact, evidence limits, next step). Recording an issue is not authorization to change behavior; ask when intent is unclear. When an issue is fixed, delete its entry and describe the fix in [CHANGELOG.md](CHANGELOG.md); Git history keeps the old report.
-
-Confirm intended behavior before implementing an approved change. At completion, consolidate the relevant route/component docs and one concise user-facing entry in [CHANGELOG.md](CHANGELOG.md); do not continuously document intermediate steps. Update [traceability.json](docs/traceability.json) when code hooks/symbols/routes move, run `php tools/docs/sync.php --write` and `php tools/docs/check.php`, and update relevant Archify candidates/receipts. Keep docs in English and maintain source links. New APIs need explicit documentation owners; in-page components do not invent browser routes.
-
-Use Archify for diagrams and put source JSON, final HTML and receipts under [docs/diagrams](docs/diagrams/); do not create .archify or a historical docs archive. Diagrams cite committed source at their pinned revision; do not misrepresent local changes as that revision. See [maintenance](docs/maintenance.md).
-
-Keep open issues in [docs/issues.md](docs/issues.md) and what each kind of evidence proves in [the verification guide](docs/testing/verification-limits.md). Put test/verification evidence for a change in its commit or pull-request description, not in docs; do not recreate phase plans, evidence logs or status diaries. Never commit credentials, tokens, fabricated results or generated browser screenshots unless specifically requested.
+Record newly discovered, unresolved bugs or migration issues in [the open-issue list](docs/issues.md). When an issue is fixed, remove its entry from [docs/issues.md](docs/issues.md) and note the change in [CHANGELOG.md](CHANGELOG.md). Never commit credentials, tokens, or fabricated test results.

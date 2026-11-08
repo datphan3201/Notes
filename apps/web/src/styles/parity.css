@@ -1,0 +1,461 @@
+/* React bindings for the retained visual system; baseline CSS is copied verbatim. */
+.baseline-workspace .app-body {
+    min-width: 0;
+    min-height: 100vh;
+}
+.baseline-workspace .app-sidebar {
+    z-index: 30;
+}
+.baseline-workspace .ui-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+.baseline-workspace .sidebar-user {
+    min-width: 0;
+}
+.baseline-workspace .sidebar-user-copy {
+    overflow: hidden;
+}
+.baseline-workspace .sidebar-user-copy strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.baseline-workspace .nav-link {
+    width: 100%;
+}
+.baseline-workspace .scene-header::before {
+    z-index: -1;
+}
+.baseline-workspace .planning-page {
+    max-width: none;
+}
+.baseline-workspace button {
+    font-family: inherit;
+}
+.baseline-workspace .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.baseline-workspace .sidebar-scrim {
+    display: none;
+}
+.baseline-workspace .task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.baseline-workspace .task-row-main {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    text-align: left;
+    background: transparent;
+    border: 0;
+}
+.baseline-workspace .task-row-main small {
+    display: block;
+    color: var(--muted);
+}
+.baseline-workspace .task-row.is-done .task-row-main strong {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+.baseline-workspace .task-check {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    color: var(--accent);
+    padding: 0;
+}
+.baseline-workspace .is-done .task-check {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.baseline-workspace .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.baseline-workspace .task-actions .is-selected {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+.baseline-workspace .task-importance {
+    color: #c48818;
+    white-space: nowrap;
+}
+.baseline-workspace .row-menu {
+    position: relative;
+}
+.baseline-workspace .row-menu > summary {
+    list-style: none;
+    cursor: pointer;
+}
+.baseline-workspace .row-menu[open] > div {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 10;
+    width: 180px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+.baseline-workspace .row-menu button {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    text-align: left;
+    background: transparent;
+}
+.baseline-workspace .row-menu button:hover {
+    background: var(--accent-soft);
+}
+.baseline-workspace .goal-tree-branch {
+    padding-inline-start: 20px;
+    border-left: 1px solid var(--border);
+}
+.baseline-workspace .goal-tree-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.baseline-workspace .goal-tree-row .goal-tree-link {
+    flex: 1;
+}
+.baseline-workspace .goal-tree-row progress {
+    width: 90px;
+    height: 8px;
+}
+.baseline-workspace .area-block {
+    margin-bottom: 16px;
+}
+.baseline-workspace .area-block > summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+}
+.baseline-workspace .roadmap-preview {
+    display: flex;
+    align-items: start;
+    overflow-x: auto;
+    gap: 0;
+    padding-block: 20px 4px;
+}
+.baseline-workspace .roadmap-step {
+    flex: 1;
+    min-width: 160px;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-top: 4px solid var(--border);
+    padding: 14px 12px 4px 0;
+}
+.baseline-workspace .roadmap-step.is-done {
+    border-color: var(--success);
+}
+.baseline-workspace .roadmap-step small {
+    display: block;
+    color: var(--muted);
+}
+.baseline-workspace .roadmap-board {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding-block: 24px;
+}
+.baseline-workspace .roadmap-board .roadmap-branch {
+    width: 260px;
+    flex-shrink: 0;
+}
+.baseline-workspace .calendar-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.baseline-workspace .calendar-table th {
+    padding: 8px;
+    color: var(--muted);
+    font-weight: 500;
+}
+.baseline-workspace .calendar-table td {
+    padding: 6px;
+    border: 1px solid var(--border);
+    height: 120px;
+    vertical-align: top;
+}
+.baseline-workspace .calendar-date {
+    border: 0;
+    background: transparent;
+    padding: 2px 7px;
+    border-radius: 50%;
+}
+.baseline-workspace .calendar-date.is-today {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.baseline-workspace .calendar-event {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    padding: 4px;
+    margin-top: 3px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.baseline-workspace .calendar-event[data-kind="milestones"] {
+    border-left: 3px solid #bf8745;
+}
+.baseline-workspace .calendar-event[data-kind="goals"] {
+    border-left: 3px solid #7e62aa;
+}
+.baseline-workspace .note-card {
+    background: var(--note-surface, var(--surface));
+}
+.baseline-workspace .note-card .note-card-open {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    padding: 18px;
+}
+.baseline-workspace .note-card-open p {
+    white-space: pre-wrap;
+    overflow: hidden;
+    max-height: 160px;
+}
+.baseline-workspace .note-card-actions {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+}
+.baseline-workspace .notes-grid.is-list {
+    display: flex;
+    flex-direction: column;
+}
+.baseline-workspace .notes-grid.is-list .note-card-open p {
+    max-height: 50px;
+}
+.baseline-workspace .habit-history-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.baseline-workspace .habit-day {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+}
+.baseline-workspace .habit-day button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+}
+.baseline-workspace .habit-day button[data-state="done"] {
+    background: var(--success);
+    color: white;
+}
+.baseline-workspace .habit-day button[data-state="rest"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.baseline-workspace .habit-day small {
+    font-size: 10px;
+    color: var(--muted);
+}
+.baseline-workspace .parity-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.baseline-workspace .parity-ring {
+    display: grid;
+    place-items: center;
+    width: 92px;
+    height: 92px;
+    border: 8px solid var(--accent-soft);
+    border-radius: 50%;
+    font-size: 22px;
+    font-weight: 600;
+}
+.baseline-workspace .dashboard-split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+    gap: 20px;
+}
+.baseline-workspace .theme-picker img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+.baseline-workspace .theme-choice {
+    border: 2px solid transparent;
+    background: transparent;
+    border-radius: 10px;
+    padding: 5px;
+    text-align: left;
+}
+.baseline-workspace .theme-choice[aria-pressed="true"] {
+    border-color: var(--accent);
+}
+.baseline-workspace .theme-choice span {
+    display: block;
+    padding: 6px;
+}
+.baseline-workspace .drawer {
+    color: var(--text);
+    background: var(--surface);
+}
+.baseline-workspace .field-error {
+    color: var(--danger);
+}
+.baseline-workspace .empty-state {
+    padding: 28px;
+    color: var(--muted);
+    text-align: center;
+}
+.baseline-workspace .settings-panel {
+    max-width: 850px;
+}
+@media (max-width: 800px) {
+    .baseline-workspace .app-sidebar.is-open {
+        transform: translateX(0);
+    }
+    .baseline-workspace .app-sidebar.is-open + .sidebar-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: #14284966;
+        z-index: 25;
+    }
+    .baseline-workspace .dashboard-split-layout {
+        grid-template-columns: 1fr;
+    }
+    .baseline-workspace .task-importance {
+        display: none;
+    }
+    .baseline-workspace .calendar-table td {
+        height: 90px;
+        padding: 2px;
+    }
+    .baseline-workspace .calendar-event {
+        font-size: 11px;
+    }
+    .baseline-workspace .collection-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.baseline-workspace .gantt-scroll {
+    overflow-x: auto;
+}
+.baseline-workspace .parity-gantt {
+    display: grid;
+    grid-auto-rows: 36px;
+    min-width: 100%;
+    gap: 2px;
+}
+.baseline-workspace .parity-gantt > span {
+    text-align: center;
+    color: var(--muted);
+    border-inline-start: 1px solid var(--border);
+}
+.baseline-workspace .gantt-react-row {
+    display: contents;
+}
+.baseline-workspace .gantt-react-row > button:first-child {
+    grid-column: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    border: 0;
+    background: var(--surface);
+}
+.baseline-workspace .gantt-react-bar {
+    border: 0;
+    border-radius: 5px;
+    color: var(--on-accent);
+    background: var(--accent);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+:root {
+    --ink: var(--text);
+    --paper: var(--surface);
+    --line: var(--border);
+}
+.baseline-workspace .note-card {
+    padding: 0;
+}
+.baseline-workspace .brand-symbol > svg {
+    display: none;
+}
+.baseline-workspace .brand-symbol {
+    display: grid;
+    place-items: center;
+}
+.baseline-workspace .brand-symbol::after {
+    height: 21px;
+}
+@media (max-width: 800px) {
+    .baseline-workspace .collection-controls {
+        display: grid;
+        gap: 12px;
+    }
+    .baseline-workspace .notes-filter-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .baseline-workspace .notes-filter-panel .filter-divider {
+        display: none;
+    }
+    .baseline-workspace .calendar-scroll {
+        overflow-x: auto;
+    }
+    .baseline-workspace .calendar-table {
+        min-width: 620px;
+    }
+}
+:root[data-theme="dark"] {
+    --canvas: #111c2d;
+    --text: #e7effb;
+    --muted: #a8bad2;
+    --border: #304159;
+    --accent: #81d5e0;
+    --accent-soft: #203e4e;
+    --sidebar: #162234;
+    --surface: #19273b;
+    --surface-soft: #203047;
+    --success: #65d5ac;
+    --success-text: #65d5ac;
+    --control-border: #75879c;
+}

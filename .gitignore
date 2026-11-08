@@ -36,6 +36,24 @@
 /backend/storage/app/private
 /output/playwright
 
+# Personal AI Planner runtime (legacy source remains available during migration).
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+apps/web/node_modules/
+apps/web/.next/
+apps/web/.next-e2e/
+apps/web/next-env.d.ts
+apps/web/*.tsbuildinfo
+apps/web/test-results/
+apps/web/playwright-report/
+apps/api/.private/
+apps/api/.playwright-cli/
+**/.env.local
+**/.env.staging
+**/.env.testing
+
 # Machine-local agent notes; authoritative repository rules stay tracked.
 AGENTS.local.md
 CLAUDE.local.md
@@ -52,3 +70,7 @@ Thumbs.db
 # IDE caches
 .vs/
 .idea/
+
+# Vercel project linkage/build verification is machine-local.
+.vercel/
+apps/web/.next-vercel-check/

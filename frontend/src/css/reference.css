@@ -607,7 +607,6 @@
 }
 [data-goals-page] > .scene-header,
 [data-habits-page] > .scene-header,
-[data-teamwork-page] > .scene-header,
 [data-admin-page] > .scene-header,
 [data-notes-workspace] > .scene-header {
     min-height: 90px;

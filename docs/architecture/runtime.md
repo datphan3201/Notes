@@ -37,7 +37,7 @@ Use constructor dependencies rather than a service locator. New features belong 
 
 ## Browser behavior is not all server behavior
 
-Tasks time views are a client projection; Dashboard has SQL-backed projections. Personal recurrence and Teamwork repeats have distinct services. Main Notes uses an autosave machine (or the realtime session for shared Notes, with an IndexedDB outbox when offline); Task notes and Reviews use explicit save/draft handling. A shared visual control does not imply a shared transaction or persistence contract.
+Tasks time views are a client projection; Dashboard has SQL-backed projections. Personal recurrence is handled by TaskSeries. Main Notes uses an autosave machine (or the realtime session for shared Notes, with an IndexedDB outbox when offline); Task notes and Reviews use explicit save/draft handling. A shared visual control does not imply a shared transaction or persistence contract.
 
 ## Optional infrastructure
 

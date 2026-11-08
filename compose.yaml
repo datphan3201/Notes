@@ -1,0 +1,31 @@
+name: planner-v1
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: planner
+      POSTGRES_PASSWORD: planner-local-only
+      POSTGRES_DB: planner_dev
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: ["planner-pg:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planner -d planner_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  db-test:
+    image: pgvector/pgvector:pg17
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: planner_test
+      POSTGRES_PASSWORD: isolated-test-only
+      POSTGRES_DB: planner_test
+    ports: ["127.0.0.1:5434:5432"]
+    tmpfs: ["/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planner_test -d planner_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  planner-pg:

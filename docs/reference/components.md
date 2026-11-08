@@ -47,7 +47,6 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `dashboard.today.capture` | [Add task / Add for today](../ui/dashboard/README.md#add-task--add-for-today) | /dashboard — Today, This week and Activity |
 | `dashboard.overdue.reminder` | [Overdue reminder and encouragement](../ui/dashboard/README.md#overdue-reminder-and-encouragement) | /dashboard — Today, This week and Activity |
 | `dashboard.roadmap` | [Roadmap below the header and account selection](../ui/dashboard/README.md#roadmap-below-the-header-and-account-selection) | /dashboard — Today, This week and Activity |
-| `dashboard.team` | [Team tasks assigned to you](../ui/dashboard/README.md#team-tasks-assigned-to-you) | /dashboard — Today, This week and Activity |
 | `calendar.grid` | [Month and week grid](../ui/calendar/README.md#month-and-week-grid) | /calendar — Calendar of planning dates |
 | `calendar.move` | [Move by drag, keyboard or Move to…](../ui/calendar/README.md#move-by-drag-keyboard-or-move-to) | /calendar — Calendar of planning dates |
 | `calendar.capture` | [Selected day, New task and Unscheduled](../ui/calendar/README.md#selected-day-new-task-and-unscheduled) | /calendar — Calendar of planning dates |
@@ -72,10 +71,6 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `notes.files.upload` | [Upload, select Note background and remove attachment](../ui/notes/files.md#upload-select-note-background-and-remove-attachment) | / — Attachments and private Note backgrounds |
 | `notes.files.stream` | [Preview, download, HEAD and Range](../ui/notes/files.md#preview-download-head-and-range) | / — Attachments and private Note backgrounds |
 | `shared.tags` | [Tag picker, hierarchy and Notes labels](../ui/shared/tags.md#tag-picker-hierarchy-and-notes-labels) | Shared — Tags and legacy labels |
-| `teamwork.goals` | [Team Goal cards, search and carousel](../ui/teamwork/README.md#team-goal-cards-search-and-carousel) | /teamwork — Team Goals, members, Tasks and chat |
-| `teamwork.members` | [Invite, accept/decline, role, remove and completion](../ui/teamwork/README.md#invite-acceptdecline-role-remove-and-completion) | /teamwork — Team Goals, members, Tasks and chat |
-| `teamwork.tasks` | [Assigned Task capture, status, due/reminder and repeat](../ui/teamwork/README.md#assigned-task-capture-status-duereminder-and-repeat) | /teamwork — Team Goals, members, Tasks and chat |
-| `teamwork.chat` | [Team chat and polling](../ui/teamwork/README.md#team-chat-and-polling) | /teamwork — Team Goals, members, Tasks and chat |
 | `profile.details` | [Display name and biography](../ui/settings/profile.md#display-name-and-biography) | /settings/profile — Profile, avatar and email |
 | `profile.avatar` | [Replace and remove avatar](../ui/settings/profile.md#replace-and-remove-avatar) | /settings/profile — Profile, avatar and email |
 | `profile.email` | [Verification status, resend and change email](../ui/settings/profile.md#verification-status-resend-and-change-email) | /settings/profile — Profile, avatar and email |
@@ -107,7 +102,7 @@ Generated from the trace registry. Find a visible label or stable Trace ID, then
 | `help.guide` | [User guide page per language](../ui/help/README.md#user-guide-page-per-language) | /help — User guide |
 | `help.screenshots` | [Demo accounts and screenshot pipeline](../ui/help/README.md#demo-accounts-and-screenshot-pipeline) | /help — User guide |
 | `bell.list` | [Unread count, list, mark read and invitations](../ui/shared/notifications.md#unread-count-list-mark-read-and-invitations) | Shared — Notification bell and reminders |
-| `bell.reminders` | [Due personal/assigned team reminders and dismissal](../ui/shared/notifications.md#due-personalassigned-team-reminders-and-dismissal) | Shared — Notification bell and reminders |
+| `bell.reminders` | [Due personal reminders and dismissal](../ui/shared/notifications.md#due-personal-reminders-and-dismissal) | Shared — Notification bell and reminders |
 | `ai.chat` | [Tool-calling chat, owned reads and conversation history](../ui/shared/ai.md#tool-calling-chat-owned-reads-and-conversation-history) | Shared — Floating AI assistant and proposal APIs |
 | `ai.proposal` | [Chat proposal preview, Apply and Cancel](../ui/shared/ai.md#chat-proposal-preview-apply-and-cancel) | Shared — Floating AI assistant and proposal APIs |
 | `ai.calendar` | [Calendar scheduling from the chat](../ui/shared/ai.md#calendar-scheduling-from-the-chat) | Shared — Floating AI assistant and proposal APIs |

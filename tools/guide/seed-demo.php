@@ -1,7 +1,7 @@
 <?php
 
 // Creates the demo accounts whose screens illustrate the user guide (one Vietnamese and one
-// English account, each with a helper account for sharing and Teamwork), through the ordinary
+// English account, each with a helper account for Note sharing), through the ordinary
 // services. Dates are relative to today so the screenshots always look current.
 //
 //   php tools/guide/seed-demo.php <file-for-passwords>
@@ -30,7 +30,6 @@ $notes = $runtime['note_service'];
 $shares = $runtime['note_share_service'];
 $locks = $runtime['note_lock_service'];
 $reviews = $runtime['review_service'];
-$teams = $runtime['team_service'];
 $dashboard = $runtime['dashboard_service'];
 $links = new NoteLinkService($notes, $planning, new PdoNoteLinkRepository($pdo), $runtime['transactions'], $runtime['clock'], new InputValidator());
 
@@ -265,8 +264,8 @@ foreach (['vi', 'en'] as $language) {
     $note($me, $n['books'][0], $n['books'][1]);
     $secret = $note($me, $n['secret'][0], $n['secret'][1]);
     $locks->enable($me, $secret, ['password' => 'demo-1234', 'password_confirmation' => 'demo-1234']);
-    $teamNote = $note($me, $n['team'][0], $n['team'][1], 'sky', false, [$tags['project']]);
-    $share = $shares->shareMany($me, $teamNote, [$c['friend_email']], 'edit');
+    $sharedNote = $note($me, $n['shared'][0], $n['shared'][1], 'sky', false, [$tags['project']]);
+    $share = $shares->shareMany($me, $sharedNote, [$c['friend_email']], 'edit');
     $shares->respond($friend, $share[0]['id'], true);
     $fromFriend = $note($friend, $n['from_friend'][0], $n['from_friend'][1], 'mint');
     $shares->respond($me, $shares->shareMany($friend, $fromFriend, [$c['email']], 'view')[0]['id'], true);
@@ -276,19 +275,6 @@ foreach (['vi', 'en'] as $language) {
     // A weekly Review with reflections.
     $review = $reviews->create($me, ['kind' => 'Weekly', 'date' => $day(-7)]);
     $reviews->update($me, (string) $review['id'], ['base_version' => $v($review)] + $c['review']);
-
-    // Teamwork: a shared project with the helper account.
-    $team = $teams->create($me, ['name' => $c['team']['name'], 'description' => $c['team']['description'], 'due_date' => $day(12)]);
-    $teamId = (string) $team['id'];
-    $teams->invite($me, $teamId, $c['friend_email'], 'editor');
-    $teams->respond($friend, $teamId, true);
-    $members = array_column($teams->show($me, $teamId)['members'], 'id', 'email');
-    foreach ($c['team']['tasks'] as [$name, $who, $due, $status]) {
-        $teams->createTask($me, $teamId, ['name' => $name, 'assignee_id' => (string) $members[$who === 'me' ? $c['email'] : $c['friend_email']], 'due_date' => $day($due), 'status' => $status]);
-    }
-    foreach ($c['team']['chat'] as [$who, $body]) {
-        $teams->postMessage($who === 'me' ? $me : $friend, $teamId, $body);
-    }
 
     // Archive: a Goal archived together with its Milestone and Tasks.
     $old = $planning->create('goal', $me, ['name' => $c['archived']['name'], 'area_id' => $personal['id']]);

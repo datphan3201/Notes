@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-System admins are assigned by the server console, not registration or Teamwork. Ordinary accounts receive 404. Admin access to a report exposes its snapshot, not the live private Note.
+System admins are assigned by the server console, not registration. Ordinary accounts receive 404. Admin access to a report exposes its snapshot, not the live private Note.
 
 Administration exists because accounts are created by people the operator may not know, Notes are shared by email, Teams invite others and users can report each other. Its controls are therefore registration (who may create an account), moderation that acts (withdraw a shared Note, warn, lock) and an activity record of every administrator action. It never reads private planning data.
 
@@ -35,14 +35,14 @@ List reports filed from Settings: reported email, matched account (or none), rep
 | Browser logic | [admin-page.js · const loadUserReports](../../../frontend/src/js/admin/admin-page.js#L227) |
 | Controller / service / domain | [UserReportService.php · public function list(](../../../backend/src/Application/Admin/UserReportService.php#L127)<br>[UserReportService.php · public function resolve(](../../../backend/src/Application/Admin/UserReportService.php#L159)<br>[UserReportService.php · public function evidence(](../../../backend/src/Application/Admin/UserReportService.php#L202) |
 | Persistence | [PdoUserReportRepository.php · public function list(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php#L53)<br>[PdoUserReportRepository.php · public function evidencePath(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoUserReportRepository.php#L89) |
-| Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_user_reports_with_image_evidence_are_private_to_administrators(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L304)<br>[SystemAdminHttpTest.php · public function test_user_reports_can_lock_the_account_and_locked_members_take_no_new_team_work(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L169) |
+| Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_user_reports_with_image_evidence_are_private_to_administrators(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L304)<br>[SystemAdminHttpTest.php · public function test_user_reports_can_lock_the_reported_account(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L169) |
 | HTTP | `GET /api/v1/admin/user-reports` (`api.admin.user-reports`) → [UserReportController::index](../../../backend/src/Http/Controller/UserReportController.php#L43)<br>`POST /api/v1/admin/user-reports/{id}/resolve` (`api.admin.user-reports.resolve`) → [UserReportController::resolve](../../../backend/src/Http/Controller/UserReportController.php#L55)<br>`GET /admin/user-reports/{id}/evidence/{position}` (`admin.user-reports.evidence`) → [UserReportController::evidence](../../../backend/src/Http/Controller/UserReportController.php#L78) |
 
 ### Search users, lock/unlock
 
 **Trace ID:** `admin.users`
 
-Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. It also hides the Notes they shared from every recipient and marks them Locked in Teams, where they keep existing work but cannot be assigned new tasks; unlocking restores both. The list shows who locked an account and why. Self-lock is rejected, and administrators cannot be locked here: the role is granted and removed only with the server console (users:role), so one administrator cannot shut another out. Team roles do not grant these endpoints.
+Locking bumps auth_version and deletes sessions; locked users cannot sign in or keep existing sessions. It also hides the Notes they shared from every recipient; unlocking restores shared Note access. The list shows who locked an account and why. Self-lock is rejected, and administrators cannot be locked here: the role is granted and removed only with the server console (users:role), so one administrator cannot shut another out.
 
 | Layer | Entry point |
 | --- | --- |
@@ -80,7 +80,7 @@ Registration sets who can create an account: Anyone with the link, Only invited 
 | Browser logic | [admin-page.js · const renderInvites = (invites) =&gt;](../../../frontend/src/js/admin/admin-page.js#L342) |
 | Controller / service / domain | [ReportService.php · public function invite(](../../../backend/src/Application/Admin/ReportService.php#L199)<br>[RegistrationPolicy.php · final readonly class RegistrationPolicy](../../../backend/src/Application/Account/RegistrationPolicy.php#L12) |
 | Persistence | [PdoRegistrationInviteRepository.php · public function markUsed(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoRegistrationInviteRepository.php#L49)<br>[PdoSystemSettingRepository.php · public function registrationMode(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoSystemSettingRepository.php#L36)<br>[0030_add_system_admin_controls.php · CREATE TABLE registration_invites](../../../backend/database/plain-migrations/0030_add_system_admin_controls.php#L42) |
-| Relevant tests (not a pass claim) | [SystemAdminHttpTest.php · public function test_registration_mode_and_invitations_decide_who_can_create_an_account(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L53)<br>[SystemAdminHttpTest.php · public function test_console_commands_change_roles_and_registration_and_are_recorded(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L197) |
+| Relevant tests (not a pass claim) | [SystemAdminHttpTest.php · public function test_registration_mode_and_invitations_decide_who_can_create_an_account(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L53)<br>[SystemAdminHttpTest.php · public function test_console_commands_change_roles_and_registration_and_are_recorded(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L184) |
 | HTTP | `PATCH /api/v1/admin/settings` (`api.admin.settings.update`) → [AdminController::updateSettings](../../../backend/src/Http/Controller/AdminController.php#L100)<br>`GET /api/v1/admin/registration-invites` (`api.admin.invites`) → [AdminController::invites](../../../backend/src/Http/Controller/AdminController.php#L135)<br>`POST /api/v1/admin/registration-invites` (`api.admin.invites.store`) → [AdminController::invite](../../../backend/src/Http/Controller/AdminController.php#L142)<br>`DELETE /api/v1/admin/registration-invites` (`api.admin.invites.destroy`) → [AdminController::removeInvite](../../../backend/src/Http/Controller/AdminController.php#L149) |
 
 ### Administrator activity
@@ -95,21 +95,21 @@ An append-only record of administration, newest first (100 entries): locks and u
 | Browser logic | [admin-page.js · const loadActivity = async () =&gt;](../../../frontend/src/js/admin/admin-page.js#L387) |
 | Controller / service / domain | [AdminActionLog.php · public function record(](../../../backend/src/Application/Admin/AdminActionLog.php#L18) |
 | Persistence | [PdoAdminActionRepository.php · public function recent(](../../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoAdminActionRepository.php#L30)<br>[0030_add_system_admin_controls.php · CREATE TABLE admin_actions](../../../backend/database/plain-migrations/0030_add_system_admin_controls.php#L28) |
-| Relevant tests (not a pass claim) | [SystemAdminHttpTest.php · public function test_locking_hides_shared_notes_records_the_admin_and_spares_administrators(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L141)<br>[SystemAdminHttpTest.php · public function test_console_commands_change_roles_and_registration_and_are_recorded(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L197) |
+| Relevant tests (not a pass claim) | [SystemAdminHttpTest.php · public function test_locking_hides_shared_notes_records_the_admin_and_spares_administrators(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L141)<br>[SystemAdminHttpTest.php · public function test_console_commands_change_roles_and_registration_and_are_recorded(](../../../backend/tests/Plain/Http/SystemAdminHttpTest.php#L184) |
 | HTTP | `GET /api/v1/admin/actions` (`api.admin.actions`) → [AdminController::actions](../../../backend/src/Http/Controller/AdminController.php#L128) |
 
 ### Delete an account
 
 **Trace ID:** `admin.users.delete`
 
-Beside Lock, Delete account removes an ordinary account for good after the administrator types its email (case and spaces ignored). Administrators, including oneself, cannot be deleted here. Everything the account owns goes, with its files; so do its shares with others and team goals it created (for their members too). Reports about it and administrator history stay with the link cleared. Recorded in Administrator activity as Deleted an account.
+Beside Lock, Delete account removes an ordinary account for good after the administrator types its email (case and spaces ignored). Administrators, including oneself, cannot be deleted here. Everything the account owns goes, with its files; so do its shares with others. Reports about it and administrator history stay with the link cleared. Recorded in Administrator activity as Deleted an account.
 
 | Layer | Entry point |
 | --- | --- |
 | Browser logic | [admin-page.js · const deleteButton = (account) =&gt;](../../../frontend/src/js/admin/admin-page.js#L142) |
 | Controller / service / domain | [AccountDeletionService.php · public function deleteByAdmin(](../../../backend/src/Application/Account/AccountDeletionService.php#L52)<br>[AccountDeletionController.php · public function admin(](../../../backend/src/Http/Controller/AccountDeletionController.php#L36) |
 | Persistence | [PdoCascadeDeleter.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/PdoCascadeDeleter.php#L42) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_an_administrator_deletes_an_ordinary_account_after_typing_its_email(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L443) |
+| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_an_administrator_deletes_an_ordinary_account_after_typing_its_email(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L391) |
 | HTTP | `DELETE /api/v1/admin/users/{id}` (`api.admin.users.delete`) → [AccountDeletionController::admin](../../../backend/src/Http/Controller/AccountDeletionController.php#L36) |
 
 <!-- END GENERATED TRACE -->

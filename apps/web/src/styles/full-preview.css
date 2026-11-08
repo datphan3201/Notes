@@ -1,0 +1,2857 @@
+/* Complete in-memory UI review, scoped away from the connected application. */
+.preview-workspace [hidden],
+.review-dialog [hidden] {
+    display: none !important;
+}
+.preview-workspace .planning-page > div,
+.review-planning,
+.review-notes,
+.review-calendar,
+.review-habits,
+.review-reviews,
+.review-settings {
+    min-width: 0;
+}
+.preview-workspace .planning-panel {
+    color: var(--text);
+}
+.preview-workspace .review-page-header {
+    margin-bottom: 8px;
+}
+.review-page-header h1 {
+    font-weight: 700;
+}
+.review-page-header p {
+    max-width: 680px;
+}
+.review-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.review-toolbar .workspace-section-menu {
+    margin: 0;
+}
+.review-toolbar input,
+.review-toolbar select {
+    width: auto;
+    max-width: 100%;
+}
+.review-search {
+    flex: 1;
+    min-width: 160px;
+    max-width: 420px;
+}
+.review-search input {
+    width: 100%;
+}
+.review-caption,
+.review-prose,
+.review-inline-empty {
+    color: var(--muted);
+    line-height: 1.75;
+    font-size: 13px;
+}
+.review-inline-empty {
+    padding: 24px 8px;
+    text-align: center;
+}
+.review-prose {
+    white-space: pre-wrap;
+}
+.review-state {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    padding: 32px;
+}
+.review-state h2 {
+    font-size: 19px;
+    font-weight: 500;
+}
+.review-state p {
+    max-width: 520px;
+}
+.review-spaced {
+    margin-top: 18px;
+}
+.review-form-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+.preview-workspace h2,
+.review-dialog h2 {
+    font-size: 17px;
+    font-weight: 500;
+}
+.preview-workspace h3 {
+    font-size: 14px;
+    font-weight: 500;
+}
+.review-field-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.review-field {
+    min-width: 0;
+}
+.review-field small {
+    color: var(--muted);
+    font-weight: 400;
+    line-height: 1.6;
+}
+.review-dialog .stack-form {
+    align-content: start;
+}
+.review-dialog .review-checkbox,
+.review-dialog .review-checkbox-list label,
+.preview-workspace .review-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+.review-checkbox input,
+.review-checkbox-list input,
+.review-toggle input {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+}
+.review-checkbox-list {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+.review-checkbox-list legend {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 0 5px;
+}
+.review-checkbox-list span {
+    display: grid;
+    gap: 4px;
+}
+.review-checkbox-list small {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+}
+.review-dialog.review-compact {
+    width: min(560px, calc(100vw - 28px));
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    overflow: hidden;
+}
+.review-dialog .dialog-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+}
+.review-dialog .preview-dialog-body {
+    padding: 24px;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+.review-dialog .preview-dialog-footer {
+    flex-wrap: wrap;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+}
+.review-dialog .preview-dialog-form {
+    max-height: calc(100dvh - 125px);
+    display: flex;
+    flex-direction: column;
+}
+.review-dialog.review-compact > .preview-dialog-body {
+    max-height: calc(100dvh - 210px);
+}
+.review-toast {
+    position: fixed;
+    bottom: 26px;
+    left: calc(188px + 24px);
+    max-width: min(620px, calc(100vw - 240px));
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 24px #14284925;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+}
+.review-toast span {
+    flex: 1;
+}
+.review-entity-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+}
+.review-entity-icon:is(button):hover {
+    background: var(--accent-soft);
+}
+.review-icon-picker {
+    display: grid;
+    gap: 14px;
+}
+.review-icon-picker > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.review-icon-picker > div:first-child {
+    max-height: 158px;
+    overflow: auto;
+}
+.review-icon-picker button[aria-pressed="true"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+.review-color-dot {
+    width: 25px;
+    height: 25px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--border);
+}
+.review-color-dot[aria-pressed="true"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.review-stars {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 14px;
+    color: #f59e0b;
+}
+.review-stars button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0 2px;
+    font: inherit;
+    cursor: pointer;
+    min-width: 17px;
+    min-height: 26px;
+}
+.review-row-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+.review-row-menu summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 7px;
+}
+.review-row-menu summary::-webkit-details-marker {
+    display: none;
+}
+.review-row-menu[open] {
+    z-index: 8;
+}
+.review-row-menu > div {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    min-width: 190px;
+    max-width: min(300px, 80vw);
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 8px 25px #14284920;
+    display: grid;
+    gap: 3px;
+}
+.review-row-menu > div > button {
+    display: block;
+    border: 0;
+    border-radius: 5px;
+    padding: 9px 12px;
+    text-align: left;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.review-row-menu > div > button:hover {
+    background: var(--accent-soft);
+}
+.review-popover strong {
+    padding: 8px 12px;
+    font-weight: 500;
+    font-size: 12px;
+}
+.preview-workspace .danger-text {
+    color: #af454c;
+}
+.review-round-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--accent);
+    cursor: pointer;
+}
+.review-round-check[aria-checked="true"],
+.review-round-check[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+.review-simulation {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 14px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.review-simulation summary {
+    cursor: pointer;
+}
+.review-simulation button {
+    margin-top: 12px;
+}
+/* Goals and the retained fishbone. */
+.review-main-goal,
+.review-area {
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+.review-main-goal-body {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.review-main-goal-body > button:not(.button) {
+    flex: 1;
+    display: grid;
+    gap: 7px;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 16px;
+}
+.review-main-goal-body small {
+    color: var(--muted);
+    font-size: 12px;
+}
+.review-area-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.review-area-title h2 {
+    margin: 0;
+}
+.review-area .section-heading {
+    margin-bottom: 12px;
+}
+.review-goal-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 75px;
+    padding: 12px 0 12px calc(var(--depth) * 22px);
+    border-top: 1px solid var(--border);
+}
+.review-tree-gutter {
+    width: 25px;
+    flex: 0 0 25px;
+}
+.review-tree-gutter .is-collapsed {
+    transform: rotate(-90deg);
+}
+.review-goal-name {
+    flex: 1;
+    min-width: 100px;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+}
+.review-goal-name small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 5px;
+}
+.review-goal-progress {
+    width: 100px;
+    display: grid;
+    gap: 6px;
+    font-size: 11px;
+    text-align: right;
+    color: var(--muted);
+}
+.review-goal-progress progress {
+    width: 100%;
+    height: 5px;
+    accent-color: var(--accent);
+}
+.review-manage-area {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+}
+.review-manage-area > span:nth-child(2) {
+    flex: 1;
+    min-width: 70px;
+    font-size: 13px;
+}
+.review-manage-area .text-button {
+    font-size: 11px;
+}
+.review-fishbone {
+    margin: 20px 0 28px;
+}
+.review-fishbone .roadmap-connections path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+.review-fishbone .roadmap-branch {
+    font: inherit;
+    color: var(--text);
+}
+.review-fishbone .roadmap-center {
+    font: inherit;
+    color: var(--text);
+}
+.review-fishbone .review-entity-icon {
+    margin: auto;
+}
+.review-fishbone .review-stars {
+    justify-content: center;
+}
+.review-fishbone .roadmap-center strong {
+    font-weight: 500;
+    font-size: 17px;
+}
+.review-fishbone .roadmap-center small {
+    font-size: 11px;
+    line-height: 1.6;
+}
+.review-fishbone .is-done {
+    border-color: #84b9a5;
+}
+.review-planning .goal-tree-link {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.review-planning .goal-area-group > summary {
+    list-style: none;
+}
+.review-planning .goal-area-group > summary::-webkit-details-marker {
+    display: none;
+}
+.review-planning .goal-area-group > summary > .entity-icon-button {
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+.review-planning .goal-area-group .review-entity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+}
+.review-planning .goal-tree-name .review-entity-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+.review-planning .main-goal-title > .review-entity-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.review-planning .main-goal-title > .review-stars {
+    font-size: 21px;
+}
+.review-planning .review-goal-view-menu {
+    display: flex;
+    align-items: center;
+}
+.review-planning .review-expand-goals {
+    margin-left: auto;
+}
+.review-planning .roadmap-branch .review-stars {
+    grid-column: 2;
+    justify-content: flex-start;
+}
+.review-planning .roadmap-branch .roadmap-task-preview {
+    grid-column: 2;
+}
+.review-planning .roadmap-branch .milestone-icon .review-entity-icon {
+    width: 24px;
+    height: 24px;
+}
+.review-planning .roadmap-branch .progress-track {
+    margin: 4px 0 0;
+    width: 100%;
+}
+.review-planning .roadmap-center > .review-entity-icon {
+    display: inline-flex;
+    margin: 0 auto;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--accent-soft);
+}
+.review-goal-information-dialog[open] {
+    inset: 0;
+    margin: auto;
+    width: min(560px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 48px);
+    border-radius: 16px;
+}
+.review-goal-information-dialog .goal-information-content {
+    margin: 0 0 18px;
+}
+.review-goal-information-dialog .drawer-heading {
+    align-items: flex-start;
+}
+.review-goal-information-dialog .drawer-heading p {
+    margin: 0 0 8px;
+}
+.review-goal-information-dialog .goal-information-section:first-of-type {
+    margin-top: 16px;
+}
+.review-goal-information-dialog .danger-zone {
+    margin-top: 28px;
+}
+.review-milestone-focus .workspace-header {
+    gap: 16px;
+}
+.review-milestone-focus .review-task-line {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+@media (max-width: 600px) {
+    .review-planning .main-goal-title > .review-stars {
+        grid-column: 1 / -1;
+    }
+    .review-planning .main-goal-footer .section-link {
+        margin-left: 0;
+    }
+    .review-planning .goal-tree-link {
+        align-items: flex-start;
+    }
+    .review-planning .goal-tree-meta {
+        flex-wrap: wrap;
+    }
+    .review-planning .main-goal-picker select {
+        max-width: 100%;
+    }
+}
+.review-roadmap-title {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.review-roadmap-title .review-entity-icon {
+    width: 44px;
+    height: 44px;
+}
+.review-goal-information,
+.review-goal-info {
+    padding: 24px;
+    margin-bottom: 20px;
+}
+.review-definition {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.review-definition dt {
+    color: var(--muted);
+}
+.review-definition dd {
+    margin: 0;
+    white-space: pre-wrap;
+}
+.review-linked-row,
+.review-task-line,
+.review-note-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--border);
+}
+.review-linked-row > button:first-child,
+.review-note-link > button:first-child {
+    flex: 1;
+}
+.review-task-line-name {
+    flex: 1;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+}
+.review-task-line-name small {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+.review-milestone-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.review-milestone-heading .button {
+    margin-left: auto;
+}
+/* Notes use the original pastel paper, regardless of shell mode. */
+.review-local-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0 0 15px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.review-notes-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.review-notes-toolbar .review-search {
+    flex: 1;
+}
+.review-note-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+.review-note-card {
+    position: relative;
+    min-height: 220px;
+    border: 1px solid #14284912;
+    border-radius: 13px;
+    box-shadow: 0 2px 7px #14284906;
+    color: #142849;
+}
+.review-note-card-open {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    padding: 22px;
+    width: 100%;
+    min-height: 220px;
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+.review-note-card h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    padding-right: 15px;
+}
+.review-note-card p {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.review-note-card small {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: auto;
+}
+.review-note-badges {
+    display: flex;
+    gap: 7px;
+}
+.review-note-card > .review-row-menu {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+.review-note-grid.is-list {
+    grid-template-columns: 1fr;
+}
+.review-note-grid.is-list .review-note-card,
+.review-note-grid.is-list .review-note-card-open {
+    min-height: 120px;
+}
+.review-note-grid.is-list .review-note-card p {
+    -webkit-line-clamp: 2;
+}
+.review-notes-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 285px;
+    gap: 20px;
+    align-items: start;
+}
+.review-note-editor {
+    padding: 22px;
+    min-width: 0;
+}
+.review-note-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.review-note-title-row input {
+    font-size: 21px;
+    border: 0;
+    padding: 8px 0;
+    box-shadow: none;
+    color: var(--text);
+    font-weight: 500;
+}
+.review-note-paper {
+    padding: 22px;
+    border-radius: 8px;
+    min-height: 400px;
+}
+.review-note-paper .note-document {
+    min-height: 350px;
+}
+.review-note-save-status {
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 14px;
+    line-height: 1.6;
+}
+.review-note-side {
+    display: grid;
+    gap: 16px;
+}
+.review-note-side > .planning-panel {
+    padding: 18px;
+}
+.review-note-side h2 {
+    font-size: 14px;
+}
+.review-color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.review-note-side .review-checkbox-list {
+    border: 0;
+    padding: 0;
+}
+.review-answer {
+    margin-top: 15px;
+    font-size: 12px;
+    line-height: 1.75;
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+}
+.review-conflict {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.review-file-input {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+.review-file-input input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    cursor: pointer;
+}
+.review-file-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding: 15px 0;
+    font-size: 12px;
+}
+.review-file-row > div {
+    flex: 1;
+    min-width: 100px;
+}
+.review-file-preview {
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    padding: 0;
+    overflow: hidden;
+}
+.review-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.review-file-row small {
+    display: block;
+    color: var(--muted);
+    margin-top: 4px;
+}
+.review-image-preview,
+.review-full-image {
+    display: block;
+    max-width: 100%;
+    max-height: 75dvh;
+    object-fit: contain;
+    margin: auto;
+}
+.review-file-text {
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.8;
+}
+.review-share-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+.review-share-row > span {
+    flex: 1;
+}
+.review-share-row select {
+    width: auto;
+}
+/* Calendar. */
+.review-calendar-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 235px;
+    gap: 18px;
+    align-items: start;
+}
+.review-calendar-scroll {
+    overflow: auto;
+    padding: 0;
+}
+.review-calendar-grid {
+    min-width: 660px;
+}
+.review-weekdays,
+.review-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.review-weekdays {
+    padding: 14px 0;
+    background: var(--surface);
+}
+.review-weekdays span {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+}
+.review-calendar-day {
+    position: relative;
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-height: 128px;
+    padding: 8px 5px 24px;
+}
+.review-calendar-day:nth-child(7n) {
+    border-right: 0;
+}
+.review-calendar-day.is-selected {
+    background: var(--accent-soft);
+}
+.review-calendar-day.is-outside > .review-date-number {
+    opacity: 0.4;
+}
+.review-date-number {
+    display: block;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    margin-bottom: 6px;
+}
+.is-today > .review-date-number {
+    background: var(--accent);
+    color: white;
+}
+.review-calendar-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 10px;
+    text-align: left;
+    line-height: 1.5;
+    margin-bottom: 4px;
+    cursor: pointer;
+}
+.review-calendar-item svg {
+    flex-shrink: 0;
+}
+.review-calendar-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.review-calendar-item.is-done {
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+.review-calendar-item.is-overdue {
+    background: #bd4f5b13;
+    color: #b34a55;
+}
+.review-day-add {
+    position: absolute;
+    right: 5px;
+    bottom: 3px;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    font-size: 17px;
+    cursor: pointer;
+}
+.review-date-agenda {
+    padding: 18px;
+}
+.review-date-agenda h2 {
+    font-size: 14px;
+}
+.review-date-agenda h3 {
+    margin-top: 26px;
+}
+.review-date-agenda .review-calendar-item {
+    font-size: 12px;
+    padding: 9px;
+    margin-bottom: 7px;
+}
+.review-calendar-grid.is-week .review-calendar-day {
+    min-height: 450px;
+}
+.review-gantt-scroll {
+    overflow: auto;
+    padding: 0;
+}
+.review-gantt {
+    font-size: 11px;
+    min-width: 100%;
+}
+.review-gantt-axis {
+    display: flex;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 3;
+    border-bottom: 1px solid var(--border);
+}
+.review-gantt-axis > strong {
+    position: sticky;
+    left: 0;
+    flex: 0 0 240px;
+    padding: 18px 14px;
+    background: var(--surface);
+    font-size: 11px;
+    font-weight: 500;
+}
+.review-gantt-axis > div {
+    display: flex;
+    align-items: center;
+}
+.review-gantt-axis span {
+    width: var(--day-width);
+    text-align: center;
+    color: var(--muted);
+}
+.review-gantt-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    border-bottom: 1px solid var(--border);
+    min-height: 44px;
+}
+.review-gantt-name {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 2;
+    border: 0;
+    border-right: 1px solid var(--border);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px;
+    line-height: 1.5;
+}
+.review-gantt-track {
+    display: flex;
+    position: relative;
+    min-height: 44px;
+}
+.review-gantt-track > span {
+    width: var(--day-width);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.review-gantt-bar {
+    position: absolute;
+    top: 8px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3px;
+    border-radius: 5px;
+    color: white;
+    cursor: grab;
+    overflow: hidden;
+    font-size: 10px;
+}
+.review-gantt-bar > span:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.review-gantt-bar.is-done {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+.review-gantt-handle {
+    width: 7px;
+    align-self: stretch;
+    cursor: ew-resize;
+    flex-shrink: 0;
+    background: #ffffff25;
+}
+.review-gantt-group {
+    grid-column: 1/-1;
+    padding: 9px 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+}
+.review-gantt-unscheduled {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+}
+/* Habits and saved reflection. */
+.review-habit-card {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 225px auto;
+    gap: 22px;
+    align-items: center;
+    padding: 22px;
+    margin-bottom: 18px;
+}
+.review-habit-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+.review-habit-main h2 {
+    margin: 3px 0 6px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+.review-habit-main p {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 7px 0;
+}
+.review-parent-chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: inherit;
+    font-size: 10px;
+    border: 0;
+    border-radius: 5px;
+    padding: 5px 8px;
+}
+.review-habit-weekdays,
+.review-habit-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+.review-habit-weekdays span {
+    text-align: center;
+    font-size: 9px;
+    color: var(--muted);
+    padding-bottom: 5px;
+}
+.review-habit-dates button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 27px;
+    height: 25px;
+    padding: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 5px;
+    color: var(--muted);
+    font: inherit;
+    font-size: 10px;
+}
+.review-habit-dates button.is-checked {
+    background: var(--accent);
+    color: white;
+}
+.review-habit-dates button.is-rest {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.review-habit-dates button.is-today {
+    border-color: var(--accent);
+}
+.review-habit-dates button.is-outside {
+    opacity: 0.35;
+}
+.review-habit-dates button:disabled {
+    opacity: 0.3;
+}
+.review-habit-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.review-review-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+.review-review-card {
+    position: relative;
+    display: block;
+    padding: 24px;
+    text-align: left;
+    color: var(--text);
+    font: inherit;
+}
+.review-review-card small {
+    color: var(--muted);
+    font-size: 11px;
+}
+.review-review-card h2 {
+    margin: 12px 0;
+}
+.review-review-card p {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--muted);
+    white-space: pre-wrap;
+}
+.review-review-card > span {
+    font-size: 11px;
+    color: var(--accent);
+}
+.review-review-card > svg {
+    position: absolute;
+    right: 20px;
+    bottom: 24px;
+}
+.review-reflection {
+    padding: 26px;
+    max-width: 950px;
+}
+.review-reflection .review-field {
+    display: grid;
+    gap: 10px;
+}
+.review-snapshot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 20px 0;
+    border-block: 1px solid var(--border);
+    margin: 22px 0;
+}
+.review-snapshot > div {
+    display: grid;
+    gap: 8px;
+    min-width: 140px;
+}
+.review-snapshot strong {
+    font-size: 25px;
+    font-weight: 500;
+    color: var(--accent);
+}
+.review-snapshot span,
+.review-snapshot p {
+    font-size: 12px;
+    color: var(--muted);
+}
+.review-snapshot p {
+    flex-basis: 100%;
+    margin: 0;
+}
+/* Account settings and support. */
+.review-settings-card {
+    padding: 26px;
+    margin-bottom: 22px;
+    max-width: 960px;
+}
+.review-settings-card h2 {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 0;
+}
+.review-settings-card > p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+}
+.review-settings-card .review-field input,
+.review-settings-card .review-field textarea,
+.review-settings-card .review-field select {
+    width: 100%;
+}
+.review-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+.review-toggle input {
+    width: 32px !important;
+    height: 18px !important;
+    cursor: pointer;
+}
+.review-toggle input:checked {
+    accent-color: var(--accent);
+}
+.review-avatar-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.review-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 28px;
+}
+.avatar-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+.review-badge {
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 5px 7px;
+    white-space: nowrap;
+}
+.review-scenery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+}
+.review-scenery {
+    position: relative;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    overflow: hidden;
+    color: var(--text);
+    background: var(--surface);
+    text-align: left;
+    font: inherit;
+}
+.review-scenery[aria-pressed="true"] {
+    border-color: var(--accent);
+}
+.review-scenery img {
+    display: block;
+    width: 100%;
+    height: 115px;
+    object-fit: cover;
+}
+.review-scenery span {
+    display: block;
+    font-size: 12px;
+    padding: 10px;
+}
+.review-scenery svg {
+    position: absolute;
+    right: 10px;
+    bottom: 9px;
+    color: var(--accent);
+}
+.review-backgrounds {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.review-backgrounds > div {
+    display: grid;
+    gap: 6px;
+    text-align: center;
+}
+.review-background {
+    width: 100px;
+    height: 65px;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    border-radius: 7px;
+}
+.review-background[aria-pressed="true"] {
+    border-color: var(--accent);
+}
+.review-background img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.review-settings-card input[type="color"] {
+    width: 90px !important;
+    height: 40px;
+    padding: 4px;
+}
+.review-danger-zone {
+    border-color: #bd4f5b44;
+}
+.review-mfa-illustration {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    color: var(--accent);
+}
+.review-history-row,
+.review-archive-row,
+.review-user-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+.review-history-row > div,
+.review-archive-row > div,
+.review-user-row > div {
+    flex: 1;
+    min-width: 0;
+}
+.review-history-row small,
+.review-archive-row small,
+.review-user-row small {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+}
+.review-archive-row strong,
+.review-user-row strong {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+.review-archive-row > svg {
+    color: var(--muted);
+    flex-shrink: 0;
+}
+.review-guide-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+.review-guide-nav {
+    position: sticky;
+    top: 18px;
+    padding: 16px;
+    display: grid;
+    gap: 3px;
+}
+.review-guide-nav a {
+    color: var(--muted);
+    font-size: 12px;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+.review-guide-nav a:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.review-guide-content {
+    display: grid;
+    gap: 24px;
+}
+.review-guide-content > .planning-panel {
+    padding: 24px;
+    scroll-margin-top: 18px;
+}
+.review-guide-content p {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--muted);
+}
+.review-guide-content details {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    font-size: 13px;
+}
+.review-guide-content summary {
+    cursor: pointer;
+    line-height: 1.7;
+}
+.review-guide-image {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    padding: 0;
+    margin: 20px 0;
+    background: transparent;
+    width: 100%;
+    cursor: zoom-in;
+}
+.review-guide-image img {
+    width: 100%;
+    display: block;
+}
+.review-tour {
+    width: min(780px, calc(100vw - 28px));
+    max-height: 95dvh;
+    padding: 0;
+    overflow: auto;
+}
+.review-tour img {
+    display: block;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.review-tour p {
+    font-size: 13px;
+    line-height: 1.8;
+}
+.review-evidence {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.review-evidence > div {
+    position: relative;
+}
+.review-evidence img {
+    width: 110px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+}
+.review-evidence .icon-button {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    background: var(--surface);
+}
+.review-report-row {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.7;
+}
+.review-report-row strong {
+    display: block;
+    font-weight: 500;
+}
+.review-report-row span {
+    color: var(--muted);
+    font-size: 11px;
+}
+.review-report-row p {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+.review-report-button {
+    position: relative;
+    display: block;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: var(--text);
+    padding-right: 30px;
+    cursor: pointer;
+}
+.review-report-button > svg {
+    position: absolute;
+    right: 0;
+    top: 50%;
+}
+/* Assistant stays available across page navigation. */
+.review-assistant-launcher {
+    position: fixed;
+    right: 25px;
+    bottom: 24px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 17px;
+    color: white;
+    background: var(--accent);
+    border: 0;
+    border-radius: 30px;
+    box-shadow: 0 4px 20px #14284925;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+.review-assistant {
+    position: fixed;
+    right: 24px;
+    bottom: 82px;
+    width: min(430px, calc(100vw - 32px));
+    height: min(720px, calc(100dvh - 110px));
+    z-index: 95;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 12px 55px #14284930;
+    overflow: hidden;
+}
+.review-assistant.is-collapsed {
+    height: auto;
+}
+.review-assistant > header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.review-assistant > header > svg {
+    color: var(--accent);
+}
+.review-assistant > header > div {
+    flex: 1;
+}
+.review-assistant > header strong {
+    font-size: 13px;
+    font-weight: 500;
+}
+.review-assistant > header small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+.review-assistant > header .icon-button {
+    width: 26px;
+    height: 30px;
+    padding: 3px;
+}
+.review-assistant-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+}
+.review-assistant-body[hidden] {
+    display: none;
+}
+.review-chat-log {
+    flex: 1;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 18px;
+    min-height: 0;
+}
+.review-chat-welcome {
+    text-align: center;
+    padding: 25px 5px;
+}
+.review-chat-welcome > svg {
+    color: var(--accent);
+}
+.review-chat-welcome h2 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 17px 0 12px;
+}
+.review-chat-welcome p {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--muted);
+}
+.review-chat-welcome button {
+    display: flex;
+    margin: 10px auto;
+    font-size: 11px;
+}
+.review-chat-message {
+    font-size: 12px;
+    line-height: 1.8;
+    margin-bottom: 22px;
+}
+.review-chat-message > small {
+    color: var(--muted);
+    font-size: 10px;
+}
+.review-chat-message > p {
+    margin: 6px 0;
+    white-space: pre-wrap;
+}
+.review-chat-message.is-user {
+    margin-left: 25px;
+    background: var(--accent-soft);
+    padding: 12px 14px;
+    border-radius: 12px;
+}
+.review-citation {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 10px;
+    text-align: left;
+    padding: 5px 8px;
+    cursor: pointer;
+}
+.review-proposal {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 14px;
+    background: var(--canvas);
+}
+.review-proposal > strong {
+    font-weight: 500;
+}
+.review-proposal dl {
+    margin: 12px 0;
+}
+.review-proposal dt {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 10px;
+}
+.review-proposal dd {
+    margin: 4px 0;
+    font-size: 12px;
+}
+.review-proposal .button {
+    font-size: 10px;
+    padding: 8px 12px;
+}
+.review-proposal .action-row {
+    justify-content: flex-end;
+}
+.review-chat-thinking {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.review-chat-input {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 13px;
+    border-top: 1px solid var(--border);
+}
+.review-chat-input textarea {
+    flex: 1;
+    resize: none;
+    font: inherit;
+    font-size: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    box-shadow: none;
+    padding: 7px;
+}
+.review-chat-input .icon-button {
+    color: var(--accent);
+}
+.review-chat-examples {
+    padding: 0 16px 12px;
+    font-size: 10px;
+    color: var(--muted);
+}
+.review-chat-examples summary {
+    cursor: pointer;
+}
+.review-chat-examples select {
+    font-size: 11px;
+    margin-top: 8px;
+    min-height: 30px;
+}
+[data-show-quote="false"] .preview-workspace .theme-quote {
+    display: none;
+}
+@media (min-width: 1450px) {
+    .review-note-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .review-calendar-layout {
+        grid-template-columns: minmax(0, 1fr) 260px;
+    }
+}
+@media (max-width: 1150px) {
+    .review-note-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .review-calendar-layout {
+        grid-template-columns: 1fr;
+    }
+    .review-date-agenda {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    .review-date-agenda h2,
+    .review-date-agenda h3 {
+        flex-basis: 100%;
+        margin: 0;
+    }
+    .review-date-agenda .review-calendar-item {
+        width: auto;
+    }
+    .review-date-agenda p {
+        flex-basis: 100%;
+    }
+    .review-habit-card {
+        grid-template-columns: minmax(160px, 1fr) 225px;
+    }
+    .review-habit-actions {
+        grid-column: 1/-1;
+        justify-content: flex-end;
+    }
+    .review-notes-layout {
+        grid-template-columns: minmax(0, 1fr) 245px;
+    }
+    .review-goal-progress {
+        width: 65px;
+    }
+    .review-guide-layout {
+        grid-template-columns: 170px 1fr;
+    }
+}
+@media (max-width: 800px) {
+    .review-page-header {
+        gap: 15px;
+    }
+    .review-main-goal,
+    .review-area,
+    .review-goal-information,
+    .review-goal-info {
+        padding: 18px;
+    }
+    .review-goal-row {
+        gap: 5px;
+        flex-wrap: wrap;
+        padding-left: calc(var(--depth) * 12px);
+    }
+    .review-goal-row > .review-stars {
+        display: none;
+    }
+    .review-goal-row .review-goal-progress {
+        width: 50px;
+        font-size: 10px;
+    }
+    .review-tree-gutter {
+        width: 18px;
+        flex-basis: 18px;
+    }
+    .review-goal-name {
+        font-size: 12px;
+        min-width: 70px;
+    }
+    .review-main-goal .section-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .review-main-goal .section-heading select {
+        max-width: 100%;
+        font-size: 12px;
+    }
+    .review-notes-layout {
+        grid-template-columns: 1fr;
+    }
+    .review-note-side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .review-settings-card {
+        padding: 20px;
+    }
+    .review-guide-layout {
+        grid-template-columns: 1fr;
+    }
+    .review-guide-nav {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .review-guide-nav a {
+        padding: 6px;
+    }
+    .review-guide-content > .planning-panel {
+        padding: 18px;
+    }
+    .review-toast {
+        left: 16px;
+        bottom: 90px;
+        max-width: calc(100vw - 32px);
+    }
+    .review-assistant {
+        right: 16px;
+        bottom: 80px;
+    }
+    .review-assistant-launcher {
+        right: 16px;
+        bottom: 20px;
+    }
+    .review-review-grid {
+        grid-template-columns: 1fr;
+    }
+    .review-activity {
+        padding: 18px;
+    }
+    .review-fact {
+        flex-wrap: wrap;
+    }
+    .review-fact time {
+        margin-left: auto;
+    }
+    .review-definition {
+        grid-template-columns: 115px 1fr;
+    }
+    .review-field-pair {
+        gap: 12px;
+    }
+}
+@media (max-width: 520px) {
+    .review-note-grid {
+        grid-template-columns: 1fr;
+    }
+    .review-note-card,
+    .review-note-card-open {
+        min-height: 180px;
+    }
+    .review-note-side {
+        grid-template-columns: 1fr;
+    }
+    .review-note-editor {
+        padding: 16px;
+    }
+    .review-note-paper {
+        padding: 15px;
+    }
+    .review-notes-toolbar {
+        gap: 10px;
+    }
+    .review-notes-toolbar .review-search {
+        max-width: none;
+        flex-basis: 100%;
+    }
+    .review-scenery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .review-scenery img {
+        height: 90px;
+    }
+    .review-habit-card {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 18px;
+    }
+    .review-habit-calendar {
+        max-width: 280px;
+        margin-left: 36px;
+    }
+    .review-habit-dates button {
+        width: 29px;
+        height: 27px;
+    }
+    .review-habit-actions {
+        grid-column: auto;
+    }
+    .review-history-row,
+    .review-archive-row,
+    .review-user-row {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .review-history-row > div,
+    .review-archive-row > div,
+    .review-user-row > div {
+        flex-basis: calc(100% - 50px);
+    }
+    .review-archive-row > .button {
+        margin-left: 34px;
+    }
+    .review-history-row .button {
+        margin-left: auto;
+    }
+    .review-field-pair {
+        grid-template-columns: 1fr;
+    }
+    .review-main-goal-body {
+        flex-wrap: wrap;
+    }
+    .review-main-goal-body > .button {
+        margin-left: auto;
+    }
+    .review-dialog .preview-dialog-body {
+        padding: 20px;
+    }
+    .review-dialog .preview-dialog-footer {
+        padding: 14px 20px;
+        gap: 8px;
+    }
+    .review-definition {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .review-definition dd {
+        margin-bottom: 12px;
+    }
+    .review-local-controls {
+        flex-wrap: wrap;
+    }
+    .review-habit-main .review-entity-icon {
+        width: 28px;
+        flex-basis: 28px;
+    }
+    .review-activity .section-heading {
+        flex-wrap: wrap;
+    }
+    .review-tour {
+        max-height: calc(100dvh - 24px);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .preview-workspace *,
+    .review-dialog * {
+        scroll-behavior: auto !important;
+    }
+}
+/* Resolve retained generic form/card rules on the combined preview. */
+.preview-workspace .review-main-goal .section-heading select {
+    width: auto;
+    max-width: min(520px, 75%);
+}
+.preview-workspace .review-main-goal .section-heading h2 {
+    white-space: nowrap;
+}
+.preview-workspace .review-local-controls .review-checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+}
+.preview-workspace .review-checkbox input[type="checkbox"],
+.review-dialog .review-checkbox input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    min-height: 17px;
+    flex: 0 0 17px;
+}
+.preview-workspace .review-notes-toolbar {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.preview-workspace .review-notes-toolbar > select {
+    width: auto;
+    min-width: 140px;
+    max-width: 205px;
+    flex: 0 1 auto;
+}
+.preview-workspace .review-notes-toolbar .review-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: none;
+}
+.preview-workspace .review-notes-toolbar .review-search input {
+    min-width: 80px;
+}
+.review-calendar-more {
+    display: block;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 4px 5px;
+    cursor: pointer;
+}
+.review-calendar-grid:not(.is-week) .review-calendar-item {
+    white-space: nowrap;
+    min-height: 25px;
+}
+.review-calendar-grid:not(.is-week) .review-calendar-item span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+@media (max-width: 520px) {
+    .preview-workspace .review-main-goal .section-heading select {
+        max-width: 100%;
+        width: 100%;
+    }
+    .preview-workspace .review-notes-toolbar > select {
+        flex: 1;
+        min-width: 130px;
+        max-width: none;
+    }
+    .preview-workspace .review-notes-toolbar .review-search {
+        flex-basis: 100%;
+    }
+}
+.preview-workspace .stack-form label.review-toggle {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    text-align: left;
+}
+.preview-workspace .review-file-input {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.review-dialog .stack-form .review-checkbox-list label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+.preview-workspace .review-local-controls .review-checkbox {
+    justify-content: flex-start;
+}
+.preview-workspace .review-note-side .review-checkbox-list label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    font-size: 12px;
+}
+.preview-workspace .review-note-side .review-checkbox-list input {
+    width: 16px;
+    height: 16px;
+    min-height: 16px;
+}
+.review-dialog .review-checkbox {
+    flex-direction: row !important;
+}
+.review-dialog .review-file-input {
+    display: inline-flex;
+    flex-direction: row;
+    gap: 8px;
+}
+.review-gantt {
+    position: relative;
+}
+.review-gantt-open {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    color: var(--text);
+    text-align: left;
+    padding: 0;
+    min-width: 0;
+    line-height: 1.5;
+}
+.review-gantt-name .icon-button {
+    width: 20px;
+    height: 22px;
+    padding: 0;
+    flex-shrink: 0;
+}
+.review-gantt-bar {
+    z-index: 1;
+}
+.review-gantt-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background: #ffffffa0;
+    pointer-events: none;
+}
+.review-gantt-dependencies {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
+.review-gantt-dependencies path {
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+    fill: none;
+}
+.review-gantt-axis {
+    height: 54px;
+}
+.review-gantt-row {
+    height: 44px;
+}
+[data-theme="dark"] .review-assistant-launcher {
+    color: #142849;
+}
+@media (max-width: 520px) {
+    .review-assistant-launcher > span {
+        display: none;
+    }
+    .review-assistant-launcher {
+        width: 48px;
+        height: 48px;
+        padding: 12px;
+        justify-content: center;
+    }
+    .review-goal-row > .icon-button {
+        display: none;
+    }
+    .review-goal-name {
+        flex-basis: 110px;
+    }
+    .review-goal-progress {
+        width: 38px !important;
+    }
+    .review-goal-row .review-entity-icon {
+        width: 26px;
+        flex-basis: 26px;
+    }
+}
+
+/* Match the retained Notes collection and modal, and compact Habit/Calendar layouts. */
+.preview-workspace .review-notes.workspace {
+    display: block;
+    min-height: 0;
+}
+.preview-workspace .review-notes-collection .label-filter-option {
+    flex-direction: row;
+}
+.preview-workspace .review-notes .review-page-header {
+    overflow: visible;
+    z-index: 5;
+}
+.preview-workspace .review-notes-results {
+    min-width: 0;
+}
+.preview-workspace .review-notes-collection .notes-toolbar .search-field {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+.preview-workspace .review-notes-collection .notes-toolbar select {
+    width: auto;
+    max-width: 210px;
+}
+.preview-workspace .review-notes-collection .label-filter-option input {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+}
+.preview-workspace .review-notes-collection .filter-all > svg {
+    flex-shrink: 0;
+    width: 18px;
+}
+.preview-workspace .notes-group-heading {
+    margin: 28px 0 16px;
+    color: var(--muted);
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.preview-workspace .review-note-card h2 {
+    font-size: var(--font-size-ui);
+    font-weight: 600;
+}
+.preview-workspace .review-note-card p {
+    font-size: var(--font-size-note, 16px);
+    line-height: 1.6;
+}
+.preview-workspace .review-note-preferences {
+    width: 260px;
+    padding: 16px;
+}
+.review-mobile-note-filters {
+    display: none;
+}
+.review-note-modal[open] {
+    inset: 0;
+    margin: auto;
+    width: min(760px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 80px);
+    border-radius: 16px;
+}
+.review-note-modal .drawer-heading {
+    align-items: flex-start;
+    padding-bottom: 14px;
+}
+.review-note-modal .drawer-heading .eyebrow {
+    margin: 0 0 6px;
+}
+.review-note-modal .drawer-heading .save-status {
+    display: block;
+    margin-top: 8px;
+}
+.review-note-modal .review-notes-layout {
+    display: flex;
+    flex-direction: column;
+}
+.review-note-modal .review-note-editor {
+    width: 100%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+.review-note-modal .review-note-title-label {
+    flex: 1;
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    font-size: var(--font-size-ui);
+    font-weight: 600;
+}
+.review-note-modal .review-note-title-label input {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 0 12px;
+    border: 0;
+    border-bottom: 1px solid var(--accent);
+    border-radius: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+.review-note-modal .review-note-body {
+    margin-top: 18px;
+}
+.review-note-modal .review-note-body > label {
+    display: block;
+    margin-bottom: 8px;
+}
+.review-note-modal .review-note-paper {
+    padding: 0;
+    margin: 0 0 22px;
+    border: 0;
+    min-height: 0;
+}
+.review-note-modal .note-content-editor {
+    min-height: 300px;
+}
+.review-note-modal .review-note-side {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.review-note-modal .review-note-summary {
+    order: -1;
+    background: var(--accent-soft);
+}
+.review-note-modal .review-note-save-status {
+    display: none;
+}
+.review-note-modal-actions,
+.review-offline-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0;
+}
+.review-habits .habit-summary {
+    margin-bottom: 20px;
+}
+.review-habits .habit-summary h2,
+.review-habits .habit-today-panel > .section-heading h2 {
+    font-size: 17px;
+    font-weight: 600;
+}
+.review-habit-streak {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 20px 0 10px;
+}
+.review-habit-streak > strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 25px;
+}
+.review-habit-streak > strong > svg {
+    color: #f59e0b;
+    fill: #f59e0b;
+}
+.review-habits .habit-summary .habit-checkin-days > div {
+    display: grid;
+    gap: 5px;
+    justify-items: center;
+    color: var(--muted);
+    font-size: 11px;
+}
+.review-habits .habit-row-name .review-entity-icon {
+    width: 29px;
+    height: 29px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.review-habits .habit-row-name > span {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: center;
+}
+.review-habits .habit-row-copy > .context-chip {
+    border: 0;
+    text-align: left;
+}
+.review-habits .habit-checkin-days .habit-checkin-dot {
+    font-size: 13px;
+}
+.preview-workspace .review-calendar-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+}
+.preview-workspace .review-calendar-scroll {
+    padding: 18px;
+}
+.preview-workspace .review-calendar-grid {
+    min-width: 0;
+}
+.review-calendar .calendar-controls > select {
+    width: auto;
+    max-width: 240px;
+}
+.review-calendar .review-agenda-stack {
+    display: grid;
+    gap: 20px;
+}
+.review-calendar .review-date-agenda {
+    padding: 18px;
+}
+.review-calendar .review-date-agenda .section-heading {
+    gap: 10px;
+    align-items: flex-start;
+}
+.review-calendar .review-date-agenda h2 {
+    font-size: 16px;
+    font-weight: 600;
+}
+.review-calendar .review-date-agenda .button {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+.review-calendar .review-calendar-day.is-selected {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 2px
+        color-mix(in srgb, var(--accent) 65%, transparent);
+}
+.review-calendar .review-calendar-days {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.review-calendar .review-gantt-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+    align-items: end;
+}
+.review-calendar .review-gantt-controls label {
+    display: grid;
+    gap: 5px;
+    font-size: 12px;
+}
+.review-calendar .review-gantt-controls input {
+    flex: 1;
+    min-width: 160px;
+}
+.review-calendar .review-gantt-controls select {
+    width: auto;
+}
+@media (max-width: 1100px) {
+    .preview-workspace .review-calendar-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .review-calendar .review-agenda-stack {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 800px) {
+    .preview-workspace .review-notes-collection {
+        grid-template-columns: 1fr;
+    }
+    .review-notes-collection .notes-filter-panel {
+        display: none;
+    }
+    .review-notes-collection .notes-filter-panel.is-open {
+        display: block;
+    }
+    .review-mobile-note-filters {
+        display: inline-flex;
+    }
+    .preview-workspace .review-notes-collection .notes-toolbar {
+        flex-wrap: wrap;
+    }
+    .preview-workspace .review-notes-collection .notes-toolbar select {
+        max-width: 100%;
+    }
+}
+@media (max-width: 600px) {
+    .review-note-modal[open] {
+        width: 100vw;
+        max-height: 100dvh;
+        height: 100dvh;
+        border-radius: 0;
+    }
+    .review-habit-streak {
+        flex-wrap: wrap;
+    }
+    .review-calendar .review-agenda-stack {
+        grid-template-columns: 1fr;
+    }
+    .preview-workspace .review-calendar-scroll {
+        padding: 14px;
+    }
+    .review-calendar .calendar-nav h2 {
+        font-size: 16px;
+        min-width: 0;
+    }
+    .review-calendar .calendar-controls > select {
+        width: 100%;
+        max-width: 100%;
+    }
+    .review-calendar .calendar-controls {
+        width: 100%;
+    }
+    .review-calendar-grid[data-view="month"] .review-calendar-day {
+        min-height: 56px;
+        padding: 3px;
+    }
+    .review-calendar-grid[data-view="month"]
+        .review-calendar-day
+        > :is(.review-calendar-item, .review-calendar-more, .review-day-add) {
+        display: none;
+    }
+    .review-calendar-grid[data-view="month"] .review-date-number {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+        height: 100%;
+    }
+    .review-calendar-grid[data-view="week"] .review-weekdays {
+        display: none;
+    }
+    .review-calendar-grid[data-view="week"] .review-calendar-days {
+        grid-template-columns: 1fr;
+    }
+    .review-calendar-grid[data-view="week"] .review-calendar-day {
+        min-height: 100px;
+    }
+}
+
+.preview-workspace .review-settings-card {
+    max-width: 760px;
+}
+.review-settings[data-settings-section="security"] .review-settings-card {
+    max-width: 560px;
+}
+.preview-workspace .review-settings .settings-header h1 {
+    font-weight: 700;
+}
+.preview-workspace .review-settings h2 {
+    font-weight: 600;
+}
+.preview-workspace .review-settings .workspace-section-menu {
+    max-width: 760px;
+}
+.preview-workspace .review-settings .review-scenery img {
+    height: 100px;
+}
+.preview-workspace .review-settings .review-scenery span {
+    font-weight: 600;
+    font-size: 14px;
+}
+.review-settings .review-personal-scenery {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 18px;
+    border: 2px dashed var(--border);
+    min-height: 150px;
+}
+.review-settings .review-personal-scenery > svg {
+    position: static;
+}
+.review-settings .preference-section h2 {
+    font-size: 15px;
+}
+.review-settings .theme-preview-region {
+    margin-bottom: 16px;
+}
+.review-collection-panel > .section-heading {
+    align-items: center;
+}
+.review-collection-panel > .section-heading .field {
+    max-width: 180px;
+}
+.preview-workspace .review-collection-panel h2 {
+    font-weight: 600;
+}
+.preview-workspace .review-list-entry {
+    width: 100%;
+    background: var(--surface);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+.review-list-entry > span:first-child {
+    flex: 1;
+}
+.review-list-entry small {
+    display: block;
+    color: var(--muted);
+    margin-top: 4px;
+}
+.review-reflection .review-editor-heading {
+    margin: 24px 0;
+    gap: 16px;
+}
+.review-period-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin: 16px 0 24px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.review-reflection .review-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 24px;
+}
+.preview-workspace .review-reflection .review-metrics h2 {
+    font-size: 16px;
+    font-weight: 600;
+}
+.review-reflection .review-metrics .insight-card > strong {
+    font-size: 28px;
+}
+.review-reflection .review-metrics .progress-ring {
+    margin: 14px 0 8px;
+}
+.review-wins-card {
+    position: relative;
+    isolation: isolate;
+}
+.review-snapshot-bars {
+    display: flex;
+    align-items: end;
+    gap: 6px;
+    height: 100px;
+    overflow: hidden;
+}
+.review-snapshot-bars > div {
+    flex: 1;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.review-snapshot-bars i {
+    display: block;
+    width: 8px;
+    max-width: 100%;
+    min-height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(var(--success), #a2d4c5);
+}
+.review-snapshot-bars small {
+    color: var(--muted);
+    font-size: 10px;
+}
+.review-snapshot-facts {
+    margin: 24px 0;
+    color: var(--muted);
+}
+.review-snapshot-facts summary {
+    cursor: pointer;
+}
+.review-reflection-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.review-reflection-fields textarea {
+    width: 100%;
+    resize: vertical;
+}
+@media (max-width: 800px) {
+    .review-reflection .review-metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+    .review-reflection .review-metrics .insight-card:nth-child(3) {
+        border-left: 0;
+    }
+    .review-reflection-fields {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 600px) {
+    .review-settings .settings-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .review-collection-panel > .section-heading {
+        flex-wrap: wrap;
+    }
+    .review-collection-panel > .section-heading .field {
+        max-width: 100%;
+        width: 100%;
+    }
+    .review-reflection .review-metrics {
+        grid-template-columns: 1fr;
+    }
+    .review-reflection .review-metrics .insight-card + .insight-card {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+}
+.review-icon-anchor {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+.review-entity-popover {
+    position: fixed;
+    z-index: 150;
+    width: min(312px, calc(100vw - 16px));
+    max-height: 340px;
+    overflow: auto;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+.review-entity-options {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+    margin: 12px 0;
+}
+.review-entity-options .icon-button {
+    padding: 4px;
+}
+.review-entity-options .review-entity-icon {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+}
+.review-entity-options [aria-pressed="true"] {
+    background: var(--accent-soft);
+    outline: 1px solid var(--accent);
+}
+.review-planning .main-goal-title .review-icon-anchor {
+    align-self: center;
+}
+.review-note-card .review-note-badges {
+    position: absolute;
+    top: 22px;
+    right: 20px;
+}
+.review-note-card > .review-row-menu {
+    top: auto;
+    bottom: 8px;
+    right: 8px;
+}
+.preview-workspace .review-planning .goal-tree-row {
+    padding: 0;
+    border: 0;
+    gap: 8px;
+}
+.preview-workspace .review-planning .goal-tree-meta {
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 auto;
+}
+.preview-workspace .review-planning .goal-tree-meta .review-stars {
+    color: #f59e0b;
+}
+.preview-workspace .review-appearance {
+    gap: 16px;
+}
+@media (max-width: 600px) {
+    .preview-workspace .review-planning .goal-tree-link {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .preview-workspace .review-planning .goal-tree-meta {
+        width: 100%;
+    }
+    .preview-workspace .review-planning .goal-tree-meta .goal-mini-track {
+        width: 36px;
+    }
+}
+.review-habit-streak .is-checked .habit-checkin-dot {
+    color: var(--on-accent);
+    background: var(--success);
+    border-color: var(--success);
+}
+.review-habit-streak .is-missed .habit-checkin-dot {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: var(--danger);
+}
+.preview-workspace .review-milestone-focus .review-round-check {
+    width: 32px;
+    height: 32px;
+    border-color: var(--accent);
+}
+.preview-workspace .review-milestone-focus .review-task-line-name {
+    font-size: 14px;
+}
+
+.live-save-error,.live-save-status { position:fixed;z-index:2000;top:12px;left:50%;transform:translateX(-50%);max-width:min(90vw,760px);padding:10px 16px;border-radius:12px;box-shadow:0 8px 30px #0002;background:var(--surface,#fff);color:var(--text,#24323b); }
+.live-save-error { border:1px solid #d56e6e;display:flex;align-items:center;gap:12px; }
+.live-save-status { top:auto;bottom:16px;pointer-events:none;font-size:13px; }

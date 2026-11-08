@@ -1,0 +1,120 @@
+.review-activity {
+    padding: 24px;
+}
+.review-heatmap-scroll {
+    overflow: auto;
+    padding: 8px 3px;
+}
+.review-heatmap {
+    display: grid;
+    grid-template-rows: repeat(7, 12px);
+    grid-auto-flow: column;
+    grid-auto-columns: 12px;
+    gap: 4px;
+    width: max-content;
+}
+.review-heatmap.is-compact {
+    grid-template-rows: repeat(5, 16px);
+    grid-auto-columns: 16px;
+}
+.review-heat-cell {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 3px;
+    background: var(--border);
+    padding: 0;
+}
+.review-heat-cell[data-level="1"] {
+    background: #b8dcd3;
+}
+.review-heat-cell[data-level="2"] {
+    background: #7bbcb0;
+}
+.review-heat-cell[data-level="3"] {
+    background: #3d978b;
+}
+.review-heat-cell[data-level="4"] {
+    background: #067287;
+}
+.review-heat-cell.is-selected {
+    outline: 2px solid var(--text);
+    outline-offset: 1px;
+}
+.review-heatmap.is-compact .review-heat-cell {
+    width: 16px;
+    height: 16px;
+}
+.review-activity-legend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: flex-end;
+    font-size: 10px;
+    color: var(--muted);
+    margin: 14px 0 25px;
+}
+.review-fact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    padding: 15px 0;
+    font-size: 12px;
+}
+.review-fact > span:nth-child(2),
+.review-fact > .text-button {
+    flex: 1;
+    line-height: 1.6;
+    text-align: left;
+}
+.review-fact-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.review-fact-dot.is-reversed {
+    background: #b38137;
+}
+.review-fact time {
+    color: var(--muted);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.review-activity .review-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.review-activity .review-caption,
+.review-activity .review-inline-empty {
+    color: var(--muted);
+    font-size: 12px;
+}
+@media (max-width: 600px) {
+    .review-activity {
+        padding: 18px;
+    }
+    .review-activity .section-heading {
+        flex-wrap: wrap;
+    }
+    .review-fact {
+        flex-wrap: wrap;
+    }
+    .review-fact time {
+        margin-left: auto;
+    }
+}
+
+.review-activity .review-toolbar input,
+.review-activity .review-toolbar select {
+    width: auto;
+    max-width: 100%;
+}

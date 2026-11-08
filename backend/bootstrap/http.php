@@ -323,11 +323,6 @@ $twoFactorService = new \Planner\Application\Account\TwoFactorService(
     $mailer, $services['clock'],
 );
 $twoFactorController = new \Planner\Http\Controller\TwoFactorController($auth, $twoFactorService, $inputValidator, $session, $views);
-$teamService = new \Planner\Application\Teamwork\TeamService(
-    new \Planner\Infrastructure\Persistence\Pdo\Teamwork\PdoTeamRepository($services['pdo']),
-    $accountRepository, $noteShareRepository, $notificationService, $services['transactions'], $services['uuid'], $services['clock'],
-);
-$teamController = new \Planner\Http\Controller\TeamController($auth, $teamService, $inputValidator);
 // The AI services come after NoteService: confirmed chat proposals can change Notes.
 $aiService = new AIActionService($aiProvider, new ProposalValidator, $aiRepository, $planningRepository, $planningService, $reviewService, $services['transactions'], $services['uuid'], $services['clock'], $noteService, new NoteValidator($inputValidator), $cleanup, $habitService);
 $aiController = new AIActionController($auth, $aiService);
@@ -393,7 +388,6 @@ $router = new Router($routeFactory(
     $noteShareController,
     $adminController,
     $twoFactorController,
-    $teamController,
     $aiChatController,
     $emailController,
     $userReportController,
@@ -431,7 +425,6 @@ return [
     'report_service' => $reportService,
     'user_report_service' => $userReportService,
     'two_factor_service' => $twoFactorService,
-    'team_service' => $teamService,
     'task_history_service' => $taskHistoryService,
     'note_service' => $noteService,
     'note_lock_gate' => $noteLockGate,

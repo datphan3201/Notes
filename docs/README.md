@@ -1,6 +1,12 @@
 # UI-to-code documentation
 
+Current migrated runtime: [approved UI integration](migration/ui-integration.md) · [deployment routes](migration/deployment-routes.md).
+
+The Next.js/FastAPI migration has its own [plan](migration/personal-ai-planner.md), [development guide](migration/development.md), [status](migration/status.md) and [cloud runbook](migration/cloud.md). The route/source traces below describe the retained PHP/JavaScript baseline until migration parity is verified.
+
 Start with the URL or visible label, not a historical implementation phase. Every component trace links its **UI/DOM → browser logic → controller/service/domain → persistence → relevant tests**, plus exact named HTTP routes. Tests listed in a trace are pointers, not claims they currently pass.
+
+The approved UI is being [integrated with the real system](migration/ui-integration.md). The [combined review preview](migration/full-ui-review.md) remains available for comparison; its synthetic interactions are separate from authenticated routes and the retained baseline below.
 
 ## Find the page you see
 
@@ -22,7 +28,6 @@ Start with the URL or visible label, not a historical implementation phase. Ever
 | `/calendar` | Month/week dates, drag to reschedule, Unscheduled | [Calendar](ui/calendar/README.md) |
 | `/habits` | Check-ins, streaks, missed/rest dates | [Habits](ui/habits/README.md) |
 | `/reviews` | Daily/Weekly/Monthly collection and editor | [Reviews](ui/reviews/README.md) |
-| `/teamwork` | Team Goals, members, assignments, chat | [Teamwork](ui/teamwork/README.md) |
 | `/settings/profile` | Name, biography, avatar, email | [Profile](ui/settings/profile.md) |
 | `/settings/preferences` | Appearance, backgrounds, RGB, quote, locale | [Preferences](ui/settings/preferences.md) |
 | `/settings/password` | Password and 2FA setup | [Security](ui/settings/password.md) |

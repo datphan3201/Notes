@@ -34,4 +34,4 @@ See [environment variables](../../backend/.env.example) and [mail infrastructure
 
 An authorized operator can run `php bin/console mail:test <recipient-email>` to test the configured delivery path. That is an actual outbound message when delivery is enabled; use an intended recipient. Never paste verification/reset links or codes into docs/log screenshots.
 
-Invitation (including Note shares), verification/change, password reset (link and 6-digit code) and reminder delivery have different product triggers. In-app team reminders do not imply team email reminders. Personal reminder emails are at-least-once across a delivery/commit crash boundary and can duplicate after a crash; do not claim exactly-once external delivery.
+Invitation (including Note shares), verification/change, password reset (link and 6-digit code) and reminder delivery have different product triggers. Personal reminder emails are at-least-once across a delivery/commit crash boundary and can duplicate after a crash; do not claim exactly-once external delivery.

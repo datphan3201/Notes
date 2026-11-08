@@ -8,7 +8,6 @@
         <symbol id="icon-reviews" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1 0-4h13M8 7h7M8 11h5"/></symbol>
         <symbol id="icon-notes" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></symbol>
         <symbol id="icon-ai" viewBox="0 0 24 24"><path d="m12 4 2.3 6.7L21 13l-6.7 2.3L12 22l-2.3-6.7L3 13l6.7-2.3zM4 2v4M2 4h4M20 3v4M18 5h4"/></symbol>
-        <symbol id="icon-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20M16 4.5a3.5 3.5 0 0 1 0 7M18 13.2a6.5 6.5 0 0 1 3.5 5.8V20"/></symbol>
         <symbol id="icon-profile" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
         <symbol id="icon-appearance" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 0 1 0 18" fill="currentColor"/></symbol>
         <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>

@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [All routes](../../reference/routes.md)
 
-Entry: **New task** dialog (`new-task-dialog`). Goal and Milestone capture reuse the same capture modules; Teamwork has its own payload/permission path.
+Entry: **New task** dialog (`new-task-dialog`). Goal and Milestone capture reuse the same capture modules.
 
 Required Task name, optional location, description, criteria, importance, dates, estimate, reminder and repeat controls are not independent entities. Dashboard Today also offers a minimal named Task capture that atomically selects the day and week; the full capture dialog retains its fields and now offers a separate Today/Week planning choice. Name comes first; optional descriptions/criteria and advanced fields are collapsed, with Create/Cancel available while scrolling.
 

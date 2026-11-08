@@ -1,0 +1,311 @@
+.modal-backdrop {
+    position: fixed;
+    z-index: 40;
+    inset: 0;
+    background: rgb(18 35 53 / 48%);
+}
+.modal {
+    position: fixed;
+    z-index: 41;
+    top: 50%;
+    left: 50%;
+    width: min(calc(100% - 32px), 760px);
+    max-height: min(90vh, 850px);
+    overflow: auto;
+    padding: 26px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-dialog);
+    box-shadow: var(--shadow);
+    transform: translate(-50%, -50%);
+}
+.compact-modal {
+    width: min(calc(100% - 32px), 590px);
+}
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+}
+.modal-header h2 {
+    margin-bottom: 0;
+}
+.modal-intro {
+    color: var(--muted);
+}
+.modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+}
+.toast-region {
+    position: fixed;
+    z-index: 80;
+    right: 18px;
+    bottom: 18px;
+    display: grid;
+    gap: 8px;
+}
+.toast {
+    max-width: min(360px, calc(100vw - 36px));
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+.toast.is-error {
+    border-left-color: var(--danger);
+}
+.avatar {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--on-accent);
+    background: var(--accent);
+    border-radius: 50%;
+    font-weight: 600;
+}
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.avatar-small {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-ui);
+}
+.avatar-large {
+    width: 78px;
+    height: 78px;
+    font-size: 1.75rem;
+}
+.inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+}
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* Entity icons: user-chosen (or automatic) icon on a soft accent tile. */
+.entity-icon {
+    --icon-hue: 171;
+    --icon-glyph: 17px;
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    color: hsl(var(--icon-hue) 70% 40%);
+    background: hsl(var(--icon-hue) 85% 94%);
+    border: 1px solid hsl(var(--icon-hue) 60% 84%);
+    border-radius: 8px;
+}
+.entity-icon.is-sm {
+    --icon-glyph: 14px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+}
+.entity-icon.is-lg {
+    --icon-glyph: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+}
+.entity-icon .entity-icon-svg {
+    width: var(--icon-glyph);
+    height: var(--icon-glyph);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+[data-theme='dark'] .entity-icon {
+    color: hsl(var(--icon-hue) 80% 72%);
+    background: hsl(var(--icon-hue) 35% 20%);
+    border-color: hsl(var(--icon-hue) 35% 32%);
+}
+.entity-icon-button {
+    display: inline-flex;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 9px;
+    cursor: pointer;
+}
+.entity-icon-button:hover .entity-icon,
+.entity-icon-button:focus-visible .entity-icon {
+    outline: 2px solid hsl(var(--icon-hue) 70% 55%);
+    outline-offset: 2px;
+}
+.icon-picker {
+    position: absolute;
+    z-index: 60;
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgb(10 20 40 / 22%);
+}
+.icon-picker.is-fixed {
+    position: fixed;
+}
+.icon-picker-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.icon-picker-swatch {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: hsl(var(--icon-hue) 70% 55%);
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--border);
+    cursor: pointer;
+}
+.icon-picker-swatch[aria-checked='true'] {
+    box-shadow: 0 0 0 2px hsl(var(--icon-hue) 70% 45%);
+}
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    grid-auto-rows: 36px;
+    gap: 4px;
+    max-height: 244px;
+    overflow-y: auto;
+}
+.icon-picker-option {
+    display: grid;
+    place-content: center;
+    height: 36px;
+    padding: 0;
+    color: hsl(var(--icon-hue) 60% 45%);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+}
+[data-theme='dark'] .icon-picker-option {
+    color: hsl(var(--icon-hue) 80% 72%);
+}
+.icon-picker-option:hover,
+.icon-picker-option:focus-visible,
+.icon-picker-option[aria-pressed='true'] {
+    background: var(--surface-soft);
+    border-color: var(--border);
+}
+.icon-picker-option .entity-icon-svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.icon-picker-reset {
+    justify-self: start;
+}
+
+/* Importance as stars, at every planning level. */
+.star-rating {
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 1px;
+    align-items: center;
+    color: #f59e0b;
+    vertical-align: middle;
+}
+.star-rating .star-icon {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+}
+.star-rating .star-icon path[fill='none'] {
+    stroke: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+.star-rating.is-md .star-icon {
+    width: 17px;
+    height: 17px;
+}
+.star-rating-option {
+    display: inline-grid;
+    place-content: center;
+    width: 18px;
+    height: 22px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.star-rating.is-md .star-rating-option {
+    width: 22px;
+    height: 26px;
+}
+.star-rating-option:hover,
+.star-rating-option:focus-visible {
+    background: var(--surface-soft);
+}
+
+/* Titles that carry an entity icon and stars (Goal and Milestone headers, Habit rows). */
+.entity-title-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.entity-title-row > h1,
+.entity-title-row > h2 {
+    min-width: 0;
+    margin: 0;
+}
+.entity-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+}
+.habit-row-name {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.habit-row-name .star-rating {
+    margin-left: 4px;
+}
+.roadmap-branch > .entity-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+.roadmap-branch > .star-rating {
+    grid-column: 2;
+    justify-self: start;
+}
+.task-row-actions > .star-rating {
+    margin-inline: 2px 4px;
+}

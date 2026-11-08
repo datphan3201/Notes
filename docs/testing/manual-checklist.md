@@ -2,7 +2,7 @@
 
 [Testing](README.md) · [UI/source map](../README.md) · [Blank route sheet](../reference/routes.csv)
 
-This is a test plan, not an execution report. All cases start unchecked. Use the canonical APP_URL, private demo credentials and newly created QA-prefixed data for mutations; do not delete or rewrite the existing roadmap. Use separate browser/account B for sharing and Teamwork, and authorized system-admin C for admin positives. Record environment/revision and save each test run separately.
+This is a test plan, not an execution report. All cases start unchecked. Use the canonical APP_URL, private demo credentials and newly created QA-prefixed data for mutations; do not delete or rewrite the existing roadmap. Use separate browser/account B for Note sharing, and authorized system-admin C for admin positives. Record environment/revision and save each test run separately.
 
 Callbacks need real server-issued links; /files routes stream private bytes and /api/v1 routes are not HTML pages. Valid parameter examples are invitation action accept|decline, admin lock|unlock, series pause|resume|end, Review refresh|finalize|reopen, weekly type task|milestone and ISO YYYY-MM-DD Habit dates. Inspect named routes/source for required bodies and current versions instead of sending an empty request to every URL.
 
@@ -255,12 +255,12 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 
 - [ ] NOTIFY01 — Bell unread count/list loads owned entries and refreshes on the visibility-aware polling cadence.
 - [ ] NOTIFY02 — Mark one/all read; unread count and persisted state agree after reload.
-- [ ] NOTIFY03 — Invitation actions navigate/respond for the correct owned share/team membership.
+- [ ] NOTIFY03 — Invitation actions navigate/respond for the correct owned Note share.
 - [ ] NOTIFY04 — Due personal reminder appears once until dismissed/completed/rescheduled.
 - [ ] NOTIFY05 — Dismiss one/all reminders; changing time makes a new reminder visible.
-- [ ] NOTIFY06 — Assigned team reminder links to the correct team Goal; reassignment respects visibility.
+- [ ] NOTIFY06 — Retired Teamwork routes return 404 and historical notifications do not appear in the bell or badge.
 - [ ] NOTIFY07 — Notification opt-out and invitation-email preferences follow service exceptions for admin reports.
-- [ ] NOTIFY08 — Authorized scheduler/mail run delivers eligible personal emails; team reminders stay in-app and delivery failures are recorded honestly.
+- [ ] NOTIFY08 — Authorized scheduler/mail run delivers eligible personal emails; delivery failures are recorded honestly.
 
 ## Reviews — REVIEW
 
@@ -276,22 +276,6 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] REVIEW08 — Finalize freezes facts/editing; Reopen retains snapshot until explicit Refresh.
 - [ ] REVIEW09 — Delete a QA Review permanently with version/ownership checks; unrelated Reviews remain.
 
-## Teamwork (requires B) — TEAM
-
-[Behavior and source trace](../ui/teamwork/README.md)
-
-- [ ] TEAM01 — Create QA team Goal with details and invitations; owner/creator membership is correct.
-- [ ] TEAM02 — Search/carousel paging and responsive 4/2/1-card layouts retain selected Goal context.
-- [ ] TEAM03 — B accepts/declines invitation; non-member Goal/API access returns 404.
-- [ ] TEAM04 — Team admin changes roles/removes eligible members while creator protections remain enforced.
-- [ ] TEAM05 — Member name/biography and factual done/assigned completion are correct.
-- [ ] TEAM06 — Create assigned team Task with shared capture fields plus owned team assignee.
-- [ ] TEAM07 — Edit/reassign/delete team Task follows admin/member permissions and current version.
-- [ ] TEAM08 — Viewer without assignment cannot modify team data; assigned viewer can use only their permitted own-status path.
-- [ ] TEAM09 — Complete repeating team Task: one next occurrence follows its rule/reminder and end date; personal TaskSeries is not used.
-- [ ] TEAM10 — Due team reminder and reassignment appear for the correct assignee without sending team reminder email.
-- [ ] TEAM11 — Post/read escaped team chat; polling while open, message bounds and membership checks hold.
-- [ ] TEAM12 — Archive QA team Goal or remove membership: access/notifications/chat respect updated membership; system-admin rights are unaffected.
 
 ## Profile — PROFILE
 
@@ -387,9 +371,9 @@ Callbacks need real server-issued links; /files routes stream private bytes and 
 - [ ] ADMIN01 — Ordinary account receives 404 for admin page/APIs.
 - [ ] ADMIN02 — C lists reports using stored snapshots, resolves/dismisses and triggers intended notifications.
 - [ ] ADMIN03 — C searches users and locks/unlocks QA B; active sessions and sign-in reflect lock state.
-- [ ] ADMIN04 — Self-lock is rejected; team-admin membership does not grant system-admin rights.
+- [ ] ADMIN04 — Self-lock is rejected; ordinary accounts cannot access system-admin operations.
 - [ ] ADMIN05 — Update valid system history limit; reject out-of-range settings and verify cap in a controlled maintenance case.
-- [ ] ADMIN06 — Delete account on a disposable ordinary account: a wrong email changes nothing; the right email deletes it with its notes, shares and team goals it created, and Administrator activity shows Deleted an account. Administrators have no Delete button.
+- [ ] ADMIN06 — Delete account on a disposable ordinary account: a wrong email changes nothing; the right email deletes it with its notes, shares and personal planning data, and Administrator activity shows Deleted an account. Administrators have no Delete button.
 
 ## Cross-cutting UI/API checks — COMMON
 

@@ -166,31 +166,18 @@ final class SystemAdminHttpTest extends TestCase
         self::assertSame(['Deputy', 'Lead'], array_map(static fn (array $entry): string => $entry['actor']['display_name'], $log));
     }
 
-    public function test_user_reports_can_lock_the_account_and_locked_members_take_no_new_team_work(): void
+    public function test_user_reports_can_lock_the_reported_account(): void
     {
         $admin = $this->admin('safety@example.test', 'Safety');
-        $lead = $this->registerAccount('team-lead@example.test', 'Team lead');
-        $member = $this->registerAccount('team-member@example.test', 'Team member');
-        $goalId = $this->data($this->api('POST', '/api/v1/team-goals', [
-            'name' => 'Launch', 'description' => '', 'due_date' => null,
-            'members' => [['email' => 'team-member@example.test', 'role' => 'editor']],
-        ], $lead))['id'];
-        $this->api('POST', "/api/v1/team-goals/$goalId/invitation/accept", [], $member);
-        $memberId = $this->userId('team-member@example.test');
-        self::assertSame(201, $this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'Draft', 'assignee_id' => (string) $memberId], $lead)->status);
-
-        $this->pdo->prepare("INSERT INTO user_reports (id, reporter_id, target_email, target_user_id, reason, status, created_at) VALUES ('7f9c4b5e-2f3a-4c1d-9e8f-1a2b3c4d5e6f', :reporter, 'team-member@example.test', :target, 'Threatening messages in the team chat', 'open', NOW(6))")
-            ->execute(['reporter' => $this->userId('team-lead@example.test'), 'target' => $memberId]);
+        $this->registerAccount('reporter@example.test', 'Reporter');
+        $reported = $this->registerAccount('reported@example.test', 'Reported');
+        $reportedId = $this->userId('reported@example.test');
+        $this->pdo->prepare("INSERT INTO user_reports (id, reporter_id, target_email, target_user_id, reason, status, created_at) VALUES ('7f9c4b5e-2f3a-4c1d-9e8f-1a2b3c4d5e6f', :reporter, 'reported@example.test', :target, 'Abusive shared content', 'open', NOW(6))")
+            ->execute(['reporter' => $this->userId('reporter@example.test'), 'target' => $reportedId]);
         $path = '/api/v1/admin/user-reports/7f9c4b5e-2f3a-4c1d-9e8f-1a2b3c4d5e6f/resolve';
         self::assertSame(422, $this->api('POST', $path, ['status' => 'resolved', 'actions' => ['revoke_shares']], $admin)->status);
         self::assertSame(200, $this->api('POST', $path, ['status' => 'resolved', 'actions' => ['lock_account']], $admin)->status);
-        self::assertSame(401, $this->api('GET', '/api/v1/session', [], $member)->status);
-
-        $goal = $this->data($this->api('GET', "/api/v1/team-goals/$goalId", [], $lead));
-        $locked = array_values(array_filter($goal['members'], static fn (array $m): bool => $m['id'] === (string) $memberId))[0];
-        self::assertTrue($locked['locked']);
-        self::assertSame(422, $this->api('POST', "/api/v1/team-goals/$goalId/tasks", ['name' => 'More', 'assignee_id' => (string) $memberId], $lead)->status);
-        self::assertSame('Draft', $goal['tasks'][0]['name']);
+        self::assertSame(401, $this->api('GET', '/api/v1/session', [], $reported)->status);
         self::assertSame(['lock_account'], $this->data($this->api('GET', '/api/v1/admin/user-reports?status=resolved', [], $admin))[0]['actions']);
     }
 

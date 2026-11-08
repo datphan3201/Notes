@@ -37,7 +37,7 @@
             <div class="field">
                 <label for="profile-biography"><?= $view->e($view->t('Biography')) ?></label>
                 <textarea id="profile-biography" name="biography" rows="3" maxlength="2000" data-profile-biography><?= $view->e($user['biography']) ?></textarea>
-                <p class="field-hint"><?= $view->e($view->t('Shown to members of your Teamwork goals.')) ?></p>
+                <p class="field-hint"><?= $view->e($view->t('A short introduction for your profile.')) ?></p>
             </div>
             <div class="form-actions">
                 <button class="button button-primary" type="submit"><?= $view->e($view->t('Save changes')) ?></button>
