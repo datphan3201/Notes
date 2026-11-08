@@ -89,6 +89,7 @@ async def request_context(request: Request, call_next):
             "route": getattr(route, "path", "unmatched"),
             "status": response.status_code,
             "latency_ms": int((time.monotonic() - started) * 1000),
+            "user_agent": request.headers.get("user-agent", ""),
         },
     )
     return response
@@ -101,6 +102,8 @@ async def integrity_error(request, exc):
     )
 
 
+@app.get("/")
+@app.head("/")
 @app.get("/health")
 def health():
     return {"status": "ok"}
