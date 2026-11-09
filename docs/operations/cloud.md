@@ -108,9 +108,9 @@ Runtime commit `4a280e1` was deployed to Render (`dep-dboktjff3r2c73bgaco0`, liv
 
 Production login and proxied readiness returned HTTP 200; authenticated demo login and snapshot reads succeeded. A Playwright production browser check opened a migrated Note from its Task, observed the shared formatting toolbar and disabled Save on the clean document, then closed back to the originating Task Notes tab. These release checks do not certify mail delivery, AI quality or managed restore/PITR.
 
-### Next Area name migration (0008)
+### Area name migration (0008)
 
-Revision `0008` is local preparation, not part of the recorded cloud release. Back up the intended database and rehearse on an isolated restored copy before upgrading. It adds a unique index per owner over `lower(btrim(regexp_replace(title, '\s+', ' ', 'g')))`, including archived Areas. Service writes use the same PostgreSQL normalization. Existing titles are preserved.
+Revision `0008` was applied in the backend release recorded below. For other environments, back up the intended database and rehearse on an isolated restored copy before upgrading. It adds a unique index per owner over `lower(btrim(regexp_replace(title, '\s+', ' ', 'g')))`, including archived Areas. Service writes use the same PostgreSQL normalization. Existing titles are preserved.
 
 The migration checks duplicates before changing schema. If found, it aborts with owner and Area IDs; let the owner choose new names, then retry. Never merge, delete or automatically rename their data to force an upgrade. Read-only preflight query (run against the explicitly selected database/schema):
 
@@ -123,6 +123,18 @@ HAVING count(*) > 1;
 
 Local `planner_dev/public` had no duplicate groups; it was backed up privately and upgraded to `0008`, preserving 13 Areas, 120 Notes and 157 Tasks. This is a local migration/count check, not hosted acceptance or a restore rehearsal.
 
-### Next Task Note cardinality migration (0007)
+### Task Note cardinality migration (0007)
 
-Revision `0007` is prepared locally and is not part of the recorded `4a280e1` cloud release. Back up the intended database before applying it. It retains one attached Note per Task, preferring active Notes, then a match to legacy working text, then creation time/ID. Other Notes become independent resource references in the Task details; their content, locks, documents and attachments remain intact. A unique constraint prevents multiple attached Notes. Downgrade removes the constraint but preserves resource links instead of copying content back.
+Revision `0007` was applied with `0008` in the backend release recorded below; it was absent from the earlier `4a280e1` release. Back up the intended database before applying it elsewhere. It retains one attached Note per Task, preferring active Notes, then a match to legacy working text, then creation time/ID. Other Notes become independent resource references in the Task details; their content, locks, documents and attachments remain intact. A unique constraint prevents multiple attached Notes. Downgrade removes the constraint but preserves resource links instead of copying content back.
+
+### 2026-11-09 shared UI release — backend deployed, frontend pending
+
+Application commit `c0f4f2a` was pushed to `main` and the working branch. Render deployment `dep-dboseg8u01pc7389f3c0` reached `live` at 13:16 UTC on 2026-11-09 with that exact commit. Automatic Render deployment remains disabled. The API was briefly suspended for a final consistent private backup and resumed before the manual deployment.
+
+The private schema backup contained 31 tables and zero referenced/private-bucket objects. It was restored only into isolated local `planner_test/planner`; all restored table counts and deterministic row digests matched the source snapshot. Rehearsing revisions `0007` and `0008` preserved the digests/counts of all 30 business tables and found no cross-owner Task/Note links. The restored production schema was removed afterward. This is a specific schema-backup restoration rehearsal, not a managed PITR or complete historical migration acceptance claim.
+
+Cloud revision is now `0008`, with 16 Areas, 186 Tasks and 118 Notes preserved, no duplicate normalized Area-name groups and no multiple attached Task Note groups. Local release checks passed 175 API tests, 38 web unit tests, the production frontend build with the hosted API origin, Ruff and the documentation checker/17 documentation tests.
+
+After rollout, the API readiness endpoint, production login page and same-origin proxied health returned HTTP 200. The existing synthetic demo account logged in and read its workspace snapshot successfully; the smoke session logged out with HTTP 204. No planning/Note mutation, email delivery or AI-provider evaluation was performed.
+
+The Vercel access token's scope expired at 06:26 UTC on 2026-11-09; project access returned HTTP 403. The responsive Dashboard roadmap and other frontend changes in this release have **not** been deployed to Vercel. Supply a renewed token with access to the existing `planner-t1` project, verify that project/account instead of using the obsolete local project link, then deploy the prepared frontend and check its stable production alias. Do not interpret the successful backend rollout as frontend release completion.
