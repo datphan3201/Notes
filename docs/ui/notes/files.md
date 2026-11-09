@@ -1,39 +1,25 @@
-# / — Attachments and private Note backgrounds
+# Private Note attachments
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-Only backend/public is a public document root. Uploaded bytes stay private and are served through authenticated owned file routes. Shared recipients do not inherit attachment access.
+Uploads are attached to an authorized Note and stored privately through local, GCS or Supabase storage. The API returns an authenticated `/api/v1/files/{attachment_id}` URL, never a public object-storage URL. Access checks sharing permissions and the Note password gate before streaming.
+
+The configured upload and account-storage limits are authoritative. Upload failures must not leave usable metadata; deleting files/Notes queues durable byte cleanup. Note image backgrounds reference authorized attachments. Offline shell caches do not cache API/media requests. Account avatars/backgrounds and report evidence use separate account-file endpoints.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Upload, select Note background and remove attachment
+## Source and verification map
 
-**Trace ID:** `notes.files.upload`
+Trace ID: `notes.files`. Test references identify coverage to inspect; they are not execution results.
 
-Server MIME/signature and size validation is authoritative; attachment limit is 20MiB. Metadata transactions compensate failed writes; deferred deletion avoids mixing file I/O with SQL commits.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [index.php · &lt;select data-note-background&gt;](../../../frontend/src/views/notes/index.php#L175) |
-| Browser logic | [note-editor.js · async uploadFiles(](../../../frontend/src/js/notes/note-editor.js#L995) |
-| Controller / service / domain | [FileService.php · public function uploadAttachment(](../../../backend/src/Application/Files/FileService.php#L50)<br>[FileService.php · public function deleteAttachment(](../../../backend/src/Application/Files/FileService.php#L139)<br>[UploadValidator.php · public function attachment(](../../../backend/src/Application/Files/UploadValidator.php#L46)<br>[NoteService.php · public function setBackground(](../../../backend/src/Application/Notes/NoteService.php#L191) |
-| Persistence | [AttachmentRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L97)<br>[AttachmentRepository.php · public function tombstone(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L129)<br>[AttachmentRepository.php · public function findOwnedForNote(](../../../backend/src/Infrastructure/Persistence/Pdo/Files/AttachmentRepository.php#L44)<br>[PdoNoteRepository.php · public function setBackground(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L350) |
-| Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_invalid_files_quota_and_unknown_fields_leave_no_orphan_bytes(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L207) |
-| HTTP | `GET /api/v1/notes/{note}/attachments` (`api.attachments.index`) → [AttachmentController::index](../../../backend/src/Http/Controller/AttachmentController.php#L25)<br>`POST /api/v1/notes/{note}/attachments` (`api.attachments.store`) → [AttachmentController::store](../../../backend/src/Http/Controller/AttachmentController.php#L34)<br>`DELETE /api/v1/notes/{note}/attachments/{attachment}` (`api.attachments.destroy`) → [AttachmentController::destroy](../../../backend/src/Http/Controller/AttachmentController.php#L52)<br>`PUT /api/v1/notes/{note}/background` (`api.notes.background`) → [NoteController::background](../../../backend/src/Http/Controller/NoteController.php#L120) |
-
-### Preview, download, HEAD and Range
-
-**Trace ID:** `notes.files.stream`
-
-Only allowed media types preview. Safe filenames and a single byte Range are supported; 206/416 and HEAD preserve streaming semantics. Path traversal, foreign IDs and symlinks are rejected.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [index.php · data-editor-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L114) |
-| Browser logic | [note-editor.js · attachmentRow(attachment) {](../../../frontend/src/js/notes/note-editor.js#L1122) |
-| Controller / service / domain | [FileService.php · public function authorizedAttachment(](../../../backend/src/Application/Files/FileService.php#L173)<br>[FileStreamer.php · public function attachment(](../../../backend/src/Application/Files/FileStreamer.php#L14) |
-| Persistence | [LocalPrivateStorage.php · public function resolve(](../../../backend/src/Infrastructure/Storage/LocalPrivateStorage.php#L114) |
-| Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_attachment_replay_stream_ranges_owner_scope_and_tombstone(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L77) |
-| HTTP | `GET/HEAD /files/attachments/{attachment}/preview` (`files.attachment.preview`) → [FileContentController::preview](../../../backend/src/Http/Controller/FileContentController.php#L23)<br>`GET/HEAD /files/attachments/{attachment}/download` (`files.attachment.download`) → [FileContentController::download](../../../backend/src/Http/Controller/FileContentController.php#L29) |
+| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L29) — `export default function NotesPreview({ text }: { text: Text }) {` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L420) — `def upload_attachment(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L469) — `def download(` |
+| API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L139) — `def remove_attachment(` |
+| Related tests | [apps/api/tests/test_render_supabase.py](../../../apps/api/tests/test_render_supabase.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
+| Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |
 
 <!-- END GENERATED TRACE -->

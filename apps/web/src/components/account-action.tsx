@@ -139,6 +139,7 @@ export default function AccountAction({
         );
         (byCode ? setCodeErrors : setErrors)(invalid);
         setError("");
+        setNotice("");
         if (Object.keys(invalid).length) {
             focusInvalid(form, invalid);
             return;
@@ -148,7 +149,7 @@ export default function AccountAction({
             else if (action === "reset") setDone(true);
             else {
                 setNotice(
-                    "If the account is eligible, a recovery email will arrive shortly.",
+                    "Password reset link requested successfully. If the account is eligible, check your inbox and spam folder.",
                 );
                 setCodeEmail(values.email.trim());
             }
@@ -192,7 +193,7 @@ export default function AccountAction({
                     body: JSON.stringify(payload),
                 });
                 setNotice(
-                    "If the account is eligible, a recovery email will arrive shortly.",
+                    "Password reset link requested successfully. If the account is eligible, check your inbox and spam folder.",
                 );
                 setCodeEmail(values.email.trim());
             }
@@ -294,7 +295,7 @@ export default function AccountAction({
                                                 text={text}
                                                 error={errors.password}
                                                 hint={text(
-                                                    "Use at least 12 characters.",
+                                                    "Use at least 8 characters.",
                                                 )}
                                             />
                                             <PasswordField

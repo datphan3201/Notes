@@ -1,4 +1,5 @@
 "use client";
+import FloatingActions from "../floating-actions";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
     ArrowDown,
@@ -11,7 +12,6 @@ import {
     Pencil,
     Pin,
     Plus,
-    RefreshCw,
     Settings2,
 } from "lucide-react";
 import Dialog from "../dialog";
@@ -906,22 +906,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                 <BaselineIcon name="goals" />
                                 {text("Goal information", "Thông tin mục tiêu")}
                             </button>
-                            <button
-                                className="button button-quiet"
-                                onClick={() =>
-                                    db.live
-                                        ? void db.live.refresh()
-                                        : db.setMessage(
-                                              text(
-                                                  "Roadmap refreshed.",
-                                                  "Đã tải lại lộ trình.",
-                                              ),
-                                          )
-                                }
-                            >
-                                <RefreshCw size={17} />
-                                {text("Refresh", "Tải lại")}
-                            </button>
+
                             <button
                                 className="button button-quiet"
                                 onClick={() =>
@@ -999,23 +984,11 @@ export default function PlanningPreview({ text }: { text: Text }) {
                             "Give your ambitions a direction.",
                             "Định hướng cho những điều bạn muốn thực hiện.",
                         )}
+                    />
+                    <FloatingActions
+                        label={text("Page actions", "Thao tác trang")}
+                        closeLabel={text("Close actions", "Đóng thao tác")}
                     >
-                        <button
-                            className="button button-quiet"
-                            onClick={() =>
-                                db.live
-                                    ? void db.live.refresh()
-                                    : db.setMessage(
-                                          text(
-                                              "Goals refreshed.",
-                                              "Đã tải lại mục tiêu.",
-                                          ),
-                                      )
-                            }
-                        >
-                            <RefreshCw size={17} />
-                            {text("Refresh", "Tải lại")}
-                        </button>
                         <button
                             className="button button-quiet"
                             onClick={() => setManage(true)}
@@ -1030,7 +1003,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                             <Plus size={17} />
                             {text("New goal", "Mục tiêu mới")}
                         </button>
-                    </Header>
+                    </FloatingActions>
                     <article className="main-goal-card scene-card">
                         <span className="context-chip">
                             ★ {text("Main goal", "Mục tiêu chính")}

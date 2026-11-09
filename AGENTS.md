@@ -6,7 +6,7 @@ The Next.js/FastAPI system is deployed on `main` under `apps/`. Read [the migrat
 
 1. Start at [the UI/route documentation index](docs/README.md), [current decisions](docs/architecture/decisions.md), and [open issues](docs/issues.md).
 2. Read [the rule index](.ai/rules/index.md) and rules matching the paths in scope.
-3. Activate and follow the [Karpathy Guidelines skill](.ai/skills/karpathy-guidelines/SKILL.md) (also installed at `.agents/skills/karpathy-guidelines/SKILL.md` and `.claude/skills/karpathy-guidelines/SKILL.md`).
+3. Activate and follow the [Karpathy Guidelines skill](.agents/skills/karpathy-guidelines/SKILL.md) (also discoverable through `.ai/skills/` and `.claude/skills/`).
 4. Inspect existing source/tests to understand current product behavior before modifying or migrating features.
 
 ## Architecture & Tech Stack Policy (Unrestricted Migration)

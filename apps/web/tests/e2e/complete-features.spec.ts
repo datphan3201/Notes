@@ -39,6 +39,7 @@ test("Habit check-ins feed saved Review facts and finalized reflections persist"
 }) => {
     await signInFixture(page);
     await navigate(page, "Thói quen");
+    await page.getByRole("button", { name: "Thao tác trang", exact: true }).click();
     await page
         .getByRole("button", { name: "Thói quen mới", exact: true })
         .first()
@@ -110,6 +111,7 @@ test("repeating templates survive reload and pause, resume and end use the real 
 }) => {
     const account = await signInFixture(page);
     await navigate(page, "Công việc");
+    await page.getByRole("button", { name: "Thao tác trang", exact: true }).click();
     await page
         .getByRole("button", { name: "Công việc mới", exact: true })
         .first()

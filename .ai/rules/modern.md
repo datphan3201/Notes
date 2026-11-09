@@ -2,15 +2,18 @@
 paths:
   - 'apps/**'
   - 'compose.yaml'
+  - 'render.yaml'
   - '.github/workflows/planner-v1.yml'
 ---
 
-# Personal AI Planner migration
+# Current Next.js/FastAPI runtime
 
-Read [the migration plan](../../../docs/migration/personal-ai-planner.md), the current implementation status and operations instructions under `docs/migration/`, and the [open issues](../../../docs/issues.md). `apps/api` and `apps/web` are the new runtime; `backend` and `frontend` remain the behavioral reference until a verified cutover.
+Read [scope and acceptance](../../docs/migration/personal-ai-planner.md), [status](../../docs/migration/status.md), [operations](../../docs/operations/cloud.md) and [issues](../../docs/issues.md). `apps/api` and `apps/web` on `main` are active; the retired PHP/JS reference is available only in Git history/private archival data. Historical migration handoffs do not override current deployment state.
 
-Follow Karpathy Guidelines. Use maintainer-owned framework/provider documentation for implementation details. Do not install skills based on titles or popularity, remove user-wide skills, introduce microservices, or declare feature parity merely because a route renders.
+Follow Karpathy Guidelines and maintainer-owned documentation for framework details. Do not introduce microservices or claim parity because a route renders. Read the installed Next.js guide required by `apps/web/AGENTS.md` before frontend implementation.
 
-Business rules and authorization live in FastAPI application services. Scope owned queries, graph edges, file reads and AI retrieval to the account. Mutations use explicit CSRF/origin checks, authoritative Pydantic validation and transactions. Password-protected Notes never enter AI indexes. External network calls must not hold database write transactions. AI mutations require the user's confirmation of the exact proposal and current permissions/versions.
+Business validation/authorization live in FastAPI services. Scope owned queries, edges, files and AI to the account. Mutations require the endpoint's CSRF/origin checks, authoritative Pydantic validation and atomic transactions. Password-protected Notes never enter AI indexes. Provider/mail calls must not hold business write transactions. AI applies only the exact user-confirmed proposal with current permissions/versions.
 
-Use locked dependencies and real isolated PostgreSQL/pgvector for integration tests. Before truncation/import, verify configured and actual database names. Imports normally use the explicit staging/test allowlist. An explicitly user-authorized local development transfer may use the guarded `planner_dev --merge-existing` path after a verified backup and staging rehearsal, with application writers paused; preserve existing accounts and reject collisions. Test cleanup remains restricted to `planner_test`. Keep source MySQL and Teamwork data intact. Port behavior tests; do not rewrite expectations to match regressions. Keep docs honest about unimplemented features and unexecuted cloud/live-provider checks.
+Use locked dependencies and isolated PostgreSQL/pgvector for tests. Before migrations/truncation/import verify configured and actual database names. Destructive test fixtures accept only `planner_test`. Legacy imports normally accept explicit staging/test targets; an explicitly authorized `planner_dev --merge-existing` transfer requires verified backup/staging rehearsal and paused writers. Preserve existing records and reject collisions. Never point test cleanup at cloud data. The raw Supabase COPY helper has unresolved guards (ISSUE-065).
+
+Keep historical data/private exports intact. Do not assert live-provider quality, hosted health or managed recovery without current execution evidence. The committed deployment is `main` with manual Render trigger; source settings are not proof of hosted dashboard state.

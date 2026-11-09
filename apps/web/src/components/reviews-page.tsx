@@ -15,7 +15,7 @@ export function ReviewsPage({ ctx }: { ctx: PageContext }) {
     const [period, setPeriod] = useState("daily");
     return (
         <>
-            <QueryState queries={[reviews]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[reviews]} />
             <Tabs
                 label={ctx.t.reviews}
                 value={period}

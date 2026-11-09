@@ -131,5 +131,5 @@ export async function workspaceSaved(
     );
     await action();
     expect((await result).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
 }

@@ -1,10 +1,10 @@
 ---
 paths:
-  - 'frontend/**'
+  - 'apps/web/**'
 ---
 
-# Browser source and interaction boundary
+# Browser source and interaction boundaries
 
-Tech-stack restrictions on the frontend are lifted: you may migrate from PHP views and vanilla JS/Alpine modules to modern frontend/full-stack frameworks, component libraries, state managers, and build pipelines as directed by the user.
+Use [feature maps](../../docs/README.md), [interaction invariants](../../docs/architecture/interactions.md) and [style ownership](../../docs/ui/shared/shell.md#style-file-ownership). Follow `apps/web/AGENTS.md` and the relevant installed Next.js guide before implementation.
 
-Use [the route/component trace](../../../docs/README.md), [interaction invariants](../../../docs/architecture/interactions.md), and [CSS ownership](../../../docs/ui/shared/shell.md#style-file-ownership) as the behavioral reference for existing user flows (such as Notes autosave versus explicit-save editors, conflict handling, and keyboard/focus behavior).
+Live workspace routes use authenticated state even when view components live under `components/preview/`; explicit preview routes use synthetic providers. Preserve main Notes autosave/conflicts, explicit-save planning/Review drafts, account-scoped offline recovery, keyboard/focus/responsive behavior and exact confirmed assistant Apply. The API remains the authority; a rendered client shell is not authorization. CI/launcher use npm and package-lock.json.

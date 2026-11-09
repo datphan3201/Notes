@@ -2,7 +2,7 @@
 
 [Routes](deployment-routes.md) · [Status](status.md) · [Open issues](../issues.md)
 
-The user selected this cloud combination on 2026-11-08. The system was provisioned and deployed to production on 2026-11-08: Vercel frontend (`https://planner-t1.vercel.app`), Render Singapore backend (`https://planner-api-sg.onrender.com`), and Supabase PostgreSQL (schema `planner`). For live operations, environment variables, health checks and incident runbooks, see the [Cloud operations guide](../operations/cloud.md).
+The user selected this cloud combination on 2026-11-08. Repository deployment records report production deployment on 2026-11-08 (not freshly checked by this document): Vercel frontend (`https://planner-t1.vercel.app`), Render Singapore backend (`https://planner-api-sg.onrender.com`), and Supabase PostgreSQL (schema `planner`). For live operations, environment variables, health checks and incident runbooks, see the [Cloud operations guide](../operations/cloud.md).
 
 ## Topology and Free limitations
 
@@ -20,7 +20,7 @@ flowchart LR
 
 [render.yaml](../../render.yaml) requests one **Free web service**. The Docker entry point supervises separate API and polling-worker processes in that container. Jobs, leases and retries remain durable in PostgreSQL rather than request-local background tasks. A child failure stops its sibling and exits the container. Forward migrations run before either process starts. No paid worker, disk or Render database is requested.
 
-[Render Free](https://render.com/docs/free) sleeps after 15 minutes without inbound traffic, may restart and has ephemeral storage. Both processes pause while asleep. New traffic wakes the service, but overnight reminders/recurrence/retention are not guaranteed to run on schedule. Interrupted jobs resume after lease expiry and normal retries. Do not add fake keepalive requests or describe the trial as always-on. Monthly service-hour and external service-initiated traffic limits also apply.
+[Render Free](https://render.com/docs/free) can sleep without inbound traffic, may restart and has ephemeral storage; verify current plan behavior in the provider dashboard before relying on exact limits. Both processes pause while asleep. New traffic wakes the service, but overnight reminders/recurrence/retention are not guaranteed to run on schedule. Interrupted jobs resume after lease expiry and normal retries. Do not add fake keepalive requests or describe the trial as always-on. Monthly service-hour and external service-initiated traffic limits also apply.
 
 For continuous background processing, create a paid Render worker from the same image with command `python -m planner.jobs`, `PLANNER_WORKER_MODE=poll` and the same private settings. Set `PLANNER_RUN_WORKER=false` on the API and run migrations before releasing the worker. Start with one worker. API sleep is independent if it remains on Free. Billing changes require a separate operator decision.
 
@@ -33,11 +33,11 @@ Use a dedicated project/environment. FastAPI retains account authentication, ses
 3. Copy the actual **Connect → Session pooler** string, using port 5432 when IPv4 is needed. Use `postgresql+psycopg://` and require TLS. Do not guess the pooler hostname or role suffix. Direct connections may require IPv6; transaction mode on port 6543 has prepared-statement/session-state restrictions. See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
 4. Create **`planner-private` as a private bucket** with no anonymous read/write policy. API file routes authorize every request and proxy bytes; no public object URLs are returned. The adapter uses the server-only legacy `service_role` JWT, never an anon/publishable key. See [private buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals) and [service keys](https://supabase.com/docs/guides/storage/security/access-control).
 
-API and worker each use a 2+1 pool: at most six application connections together, plus migration/admin headroom. Check actual project limits. Never point test cleanup or the legacy importer at a managed database. Rehearse the `public` → `planner` schema mapping and file checksum transfer on isolated data before any separately authorized cutover; ISSUE-046 remains open.
+The committed blueprint gives each API/worker process a 4+2 pool: at most twelve application connections together, plus migration/admin headroom. Check actual project limits. Never point test cleanup or the legacy importer at a managed database. Rehearse the `public` → `planner` schema mapping and file checksum transfer on isolated data before any separately authorized cutover; ISSUE-046 remains open.
 
 ## Render preparation
 
-Review the blueprint on `feat/personal-ai-planner-v1` before publishing the branch or connecting it in Render. A trial does not need a merge to `main`. Importing/deploying the blueprint requires the intended account and repository access. Auto deploy is disabled.
+Review the blueprint on `main` and the intended existing Render service before a manual release. The template service name `planner-api` differs from recorded deployed `planner-api-sg`; avoid creating a duplicate unintentionally. Importing/deploying requires the intended account/repository access. Auto deploy is disabled.
 
 Supply these `sync: false` fields through Render's secret settings:
 
@@ -59,7 +59,7 @@ The blueprint automatically manages:
 - `PLANNER_WORKER_MODE`: `poll`, colocated worker and migration-on-start.
 - Failures on startup aggregate all missing/invalid production requirements in a single clear diagnostic checklist.
 
-Render Free blocks SMTP ports **25, 465 and 587**. The new HTTPS [Resend adapter](../../apps/api/planner/accounts.py) supports account/security messages and reminders, with retry idempotency bound to the durable job ID. Configure an approved sender/domain and verify actual delivery/quotas. Free hosting does not include unlimited mail or AI usage. Existing local SMTP and GCS/Cloud Tasks configurations remain supported.
+The recorded topology uses HTTPS mail rather than relying on Free-tier outbound SMTP; verify current provider restrictions for the intended plan. The new HTTPS [Resend adapter](../../apps/api/planner/accounts.py) supports account/security messages and reminders, with retry idempotency bound to the durable job ID. Configure an approved sender/domain and verify actual delivery/quotas. Free hosting does not include unlimited mail or AI usage. Existing local SMTP and GCS/Cloud Tasks configurations remain supported.
 
 The `/ready` health path checks the database. Readiness does not prove external provider/file/email access or successful jobs; the supervisor separately exits if the worker process dies.
 
@@ -90,4 +90,4 @@ python3 tools/deploy/planner_v1.py check --url https://your-planner.vercel.app
 5. Demonstrate sleep-related reminder/recurrence/retention delays on Free; measure memory, connections, file/AI/email quotas and network timeouts on the chosen plans.
 6. Rehearse schema/file transfer, backups, counts, owners, checksums and rollback before moving real data. Never reset `planner_dev`, MySQL or private exports for a cloud trial.
 
-Local results are recorded in [status](status.md). They do not establish that any hosted Render/Vercel/Supabase project has passed these gates.
+Historical local results and remaining acceptance are recorded in [status](status.md). Repository deployment records do not establish that every hosted gate above has passed; retain separate dated operational evidence.

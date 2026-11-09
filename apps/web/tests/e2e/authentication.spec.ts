@@ -78,7 +78,7 @@ test("original guest layout, language navigation, keyboard and password visibili
     ).toBeVisible();
 });
 
-test("registration validates confirmation, keeps input, persists language and opens Dashboard", async ({
+test("registration validates confirmation, confirms success, persists language and opens Dashboard", async ({
     page,
 }) => {
     const email = `signup-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
@@ -103,6 +103,23 @@ test("registration validates confirmation, keeps input, persists language and op
     await page
         .getByRole("button", { name: "Create account", exact: true })
         .click();
+    await expect(page.getByRole("status")).toContainText("Account created successfully.");
+    await expect(page.getByRole("heading", { name: "Account created successfully", exact: true })).toBeVisible();
+    await expect(page.getByLabel("Display name")).toHaveCount(0);
+    await page.getByRole("link", { name: "Continue to sign in" }).click();
+    await expect(page).toHaveURL(/\/login\?lang=en$/);
+    await expect(page.getByRole("dialog", { name: "Email verification" })).toHaveCount(0);
+    await page.reload();
+    await expect(page).toHaveURL(/\/login\?lang=en$/);
+    await expect(page.getByRole("dialog", { name: "Email verification" })).toHaveCount(0);
+    await signIn(page, { email, password });
+    await expect(page.getByRole("dialog", { name: "Email verification" })).toBeVisible();
+    const verified = await page.request.post("/api/v1/auth/verify", {
+        headers: { origin: new URL(page.url()).origin },
+        data: { token: tokenFrom(mail(email, "verify").body) },
+    });
+    expect(verified.ok()).toBe(true);
+    await page.getByRole("button", { name: "I have verified my email" }).click();
     await expect(page).toHaveURL("/dashboard");
     const identity = await (await page.request.get("/api/v1/auth/me")).json();
     expect(identity.user.locale).toBe("en");
@@ -174,7 +191,7 @@ test("recovery by email code survives refresh and resets without signing in", as
         .getByRole("button", { name: "Send reset link", exact: true })
         .click();
     await expect(page.getByRole("status")).toContainText(
-        "If the account is eligible",
+        "Password reset link requested successfully. If the account is eligible",
     );
     const email = mail(account.email, "reset");
     expect(email.body).toContain("http://localhost:3100/reset-password#token=");
@@ -351,4 +368,44 @@ test("MFA is a separate pending page with refresh, authenticator and email fallb
     expect(
         await page.evaluate(() => sessionStorage.getItem("planner-auth-login")),
     ).toBeNull();
+});
+
+test("unverified accounts stay actionable on sign-in and can switch accounts", async ({ page }) => {
+    const account = seedFixture({ unverified: true });
+    await page.goto("/login?lang=en");
+    await expect(page.getByRole("dialog", { name: "Email verification" })).toHaveCount(0);
+    await page.getByLabel("Email", { exact: true }).fill(account.email);
+    await page.getByLabel("Password", { exact: true }).fill("wrong-password");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Email verification" })).toHaveCount(0);
+    await signIn(page, account);
+    const panel = page.getByRole("dialog", { name: "Email verification" });
+    await expect(panel).toContainText(account.email);
+    await expect(page.getByRole("link", { name: "Forgot password?", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Resend verification email" }).click();
+    await expect(page.getByText("Verification email requested. Check your inbox and spam folder.", { exact: true })).toBeVisible();
+    expect(mail(account.email, "verify").body).toContain("verify-email#token=");
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(page.getByLabel("Email", { exact: true })).toBeEnabled();
+    await signIn(page, account);
+    await page.getByRole("button", { name: "I have verified my email" }).click();
+    await expect(page.getByText("Your email is not verified yet. Open the verification link in your email.", { exact: true })).toBeVisible();
+    await page.route("**/api/v1/workspace/snapshot", route => route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ detail: "Verify your email before using the workspace" }),
+    }));
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL("/login");
+    await expect(page.getByRole("dialog", { name: /Email verification|Xác minh email/ })).toHaveCount(0);
+    await signIn(page, account);
+    await page.getByRole("button", { name: "Use another account" }).click();
+    await expect(panel).toHaveCount(0);
+    expect((await page.request.get("/api/v1/auth/me")).status()).toBe(401);
+    await page.unroute("**/api/v1/workspace/snapshot");
+    const other = seedFixture();
+    await signIn(page, other);
+    await expect(page).toHaveURL("/dashboard");
 });

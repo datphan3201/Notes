@@ -1,8 +1,8 @@
-# Archify visual maps
+# Historical Archify visual maps
 
-[Documentation home](../README.md) · [Regeneration workflow](../maintenance.md#archify)
+[Documentation home](../README.md) · [Current runtime](../architecture/runtime.md) · [Artifact policy](../maintenance.md#historical-artifacts)
 
-All maintained diagrams are authored with Archify and stored here, with their candidate JSON and final automated receipts. Open the standalone HTML in a browser; the route/component Markdown remains the editable UI-to-code lookup layer.
+**Historical artifacts, not current Next.js/FastAPI architecture diagrams.** These HTML/JSON outputs and original automated receipts describe the retired PHP implementation or product contracts reviewed in 2026-11-04–07. Their source paths/revisions/validation totals are historical. The current Markdown feature/source/route maps supersede them for implementation work.
 
 | Question | Interactive diagram | Source | Automated receipt |
 | --- | --- | --- | --- |
@@ -16,19 +16,9 @@ All maintained diagrams are authored with Archify and stored here, with their ca
 | When is a Note dirty/saving/saved/retrying/conflicted? | [Notes save lifecycle](notes-autosave/index.html) | [JSON](notes-autosave/candidate.json) | [Receipt](notes-autosave/index.finalize-summary.json) |
 | Who handles validation/session/missing-Note errors? | [Notes save outcomes](notes-save-outcomes/index.html) | [JSON](notes-save-outcomes/candidate.json) | [Receipt](notes-save-outcomes/index.finalize-summary.json) |
 
+
 ## Evidence and scope
 
-Seven maps cite committed revision `2e9e68d690e77c581806917de2f6678984de5249` (2026-11-04 refresh). Source ranges were reviewed against that committed snapshot, including changed ownership/transition paths, before regeneration. The daily/weekly and Task classification maps also carry source evidence for their implemented rules. Navigation and terminal TaskSeries are approved product-contract diagrams updated after permanent Teamwork removal (2026-11-07); they omit repository attribution and do not claim to prove uncommitted implementation. Current source/test links remain in the Markdown traces.
+Seven source-backed maps pin historical commit `2e9e68d690e77c581806917de2f6678984de5249`; navigation/TaskSeries maps include product-contract reviews after Teamwork removal. The old system map depicts PHP/PDO, and Notes save/realtime/API details do not establish behavior of the new runtime. Even matching product concepts require current source verification.
 
-These remain focused explanatory maps, not exhaustive physical ERDs or every possible branch:
-
-- **System:** framework-free PHP, guarded HTTP, application transactions, owned PDO queries and private storage. Calendar reuses planning APIs; optional AI/provider, SMTP and jobs do not become independent application services.
-- **Navigation:** current planning pages including `/calendar`, Notes, account/admin pages and shared controls. Edges mean containment, not redirects; Milestone panels, Review editors and floating AI remain in-page. The complete route inventory lives in [the HTTP reference](../reference/routes.md).
-- **Planning containment:** Area/Goal/Milestone/Task/Checklist and optional primary Habits, with independent contributions/prerequisites. Notes links, explicit Main goal/roadmap preference and icon/importance presentation are explained separately from containment edges.
-- **Tasks and daily/weekly:** independent time views/status/sort, Goal grouping in roadmap order, view-scoped Completed, retained History, atomic daily/week selection and quiet overdue reminders. Dashboard Today and This week remain separate tabs with different supporting cards; selection never changes Task status or dates.
-- **Transitions and recurrence:** conditional acknowledgement for unchecked items/ancestor reopening, explicit overdue Reopen deadline choice, atomic side effects and terminal personal TaskSeries.
-- **Notes:** the unchanged autosave machine is repinned to current committed source. Primary save states and non-success/recovery outcomes are separate maps. Goal/Task note links stay outside the autosave snapshot; Task/Review editors use explicit Save.
-
-The pinned snapshot includes the shared floating editor and Goals UI unification: Goal/Milestone/Task creators and editors preserve their parent context, roadmap creation preserves append order, Milestone Tasks share Task-row structure, and Area management exposes icon/stars/Rename/Archive. Navigation includes the floating editor as a shared control. Strategy and Related work remain in the Goal information dialog. The linked revision is the implementation commit; this subsequent documentation/receipt commit does not change runtime behavior.
-
-The seven source-backed maps pin implementation 2e9e68d and predate Note passwords, live collaboration, Note AI and offline sync ([ISSUE-036](../issues.md#issue-036--archify-diagrams-predate-note-passwords-collaboration-ai-and-offline)); the Markdown traces are current. Canonical receipts record each artifact's validation, delivery, strict provenance and automated browser checks. This evidence does not establish live application acceptance, provider compliance or a perceptual visual review. No generated application screenshots are committed.
+This documentation pass preserves every artifact and receipt byte rather than fabricating new provenance or browser validation. The current checker validates links to these files but does not validate their internal HTML/JSON source paths, hashes or receipts. Historical whitespace is ISSUE-007. The former request to keep these diagrams current (ISSUE-036) was retired when their scope was explicitly made historical; current architecture uses maintained Markdown/Mermaid.

@@ -34,6 +34,65 @@
     color: var(--text);
 }
 
+.auth-refined .auth-verification {
+    inset: 0;
+    width: min(420px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    margin: auto;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+.auth-refined .auth-verification .drawer-heading {
+    position: static;
+    padding: 0;
+    margin-bottom: 14px;
+    border: 0;
+    background: transparent;
+}
+.auth-refined .auth-verification .drawer-heading h2 {
+    margin: 0;
+}
+.auth-refined .auth-verification .auth-verification-feedback,
+.auth-refined .auth-verification .field-error {
+    margin-top: 12px;
+}
+body:has(.auth-verification:modal) {
+    overflow: hidden;
+}
+.auth-refined .auth-verification h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+}
+.auth-refined .auth-verification p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.auth-refined .auth-verification .auth-verification-email {
+    margin-top: 6px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+.auth-refined .auth-verification-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+.auth-refined .auth-verification-actions .button {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+}
+.auth-refined .auth-verification-actions .text-button {
+    justify-self: center;
+    font-size: 14px;
+}
+
 .auth-preview-toolbar {
     padding: 12px 24px;
     color: var(--text);

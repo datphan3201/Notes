@@ -1773,6 +1773,10 @@
 }
 .review-chat-input textarea {
     flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    max-height: min(180px, 30dvh);
+    overflow-y: auto;
     resize: none;
     font: inherit;
     font-size: 12px;
@@ -2392,6 +2396,24 @@
 .review-habits .habit-summary {
     margin-bottom: 20px;
 }
+.review-habits .habit-summary .quote-scene-card {
+    display: flex;
+    align-items: center;
+    padding: 24px;
+    background: var(--surface);
+}
+.review-habits .habit-summary .quote-scene-card::before {
+    content: none;
+}
+.review-habits .habit-summary .quote-scene-card .theme-quote {
+    max-width: 28ch;
+    padding: 0 0 0 16px;
+    border-left: 3px solid var(--accent);
+    border-radius: 0;
+    font-size: 18px;
+    font-style: normal;
+    line-height: 1.6;
+}
 .review-habits .habit-summary h2,
 .review-habits .habit-today-panel > .section-heading h2 {
     font-size: 17px;
@@ -2440,6 +2462,10 @@
 }
 .review-habits .habit-checkin-days .habit-checkin-dot {
     font-size: 13px;
+    line-height: 1;
+}
+.review-habits .habit-checkin-dot > svg {
+    display: block;
 }
 .preview-workspace .review-calendar-layout {
     grid-template-columns: minmax(0, 1fr) 320px;
@@ -2852,6 +2878,5 @@
     font-size: 14px;
 }
 
-.live-save-error,.live-save-status { position:fixed;z-index:2000;top:12px;left:50%;transform:translateX(-50%);max-width:min(90vw,760px);padding:10px 16px;border-radius:12px;box-shadow:0 8px 30px #0002;background:var(--surface,#fff);color:var(--text,#24323b); }
+.live-save-error { position:fixed;z-index:2000;top:12px;left:50%;transform:translateX(-50%);max-width:min(90vw,760px);padding:10px 16px;border-radius:12px;box-shadow:0 8px 30px #0002;background:var(--surface,#fff);color:var(--text,#24323b); }
 .live-save-error { border:1px solid #d56e6e;display:flex;align-items:center;gap:12px; }
-.live-save-status { top:auto;bottom:16px;pointer-events:none;font-size:13px; }

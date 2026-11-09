@@ -1,4 +1,5 @@
 "use client";
+import FloatingActions from "../floating-actions";
 import { useState, type CSSProperties } from "react";
 import {
     ChevronLeft,
@@ -7,7 +8,6 @@ import {
     CalendarDays,
     Flag,
     Target,
-    RefreshCw,
 } from "lucide-react";
 import {
     usePreviewData,
@@ -478,23 +478,11 @@ export default function CalendarPreview({ text }: { text: Text }) {
                     "Every date in your plan, and room to move work where it fits.",
                     "Mọi mốc thời gian trong kế hoạch, và chỗ để dời công việc sang ngày phù hợp.",
                 )}
+            />
+            <FloatingActions
+                label={text("Page actions", "Thao tác trang")}
+                closeLabel={text("Close actions", "Đóng thao tác")}
             >
-                <button
-                    className="button button-quiet"
-                    onClick={() =>
-                        db.live
-                            ? void db.live.refresh()
-                            : db.setMessage(
-                                  text(
-                                      "Calendar refreshed.",
-                                      "Đã tải lại lịch.",
-                                  ),
-                              )
-                    }
-                >
-                    <RefreshCw size={17} />
-                    {text("Refresh", "Tải lại")}
-                </button>
                 <button
                     className="button button-primary"
                     onClick={() => create(selected)}
@@ -502,7 +490,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                     <Plus size={17} />
                     {text("New task", "Công việc mới")}
                 </button>
-            </Header>
+            </FloatingActions>
             {view !== "gantt" ? (
                 <div
                     className="review-calendar-layout"

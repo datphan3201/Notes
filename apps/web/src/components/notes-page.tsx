@@ -55,7 +55,7 @@ export function NotesPage({ ctx }: { ctx: PageContext }) {
         });
     return (
         <>
-            <QueryState queries={[notes]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[notes]} />
             <div className="workspace-layout">
                 <aside
                     className="notes-filter-panel"

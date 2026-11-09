@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { normalizeCode, validateAuth } from "../src/lib/auth-input.ts";
 
-test("legacy passwords remain valid login input while new passwords require twelve characters", () => {
+test("legacy passwords remain valid login input while new passwords require eight characters", () => {
     assert.deepEqual(
         validateAuth("login", {
             email: " old@example.com ",
@@ -17,7 +17,7 @@ test("legacy passwords remain valid login input while new passwords require twel
             password: "short",
             password_confirmation: "short",
         }).password,
-        "Use at least 12 characters.",
+        "Use at least 8 characters.",
     );
 });
 test("registration and reset require matching confirmation without trimming passwords", () => {
@@ -52,4 +52,13 @@ test("one-time codes preserve leading zeroes, accept spaces and reject non-ASCII
     assert.ok(
         validateAuth("recover-code", { code: "123456", email: "bad" }).email,
     );
+});
+
+ test("new account and reset passwords accept eight characters and reject seven", () => {
+    for (const mode of ["register", "reset"] as const) {
+        for (const password of ["1234567", "12345678"]) {
+            const errors = validateAuth(mode, { email: "new@example.com", name: "New", password, password_confirmation: password });
+            assert.equal(errors.password, password.length < 8 ? "Use at least 8 characters." : undefined);
+        }
+    }
 });

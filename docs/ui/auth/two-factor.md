@@ -1,23 +1,26 @@
-# /two-factor — Pending login challenge
+# Two-factor challenge
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-A successful password check may create only a pending identity. The session is fully authenticated after the challenge succeeds.
+A valid first factor may return a pending MFA challenge instead of a login cookie. The dedicated page supports authenticator codes and an emailed fallback where allowed. The server preserves the original challenge expiry; requesting another code invalidates the previous code rather than extending the challenge indefinitely.
+
+Successful verification consumes the challenge and establishes the session. TOTP steps reject replay. Setup/enabling/disabling require current credentials and confirmation; encryption keys remain private and stable across restarts. Legacy accounts marked for MFA recovery are not silently downgraded.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Verify TOTP/email code or request fallback
+## Source and verification map
 
-**Trace ID:** `auth.twofactor`
+Trace ID: `auth.two-factor`. Test references identify coverage to inspect; they are not execution results.
 
-TOTP permits the configured time-step window. Email fallback uses a hashed, expiring, limited-attempt code. The challenge cannot be bypassed by loading a protected page directly.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [two-factor.php · &lt;form class="stack-form" method="post" action="/two-factor"&gt;](../../../frontend/src/views/auth/two-factor.php#L8) |
-| Controller / service / domain | [TwoFactorController.php · public function verify(](../../../backend/src/Http/Controller/TwoFactorController.php#L51)<br>[TwoFactorService.php · public function verify(](../../../backend/src/Application/Account/TwoFactorService.php#L50) |
-| Persistence | [PdoTwoFactorRepository.php · public function find(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php#L23)<br>[PdoTwoFactorRepository.php · public function failedAttempt(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php#L32)<br>[PdoTwoFactorRepository.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoTwoFactorRepository.php#L37) |
-| Relevant tests (not a pass claim) | [FullFeedbackHttpTest.php · public function test_totp_two_factor_login_requires_a_valid_code(](../../../backend/tests/Plain/Http/FullFeedbackHttpTest.php#L137) |
-| HTTP | `GET /two-factor` (`two-factor`) → [TwoFactorController::page](../../../backend/src/Http/Controller/TwoFactorController.php#L27)<br>`POST /two-factor` (`two-factor.verify`) → [TwoFactorController::verify](../../../backend/src/Http/Controller/TwoFactorController.php#L51)<br>`POST /two-factor/email` (`two-factor.email`) → [TwoFactorController::sendEmail](../../../backend/src/Http/Controller/TwoFactorController.php#L70) |
+| UI | [apps/web/src/components/auth-form.tsx](../../../apps/web/src/components/auth-form.tsx#L23) — `export default function AuthForm({` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L355) — `def complete_login(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L374) — `def email_login_code(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L56) — `def verify_totp(` |
+| Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
+| Related tests | [apps/api/tests/test_auth_refinement.py](../../../apps/api/tests/test_auth_refinement.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
+| Related tests | [apps/web/tests/e2e/authentication.spec.ts](../../../apps/web/tests/e2e/authentication.spec.ts) |
 
 <!-- END GENERATED TRACE -->

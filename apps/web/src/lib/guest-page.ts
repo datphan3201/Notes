@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { Identity } from "./api";
 
 // Mirror the baseline guest pages without exposing the HttpOnly cookie to React.
 export async function redirectSignedIn() {
@@ -12,5 +13,7 @@ export async function redirectSignedIn() {
         },
         cache: "no-store",
     });
-    if (identity.ok) redirect("/dashboard");
+    if (!identity.ok) return;
+    const account: Identity = await identity.json();
+    if (account.user.email_verified) redirect("/dashboard");
 }

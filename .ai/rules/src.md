@@ -1,10 +1,10 @@
 ---
 paths:
-  - 'backend/src/**'
+  - 'apps/api/planner/**'
 ---
 
-# Backend source layers
+# Backend source ownership
 
-The current PHP tree organizes code under Config, Support, Http, Application, Domain and Infrastructure as a reference baseline, but architectural and tech-stack constraints are lifted for migration. You may adopt framework conventions, ORMs, containers, or a new project layout when migrating the stack.
+The current modular monolith groups HTTP/application orchestration, domain rules, schemas/models and adapters under `apps/api/planner`. See [runtime](../../docs/architecture/runtime.md) and [feature maps](../../docs/README.md) before modifying behavior.
 
-Maintain clear separation of concerns, strict typing where supported, UTC timestamps versus user-facing dates, scoped queries, and authoritative server-side validation. See [the route map](../../../docs/README.md) for existing feature behavior.
+Use authoritative server validation, explicit ownership, atomic graph/version checks and UTC/date separation. Preserve service transaction ownership; helpers called by workspace/AI must not commit partial domain batches. External provider/mail work belongs outside write transactions. Add forward Alembic revisions when the physical schema changes.

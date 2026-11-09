@@ -6,8 +6,9 @@ type Entity,
 type Identity,
 type Kind,
 } from "@/lib/api";
-import { words } from "@/lib/i18n";
+import { translate, words } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "./loading-spinner";
 
 export type PageContext = {
     identity: Identity;
@@ -40,7 +41,9 @@ export function useItems(kind: Kind, owner: string, archived = false) {
 }
 export function QueryState({
     queries,
+    locale,
 }: {
+    locale: "en" | "vi";
     queries: {
         isPending: boolean;
         error: Error | null;
@@ -51,21 +54,20 @@ export function QueryState({
     if (failed)
         return (
             <p className="field-error" role="alert">
-                {failed.error!.message}{" "}
+                {translate(failed.error!.message, locale, locale === "vi"
+                    ? "Không thể hoàn tất yêu cầu. Vui lòng thử lại." : failed.error!.message)}{" "}
                 <button
                     type="button"
                     className="text-button"
                     onClick={() => void failed.refetch()}
                 >
-                    Retry / Thử lại
+                    {locale === "vi" ? "Thử lại" : "Retry"}
                 </button>
             </p>
         );
     if (queries.some((query) => query.isPending))
         return (
-            <p role="status" className="loading-copy">
-                Loading… / Đang tải…
-            </p>
+            <LoadingSpinner label={locale === "vi" ? "Đang tải…" : "Loading…"} />
         );
     return null;
 }

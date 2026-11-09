@@ -1,4 +1,5 @@
 "use client";
+import FloatingActions from "../floating-actions";
 import { useEffect, useRef, useState } from "react";
 import {
     Download,
@@ -326,6 +327,10 @@ export default function NotesPreview({ text }: { text: Text }) {
                     "A home for your ideas, research, and things worth keeping.",
                     "Nơi lưu ý tưởng, nghiên cứu và những điều bạn muốn giữ lại.",
                 )}
+            />
+            <FloatingActions
+                label={text("Page actions", "Thao tác trang")}
+                closeLabel={text("Close actions", "Đóng thao tác")}
             >
                 <details className="note-preferences review-row-menu">
                     <summary className="button button-quiet">
@@ -396,7 +401,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                     <Plus size={17} />
                     {text("New note", "Ghi chú mới")}
                 </button>
-            </Header>
+            </FloatingActions>
             {offline && (
                 <aside className="notice review-offline-status" role="status">
                     <WifiOff size={17} />
@@ -1061,7 +1066,8 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                 )}
                                                 <button
                                                     className="button button-quiet"
-                                                    onClick={() => {
+                                                    onClick={async () => {
+                                                        if (db.live && !(await db.live.resolveNoteConflict(note.id))) return;
                                                         setDrafts((current) => {
                                                             const next = {
                                                                 ...current,
@@ -1085,9 +1091,10 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                 </button>
                                                 <button
                                                     className="button button-primary"
-                                                    onClick={() =>
-                                                        setConflict("")
-                                                    }
+                                                    onClick={async () => {
+                                                        if (db.live && !(await db.live.resolveNoteConflict(note.id, drafts[note.id]))) return;
+                                                        setConflict("");
+                                                    }}
                                                 >
                                                     {text(
                                                         "Keep my draft",

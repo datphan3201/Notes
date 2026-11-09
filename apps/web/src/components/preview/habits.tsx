@@ -1,7 +1,8 @@
 "use client";
+import FloatingActions from "../floating-actions";
 import { timezones } from "@/lib/dates";
 import { useState } from "react";
-import { Check, MoreHorizontal, Plus, Flame, RefreshCw } from "lucide-react";
+import { Check, MoreHorizontal, Plus, Flame, X } from "lucide-react";
 import {
     usePreviewData,
     addDays,
@@ -20,7 +21,6 @@ import {
     Header,
     IconPicker,
     Stars,
-    ReferenceDecoration,
 } from "./ui";
 import type { Text } from "./shared";
 import { tagOptions as fixtureTags } from "./task-data";
@@ -112,6 +112,10 @@ export default function HabitsPreview({ text }: { text: Text }) {
                     "Small steps, big consistency.",
                     "Bước nhỏ, duy trì đều đặn.",
                 )}
+            />
+            <FloatingActions
+                label={text("Page actions", "Thao tác trang")}
+                closeLabel={text("Close actions", "Đóng thao tác")}
             >
                 <button
                     className="button button-primary"
@@ -120,7 +124,7 @@ export default function HabitsPreview({ text }: { text: Text }) {
                     <Plus size={17} />
                     {text("New Habit", "Thói quen mới")}
                 </button>
-            </Header>
+            </FloatingActions>
             <div className="habit-summary">
                 <article className="planning-panel">
                     <h2>{text("Your streak", "Chuỗi ngày của bạn")}</h2>
@@ -136,11 +140,12 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                     className={`habit-checkin-day ${dayComplete(date) ? "is-checked" : date < day ? "is-missed" : "is-pending"}`}
                                     key={date}
                                 >
-                                    <span className="habit-checkin-dot">
+                                    <span className="habit-checkin-dot"
+                                        aria-label={dayComplete(date) ? text("Completed", "Đã hoàn thành") : date < day ? text("Missed", "Chưa hoàn thành") : text("Not checked in", "Chưa điểm danh")}>
                                         {dayComplete(date)
-                                            ? "✓"
+                                            ? <Check size={12} aria-hidden="true" />
                                             : date < day
-                                              ? "×"
+                                              ? <X size={12} aria-hidden="true" />
                                               : ""}
                                     </span>
                                     <small>{weekday(date)}</small>
@@ -164,29 +169,13 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                     "Những bước nhỏ cộng dồn thành kết quả lớn.",
                                 )}
                         </blockquote>
-                        <ReferenceDecoration kind="plant" />
                     </article>
                 )}
             </div>
             <section className="planning-panel habit-today-panel">
                 <div className="section-heading">
                     <h2>{text("List of habits", "Danh sách thói quen")}</h2>
-                    <button
-                        className="icon-button"
-                        aria-label={text("Refresh habits", "Tải lại thói quen")}
-                        onClick={() =>
-                            db.live
-                                ? void db.live.refresh()
-                                : db.setMessage(
-                                      text(
-                                          "Habits refreshed.",
-                                          "Đã tải lại thói quen.",
-                                      ),
-                                  )
-                        }
-                    >
-                        <RefreshCw size={18} />
-                    </button>
+
                 </div>
                 <div data-habit-list>
                     {db.habits
@@ -381,7 +370,7 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                                         ) : rested ? (
                                                             "R"
                                                         ) : date < day ? (
-                                                            "×"
+                                                            <X size={12} aria-hidden="true" />
                                                         ) : (
                                                             ""
                                                         )}

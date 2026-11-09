@@ -1,24 +1,24 @@
-# /settings/notifications — Delivery preferences
+# Notification preferences
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-Entry: Settings → Notifications. The [shared bell](../shared/notifications.md) is a separate consumer of these preferences.
+Notification preferences persist through the validated preferences API. Worker delivery respects the relevant account category/email settings and unavailable accounts. Muting email is distinct from reading an in-app notification.
+
+Notifications and email jobs use owner-scoped records. Reminder eligibility observes schedule/History boundaries and delivery deduplication. Disabling delivery does not prove existing queued jobs have disappeared; inspect worker filtering and job outcomes. Actual email receipt requires a configured provider and operational verification.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Notifications, invitation emails and Task reminders
+## Source and verification map
 
-**Trace ID:** `notifications.preferences`
+Trace ID: `settings.notifications`. Test references identify coverage to inspect; they are not execution results.
 
-Preferences control new in-app rows and opted-in email delivery. Admin report notifications are always created. Personal Task reminder emails require the scheduler and configured transport.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [notifications.php · data-notification-settings](../../../frontend/src/views/settings/notifications.php#L1) |
-| Browser logic | [delivery-preferences.js · export function initDeliveryPreferences](../../../frontend/src/js/settings/delivery-preferences.js#L4) |
-| Controller / service / domain | [AccountService.php · public function updatePreferences(](../../../backend/src/Application/Account/AccountService.php#L44)<br>[NotificationService.php · public function notify(](../../../backend/src/Application/Notifications/NotificationService.php#L40)<br>[TaskReminderService.php · public function send(](../../../backend/src/Application/Planning/TaskReminderService.php#L36) |
-| Persistence | [PdoNotificationRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notifications/PdoNotificationRepository.php#L16)<br>[PdoAccountRepository.php · public function updatePreferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L133) |
-| Relevant tests (not a pass claim) | [FeedbackMaintenanceTest.php · public function test_recurring_capture_and_reminders_are_owned_and_settings_stay_isolated(](../../../backend/tests/Plain/Integration/FeedbackMaintenanceTest.php#L107) |
-| HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L141) |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L45) — `export default function SettingsPreview({` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L194) — `def preferences(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L226) — `def process_one(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L140) — `def reminders(` |
+| Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 
 <!-- END GENERATED TRACE -->

@@ -1,23 +1,25 @@
-# /verify-email and /confirm-email — Email link results
+# Verification and email-change links
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-These GET callbacks consume server-issued tokens; they are not arbitrary navigation targets. Profile supplies resend/change controls. Use local private mail-outbox files only for local testing.
+Browser link pages consume capabilities through explicit API POSTs, not generic state-changing GET endpoints. Email verification tokens are single-use. Email change requires the current password and confirmation of the latest code/link; successful change revokes existing sessions.
+
+Email destinations derive from the configured exact primary frontend origin. Localhost, Funnel and hosted aliases are distinct browser origins. Link failure remains actionable; changing language must not lose a valid capability. Actual inbox delivery is an operational acceptance check, separate from token tests.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Email verification and address-change confirmation
+## Source and verification map
 
-**Trace ID:** `auth.email`
+Trace ID: `auth.email`. Test references identify coverage to inspect; they are not execution results.
 
-Verification links expire after 24h; address-change links after 1h. The service validates ownership/purpose/expiry before applying changes. Invalid/expired links render 422. Never copy live tokens into examples.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [email-result.php · &lt;section](../../../frontend/src/views/auth/email-result.php#L1) |
-| Controller / service / domain | [EmailVerificationService.php · public function verify(](../../../backend/src/Application/Account/EmailVerificationService.php#L68)<br>[EmailVerificationService.php · public function confirmChange(](../../../backend/src/Application/Account/EmailVerificationService.php#L110) |
-| Persistence | [PdoEmailTokenRepository.php · public function findByHash(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php#L23)<br>[PdoEmailTokenRepository.php · public function delete(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoEmailTokenRepository.php#L41) |
-| Relevant tests (not a pass claim) | [ProductCompletionTest.php · public function test_email_verification_and_change_follow_their_own_links(](../../../backend/tests/Plain/Integration/ProductCompletionTest.php#L52) |
-| HTTP | `GET /verify-email` (`email.verify`) → [EmailController::verify](../../../backend/src/Http/Controller/EmailController.php#L33)<br>`GET /confirm-email` (`email.change.confirm`) → [EmailController::confirmChange](../../../backend/src/Http/Controller/EmailController.php#L45) |
+| UI | [apps/web/src/components/confirm-email.tsx](../../../apps/web/src/components/confirm-email.tsx#L7) — `export default function ConfirmEmail() {` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L334) — `def verify_email(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L268) — `def confirm_email_link(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L250) — `def confirm_email_code(` |
+| Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
+| Related tests | [apps/web/tests/e2e/authentication.spec.ts](../../../apps/web/tests/e2e/authentication.spec.ts) |
 
 <!-- END GENERATED TRACE -->

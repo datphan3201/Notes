@@ -1,5 +1,7 @@
 # Authentication refinement
 
+> Historical migration/design record. Current runtime is `apps/` on `main`; PHP/JS source paths were retired in `8714dc0` and can be inspected in Git history. Earlier pending/integration/branch statements describe that stage only. [Current status](status.md), [live feature maps](../README.md) and [cloud operations](../operations/cloud.md) supersede present-state claims here. Referenced test runs are historical, not freshly executed.
+
 The retained guest layout and authentication views are the visual/interaction reference. This pass covers sign-in, sign-up, recovery by link/code, password reset, verification results and the pending two-factor challenge. It keeps migrated accounts and the running Funnel intact.
 
 ## Current review mode
@@ -15,7 +17,7 @@ The user has paused testing and further backend integration until the interface 
 
 ## Boundaries
 
-The new runtime currently requires 12 characters for new passwords; the old template says 10. This pass keeps the authoritative 12-character policy and updates the hint. Existing shorter legacy passwords remain accepted at sign-in. Administrative invitation/closed-registration management and profile email-change workflows remain separate migration gaps; the guest UI must not advertise unsupported controls.
+New passwords require at least 8 characters in registration, recovery and account settings, following the updated user requirement. Existing shorter legacy passwords remain accepted at sign-in. Administrative invitation/closed-registration management and profile email-change workflows remain separate migration gaps; the guest UI must not advertise unsupported controls.
 
 ## Implemented behavior
 
@@ -30,7 +32,7 @@ The new runtime currently requires 12 characters for new passwords; the old temp
 
 Offline renders of the retained PHP templates (no database or application startup) were compared with React screenshots in ignored `output/playwright/auth-refinement/{baseline,current}/`. At 1280×800 and 390×844, measured card, heading, story and language-region bounding boxes match for English/Vietnamese sign-in and English sign-up. The original icon paths and password eye paths are retained. These measurements cover those screens, not every possible error state or viewport.
 
-Recovery and MFA retain the original shell and copy while using the same full-width, explicit-label field controls as sign-in/sign-up; their field arrangement differs from the legacy inline recovery labels. Error/focus and pending feedback are explicit. Browser screenshots and interactions are used for acceptance, rather than claiming every auth pixel is identical. The 12-character hint is another deliberate difference.
+Recovery and MFA retain the original shell and copy while using the same full-width, explicit-label field controls as sign-in/sign-up; their field arrangement differs from the legacy inline recovery labels. Error/focus and pending feedback are explicit. Browser screenshots and interactions are used for acceptance, rather than claiming every auth pixel is identical. Password hints match the current 8-character minimum.
 
 ## Verification
 

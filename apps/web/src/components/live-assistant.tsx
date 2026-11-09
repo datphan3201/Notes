@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
     Check,
     ChevronDown,
@@ -189,6 +189,18 @@ export default function LiveAssistant({ text }: { text: Text }) {
     useEffect(() => {
         if (db.assistantOpen && !collapsed) field.current?.focus();
     }, [db.assistantOpen, collapsed]);
+    useLayoutEffect(() => {
+        if (!db.assistantOpen || collapsed) return;
+        const resize = () => {
+            const target = field.current;
+            if (!target) return;
+            target.style.height = "auto";
+            target.style.height = `${target.scrollHeight}px`;
+        };
+        resize();
+        window.addEventListener("resize", resize);
+        return () => window.removeEventListener("resize", resize);
+    }, [input, db.assistantOpen, collapsed]);
     useEffect(() => {
         const tail = messages.at(-1),
             key = `${tail?.id}:${tail?.run?.answer}`;
@@ -886,6 +898,25 @@ export default function LiveAssistant({ text }: { text: Text }) {
                                 )}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+                                    e.preventDefault();
+                                    if (e.ctrlKey) {
+                                        const target = e.currentTarget;
+                                        const length = target.value.length -
+                                            (target.selectionEnd - target.selectionStart) + 1;
+                                        if (length > target.maxLength) return;
+                                        target.setRangeText(
+                                            "\n",
+                                            target.selectionStart,
+                                            target.selectionEnd,
+                                            "end",
+                                        );
+                                        setInput(target.value);
+                                    } else if (!e.repeat) {
+                                        e.currentTarget.form?.requestSubmit();
+                                    }
+                                }}
                                 maxLength={4000}
                                 required
                                 rows={2}

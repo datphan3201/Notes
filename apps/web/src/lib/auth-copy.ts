@@ -3,10 +3,24 @@ import type { GuestLocale } from "./auth-input";
 import { ApiError } from "./api";
 
 const extra: Record<string, string> = {
+    "Close": "Đóng",
+    "Account created successfully": "Đăng ký tài khoản thành công",
+    "Verify your email before using the workspace.": "Vui lòng xác minh email trước khi sử dụng không gian làm việc.",
+    "Resend verification email": "Gửi lại email xác minh",
+    "I have verified my email": "Tôi đã xác minh email",
+    "Use another account": "Đăng nhập tài khoản khác",
+    "Continue to sign in": "Tiếp tục đến đăng nhập",
+    "Verification email requested. Check your inbox and spam folder.": "Đã yêu cầu gửi email xác minh. Hãy kiểm tra hộp thư đến và thư rác.",
+    "Your email is not verified yet. Open the verification link in your email.": "Email chưa được xác minh. Hãy mở liên kết xác minh trong email của bạn.",
+    "Account created successfully. Check your email for the verification link.":
+        "Đăng ký tài khoản thành công. Kiểm tra email để nhận liên kết xác minh.",
+    "Continue to Dashboard": "Tiếp tục đến Dashboard",
+    "Password reset link requested successfully. If the account is eligible, check your inbox and spam folder.":
+        "Yêu cầu gửi liên kết đặt lại mật khẩu thành công. Nếu tài khoản đủ điều kiện, hãy kiểm tra hộp thư đến và thư rác.",
     "Preview complete. No account data was changed.":
         "Đã xem xong luồng minh họa. Không có dữ liệu tài khoản nào thay đổi.",
     "Email verification": "Xác minh email",
-    "Use at least 12 characters.": "Dùng ít nhất 12 ký tự.",
+    "Use at least 8 characters.": "Dùng ít nhất 8 ký tự.",
     "Enter your password.": "Nhập mật khẩu của bạn.",
     "Use no more than 128 characters.": "Dùng không quá 128 ký tự.",
     "Enter a display name of up to 80 characters.":

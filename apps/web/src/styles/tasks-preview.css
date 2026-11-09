@@ -20,13 +20,9 @@
     min-height: 108px;
     padding: 0 8px 22px;
     border: 0;
-    border-radius: 0;
+    border-radius: 16px;
     background: transparent;
     margin-bottom: 8px;
-}
-.preview-tasks-header .workspace-header-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
 }
 .preview-task-collection {
     min-width: 0;
@@ -840,9 +836,6 @@
     .preview-tasks .preview-tasks-header {
         flex-direction: column;
         gap: 20px;
-    }
-    .preview-tasks-header .workspace-header-actions {
-        justify-content: flex-start;
     }
     .preview-task-views > button {
         font-size: 11px;

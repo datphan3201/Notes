@@ -112,7 +112,7 @@ export function TasksPage({
     };
     return (
         <section className="planning-panel collection-main">
-            <QueryState queries={[tasks, plan, goals, milestones, series]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[tasks, plan, goals, milestones, series]} />
             {!history && (
                 <div
                     className="task-view-menu"

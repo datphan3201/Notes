@@ -1,0 +1,22 @@
+name: Documentation integrity
+on:
+  push:
+    branches: [main, feat/personal-ai-planner-v1]
+    paths: ['docs/**', 'tools/docs/**', 'apps/**', '*.md', '.ai/**', '.agents/**', '.claude/**', 'compose.yaml', 'render.yaml', 'tools/deploy/**', 'tools/dev/**', '.github/workflows/**']
+  pull_request:
+    paths: ['docs/**', 'tools/docs/**', 'apps/**', '*.md', '.ai/**', '.agents/**', '.claude/**', 'compose.yaml', 'render.yaml', 'tools/deploy/**', 'tools/dev/**', '.github/workflows/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify checker regression fixtures
+        run: python3 -m unittest discover -s tools/docs/tests -q
+      - name: Verify source maps, route inventory and local links
+        run: python3 tools/docs/check.py

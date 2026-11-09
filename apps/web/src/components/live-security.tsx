@@ -144,8 +144,8 @@ export default function LiveSecurity({ text }: { text: Text }) {
                 </h2>
                 <p>
                     {text(
-                        "Use a unique password of at least 12 characters.",
-                        "Dùng mật khẩu riêng có ít nhất 12 ký tự.",
+                        "Use a unique password of at least 8 characters.",
+                        "Dùng mật khẩu riêng có ít nhất 8 ký tự.",
                     )}
                 </p>
                 <button
@@ -281,7 +281,7 @@ export default function LiveSecurity({ text }: { text: Text }) {
                                         name={name}
                                         type={visible ? "text" : "password"}
                                         autoComplete="new-password"
-                                        minLength={12}
+                                        minLength={8}
                                         maxLength={128}
                                         required
                                     />

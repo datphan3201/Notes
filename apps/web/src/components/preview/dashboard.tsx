@@ -1,4 +1,5 @@
 "use client";
+import FloatingActions from "../floating-actions";
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
@@ -246,40 +247,19 @@ export function DashboardView({
                         )}
                     </p>
                 </div>
-                <blockquote className="theme-quote">
-                    {db.appearance.quote ||
-                        text(
-                            "Small steps compound into big results.",
-                            "Những bước nhỏ cộng dồn thành kết quả lớn.",
-                        )}
-                </blockquote>
-                <div className="workspace-header-actions action-row">
-                    <button
-                        className="button button-quiet"
-                        onClick={() => {
-                            onReady();
-                            setMessage([
-                                connected
-                                    ? "Refreshing…"
-                                    : "Preview refreshed.",
-                                connected
-                                    ? "Đang làm mới…"
-                                    : "Đã làm mới bản xem thử.",
-                            ]);
-                        }}
-                    >
-                        <RefreshCw size={16} />
-                        {text("Refresh", "Tải lại")}
-                    </button>
-                    <button
-                        className="button button-primary"
-                        onClick={() => setEditor(null)}
-                    >
-                        <Plus size={18} />
-                        {text("New task", "Công việc mới")}
-                    </button>
-                </div>
             </header>
+            <FloatingActions
+                label={text("Page actions", "Thao tác trang")}
+                closeLabel={text("Close actions", "Đóng thao tác")}
+            >
+                <button
+                    className="button button-primary"
+                    onClick={() => setEditor(null)}
+                >
+                    <Plus size={18} />
+                    {text("New task", "Công việc mới")}
+                </button>
+            </FloatingActions>
             <article
                 className="planning-panel dashboard-roadmap"
                 aria-label={text("Chosen roadmap", "Lộ trình đang chọn")}

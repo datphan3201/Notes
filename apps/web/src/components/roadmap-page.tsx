@@ -26,7 +26,7 @@ export function RoadmapPage({ ctx, id }: { ctx: PageContext; id: string }) {
     const own = milestones.data?.filter((row) => row.goal_id === id) || [];
     return (
         <>
-            <QueryState queries={[goal, milestones, tasks]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[goal, milestones, tasks]} />
             {goal.data && (
                 <>
                     <header className="workspace-header scene-header">

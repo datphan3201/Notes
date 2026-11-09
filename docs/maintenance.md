@@ -1,57 +1,31 @@
-# Maintaining UI-to-code documentation
+# Maintaining documentation
 
-[Documentation home](README.md)
+[Documentation home](README.md) · [Open issues](issues.md)
 
-## Starting a UI change
+## Source of truth
 
-1. Find the exact URL/label in the [route index](README.md). Open its component trace; do not search migration phases.
-2. Follow the PHP template/DOM hook and browser symbol. Inspect relevant CSS in the [shared shell map](ui/shared/shell.md#style-file-ownership).
-3. Follow named routes to controllers, services/domain and repositories. Confirm actual branches and effects, including shared consumers and permissions.
-4. Confirm intended behavior changes with the user when intent is unclear. Record unresolved discrepancies in [the open-issue list](issues.md) within the same task.
-5. Change code/tests through the normal repository rules. Preserve unrelated local work and keep secrets out of examples.
-6. At completion, consolidate owning narrative, structured traces and diagrams; regenerate/check them once the implementation is stable. Add one concise [changelog](../CHANGELOG.md) entry for user-visible or operational changes; test evidence goes in the commit/PR description. Do not write per-step documentation/status diaries.
+User decisions and maintained product boundaries govern intent. Current source under `apps/` establishes implementation. Each feature page owns a concise behavior contract; `traceability.json` owns its stable feature ID, current UI/service symbols and related test files. A test link is not an execution result. Historical designs/previews/receipts must be labeled and must not override current status.
 
-## Trace source of truth
+## Change workflow
 
-[traceability.json](traceability.json) holds route ownership and component IDs/labels/behavior/source references. Each source reference contains a repository-relative path and an exact, unique symbol/DOM-hook substring. Repeated strings such as `test(` or `attachment` are rejected: use the named test, method declaration or complete unique selector. A reference may supply a short `label` for display while keeping the full matching `symbol`.
-
-Components may share files, but link the relevant reader/writer or use case instead of a class header when that operation is known. A pure browser filter or pure preview does not imply a separate SQL query. Optional `styles` references identify concrete CSS rules; the shared shell map explains import order and broader overrides. Optional `test_scope` text records coverage limits, such as shared DraftBuffer helper tests that do not exercise the page DOM. Tests are coverage entry points, not pass claims.
-
-UI Markdown contains a hand-edited introduction/notes plus a generated trace block. Change component data in traceability.json; do not hand-edit the generated block. Run from repository root:
+1. Start from the URL/feature in the index. Inspect the React entry, FastAPI handler/domain, schema/model and relevant tests.
+2. Update the owning behavior prose and registry references together. Source symbols must match one line in the referenced file. Keep accepted product intent separate from unverified parity.
+3. Regenerate and verify from the repository root:
 
 ```bash
-php tools/docs/sync.php --write
-php tools/docs/check.php
+python3 tools/docs/check.py --write
+python3 tools/docs/check.py
+python3 -m unittest discover -s tools/docs/tests -q
 ```
 
-[The generator](../tools/docs/sync.php) resolves unique symbols to current line numbers and refreshes generated trace blocks, complete route inventory/blank CSV, [component lookup](reference/components.md) and [source-file lookup](reference/source-index.md). These indexes are navigation, not duplicate behavior contracts. [The checker](../tools/docs/check.php) rejects missing/duplicate routes, duplicate page owners, missing/ambiguous symbols, broken files/anchors, orphan UI templates and stale generated output. It reads route declarations without application/database bootstrap.
+4. Review the generated diff, route handlers and source maps. Record unresolved source/contract/recovery gaps in `docs/issues.md`; remove fixed entries and describe fixes in `CHANGELOG.md`. Never replace historical test evidence with invented current totals.
 
-When changing the documentation tools, run `php tools/docs/tests/run.php`. [The regression runner](../tools/docs/tests/run.php) exercises the real commands against isolated positive/negative fixtures: missing/ambiguous symbols, route/document ownership, broken links/anchors, orphan views, generated drift, diagram hashes and duplicate case IDs. It also verifies that regeneration repairs a legitimate component-label/anchor change. The fixture excludes environment secrets and forbids application bootstrap; no app database or live repository fixture is mutated.
+## Generator and checks
 
-A renamed/moved symbol requires a registry update. A new HTML route needs a route owner and UI component; a new in-page feature needs a component, not an invented route. API-only capabilities are labeled as such. Keep route ownership explicit rather than using a fallback bucket for unknown future endpoints.
+[tools/docs/check.py](../tools/docs/check.py) uses Python's standard library only. It parses registered FastAPI modules and mounted router declarations via AST without importing the application. It inventories all Next.js page files, requires one registry owner per current feature document, resolves unique source symbols and generates feature trace blocks plus route/component/source indexes and a blank CSV. A newly added mounted router/page file must be documented. Dynamic route handlers constrain accepted values; the inventory preserves their declared patterns.
 
-## Archify
+The checker validates relative local Markdown file links, Markdown heading anchors and source line bounds across docs, root guidance/changelog, agent rules/skills, app AGENTS files and source-tree Markdown. It checks generated output drift, contiguous issue-summary/heading agreement, next issue numbering and duplicate acceptance case IDs. It ignores external URLs, site-root links, fenced examples and non-Markdown artifact internals; it does not certify semantic parity, every prose endpoint, rendered UI, external availability or JSON/HTML diagram provenance. The regression suite exercises real temporary source/registry/link fixtures.
 
-Use Archify for diagrams; no Mermaid/ASCII duplicate is maintained. Each [diagram folder](diagrams/README.md) contains the authored candidate JSON, final HTML and automated delivery receipts. Output paths live under docs/diagrams, not .archify. Code-backed source evidence is pinned to the committed revision and must be regenerated when cited behavior changes; current uncommitted behavior must not be misrepresented as committed evidence. An approved requirements/contract diagram may omit repository attribution and must clearly state that scope, with live code/test links in the corresponding Markdown trace.
+## Historical artifacts
 
-Read the installed Archify skill, relevant schema and repository-authoring guidance. Archify is an external authoring tool, not a runtime or build dependency; set `ARCHIFY` to its checkout. Typical invocation from the project root:
-
-```bash
-node "$ARCHIFY/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --json
-```
-
-ARCHIFY_CHROME may point to an installed Chromium executable. Keep receipts from failed runs out of the maintained final result; repairs follow the skill's review/output ownership rules. When updating an existing artifact, use a fresh browser evidence directory and explicitly keep the finalize receipt at its canonical path, because the docs checker reads that path:
-
-```bash
-node "$ARCHIFY/archify/bin/archify.mjs" finalize tree docs/diagrams/task-planning/candidate.json docs/diagrams/task-planning/index.html --repo-root . --quality showcase --out-dir docs/diagrams/task-planning/review-N --receipt docs/diagrams/task-planning/index.finalize.json --json
-```
-
-Replace `review-N` with a fresh evidence directory. The CLI derives the sibling `index.finalize-summary.json`; existing browser evidence is preserved.
-
-Do not edit generated HTML or receipts by hand. Report a failed diagram as failed, and distinguish automated browser checks from visual inspection.
-
-## Keeping docs current
-
-Report unresolved problems in [issues.md](issues.md) during the same task; search existing IDs first and record observed/expected behavior, affected UI/source, impact, status, limits and next step. A fixed issue is deleted from the list and summarized in the [changelog](../CHANGELOG.md). Ask for missing product intent; issue reporting alone does not authorize a behavior change. Feature docs link to the open-issue list instead of duplicating it.
-
-The live docs contain decisions, navigation, operating procedures, tests and unresolved findings. Remove completed phase plans, duplicate status diaries and obsolete feature exclusions after migrating their still-valid constraints. Update AGENTS/CLAUDE/rules and links in the same change. Git history holds historical committed docs; do not recreate a docs/archive or .archify folder.
+Legacy generated trace blocks/registry were replaced by current source maps; their previous contents remain in Git history. PHP documentation sync/check commands and Archify authoring dependencies are no longer required. Preserved [diagram artifacts](diagrams/README.md) are explicitly historical and keep their original receipts; do not rewrite receipts/hashes to imply a new validation. Current architecture is documented in Markdown/Mermaid. Regenerate a historical diagram only as a deliberate new artifact review, with its actual source revision and evidence.

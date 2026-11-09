@@ -12,6 +12,7 @@ import {
     type Capability,
 } from "@/lib/auth-flow";
 import AuthShell, { useGuestLocale } from "./auth-shell";
+import Dialog from "./dialog";
 import {
     CodeField,
     EmailField,
@@ -39,6 +40,8 @@ export default function AuthForm({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
+    const [registered, setRegistered] = useState(false);
+    const [verification, setVerification] = useState<Identity | null>(null);
     const [pending, setPending] = useState(false);
     const [challenge, setChallenge] = useState<Capability | null>(null);
     const [ready, setReady] = useState(preview || mode !== "two-factor");
@@ -78,6 +81,8 @@ export default function AuthForm({
             return;
         }
         if (mfa && !challenge) return;
+        setVerification(null);
+        setNotice("");
         inFlight.current = true;
         setPending(true);
         try {
@@ -113,13 +118,55 @@ export default function AuthForm({
             } else {
                 forgetCapability("login");
                 forgetCapability("reset");
-                router.replace("/dashboard");
+                try { sessionStorage.setItem("planner-workspace-locale", result.user.locale); }
+                catch { /* The account language still loads from the workspace. */ }
+                if (registration) {
+                    setValues((previous) => ({
+                        ...previous,
+                        password: "",
+                        password_confirmation: "",
+                    }));
+                    setNotice("Account created successfully. Check your email for the verification link.");
+                    setRegistered(true);
+                } else if (!result.user.email_verified) {
+                    setVerification(result);
+                    setValues((previous) => ({ ...previous, password: "", code: "" }));
+                } else {
+                    router.replace("/dashboard");
+                }
             }
         } catch (err) {
             if (err instanceof ApiError && Object.keys(err.fields).length) {
                 setErrors(err.fields);
                 focusInvalid(form, err.fields);
             }
+            setError(authError(err));
+        } finally {
+            inFlight.current = false;
+            setPending(false);
+        }
+    }
+    async function verifyEmail(action: "resend" | "check" | "switch") {
+        if (!verification || inFlight.current) return;
+        inFlight.current = true;
+        setPending(true);
+        setError("");
+        setNotice("");
+        try {
+            if (action === "resend") {
+                await api("/auth/verification", { method: "POST" }, verification.csrf);
+                setNotice("Verification email requested. Check your inbox and spam folder.");
+            } else if (action === "switch") {
+                await api("/auth/logout", { method: "POST" }, verification.csrf);
+                setVerification(null);
+                setValues((previous) => ({ ...previous, email: "", password: "", code: "" }));
+                if (mfa) router.replace(href("/login"));
+            } else {
+                const identity = await api<Identity>("/auth/me");
+                if (identity.user.email_verified) router.replace("/dashboard");
+                else setNotice("Your email is not verified yet. Open the verification link in your email.");
+            }
+        } catch (err) {
             setError(authError(err));
         } finally {
             inFlight.current = false;
@@ -153,7 +200,9 @@ export default function AuthForm({
             setPending(false);
         }
     }
-    const title = mfa
+    const title = registered
+        ? "Account created successfully"
+        : mfa
         ? "Two-step verification"
         : registration
           ? "Create an account"
@@ -169,7 +218,7 @@ export default function AuthForm({
                 id="main-content"
                 aria-labelledby="auth-title"
             >
-                {!mfa && (
+                {!mfa && !registered && (
                     <p className="eyebrow">
                         {text(
                             registration
@@ -179,7 +228,7 @@ export default function AuthForm({
                     </p>
                 )}
                 <h1 id="auth-title">{text(title)}</h1>
-                <p className="auth-intro">
+                {!registered && <p className="auth-intro">
                     {text(
                         mfa
                             ? challenge?.method === "email"
@@ -189,18 +238,55 @@ export default function AuthForm({
                               ? "Four details are all you need for a private planning workspace."
                               : "Sign in to continue with the things you are keeping track of.",
                     )}
-                </p>
-                {error && (
+                </p>}
+                {verification && (
+                    <Dialog className="auth-verification" title={text("Email verification")}
+                        closeLabel={text("Close")}
+                        onClose={() => {
+                            setVerification(null);
+                            setNotice("");
+                            setError("");
+                            if (mfa) router.replace(href("/login"));
+                        }}>
+                        <p role="status">
+                            {text("Verify your email before using the workspace.")}
+                        </p>
+                        <p className="auth-verification-email">
+                            {verification.user.email}
+                        </p>
+                        {error && <p className="field-error" role="alert">{text(error)}</p>}
+                        {notice && <p className="auth-verification-feedback" role="status">{text(notice)}</p>}
+                        <div className="auth-verification-actions">
+                            <button type="button" className="button button-primary" disabled={pending}
+                                onClick={() => void verifyEmail("resend")}>
+                                {text("Resend verification email")}
+                            </button>
+                            <button type="button" className="button button-quiet" disabled={pending}
+                                onClick={() => void verifyEmail("check")}>
+                                {text("I have verified my email")}
+                            </button>
+                            <button type="button" className="text-button" disabled={pending}
+                                onClick={() => void verifyEmail("switch")}>
+                                {text("Use another account")}
+                            </button>
+                        </div>
+                    </Dialog>
+                )}
+                {error && !verification && (
                     <p className="field-error" role="alert">
                         {text(error)}
                     </p>
                 )}
-                {notice && (
+                {notice && !verification && (
                     <p className="notice" role="status">
                         {text(notice)}
                     </p>
                 )}
-                {mfa && ready && !challenge ? (
+                {registered ? (
+                    <Link className="button button-primary" href={href("/login")}>
+                        {text("Continue to sign in")}
+                    </Link>
+                ) : verification && mfa ? null : mfa && ready && !challenge ? (
                     <p className="field-error" role="alert">
                         {text("This challenge expired. Sign in again.")}
                     </p>
@@ -280,7 +366,7 @@ export default function AuthForm({
                                         hint={
                                             registration
                                                 ? text(
-                                                      "Use at least 12 characters.",
+                                                      "Use at least 8 characters.",
                                                   )
                                                 : undefined
                                         }
@@ -321,7 +407,7 @@ export default function AuthForm({
                         </fieldset>
                     </form>
                 )}
-                {mfa ? (
+                {registered ? null : mfa ? (
                     <>
                         {challenge && (
                             <p>

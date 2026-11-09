@@ -1,56 +1,26 @@
-# /settings/preferences — Appearance and preferences
+# Appearance and preferences
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-Entry: Settings → Appearance. Five preset sceneries — Summit trail, Forest path, Coastal cove, Pisces and Starlit lake (stored ids mountain, forest, ocean, pisces, stars) — are independent from light/dark; each uses its own watercolour illustration for the background, page headers and previews. Notes has its own layout/text preferences.
+Preferences control the illustrated theme, independent appearance/scenery settings, quote, colors, locale and supported background selection. The server validates allowed fields/values; previews and saved preferences remain distinct. Selected settings survive reload.
 
-The UI supports English and Vietnamese; this documentation uses English.
+## Style file ownership
+
+`app/globals.css` and `styles/baseline/` provide the retained visual foundation. `styles/parity.css` and feature styles extend the React surface. The live workspace also imports reviewed preview styles/components. Their directory names do not mean live routes use synthetic data. Private backgrounds use account-file authorization.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Theme, light/dark, scenery and illustration toggles
+## Source and verification map
 
-**Trace ID:** `appearance.theme`
+Trace ID: `settings.preferences`. Test references identify coverage to inspect; they are not execution results.
 
-Appearance is account-persisted. applyAppearance consumes acknowledged preferences; decoration is not authoritative product data. Keep CSS selectors and preference serialization in sync.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [preferences.php · data-theme-picker](../../../frontend/src/views/settings/preferences.php#L18) |
-| Browser logic | [preferences.js · export function initPreferences](../../../frontend/src/js/settings/preferences.js#L6)<br>[theme-catalog.js · export function applyAppearance](../../../frontend/src/js/settings/theme-catalog.js#L41) |
-| Controller / service / domain | [AccountValidator.php · public function preferences(](../../../backend/src/Application/Account/AccountValidator.php#L76) |
-| Persistence | [PdoAccountRepository.php · public function preferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L58)<br>[PdoAccountRepository.php · public function updatePreferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L133) |
-| Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_illustrated_preferences_are_private_strict_and_survive_reload(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L313) |
-| HTTP | `GET /api/v1/preferences` (`api.preferences.show`) → [AccountController::preferences](../../../backend/src/Http/Controller/AccountController.php#L134)<br>`PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L141) |
-
-### Private backgrounds, Add tile, RGB and reset
-
-**Trace ID:** `appearance.background`
-
-Up to 12 owned backgrounds are retained. Upload validates JPEG/PNG/WebP, <=2MiB and <=4096x4096, re-encodes privately and serves only the owner. RGB is #RRGGBB; a submitted external URL/path is not accepted.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [preferences.php · data-background-upload](../../../frontend/src/views/settings/preferences.php#L68) |
-| Browser logic | [preferences.js · data-background-upload](../../../frontend/src/js/settings/preferences.js#L260) |
-| Controller / service / domain | [BackgroundService.php · public function add(](../../../backend/src/Application/Files/BackgroundService.php#L27)<br>[BackgroundService.php · public function delete(](../../../backend/src/Application/Files/BackgroundService.php#L56)<br>[BackgroundService.php · public function authorized(](../../../backend/src/Application/Files/BackgroundService.php#L82) |
-| Persistence | [PdoAccountRepository.php · public function insertBackground(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L202)<br>[PdoAccountRepository.php · public function selectBackground(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L173)<br>[PdoAccountRepository.php · public function deleteBackground(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L208) |
-| Relevant tests (not a pass claim) | [FilesHttpTest.php · public function test_uploaded_backgrounds_form_an_owned_list_that_can_be_selected_and_removed(](../../../backend/tests/Plain/Http/FilesHttpTest.php#L366) |
-| HTTP | `POST /api/v1/preferences/background` (`api.background.store`) → [ProfileFileController::replaceBackground](../../../backend/src/Http/Controller/ProfileFileController.php#L44)<br>`GET /api/v1/preferences/backgrounds` (`api.backgrounds.index`) → [ProfileFileController::backgrounds](../../../backend/src/Http/Controller/ProfileFileController.php#L66)<br>`DELETE /api/v1/preferences/backgrounds/{background}` (`api.backgrounds.destroy`) → [ProfileFileController::deleteBackground](../../../backend/src/Http/Controller/ProfileFileController.php#L72)<br>`GET /files/backgrounds/{background}` (`backgrounds.show`) → [ProfileFileController::backgroundFile](../../../backend/src/Http/Controller/ProfileFileController.php#L81)<br>`PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L141) |
-
-### Personal quote, preset restore and locale
-
-**Trace ID:** `appearance.quote`
-
-Quote text requires explicit Save; theme/toggles save independently. Preserve newer quote drafts while a save is pending. Locale changes UI literals, not stored user content.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [preferences.php · data-quote-form](../../../frontend/src/views/settings/preferences.php#L43)<br>[preferences.php · data-interface-locale](../../../frontend/src/views/settings/preferences.php#L57) |
-| Browser logic | [preferences.js · data-quote-form](../../../frontend/src/js/settings/preferences.js#L81)<br>[i18n.js · export function t(](../../../frontend/src/js/lib/i18n.js#L2) |
-| Controller / service / domain | [AccountService.php · public function updatePreferences(](../../../backend/src/Application/Account/AccountService.php#L44) |
-| Persistence | [PdoAccountRepository.php · public function updatePreferences(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L133) |
-| Relevant tests (not a pass claim) | [translations.test.js · every literal interface string](../../../frontend/tests/js/translations.test.js#L25) |
-| HTTP | `PATCH /api/v1/preferences` (`api.preferences.update`) → [AccountController::updatePreferences](../../../backend/src/Http/Controller/AccountController.php#L141) |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L45) — `export default function SettingsPreview({` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L194) — `def preferences(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L88) — `def account_files(` |
+| Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
+| Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |
 
 <!-- END GENERATED TRACE -->

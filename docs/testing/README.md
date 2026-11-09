@@ -1,54 +1,64 @@
-# Testing and verification
+# Testing
 
-[Documentation home](../README.md) · [Manual feature checklist](manual-checklist.md) · [Blank route test sheet](../reference/routes.csv)
+[Documentation home](../README.md) · [Evidence limits](verification-limits.md) · [Manual plan](manual-checklist.md)
 
-## Choose the boundary
+Run from the indicated directory. These commands are procedures, not claims they have just passed. CI definition: [.github/workflows/planner-v1.yml](../../.github/workflows/planner-v1.yml).
 
-| Change | Relevant verification |
-| --- | --- |
-| Pure graph/progress/recurrence/streak | PHPUnit unit test with fixed inputs and injected time |
-| SQL, ownership, transactions, concurrency | Real MySQL goals_test integration test |
-| Request validation, sessions, CSRF, authorization, upload/stream | HTTP tests and real HTTP where needed |
-| Pure browser state/filter/retry/editor text | Node test runner and fake time/transport |
-| Critical UI navigation/drafts/keyboard/theme | Playwright against the intended built/dev app |
-| Docs/source links/route coverage | Documentation checker; no business-suite certification implied |
+## Static and documentation checks
 
-Test observable rules and failure boundaries rather than duplicating implementation. Exact source/test pointers are on each UI component. Inspect sibling tests before naming/structuring new ones. Do not rewrite expectations to make incorrect behavior pass.
-
-## Commands
-
-From backend, after configuring the isolated test database:
+From the repository root:
 
 ```bash
-composer validate --strict
-composer check-platform-reqs
-php vendor/bin/phpunit -c phpunit.xml tests/Plain/Unit
-php vendor/bin/phpunit -c phpunit.xml
+python3 tools/docs/check.py
+python3 -m unittest discover -s tools/docs/tests -q
+python3 -m unittest discover -s tools/deploy/tests -p 'test_planner_v1.py' -q
+bash -n tools/dev/planner-v1.sh
 ```
 
-From frontend:
+From `apps/api`:
 
 ```bash
-npm run test:unit
-npm run format:check
+uv sync --frozen --python 3.12
+uv run ruff check planner tests migrations
+```
+
+From `apps/web`:
+
+```bash
+npm ci
+npm run typecheck
+npm test
 npm run build
 ```
 
-From repository root:
+Node's TAP summary can report one result per test file in the installed runtime; record the reporter's units rather than inventing an assertion total. The orphaned legacy deployment Node suite is known to fail after retirement (ISSUE-064) and is outside the active CI command.
+
+## Isolated PostgreSQL integration
+
+From the repository root start only the disposable test service:
 
 ```bash
-php tools/docs/check.php
-php tools/docs/tests/run.php
-node --test tools/deploy/tests/*.test.mjs
-git diff --check
+docker compose --profile test up -d db-test --wait
 ```
 
-`tests/Plain/Http/RealtimeSocketTest.php` starts `bin/realtime.php` on a random loopback port against goals_test; it needs no other running server. Browser checks of offline mode need a production build (the service worker is not registered under `npm run dev`).
+Then from `apps/api`:
 
-Commands above are procedures, not a current pass report. Run the narrowest relevant checks first. Before any destructive MySQL test cleanup, require APP_ENV=testing, configured database goals_test and actual SELECT DATABASE()=goals_test. The [integration/HTTP test setup](../../backend/tests/Plain/Integration/PlanningCoreTest.php) contains the guard. Never point integration tests at the running app's goals_dev database.
+```bash
+PLANNER_ENVIRONMENT=testing PLANNER_DATABASE_URL=postgresql+psycopg://planner_test:isolated-test-only@127.0.0.1:5434/planner_test uv run pytest -q
+```
 
-Concurrency cases need independent committed connections and owned fixtures. Inject/fake clocks, UUIDs and external providers. Required tests must not contact live SMTP/AI. Provider delivery, production config, Apache rewrites and backup restoration need separate environment-specific evidence.
+[test fixtures](../../apps/api/tests/conftest.py) check both configured and actual database name `planner_test` before migration/truncation. The test environment disables configured AI/mail/storage providers and uses temporary local storage. Never bypass the guard or target `planner_dev`/Supabase/production. Compose test storage is tmpfs; development uses a separate persistent volume/port.
 
-## Reporting
+## Browser checks
 
-Put verification evidence in the commit or pull-request description: revision and local-change scope, environment, exact command, result/assertion counts, selected browser flows and untested edges. A shell HTTP 200 is not a successful UI walkthrough, and historical suite totals do not certify the current worktree. Record unresolved problems in [the open-issue list](../issues.md). [Verification limits](verification-limits.md) explain what each kind of evidence establishes.
+From `apps/web`, after API integration completes:
+
+```bash
+npm run build:e2e
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+The [harness](../../apps/web/playwright.config.ts) starts API/web at 8101/3100 with `.next-e2e`, isolated private storage and guarded `planner_test`, and tests desktop/mobile Chromium. Do not run pytest concurrently: they share/reset the same disposable database. No development server reuse is allowed. An existing browser can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+
+Historical logged runs are recorded as historical evidence in [status](../migration/status.md), not a guarantee that the current checkout passes. Real providers, hosted proxies/cold starts, private bucket policies, inbox receipt, backup/file restoration, large datasets and human visual/keyboard/localization acceptance require separate checks.

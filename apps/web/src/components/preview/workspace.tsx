@@ -895,7 +895,7 @@ export function WorkspaceView({
             ) : (
                 <AssistantPreview text={text} />
             )}
-            <Toast message={data.message} onClose={() => data.setMessage("")} />
+            <Toast message={data.message} onClose={() => data.setMessage("")} closeLabel={text("Close", "Đóng")} />
             {help && <TourPreview text={text} onClose={() => setHelp(false)} />}
         </div>
     );

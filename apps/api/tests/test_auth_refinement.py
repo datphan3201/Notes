@@ -207,3 +207,23 @@ def test_email_fallback_preserves_pending_mfa_expiry_latest_code_and_single_use(
         == 422
     )
     assert client.get("/api/v1/auth/me").status_code == 401
+
+
+@pytest.mark.parametrize("kind", ["register", "reset", "change"])
+@pytest.mark.parametrize("password", ["1234567", "12345678"])
+def test_new_password_minimum_is_eight_characters(kind, password):
+    from pydantic import ValidationError
+
+    from planner.accounts import PasswordChange, Reset
+    from planner.schemas import Register
+
+    model, payload = {
+        "register": (Register, {"email": "boundary@example.com", "name": "Boundary", "password": password}),
+        "reset": (Reset, {"token": "synthetic-token-at-least-twenty", "password": password}),
+        "change": (PasswordChange, {"current_password": "old-password", "new_password": password}),
+    }[kind]
+    if len(password) < 8:
+        with pytest.raises(ValidationError):
+            model(**payload)
+    else:
+        model(**payload)

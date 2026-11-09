@@ -1,50 +1,29 @@
-# Console and documentation commands
+# CLI reference
 
 [Documentation home](../README.md)
 
-Run application commands from backend. [bin/console](../../backend/bin/console) is the command authority; it boots the configured app/database, including help/routes. No Artisan or framework CLI is used.
+Run from the repository root unless a working directory is specified. Commands that write data require the intended environment and separately authorized operational scope. Do not pass credentials in shell arguments or paste them into reports.
 
-| Command | Purpose |
-| --- | --- |
-| `php bin/console migrate` | Apply forward checksum-verified migrations |
-| `php bin/console migrate:status` / `migrate:check` | Inspect ledger / verify state |
-| `php bin/console routes` | Runtime route listing |
-| `php bin/console schedule:run` / `schedule:work` | Run due jobs / persistent scheduler |
-| `php bin/console recurrence:materialize` | Extend recurring Task occurrences |
-| `php bin/console reminders:send` | Send due opted-in personal reminder emails |
-| `php bin/console snapshots:capture` | Capture closed-day Goal progress |
-| `php bin/console history:prune` | Archive retained history under configured limits |
-| `php bin/console files:prune` | Process pending/orphan file deletion |
-| `php bin/console sessions:prune` / `rate-limits:prune` | Expired infrastructure cleanup |
-| `php bin/console areas:backfill` | Create default Areas where needed |
-| `php bin/console users:role <email> admin\|user` | Operator-controlled system role change; recorded in Administrator activity |
-| `php bin/console registration:mode [open\|invite\|closed]` | Show or set who may register (default open); recorded in Administrator activity |
-| `php bin/console mail:test <email>` | Deliver a test message through configured transport |
-| `php bin/realtime.php` | Run the live-collaboration WebSocket server (long-running; see [jobs](../operations/jobs.md#realtime-server)) |
+| Working directory | Command | Effect / boundary |
+| --- | --- | --- |
+| root | `bash tools/dev/planner-v1.sh [--funnel]` | Guarded development startup/migrations and watched processes; optional public Funnel |
+| root | `docker compose --profile test up -d db-test --wait` | Start disposable PostgreSQL test service on port 5434 |
+| root | `python3 tools/docs/check.py [--write]` | Validate docs or refresh generated source/route tables; no DB/app imports |
+| root | `python3 -m unittest discover -s tools/docs/tests -q` | Documentation checker/generator regression fixtures |
+| root | `python3 tools/deploy/planner_v1.py funnel` | Print Funnel startup plan; `--execute` starts it |
+| root | `python3 tools/deploy/planner_v1.py vercel --origin https://FRONTEND --backend https://API` | Print web deploy plan; `--execute` calls Vercel CLI |
+| root | `python3 tools/deploy/planner_v1.py check --url https://FRONTEND` | Read-only login/readiness check against the requested origin |
+| apps/api | `uv sync --frozen --python 3.12` | Install locked Python environment |
+| apps/api | `uv run alembic upgrade head` | Apply forward migrations to configured DB/schema; inspect target first |
+| apps/api | `uv run uvicorn planner.main:app --host 127.0.0.1 --port 8001` | Start API only |
+| apps/api | `uv run python -m planner.jobs` | Run scheduler/polling worker against configured DB |
+| apps/api | `uv run python -m planner.serve` | Container supervisor; optionally migrates and starts worker |
+| apps/api | `uv run python -m planner.admin person@example.com admin` | Grant role and audit; use `user` to revoke; requires checked target |
+| apps/api | `uv run python -m planner.demo_seed --email roadmap.demo@example.com` | Plan a new synthetic two-month account; explicit target/password/execute required to write; [procedure](../operations/demo-account.md) |
+| apps/api | `uv run python -m planner.migrate_legacy --help` | Guarded legacy export/verify/import; private data workflow, see development guide |
+| apps/web | `npm ci` | Install npm lockfile |
+| apps/web | `npm run dev` | Start Next.js development server |
+| apps/web | `npm run typecheck` / `npm test` / `npm run build` | Type, unit and production build checks |
+| apps/web | `npm run build:e2e` / `npm run test:e2e` | Isolated browser build/suite; destructive fixtures only in planner_test |
 
-From the repository root, documentation commands work without a database:
-
-```bash
-php tools/docs/routes.php
-php tools/docs/sync.php --write
-php tools/docs/check.php
-php tools/docs/tests/run.php
-```
-
-The first inspects actual route factory declarations using uninitialized controller objects solely for method binding; no controller/request is executed. The second refreshes trace tables/source line links, lookup indexes and blank route inventory/CSV. The third checks coverage, unique references, links and final diagram hashes. The fourth runs documentation-tool regression cases in an isolated fixture without application bootstrap or a database. Neither generator should be used to overwrite filled-in test results: save each executed test run as a separate local report.
-
-## Quick public preview
-
-| Command | What it does |
-| --- | --- |
-| `bash tools/dev/install-command.sh` | Installs `planner` in ~/.local/bin (run once, again after moving the checkout) |
-| `planner` or `bash tools/dev/funnel.sh` | Serves this checkout at the machine's fixed Tailscale Funnel address `https://<machine>.<tailnet>.ts.net`, live collaboration included |
-| `planner tunnel` or `bash tools/dev/tunnel.sh` | Serves it behind two Cloudflare quick tunnels (random address each run) |
-
-Both start a user-level MySQL that is down, back up and apply pending migrations (asking unless `--yes`), build the frontend only when it changed (`--build` / `--no-build`), run the scheduler for reminder emails and periodic jobs (`--no-scheduler` to skip), and stop everything on Ctrl+C. Options: `--port`, `--realtime-port`, `--no-realtime`. Setup and limits: [local development](../operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel).
-
-## Existing running host
-
-From the repository root, bash tools/deploy/existing-runtime.sh --dry-run previews the existing-server CD path. bash tools/deploy/install-existing-runtime.sh installs a user timer; PLANNER_TUNNEL_METRICS can select the running quick tunnel's loopback metrics endpoint. See [deployment](../operations/deployment.md#reuse-an-already-running-php-server-and-cloudflare-tunnel) for scope, main/clean-tree guards, failure recovery and schema/dependency restrictions. This path does not start another server or copy backend/.env to GitHub.
-
-node --test tools/deploy/tests/*.test.mjs verifies the deployer with temporary Git repositories and fake external commands; it does not connect to the app database or run a host deployment.
+The retained `tools/deploy/migrate_to_supabase.py` performs a raw transactional database COPY, not a guarded general-purpose sync/file migration command; do not use it as the ordinary release path (ISSUE-065). Retired PHP `bin/console`, Composer, realtime and legacy deployment commands are available only in Git history. No current command grants roles over HTTP or safely retries arbitrary dead jobs.

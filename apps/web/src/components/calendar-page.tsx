@@ -125,7 +125,7 @@ export function CalendarPage({ ctx }: { ctx: PageContext }) {
     }
     return (
         <>
-            <QueryState queries={[tasks, milestones, goals]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[tasks, milestones, goals]} />
             <div className="planning-panel">
                 <div className="section-heading">
                     <div className="action-row">

@@ -1,6 +1,14 @@
 import vietnamese from "./baseline-vi.json";
 
 const additions: Record<string, string> = {
+    "Failed to fetch": "Không kết nối được tới máy chủ. Vui lòng thử lại.",
+    "NetworkError when attempting to fetch resource.": "Không kết nối được tới máy chủ. Vui lòng thử lại.",
+    "Check the fields and try again.": "Kiểm tra các trường thông tin rồi thử lại.",
+    "Check the workspace fields": "Kiểm tra các trường thông tin trong không gian làm việc.",
+    "This item changed. Reload before deleting.": "Mục này đã thay đổi. Hãy tải lại trước khi xóa.",
+    "This Review changed": "Bản đánh giá này đã thay đổi. Hãy tải lại.",
+    "Too many attempts. Try again later.": "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.",
+    "Invalid CSRF token": "Phiên làm việc không hợp lệ. Vui lòng tải lại trang.",
     "Restore draft": "Khôi phục bản nháp",
     "A recovered draft is available.": "Có bản nháp chưa lưu cần khôi phục.",
     "Repeating task": "Công việc lặp lại",

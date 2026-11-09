@@ -24,8 +24,12 @@
 .baseline-workspace .nav-link {
     width: 100%;
 }
+.baseline-workspace .scene-header {
+    border-radius: 16px;
+}
 .baseline-workspace .scene-header::before {
     z-index: -1;
+    border-radius: inherit;
 }
 .baseline-workspace .planning-page {
     max-width: none;

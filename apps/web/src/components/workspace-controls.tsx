@@ -310,7 +310,7 @@ export function HabitCard({
                     · {habit.target}
                 </small>
             </div>
-            <QueryState queries={[history]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[history]} />
             <p className="subtle-copy">
                 {ctx.text("Streak in this window", "Chuỗi trong khoảng này")}:{" "}
                 {history.data?.window_streak || 0} {ctx.text("days", "ngày")}
@@ -420,7 +420,7 @@ export function ActivityPanel({ ctx }: { ctx: PageContext }) {
     return (
         <section className="planning-panel">
             <h2>{ctx.text("Activity", "Hoạt động")}</h2>
-            <QueryState queries={[activities]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[activities]} />
             {activities.data?.map((item) => (
                 <p key={item.id}>
                     <time>

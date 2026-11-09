@@ -66,14 +66,14 @@ export default function AccountSecurity({
                 <input
                     type="password"
                     autoComplete="new-password"
-                    minLength={12}
+                    minLength={8}
                     value={nextPassword}
                     onChange={(e) => setNextPassword(e.target.value)}
                 />
             </label>
             <button
                 className="secondary"
-                disabled={busy || !password || nextPassword.length < 12}
+                disabled={busy || !password || nextPassword.length < 8}
                 onClick={() =>
                     void run(async () => {
                         await api(

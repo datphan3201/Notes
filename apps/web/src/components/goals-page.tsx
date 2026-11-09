@@ -74,7 +74,7 @@ export function GoalsPage({ ctx }: { ctx: PageContext }) {
     );
     return (
         <>
-            <QueryState queries={[areas, goals, dashboard]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[areas, goals, dashboard]} />
             <div className="planning-panel">
                 <div className="section-heading">
                     <h2>{ctx.text("Main goal", "Mục tiêu chính")}</h2>

@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import { api, ApiError, type Kind } from "@/lib/api";
 import { localDate } from "@/lib/dates";
+import { rebaseEdit } from "@/lib/workspace-rebase";
+import { translate } from "@/lib/i18n";
+import LoadingSpinner from "./loading-spinner";
 import {
     cachedNotes,
     cacheNotes,
@@ -41,6 +44,21 @@ const settings: Record<string, string> = {
     archive: "archive",
     reports: "reports",
 };
+const persistedKeys = [
+    "tasks",
+    "series",
+    "areas",
+    "goals",
+    "milestones",
+    "notes",
+    "habits",
+    "reviews",
+    "focus",
+    "profile",
+    "appearance",
+    "locale",
+] as const;
+const saveDelay = 400;
 function route(ids: WorkspaceIds): Nav {
     const [section, id] = window.location.pathname.split("/").filter(Boolean),
         p = new URLSearchParams(location.search);
@@ -97,9 +115,23 @@ export default function LiveWorkspace() {
         current = useRef<Data | null>(null);
     const [data, setData] = useState<Data | null>(null),
         [busy, renderBusy] = useState(false),
+        [blocking, setBlocking] = useState(false),
         [error, setError] = useState("");
     const [offline, setOffline] = useState(false),
         [notices, setNotices] = useState<PreviewNotice[]>([]);
+    const [startupLocale, setStartupLocale] = useState<"en" | "vi">("en");
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem("planner-workspace-locale") ||
+                sessionStorage.getItem("planner-guest-locale");
+            if (saved === "en" || saved === "vi") setStartupLocale(saved);
+        } catch { /* Language still works without browser storage. */ }
+    }, []);
+    useEffect(() => {
+        if (!data) return;
+        try { sessionStorage.setItem("planner-workspace-locale", data.locale); }
+        catch { /* Language still works without browser storage. */ }
+    }, [data?.locale]);
     const mutationBusy = useRef(false);
     const setBusy = (value: boolean) => {
         mutationBusy.current = value;
@@ -108,10 +140,13 @@ export default function LiveWorkspace() {
     const [historyLimit, setHistoryLimit] = useState(1000);
     const [recovery, setRecovery] = useState<Record<string, NoteDraft>>({});
     const [failed, setFailed] = useState<Data | null>(null);
+    const saveBlocked = useRef(false);
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null),
         pending = useRef<Promise<boolean> | null>(null),
         acks = useRef<string[]>([]);
-    const deferred = useRef<{ key: keyof Data; value: unknown }[]>([]);
+    const deferred = useRef<((state: Data) => Data)[]>([]);
+    const replay = (state: Data) =>
+        deferred.current.reduce((value, update) => update(value), state);
     const offlineRef = useRef(false);
     const patch = (next: Data) => {
         current.current = next;
@@ -119,6 +154,7 @@ export default function LiveWorkspace() {
     };
     async function refresh() {
         let snapshot = await api<Snapshot>("/workspace/snapshot");
+        setStartupLocale(snapshot.identity.user.locale);
         let preservedDeletion = false;
         const cached = await cachedNotes(snapshot.identity.user.id).catch(
             () => undefined,
@@ -232,7 +268,7 @@ export default function LiveWorkspace() {
                     ? "Ghi chú đã thay đổi trên máy khác được giữ lại. Hãy xem lại trước khi xóa."
                     : "A Note changed on another device was kept. Review it before deleting.";
         base.current = next;
-        patch(next);
+        patch(replay(next));
         setOffline(false);
         const alerts = await api<
             {
@@ -274,7 +310,11 @@ export default function LiveWorkspace() {
             clearTimeout(timer.current);
             timer.current = null;
         }
-        if (pending.current) return pending.current;
+        if (pending.current) {
+            if (!(await pending.current)) return false;
+            return flush();
+        }
+        if (saveBlocked.current) return false;
         if (!base.current || !current.current || !raw.current) return false;
         const previous = base.current,
             next = current.current,
@@ -338,6 +378,10 @@ export default function LiveWorkspace() {
         }
         setBusy(true);
         setError("");
+        const sentAcks = acks.current;
+        acks.current = [];
+        let acknowledged: { kind: Kind; id: string; version: number }[] = [];
+        let saved = false;
         const work = (async () => {
             try {
                 if (profile) {
@@ -398,27 +442,33 @@ export default function LiveWorkspace() {
                 if (changes.length) {
                     const result = await api<{
                         aliases: Record<string, string>;
+                        items: { kind: Kind; id: string; version: number }[];
                     }>(
                         "/workspace/changes",
                         { method: "POST", body: JSON.stringify({ changes }) },
                         snapshot.identity.csrf,
                     );
                     ids.aliases(result.aliases);
+                    acknowledged = result.items;
                 }
                 await refresh();
+                if (deferred.current.length && base.current && current.current && raw.current) {
+                    // A refresh must not silently approve somebody else's newer
+                    // version for an edit made while the old snapshot was visible.
+                    const queued = changesBetween(base.current, current.current, raw.current, ids, acks.current);
+                    for (const change of queued) {
+                        if (!change.id || change.version === undefined) continue;
+                        const row = raw.current[change.kind].find((item) => item.id === change.id);
+                        const seen = acknowledged.find((item) => item.kind === change.kind && item.id === change.id)
+                            || snapshot[change.kind].find((item) => item.id === change.id);
+                        if (row && seen) row.version = seen.version;
+                    }
+                }
                 setFailed(null);
-                if (current.current)
-                    patch({
-                        ...current.current,
-                        message:
-                            next.locale === "vi"
-                                ? "Đã lưu thay đổi."
-                                : "Changes saved.",
-                    });
+                saved = true;
                 return true;
             } catch (err) {
                 setError((err as Error).message);
-                setFailed(next);
                 try {
                     await refresh();
                 } catch {
@@ -443,79 +493,73 @@ export default function LiveWorkspace() {
                         );
                         offlineRef.current = true;
                         setOffline(true);
+                        saved = true;
                         return true;
                     }
                     setOffline(!navigator.onLine);
                 }
+                // Keep the attempted draft and every later edit visible until
+                // the user explicitly retries against the refreshed versions.
+                const draft = { ...current.current! };
+                Object.assign(
+                    draft,
+                    Object.fromEntries(persistedKeys.map((key) => [key, next[key]])),
+                );
+                const latest = replay(draft);
+                patch(latest);
+                setFailed(latest);
+                saveBlocked.current = true;
+                setError((err as Error).message);
+                acks.current = [...new Set([...sentAcks, ...acks.current])];
                 return false;
             } finally {
                 setBusy(false);
                 pending.current = null;
-                acks.current = [];
                 const queued = deferred.current.splice(0);
-                for (const item of queued) set(item.key, item.value as never);
+                if (saved && queued.length) scheduleSave();
             }
         })();
         pending.current = work;
         return work;
     }
+    function scheduleSave() {
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => void flush(), saveDelay);
+    }
     function set<K extends keyof Data>(key: K, value: SetStateAction<Data[K]>) {
         const old = current.current;
         if (!old) return;
-        if (
-            pending.current &&
-            [
-                "tasks",
-                "series",
-                "areas",
-                "goals",
-                "milestones",
-                "notes",
-                "habits",
-                "reviews",
-                "focus",
-                "profile",
-                "appearance",
-                "locale",
-            ].includes(key)
-        ) {
-            deferred.current.push({ key, value });
-            return;
-        }
+        const persists = persistedKeys.some((item) => item === key);
         if (
             key === "message" &&
             (timer.current || pending.current || mutationBusy.current)
         )
             return;
-        const nextValue =
-            typeof value === "function"
-                ? (value as (v: Data[K]) => Data[K])(old[key])
-                : value;
-        patch({ ...old, [key]: nextValue });
-        if (
-            [
-                "tasks",
-                "series",
-                "areas",
-                "goals",
-                "milestones",
-                "notes",
-                "habits",
-                "reviews",
-                "focus",
-                "profile",
-                "appearance",
-                "locale",
-            ].includes(key)
-        ) {
-            if (timer.current) clearTimeout(timer.current);
-            timer.current = setTimeout(() => void flush(), 100);
-        }
+        const update = (state: Data): Data => ({
+            ...state,
+            [key]: typeof value === "function"
+                ? (value as (v: Data[K]) => Data[K])(state[key])
+                : value,
+        });
+        const next = update(old);
+        if (persists && pending.current)
+            deferred.current.push((state) => ({
+                ...state,
+                [key]: rebaseEdit(old[key], next[key], state[key], key),
+            }));
+        patch(next);
+        if (persists && saveBlocked.current) setFailed(next);
+        if (persists && !pending.current && !saveBlocked.current) scheduleSave();
     }
     useEffect(() => {
         let alive = true;
         refresh().catch(async (err) => {
             if (!alive) return;
+            if (err instanceof ApiError && err.status === 403 &&
+                err.message === "Verify your email before using the workspace") {
+                window.location.replace("/login");
+                return;
+            }
             if (err instanceof ApiError && err.status === 401) {
                 await forgetOfflineNotes();
                 if (!alive) return;
@@ -549,7 +593,7 @@ export default function LiveWorkspace() {
             if (current.current) set("nav", route(ids));
         };
         const before = (event: BeforeUnloadEvent) => {
-            if (pending.current || timer.current) {
+            if (pending.current || timer.current || saveBlocked.current) {
                 event.preventDefault();
                 event.returnValue = "";
             }
@@ -572,17 +616,18 @@ export default function LiveWorkspace() {
             window.removeEventListener("offline", off);
         };
     }, []);
+    const locale = data?.locale || startupLocale;
+    const errorText = (message: string) => translate(message, locale,
+        locale === "vi" ? "Không thể hoàn tất yêu cầu. Vui lòng thử lại." : message);
     if (!data || !raw.current)
         return (
-            <main className="loading-page">
-                <p role={error ? "alert" : "status"}>
-                    {error || "Đang tải… / Loading…"}
-                </p>
-                {error && (
-                    <button onClick={() => location.reload()}>
-                        Thử lại / Retry
+            <main className={error ? "loading-page" : "workspace-loading"}>
+                {error ? <>
+                    <p role="alert">{errorText(error)}</p>
+                    <button className="button button-primary" onClick={() => location.reload()}>
+                        {locale === "vi" ? "Thử lại" : "Retry"}
                     </button>
-                )}
+                </> : <LoadingSpinner label={locale === "vi" ? "Đang tải…" : "Loading…"} />}
             </main>
         );
     const identity = raw.current.identity;
@@ -601,7 +646,9 @@ export default function LiveWorkspace() {
         offline,
         notices,
         flush,
-        refresh,
+        refresh: async () => {
+            if (await flush()) await refresh();
+        },
         preferences: async (values) => {
             await api(
                 "/preferences",
@@ -636,6 +683,17 @@ export default function LiveWorkspace() {
             await discardNoteDraft(identity.user.id, id);
             if (ids.server(id) !== id)
                 await discardNoteDraft(identity.user.id, ids.server(id));
+        },
+        resolveNoteConflict: async (id, draft) => {
+            const saved = base.current?.notes.find((note) => note.id === id);
+            if (!saved) return false;
+            saveBlocked.current = false;
+            setFailed(null);
+            setError("");
+            set("notes", (notes) =>
+                notes.map((note) => note.id === id ? { ...saved, ...draft } : note),
+            );
+            return flush();
         },
         tags: catalogue.map((id) => ({ id, label: [id, id] })),
         invitations: raw.current.invitations,
@@ -736,6 +794,7 @@ export default function LiveWorkspace() {
         const actual = kind === "tasks" ? ids.id(Number(id)) : ids.server(id),
             row = raw.current![kind].find((r) => r.id === actual);
         if (!row) return;
+        setBlocking(true);
         setBusy(true);
         setError("");
         try {
@@ -762,6 +821,7 @@ export default function LiveWorkspace() {
             setError((err as Error).message);
         } finally {
             setBusy(false);
+            setBlocking(false);
         }
     };
     const context = {
@@ -861,33 +921,30 @@ export default function LiveWorkspace() {
             )}
             {error && (
                 <div className="live-save-error notice" role="alert">
-                    {error}
+                    {errorText(error)}
                     {failed && (
                         <button
                             className="text-button"
                             onClick={() => {
-                                patch(failed);
+                                saveBlocked.current = false;
                                 setError("");
                                 void flush();
                             }}
                         >
-                            Thử lưu lại / Retry save
+                            {data.locale === "vi" ? "Thử lưu lại" : "Retry save"}
                         </button>
                     )}
-                    <button
-                        className="text-button"
-                        onClick={() => setError("")}
-                    >
-                        Đóng / Close
-                    </button>
+                    {!failed && (
+                        <button
+                            className="text-button"
+                            onClick={() => setError("")}
+                        >
+                            {data.locale === "vi" ? "Đóng" : "Close"}
+                        </button>
+                    )}
                 </div>
             )}
-            {busy && (
-                <div className="live-save-status" role="status">
-                    Đang lưu… / Saving…
-                </div>
-            )}
-            <div inert={busy}>
+            <div inert={blocking} data-workspace-saving={busy || undefined}>
                 <WorkspaceView
                     initialLocale={data.locale}
                     initialSection={data.nav.section}

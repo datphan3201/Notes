@@ -1,5 +1,7 @@
 # Shared workspace UI refinement
 
+> Historical migration/design record. Current runtime is `apps/` on `main`; PHP/JS source paths were retired in `8714dc0` and can be inspected in Git history. Earlier pending/integration/branch statements describe that stage only. [Current status](status.md), [live feature maps](../README.md) and [cloud operations](../operations/cloud.md) supersede present-state claims here. Referenced test runs are historical, not freshly executed.
+
 Current status: this is a historical UI-only review record. The user subsequently accepted the revised interface and authorized full integration; see [the current integration record](ui-integration.md) for connected behavior and checks. Earlier deferral/pending statements below apply to that earlier pass.
 
 Current handoff: the [combined UI review](full-ui-review.md) now includes all remaining listed clusters. Its shared data/editors/navigation supersede earlier statements below about placeholders, independent Dashboard capture or queued Notes/History screens. Earlier screenshots remain evidence of their original focused pass.

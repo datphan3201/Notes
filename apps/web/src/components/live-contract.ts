@@ -7,6 +7,10 @@ export type LiveRuntime = {
         draft: { title: string; content: string },
     ) => Promise<void>;
     discardNoteDraft: (id: string) => Promise<void>;
+    resolveNoteConflict: (
+        id: string,
+        draft?: { title: string; content: string },
+    ) => Promise<boolean>;
     tags: { id: string; label: [string, string] }[];
     invitations: {
         note_id: string;

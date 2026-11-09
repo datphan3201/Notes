@@ -1,8 +1,8 @@
-# Running the migration runtime
+# Running the current runtime
 
-[Plan](personal-ai-planner.md) · [Implementation status](status.md) · [Legacy documentation](../README.md)
+[Plan](personal-ai-planner.md) · [Implementation status](status.md) · [Documentation home](../README.md)
 
-The new application is in `apps/api` and `apps/web`. The PHP/MySQL application remains available under its original paths. Never run new migration/import or test cleanup against the live MySQL database.
+The active application is on `main` in `apps/api` and `apps/web`. PHP/JS runtime paths were removed in `8714dc0`; historical source/private data backups remain separate. Never run importer or test cleanup against development/hosted data outside the specifically guarded authorized transfer workflow.
 
 ## Development
 
@@ -24,12 +24,12 @@ bash tools/dev/planner-v1.sh --funnel
 
 Start one launcher per checkout. The Funnel mode discovers the connected MagicDNS hostname, checks that HTTPS 443 has no existing handlers, and publishes only the frontend at port 3000. It supplies the public HTTPS origin, an exact localhost development exception and Next.js's allowed development hostname through process environment variables. API credentials and `.env` files are preserved. Public sessions use Secure/HttpOnly cookies, localhost login remains available, and CSRF tokens are required for writes on both origins. Production rejects development origin exceptions. Email links use the public origin while this launcher runs. Ctrl+C stops its application processes and removes its root Funnel handler; PostgreSQL stays available. The machine, Docker and Tailscale must remain running for this local public URL.
 
-The retained `tools/dev/funnel.sh` starts the PHP baseline. Use `planner-v1.sh --funnel` for the migrated application.
+The old PHP launcher/wrapper was retired; `planner-v1.sh --funnel` is the maintained local sharing command.
 
 From the repository root:
 
 ```bash
-docker compose --profile test up -d db db-test --wait
+docker compose up -d db --wait
 cd apps/api
 cp -n .env.example .env
 uv sync --frozen --python 3.12
@@ -54,13 +54,13 @@ cd apps/api
 uv run python -m planner.jobs
 ```
 
-The worker indexes eligible personal sources, materializes recurring tasks, creates in-app reminders, archives expired History entries and sends queued account emails. It claims persisted jobs with leases, retries transient failures and records dead jobs after five attempts. Business GETs do not do this work. Local files are kept in ignored `apps/api/.private/`; production requires a private Google Cloud Storage bucket.
+The worker indexes eligible personal sources, materializes recurring tasks, creates in-app reminders, archives expired History entries and sends queued account emails. It claims persisted jobs with leases, retries transient failures and records dead jobs after five attempts. Business GETs do not do this work. Local files are kept in ignored `apps/api/.private/`; production requires private object storage, with GCS or Supabase adapters supported.
 
 Set SMTP variables to deliver verification/recovery emails. The worker never prints private email links or codes as a fallback. Development permits an unverified account to use the workspace; production requires email verification. Configure a Fernet key in the ignored API `.env` before enabling TOTP. Generate it directly into a secret manager or the private `.env`; do not commit or paste keys into logs.
 
 For AI, set the server-only API key, model and compatible base URL. Set an embedding model that supports 1536 dimensions to enable semantic ranking; otherwise indexing and retrieval use PostgreSQL full-text search. API requests enqueue runs and return immediately. The worker streams provider output into durable run state, and the browser reads SSE snapshots. `propose_changes` stores a preview; only explicit Apply invokes business writes. No provider credentials are needed for deterministic tests.
 
-For the selected Funnel and Vercel trial routes, use the [deployment helper and checklist](deployment-routes.md). The Vercel frontend can proxy the existing Funnel backend; Google Cloud is not required for that topology.
+For optional Funnel-backed development routes, use the [deployment helper and checklist](deployment-routes.md). The Vercel frontend can proxy the existing Funnel backend; Google Cloud is not required for that topology.
 
 ## Verification
 
@@ -82,9 +82,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Browser tests start their own API/web servers on ports 8101/3100, use the separate `.next-e2e` build and temporary private storage, and can run while the development/Funnel runtime stays on 8001/3000. Their harness verifies the configured and actual `planner_test` database before migrating/truncating fixtures. It disables live AI/SMTP credentials, supplies an isolated synthetic MFA key, and exercises authentication plus workspace interactions on desktop and mobile. It does not reuse a development server or run a mail worker. Do not run pytest concurrently with browser tests: both own the same disposable database. CI installs Chromium with OS dependencies before running the same suite. An existing local browser can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+Browser tests start their own API/web servers on ports 8101/3100, use the separate `.next-e2e` build and temporary private storage, and can run while the development/Funnel runtime stays on 8001/3000. Start the isolated `db-test` service before browser verification as described in [testing](../testing/README.md). Their harness verifies the configured and actual `planner_test` database before migrating/truncating fixtures. It disables live AI/SMTP credentials, supplies an isolated synthetic MFA key, and exercises authentication plus workspace interactions on desktop and mobile. It does not reuse a development server or run a mail worker. Do not run pytest concurrently with browser tests: both own the same disposable database. CI installs Chromium with OS dependencies before running the same suite. An existing local browser can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
-The separate `.github/workflows/planner-v1.yml` performs these checks against PostgreSQL/pgvector. Legacy CI/tests remain intact as a behavior reference; their implementation-specific assertions do not certify the new runtime. The API container is built with `docker build -t planner-v1-api:local apps/api` from the repository root. It runs as an unprivileged user. Use `planner.worker_api:app` as the entry point for an authenticated cloud worker deployment.
+The separate `.github/workflows/planner-v1.yml` performs these checks against PostgreSQL/pgvector. Legacy PHP CI/tests were removed; current test entry points are in `apps/api/tests` and `apps/web/tests`. The API container is built with `docker build -t planner-v1-api:local apps/api` from the repository root. It runs as an unprivileged user. Use `planner.worker_api:app` as the entry point for an authenticated cloud worker deployment.
 
 ## Safe data migration
 

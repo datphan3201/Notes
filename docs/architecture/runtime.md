@@ -1,44 +1,25 @@
 # Runtime and layer ownership
 
-[Documentation home](../README.md) · [Archify system map](../diagrams/system/index.html)
+[Documentation home](../README.md) · [Routes](../reference/routes.md)
 
-## Request entry
+The application is a modular monolith under `apps/` on `main`. The legacy PHP/JS runtime was removed in `8714dc0`; Git history preserves its implementation, not a current runnable rollback path.
 
-[public/index.php](../../backend/public/index.php) loads [HTTP bootstrap](../../backend/bootstrap/http.php), captures a [Request](../../backend/src/Http/Request.php), calls [Application](../../backend/src/Http/Application.php), then emits the [Response](../../backend/src/Http/Response.php). [The router](../../backend/src/Http/Routing/Router.php) matches [route declarations](../../backend/routes/web.php); guards establish session/auth/CSRF/rate limits before dispatch.
+## Processes and requests
 
-The configured web root is backend/public. [dev-router.php](../../backend/dev-router.php) is local-only routing for PHP's development server. API endpoints and HTML shells share the same application, not separate microservices.
-
-## Processes
-
-| Process | Role | Source |
+| Process | Responsibility | Source |
 | --- | --- | --- |
-| PHP-FPM (or `php -S` locally) | Every HTML page and `/api/v1` request | [public/index.php](../../backend/public/index.php) |
-| Realtime server | WebSocket rooms for live co-editing of shared Notes; saves through `NoteService` | [bin/realtime.php](../../backend/bin/realtime.php), [CollaborationHub](../../backend/src/Infrastructure/Realtime/CollaborationHub.php) |
-| Scheduler | Reminders, retention, file cleanup and other periodic jobs (cron `schedule:run`) | [bin/console](../../backend/bin/console), [jobs](../operations/jobs.md) |
-| Service worker | Browser-side asset/page cache for offline use; never caches `/api` | [sw.js](../../backend/public/sw.js) |
+| Next.js | Page routes, React UI, same-origin `/api/v1/*` rewrite to API_ORIGIN | [app](../../apps/web/src/app/), [proxy/security configuration](../../apps/web/next.config.ts) |
+| FastAPI | Sessions, authorization, Pydantic input, business orchestration and HTTP responses | [main.py](../../apps/api/planner/main.py), [accounts](../../apps/api/planner/accounts.py), [workspace](../../apps/api/planner/workspace.py) |
+| Polling worker | Claim durable jobs, scheduling, provider/mail calls and retry/cleanup | [jobs.py](../../apps/api/planner/jobs.py) |
+| Container supervisor | Optional migrations, API/worker children, sibling shutdown on failure | [serve.py](../../apps/api/planner/serve.py) |
+| Browser service worker | Generic Notes shell and selected static assets; excludes private API/media | [planner-sw.js](../../apps/web/public/planner-sw.js) |
 
-The realtime server is stateless across restarts: it loads a Note's text when the first participant joins and writes merged text back through the ordinary application service. It never reads browser sessions; the web app authorizes each participant and issues a 60-second HMAC ticket ([RealtimeTicket](../../backend/src/Infrastructure/Realtime/RealtimeTicket.php)).
+Vercel hosts only the web application. The recorded Render topology colocates API and polling worker in one container; PostgreSQL/pgvector and private Storage are hosted in Supabase. A private authenticated worker ASGI app remains available for the alternative Google Cloud Tasks topology; it is not mounted on the public Render API. See [operations](../operations/cloud.md).
 
-## Ownership table
+## Code ownership
 
-| Layer | Responsibility | Starting source |
-| --- | --- | --- |
-| PHP view | Escaped markup, labels, DOM hooks, bootstrap data | [views](../../frontend/src/views/) |
-| Browser entry | Read bootstrap and start shared/page modules | [app.js](../../frontend/src/js/app.js) |
-| Browser feature | Render state, coordinate reads/drafts, call APIs | [page traces](../README.md) |
-| HTTP | Parse input, call application use case, serialize response | [controllers](../../backend/src/Http/Controller/) |
-| Application | Authorization/reference validation, transactions, orchestration | [application services](../../backend/src/Application/) |
-| Domain | Pure graph/progress/recurrence/streak/TOTP rules | [domain](../../backend/src/Domain/) |
-| Persistence | Prepared owned SQL, locking and projections | [PDO repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
-| Infrastructure | Storage, mail, sessions, provider adapters and logging | [infrastructure](../../backend/src/Infrastructure/) |
-| Wiring | Explicit constructors and dependencies | [app bootstrap](../../backend/bootstrap/app.php), [HTTP bootstrap](../../backend/bootstrap/http.php) |
+React route files mount `Workspace` → `LiveWorkspace` → reviewed feature views. Live routes reuse view code in `components/preview/` but provide real data; explicit `/preview/*` routes use synthetic providers. `live-model.ts` maps server IDs/types to UI state. Current workspace reads load an account snapshot; scalability remains ISSUE-066. The mounted feature views are `components/preview/{tasks,planning,notes,calendar,habits,reviews,settings,support,dashboard}.tsx`, coordinated by `preview/workspace.tsx`; the alternate `*-page.tsx`/`editor.tsx` tree is not mounted by this route path. File names alone are insufficient to identify the live UI.
 
-Use constructor dependencies rather than a service locator. New features belong in the existing layer-first module tree. [Composer](../../backend/composer.json) and [frontend/package.json](../../frontend/package.json) declare actual runtime/build dependencies.
+FastAPI handlers call `planning.py`, `workspace.py`, `accounts.py`, `personal.py`, `moderation.py` and `note_features.py`. `schemas.py` owns input validation, `domain.py` pure graph/recurrence/progress/streak rules, `models.py` SQLAlchemy mappings, `db.py` engine/session lifecycle, and Alembic the physical schema. `provider.py`, `storage.py` and `dispatch.py` adapt external services. Dependencies are locked in `uv.lock` and `package-lock.json`; CI uses npm.
 
-## Browser behavior is not all server behavior
-
-Tasks time views are a client projection; Dashboard has SQL-backed projections. Personal recurrence is handled by TaskSeries. Main Notes uses an autosave machine (or the realtime session for shared Notes, with an IndexedDB outbox when offline); Task notes and Reviews use explicit save/draft handling. A shared visual control does not imply a shared transaction or persistence contract.
-
-## Optional infrastructure
-
-[GoogleAIProvider](../../backend/src/Infrastructure/AI/GoogleAIProvider.php) and [DisabledAIProvider](../../backend/src/Infrastructure/AI/DisabledAIProvider.php) implement the provider boundary (chat, completion and embeddings) used by the assistant and by [Note AI](../ui/notes/ai.md). Credentials remain server-side. Mail uses configured SMTP or the runtime's environment-specific fallback. These are optional adapters, not a claim that a live provider has been tested.
+Application services enforce ownership and transaction boundaries. Do not infer authorization from Next.js routing or a rendered shell. Provider/mail calls must occur outside business write transactions. Note autosave, explicit-save planning/Review drafts, offline outbox and assistant approval are separate state machines. Realtime collaborative editing is excluded from V1.

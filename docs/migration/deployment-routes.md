@@ -2,9 +2,9 @@
 
 [Development](development.md) · [Integration](ui-integration.md) · [Status](status.md)
 
-The current cloud target is [Render API/worker + Vercel frontend + Supabase database/private files](render-vercel-supabase.md), selected on 2026-11-08. This supersedes the earlier Vercel-with-Funnel-only trial. Funnel remains the working local development/test route. VPS and Google Cloud provisioning remain deferred; the [older cloud runbook](cloud.md) is a historical alternative. The helper defaults to printing a plan; `--execute` runs the printed command. Preparation does not create projects or publish a deployment.
+The recorded cloud topology is [Render API/worker + Vercel frontend + Supabase database/private files](render-vercel-supabase.md), selected and recorded as deployed on 2026-11-08. This supersedes the earlier Vercel-with-Funnel-only trial. Funnel remains the working local development/test route. VPS and Google Cloud provisioning remain deferred; the [older cloud runbook](cloud.md) is a historical alternative. The helper defaults to printing a plan; `--execute` runs the printed command. Preparation does not create projects or publish a deployment.
 
-Preparation is currently paused; see the [handoff](deployment-handoff.md) before resuming hosted work.
+The [preparation handoff](deployment-handoff.md) is historical and superseded by deployment/merge. Current release configuration is `main` with manual Render deployment; see [cloud operations](../operations/cloud.md).
 
 ## Topology
 
@@ -89,4 +89,4 @@ python3 tools/deploy/planner_v1.py check --url https://your-project.vercel.app
 4. Stop/restart the watched worker and verify queued work resumes without duplicate reminders/occurrences. Keep database and private-file backups aligned.
 5. Test offline recovery separately on each hostname: IndexedDB/service workers are origin-scoped. Sessions and local drafts are not automatically shared across domains.
 
-The local proxy contract, exact-origin/CSRF rules, command plans and production web build are verifiable before account linking. Actual Vercel hosting, public proxy streaming/upload limits and provider behavior remain trial gates. A Vercel production alias does not convert the attached development backend into a production-certified service; migration/recovery, quality/cost and capacity gates remain in the open issues.
+The local proxy contract, exact-origin/CSRF rules, command plans and production web build are verifiable before account linking. Public proxy streaming/upload limits and provider behavior require explicit hosted acceptance, independent of the recorded deployment. A Vercel production alias does not convert the attached development backend into a production-certified service; migration/recovery, quality/cost and capacity gates remain in the open issues.

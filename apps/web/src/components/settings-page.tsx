@@ -441,7 +441,7 @@ function ArchivePage({ ctx }: { ctx: PageContext }) {
                     ))}
                 </select>
             </label>
-            <QueryState queries={[items]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[items]} />
             {items.data?.map((row) => (
                 <div className="goal-tree-row" key={row.id}>
                     <span className="goal-tree-link">{row.title}</span>

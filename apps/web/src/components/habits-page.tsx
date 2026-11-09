@@ -14,7 +14,7 @@ export function HabitsPage({ ctx }: { ctx: PageContext }) {
     const [tab, setTab] = useState("daily");
     return (
         <>
-            <QueryState queries={[habits]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[habits]} />
             <Tabs
                 label={ctx.t.habits}
                 value={tab}

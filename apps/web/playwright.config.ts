@@ -55,6 +55,7 @@ export default defineConfig({
                 PLANNER_AI_API_KEY: "",
                 PLANNER_SMTP_HOST: "",
                 PLANNER_RESEND_API_KEY: "",
+                PLANNER_BREVO_API_KEY: "",
                 PLANNER_SUPABASE_URL: "",
                 PLANNER_SUPABASE_SERVICE_ROLE_KEY: "",
                 PLANNER_SUPABASE_STORAGE_BUCKET: "",

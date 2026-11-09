@@ -32,6 +32,7 @@ with session_factory()() as db:
             password_hash=passwords.hash(values["password"]),
             locale=values.get("locale", "vi"),
             role="admin" if values.get("admin") else "user",
+            email_verified_at=None if values.get("unverified") else now(),
         )
         if values.get("mfa"):
             secret = base64.b32encode(b"12345678901234567890").decode().rstrip("=")

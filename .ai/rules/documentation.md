@@ -7,8 +7,8 @@ paths:
   - 'CLAUDE.md'
 ---
 
-# UI-driven documentation
+# Current documentation and source maps
 
-Write English in `docs/`. Record unresolved problems and migration items in [the open-issue list](../../../docs/issues.md) with stable IDs, status, affected UI/source links and a next step. Delete an entry when it is fixed and note the fix in [CHANGELOG.md](../../../CHANGELOG.md).
+Write English in `docs/`. Keep [decisions](../../docs/architecture/decisions.md), source behavior, historical reports and fresh execution evidence distinct. Record unresolved problems in [issues](../../docs/issues.md); remove resolved entries and note fixes/retirements in [CHANGELOG.md](../../CHANGELOG.md).
 
-While the legacy PHP/JS trace registry ([traceability.json](../../../docs/traceability.json)) is active, `php tools/docs/sync.php --write` and `php tools/docs/check.php` validate existing route/component trace tables and relative Markdown links. During a tech-stack migration, documentation tools and trace structures may be updated or replaced to match the new stack. Never put credentials, live tokens or unsupported test-success claims in documentation.
+[traceability.json](../../docs/traceability.json) owns current feature/source references. Follow [maintenance](../../docs/maintenance.md): run `python3 tools/docs/check.py --write`, then the checker and docs regression suite. No PHP documentation tool remains. Preserve historical diagram receipts as historical; do not fabricate current provenance or test results. Never commit credentials, private content or tokens.

@@ -994,6 +994,29 @@ legend {
     gap: 20px;
     color: var(--muted);
 }
+.workspace-loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+.loading-indicator {
+    display: grid;
+    place-items: center;
+    padding: 32px;
+    color: var(--accent);
+}
+.loading-spinner {
+    width: 28px;
+    height: 28px;
+    animation: loading-spin 0.8s linear infinite;
+}
+@keyframes loading-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner { animation: none; }
+}
 .auth-page {
     min-height: 100dvh;
     display: grid;

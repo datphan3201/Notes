@@ -1,6 +1,8 @@
 # Personal UI parity
 
-The retained PHP views, CSS, JavaScript behavior and guide screenshots are the reference for the React UI. Matching colors alone is insufficient. Teamwork is permanently removed from the product by user decision; live collaborative editing remains excluded from V1; core personal interactions remain required. This work does not change the existing MySQL source or replace migrated personal records.
+> Historical migration/design record. Current runtime is `apps/` on `main`; PHP/JS source paths were retired in `8714dc0` and can be inspected in Git history. Earlier pending/integration/branch statements describe that stage only. [Current status](status.md), [live feature maps](../README.md) and [cloud operations](../operations/cloud.md) supersede present-state claims here. Referenced test runs are historical, not freshly executed.
+
+The historical PHP views/JavaScript behavior and retained CSS/guide screenshots informed the React UI; only current copied assets and React source remain in this checkout. Matching colors alone is insufficient. Teamwork is permanently removed from the product by user decision; live collaborative editing remains excluded from V1; core personal interactions remain required. This work does not change the existing MySQL source or replace migrated personal records.
 
 ## Current acceptance scope
 

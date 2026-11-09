@@ -2,7 +2,7 @@
 
 [Documentation home](../README.md) · [Open issues](../issues.md) · [Run locally](development.md)
 
-The approved personal workspace now runs against authenticated FastAPI/PostgreSQL data on `feat/personal-ai-planner-v1`. The user authorized integration and relevant tests after the UI review. Teamwork stays removed; realtime collaborative editing stays outside V1. The PHP/JS reference, MySQL source and private migration archives remain preserved. No production cutover or cloud deployment is implied.
+The approved personal workspace now runs against authenticated FastAPI/PostgreSQL data on `main`. The user authorized integration and relevant tests after the UI review. Teamwork stays removed; realtime collaborative editing stays outside V1. The PHP/JS source tree was retired in `8714dc0`; historical Git/private migration archives remain the reference. Deployment is recorded in [cloud operations](../operations/cloud.md), while full parity/recovery acceptance remains separate.
 
 ## Runtime and persistence
 
@@ -32,10 +32,10 @@ The square control means **Stop waiting**: it stops browser observation, preserv
 
 Alembic `0004_complete_workspace` and `0005_private_assets` extend the current PostgreSQL schema. Forward upgrades were applied to development only after private backups and isolated migration checks. A fresh disposable PostgreSQL database reached the same head; `alembic check` found no new schema operations. No MySQL reset/import or replacement of private files was needed for this integration.
 
-The development web/API/worker remain watched for code changes, and the existing Funnel continues forwarding HTTPS to the web application. The worker handles recurrence, reminders, retention, mail, indexing, AI and private-file cleanup. Administrator roles are assigned only from the server operator's console; an ordinary account cannot grant itself that role.
+The development launcher supports watched web/API/worker processes and optional Funnel; whether those processes are currently running is environment state, not established by this document. The worker handles recurrence, reminders, retention, mail, indexing, AI and private-file cleanup. Administrator roles are assigned only from the server operator's console; an ordinary account cannot grant itself that role.
 
 ## Verification and limits
 
-The isolated PostgreSQL suite covers ownership/404, CSRF, graph cycles and atomic rollback, stale versions and writer races, real single-use email/MFA challenges, private files/evidence, report resolution races, recurrence templates, retention boundaries, reminder pagination, Note query batching and deterministic AI/source/approval behavior. Browser tests use actual cookie/CSRF APIs, a production Next build, disposable accounts/storage and the guarded `planner_test` database; they never reset development or contact live mail/AI providers. Current execution results are recorded in [status](status.md).
+The isolated PostgreSQL suite covers ownership/404, CSRF, graph cycles and atomic rollback, stale versions and writer races, real single-use email/MFA challenges, private files/evidence, report resolution races, recurrence templates, retention boundaries, reminder pagination, Note query batching and deterministic AI/source/approval behavior. Browser tests use actual cookie/CSRF APIs, a production Next build, disposable accounts/storage and the guarded `planner_test` database; they never reset development or contact live mail/AI providers. Historical execution reports and current limits are recorded in [status](status.md).
 
-These checks establish integration of the approved interfaces, not pixel-perfect equivalence of every historical screen or production acceptance. Concurrent shared Notes use version conflicts rather than realtime co-editing. Offline deletion never wins over a newer server version. The broader migration/recovery, model-quality/cost and production capacity gates remain in ISSUE-045–048. Cloud rollout is a separate operation.
+These checks establish integration of the approved interfaces, not pixel-perfect equivalence of every historical screen or production acceptance. Concurrent shared Notes use version conflicts rather than realtime co-editing. Offline deletion never wins over a newer server version. The broader migration/recovery, model-quality/cost and production capacity gates remain in ISSUE-045–048. Hosted deployment is recorded separately from complete hosted acceptance.

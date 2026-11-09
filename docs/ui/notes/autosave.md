@@ -1,54 +1,28 @@
-# / — Notes autosave, recovery and conflicts
+# Note autosave and recovery
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-[Archify: Notes save lifecycle](../../diagrams/notes-autosave/index.html) and [failure/recovery outcomes](../../diagrams/notes-save-outcomes/index.html). The main Notes workspace owns autosave/recovery. Task notes, shared edits and Reviews use their explicit-save paths.
+The live workspace coordinates Note drafts, save acknowledgements and recovery. Autosave uses the server version; a stale update conflicts instead of overwriting concurrent text. Request success must not erase typing entered after that request started.
+
+A local draft retains its base version across reload. Recovery offers explicit reconciliation/download; offline conflicts preserve the remote version and recover local edits as a copy. Failed/pending saves stay visible. Account-scoped browser recovery is distinct from the server's stored Note and must be cleared appropriately on logout. Task working notes and Review reflections use explicit Save.
+
+The shared save queue preserves newer edits while awaiting an acknowledgement. Saved-version/draft conflict choices explicitly resume the queue with the selected Note text; choosing the saved version does not reapply a failed local draft.
 
 <!-- BEGIN GENERATED TRACE -->
 
-### Dirty, saving, saved and retry state
+## Source and verification map
 
-**Trace ID:** `notes.autosave`
+Trace ID: `notes.autosave`. Test references identify coverage to inspect; they are not execution results.
 
-Valid edits debounce at 500ms and dispatch within 2s of continuous typing. One logical request is frozen/in-flight at a time. Only exact acknowledged content is Saved. IME composition never sends partial text.
-
-| Layer | Entry point |
+| Role | Current source |
 | --- | --- |
-| UI / DOM | [index.php · data-editor-status](../../../frontend/src/views/notes/index.php#L124) |
-| Browser logic | [autosave-machine.js · export class AutosaveMachine](../../../frontend/src/js/notes/autosave-machine.js#L12) |
-| Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L125) |
-| Persistence | [PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L152) |
-| Relevant tests (not a pass claim) | [autosave-machine.test.js · debounces valid edits](../../../frontend/tests/js/autosave-machine.test.js#L89)<br>[autosave-machine.test.js · keeps typing](../../../frontend/tests/js/autosave-machine.test.js#L112)<br>[autosave-machine.test.js · J02 continuous](../../../frontend/tests/js/autosave-machine.test.js#L209) |
-| HTTP | `POST /api/v1/notes` (`api.notes.store`) → [NoteController::store](../../../backend/src/Http/Controller/NoteController.php#L61)<br>`PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L83) |
-
-### Recover draft, offline retry and session changes
-
-**Trace ID:** `notes.recovery`
-
-One account-scoped sessionStorage record preserves acknowledged/draft/frozen request state. Validate schema, user, age and size before recovery. Retry exact requests after 1/2/4s, respect Retry-After, pause offline; validation/conflicts require intervention. Clear owned recovery records on logout/account change.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [index.php · data-session-recovery](../../../frontend/src/views/notes/index.php#L129) |
-| Browser logic | [recovery-store.js · export class RecoveryStore](../../../frontend/src/js/lib/recovery-store.js#L5)<br>[autosave-machine.js · export class AutosaveMachine](../../../frontend/src/js/notes/autosave-machine.js#L12) |
-| Controller / service / domain | [NoteService.php · public function create(](../../../backend/src/Application/Notes/NoteService.php#L38) |
-| Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function insert(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L125) |
-| Relevant tests (not a pass claim) | [recovery-store.test.js · isolated by user](../../../frontend/tests/js/recovery-store.test.js#L24)<br>[recovery-store.test.js · corrupt and expired](../../../frontend/tests/js/recovery-store.test.js#L35)<br>[recovery-store.test.js · clearAll](../../../frontend/tests/js/recovery-store.test.js#L50)<br>[autosave-machine.test.js · J12 recovery](../../../frontend/tests/js/autosave-machine.test.js#L282)<br>[autosave-machine.test.js · J13 expired session](../../../frontend/tests/js/autosave-machine.test.js#L297) |
-| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L106) |
-
-### Saved-version/draft conflict decisions
-
-**Trace ID:** `notes.conflict`
-
-Creates use stable client-generated UUIDs. Exact replay is a no-op; stale different updates return current owned content with 409. The editor keeps the local draft until the user chooses how to reconcile.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [index.php · data-conflict-dialog role="dialog"](../../../frontend/src/views/notes/index.php#L241) |
-| Browser logic | [notes-page.js · openConflict(machine) {](../../../frontend/src/js/notes/notes-page.js#L930) |
-| Controller / service / domain | [NoteService.php · public function update(](../../../backend/src/Application/Notes/NoteService.php#L125) |
-| Persistence | [PdoNoteRepository.php · public function findOwned(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L28)<br>[PdoNoteRepository.php · public function updateSnapshot(](../../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php#L152) |
-| Relevant tests (not a pass claim) | [NotesHttpTest.php · public function test_create_replay_update_conflict_noop_search_and_tombstone_contract(](../../../backend/tests/Plain/Http/NotesHttpTest.php#L55) |
-| HTTP | `PATCH /api/v1/notes/{note}` (`api.notes.update`) → [NoteController::update](../../../backend/src/Http/Controller/NoteController.php#L83) |
+| UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L111) — `export default function LiveWorkspace()` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L248) — `def update(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L465) — `def apply_changes(` |
+| Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
+| Related tests | [apps/api/tests/test_concurrency.py](../../../apps/api/tests/test_concurrency.py) |
+| Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
+| Related tests | [apps/web/tests/e2e/workspace.spec.ts](../../../apps/web/tests/e2e/workspace.spec.ts) |
+| Related tests | [apps/web/tests/workspace-rebase.test.ts](../../../apps/web/tests/workspace-rebase.test.ts) |
 
 <!-- END GENERATED TRACE -->

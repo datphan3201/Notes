@@ -105,7 +105,7 @@ export function DashboardPage({ ctx }: { ctx: PageContext }) {
         activity,
     ];
     if (queries.some((query) => query.isPending || query.error))
-        return <QueryState queries={queries} />;
+        return <QueryState locale={ctx.identity.user.locale} queries={queries} />;
     const rows = tasks.data!;
     const taskData = rows.map((row, index) =>
         dashboardTask(

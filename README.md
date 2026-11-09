@@ -1,77 +1,38 @@
-# Planner
+# Personal AI Planner
 
-The **Personal AI Planner migration** is implemented separately under [apps](apps/) on `feat/personal-ai-planner-v1`: Next.js/React/TypeScript, FastAPI/Python and PostgreSQL/pgvector. Start with the [plan](docs/migration/personal-ai-planner.md), [new runtime setup](docs/migration/development.md), [implementation status and remaining release gates](docs/migration/status.md), and [Funnel/Vercel deployment routes](docs/migration/deployment-routes.md). The PHP/MySQL application described below is retained as the behavior reference and rollback baseline; production cutover has not occurred.
+A personal planning and Notes application with Areas, hierarchical Goals, Milestones, Tasks, Habits, Calendar, Reviews and an AI assistant whose changes require confirmation. The interface supports Vietnamese and English.
 
-Planner is a personal planning and notes web application: Goals with roadmaps and Milestones, Tasks with schedules and repeats, Habits, a Calendar, Reviews, and a Notes workspace with sharing, live co-editing, per-Note passwords, AI summaries and offline use. The interface is available in English and Vietnamese and works on phones, tablets and desktops in light and dark themes.
+The active runtime is on **`main` under `apps/`**. Legacy PHP/vanilla JavaScript sources and tooling were retired in commit `8714dc0`; they are available through Git history, not a runnable rollback checkout in this tree. Teamwork is removed; realtime shared-Note co-editing is outside V1. Registered-account Note sharing remains supported.
 
-Built with framework-free PHP 8.5, MySQL 8.4, vanilla JavaScript modules with Alpine.js, and Vite.
+| Component | Source | Stack / responsibility |
+| --- | --- | --- |
+| Web | [apps/web](apps/web/) | Next.js 16, React 19, TypeScript; same-origin API proxy |
+| API | [apps/api/planner](apps/api/planner/) | FastAPI, SQLAlchemy 2, Pydantic; business validation, sessions and authorization |
+| Worker | [jobs.py](apps/api/planner/jobs.py) | PostgreSQL jobs, leases/retries, recurrence, reminders, mail, retention and AI |
+| Persistence | [migrations](apps/api/migrations/) | PostgreSQL 17, pgvector, Alembic; private files via local/GCS/Supabase adapter |
 
-## Features
+## Run locally
 
-| Area | Highlights |
-| --- | --- |
-| Notes | Grid/list, live search, tags, pin, colours, checklists, image/video/file attachments, autosave with conflict recovery, links to Goals/Tasks |
-| Note security | Optional password per Note, enforced by the server; locked text never appears in cards, search, AI or the offline copy |
-| Sharing | Invite registered accounts (view or edit), invitations by notification and email, live co-editing with presence and named carets |
-| AI | Note summaries, questions answered from your Notes with cited sources, and an assistant that proposes planning changes for confirmation |
-| Offline | Installable PWA; Notes can be read, searched, edited and created offline and sync on reconnect |
-| Planning | Areas, Goal hierarchy and fishbone roadmap, Milestones with prerequisites, Tasks, Today/Week plans, Calendar, repeating Tasks, Habits with streaks, Reviews |
-| Accounts | Email verification, password reset by link or code, two-factor authentication (email or TOTP), profile/avatar, preferences, admin reports and locking |
-| Help | A user guide for everyone at `/help` in Vietnamese and English, with real screenshots from demo accounts, and a short tour behind **?** |
-
-## Architecture
-
-```
-Browser (PWA: service worker + IndexedDB)
-   │ HTTPS                       │ WSS /realtime
-Nginx ── PHP-FPM ── backend/public/index.php ──┐
-   └──────── bin/realtime.php (WebSocket) ─────┴── MySQL 8.4
-cron ── bin/console schedule:run (reminders, retention, cleanup)
-```
-
-- [backend/src](backend/src/) — namespace `Planner\`: HTTP controllers → application services (transactions) → domain rules → PDO repositories, wired explicitly in [bootstrap](backend/bootstrap/); no framework or ORM.
-- [frontend/src](frontend/src/) — PHP views, JavaScript modules, CSS and translations, built by Vite into `backend/public/build`.
-- [backend/database/plain-migrations](backend/database/plain-migrations/) — forward-only, checksum-verified schema migrations.
-- Only [backend/public](backend/public/) is web-served; uploads live in private storage outside it.
-
-Details: [runtime and processes](docs/architecture/runtime.md), [data and transactions](docs/architecture/persistence.md), [HTTP and security](docs/architecture/http-security.md).
-
-## Quick start (local)
-
-Requirements: PHP 8.5 with the extensions in [composer.json](backend/composer.json), Composer 2, MySQL 8.4, Node 22.
+Requirements: Node 22, Python 3.12, uv and Docker Compose. From the repository root:
 
 ```bash
-cd backend
-cp -n .env.example .env          # set database credentials, APP_URL, SESSION_ENCRYPTION_KEY
-composer install
-php bin/console migrate
-(cd ../frontend && npm ci && npm run build)
-php -S 127.0.0.1:8000 -t public dev-router.php
-php bin/realtime.php             # optional, second terminal: live co-editing
+bash tools/dev/planner-v1.sh
 ```
 
-Open http://localhost:8000 (it must match `APP_URL`) and register. Full setup, hot reload and troubleshooting: [installation](docs/operations/installation.md) and [local development](docs/operations/local-development.md).
+Open `http://localhost:3000`. The launcher installs locked dependencies, checks `planner_dev`, runs forward migrations, and starts web/API/worker watching. It preserves private configuration. See [development](docs/migration/development.md) for manual setup, private email/AI configuration and Funnel sharing.
 
-To share it publicly from this machine, run `bash tools/dev/install-command.sh` once and then `planner`: it serves the checkout at a fixed Tailscale Funnel address (or `planner tunnel` for a Cloudflare quick tunnel). See [sharing the local app](docs/operations/local-development.md#share-the-local-app-at-a-fixed-address-with-tailscale-funnel).
-
-## Configuration
-
-All settings are environment variables documented in [backend/.env.example](backend/.env.example): database, session key, mail (SMTP or a local outbox), AI provider (`AI_ENABLED`, `GOOGLE_AI_API_KEY`, `AI_MODEL`, `AI_EMBEDDING_MODEL`) and live collaboration (`REALTIME_*`). Never commit `.env` files or keys.
-
-## Tests
+## Verify
 
 ```bash
-cd backend && php vendor/bin/phpunit -c phpunit.xml   # requires the isolated goals_test database
-cd frontend && npm run test:unit && npm run format:check
-php tools/docs/check.php                               # documentation coverage and links
+python3 tools/docs/check.py
+python3 -m unittest discover -s tools/docs/tests -q
+python3 -m unittest discover -s tools/deploy/tests -p 'test_planner_v1.py' -q
 ```
 
-Integration tests refuse to run unless the connected database is `goals_test`. See [testing](docs/testing/README.md) and the [manual checklist](docs/testing/manual-checklist.md).
+API lint/tests and web typecheck/unit/build/browser commands are in [testing](docs/testing/README.md). Database tests migrate and truncate **only isolated `planner_test`** after configured/actual name checks; never target development or hosted data. API and browser suites share that disposable database and must run sequentially.
 
-## Deployment
+## Deployment and documentation
 
-[tools/deploy/setup.sh](tools/deploy/setup.sh) provisions an Ubuntu host — MySQL, PHP-FPM, Nginx with the `/realtime` WebSocket proxy, the `planner-realtime` service, the scheduler and backups — behind a Cloudflare Tunnel or a direct domain with Let's Encrypt; releases are pulled from green `main` CI. See [deployment](docs/operations/deployment.md) and [jobs and processes](docs/operations/jobs.md).
+Repository deployment records identify Vercel web, Render Singapore API/worker and Supabase PostgreSQL/private Storage. [Cloud operations](docs/operations/cloud.md) records the topology, configuration and runbooks; it is not a fresh live health check. [render.yaml](render.yaml) selects `main` and disables automatic deployment. Free-container sleep pauses background work.
 
-## Documentation
-
-Users read the in-app [user guide](docs/ui/help/README.md) (Settings › User guide); its screenshots are rebuilt with `tools/guide`. Developers start at the [documentation index](docs/README.md): find the page or label you see and follow its trace from template to browser module, HTTP route, service, SQL and tests. Also: [product decisions](docs/architecture/decisions.md), [open issues](docs/issues.md), [changelog](CHANGELOG.md), [contributor and agent rules](AGENTS.md), [documentation maintenance](docs/maintenance.md).
+Start at the [documentation index](docs/README.md), [current decisions](docs/architecture/decisions.md), [open issues](docs/issues.md), [changelog](CHANGELOG.md) and [repository instructions](AGENTS.md). Outstanding historical-data acceptance, AI quality/cost, recovery and capacity work remain explicit; a deployment or passing static check does not close them.

@@ -29,8 +29,8 @@ export function validateAuth(mode: AuthMode, values: AuthFields) {
         if (!values.password) errors.password = "Enter your password.";
         else if (values.password.length > 128)
             errors.password = "Use no more than 128 characters.";
-        else if (mode !== "login" && values.password.length < 12)
-            errors.password = "Use at least 12 characters.";
+        else if (mode !== "login" && values.password.length < 8)
+            errors.password = "Use at least 8 characters.";
     }
     if (
         ["register", "reset"].includes(mode) &&

@@ -1,188 +1,99 @@
 # Cloud operations: Render, Vercel and Supabase
 
-[Operations home](README.md) · [Migration plan](../migration/personal-ai-planner.md) · [Architecture](../migration/render-vercel-supabase.md)
+[Operations](README.md) · [Release procedure](deployment.md) · [Topology setup](../migration/render-vercel-supabase.md)
 
-Production runtime deployed on **2026-11-08** for `feat/personal-ai-planner-v1`.
+## Recorded resources and evidence
 
----
+Repository deployment records report production deployment on **2026-11-08**. This runbook synchronizes those records with committed source/configuration; it does not freshly inspect hosted settings, account plans, health, data contents or inbox delivery. Verify intended account/service/revision before an operational change.
 
-## 1. System Topology & Active Resources
+| Component | Recorded resource | Recorded location / endpoint |
+| --- | --- | --- |
+| Frontend | Vercel `planner-t1` | `https://planner-t1.vercel.app` |
+| API / polling worker | Render `planner-api-sg` | Singapore; `https://planner-api-sg.onrender.com` |
+| PostgreSQL / pgvector | Supabase project `mybfctyrtdjrrmndfdvf` | Mumbai; private application schema `planner` |
+| Private files | Supabase Storage `planner-private` | Authenticated API byte proxy, no public object URLs |
+| Account mail | Resend HTTPS adapter | Server-configured approved sender/key |
 
 ```mermaid
 flowchart LR
-    Browser["Web Browser (Client)"] -->|HTTPS / WSS| Vercel["Vercel Edge (Frontend)<br/>planner-t1.vercel.app"]
-    Vercel -->|Same-origin rewrite /api/v1/*| Render["Render Singapore (API & Worker)<br/>planner-api-sg.onrender.com"]
-    Render -->|PostgreSQL 17 + pgvector (TLS)| SupabaseDB[("Supabase DB (Mumbai)<br/>Schema: planner")]
-    Render -->|Private HTTPS Storage| SupabaseStorage["Supabase Storage<br/>Bucket: planner-private"]
-    Render -->|HTTPS REST API| Resend["Resend API<br/>Transactional Email"]
+  Browser --> Web[Vercel Next.js]
+  Web -->|same-origin API rewrite| API[Render FastAPI]
+  API --> DB[(Supabase PostgreSQL and pgvector)]
+  API --> Files[Private Supabase Storage]
+  Worker[Colocated polling worker] --> DB
+  Worker --> Files
+  Worker --> Mail[HTTPS mail provider]
+  Worker --> AI[Configured AI provider]
 ```
 
-### Component Inventory
+[render.yaml](../../render.yaml) requests service name `planner-api`, branch **`main`**, Singapore, Free plan, `/ready` health check and **`autoDeployTrigger: "off"`**. The recorded existing service name differs from the template name; review/update the intended existing service rather than accidentally provisioning a duplicate. A push to `main` alone does not imply a Render deployment. Actual dashboard settings require separate inspection.
 
-| Component | Provider & Tier | Identifier / Name | Region | Endpoint / Host |
-| :--- | :--- | :--- | :--- | :--- |
-| **Frontend** | Vercel (Hobby) | `planner-t1`<br/>(`prj_BO2EKC5jEswXZMw9OSgm6QL0BBUm`) | Edge (HKG/SIN) | `https://planner-t1.vercel.app` |
-| **API & Worker** | Render (Free) | `planner-api-sg`<br/>(`srv-dbo21jp5efls73clvcp0`) | Singapore (`singapore`) | `https://planner-api-sg.onrender.com` |
-| **Database** | Supabase (Free) | `mybfctyrtdjrrmndfdvf` | Mumbai (`aws-0-ap-south-1`) | `aws-0-ap-south-1.pooler.supabase.com:5432/postgres` (schema `planner`) |
-| **Object Storage**| Supabase Storage | `planner-private` (Private) | Mumbai | Proxy via API `/files/*` |
-| **Email Service** | Resend | API-based HTTPS delivery | Global | `onboarding@resend.dev` |
+## Configuration
 
-> [!IMPORTANT]
-> **Zero hardcoded credentials:** Never commit passwords, tokens, connection strings, or encryption keys to Git. All secrets are configured strictly through Render environment variables and Vercel project settings.
+[Settings](../../apps/api/planner/config.py) and [environment example](../../apps/api/.env.example) are authoritative for accepted fields/defaults. Supply secrets through the provider's private environment/secret controls, never committed files, browser variables, command arguments or logs.
 
----
+| Backend setting | Active topology requirement |
+| --- | --- |
+| `PLANNER_ENVIRONMENT` | `production` |
+| `PLANNER_WEB_ORIGIN` | Exact stable frontend HTTPS origin, recorded `https://planner-t1.vercel.app`; no wildcard previews |
+| `PLANNER_DATABASE_URL` | Actual Supabase PostgreSQL session-pooler URL with TLS; use private operator value |
+| `PLANNER_DATABASE_SCHEMA` | `planner`, kept outside anonymous Data API exposure |
+| `PLANNER_POOL_SIZE` / `PLANNER_POOL_OVERFLOW` | Blueprint `4` / `2` per process; API + worker can use **12** application connections total, plus migration/admin headroom |
+| `PLANNER_SUPABASE_URL` | Exact project HTTPS origin |
+| `PLANNER_SUPABASE_SERVICE_ROLE_KEY` | Server-only legacy service-role JWT accepted by the current validator |
+| `PLANNER_SUPABASE_STORAGE_BUCKET` | Private `planner-private` bucket |
+| `PLANNER_WORKER_MODE` / `PLANNER_RUN_WORKER` | `poll` / `true` for colocated worker |
+| `PLANNER_MIGRATE_ON_START` | `true` in the single-container blueprint |
+| `PLANNER_ENCRYPTION_KEY` | Stable private Fernet key or supported random secret of at least 32 characters; retain for TOTP decryption |
+| `PLANNER_SMTP_FROM` / `PLANNER_RESEND_API_KEY` | Approved sender plus HTTPS email credential; template sender is onboarding@resend.dev, which is not proof of general delivery acceptance |
+| AI settings | Optional compatible base URL/key/chat+embedding models; configure prices/limits explicitly |
 
-## 2. Environment Variables & Configuration
+Vercel links **only `apps/web`**, uses Node 22/npm and sets server-only `API_ORIGIN` to `https://planner-api-sg.onrender.com` at build/runtime. Next.js rewrites are built with the destination; a changed origin needs a rebuild. Keep database/storage/mail/provider/encryption keys on the backend. Production does not accept development origin exceptions.
 
-### Backend: Render (`planner-api-sg`)
+## Release and startup
 
-All settings are configured in the Render Dashboard under **Environment**:
-
-| Variable Key | Required Value / Description | Sensitive |
-| :--- | :--- | :--- |
-| `PLANNER_ENVIRONMENT` | `production` | No |
-| `PLANNER_WEB_ORIGIN` | `https://planner-t1.vercel.app` (Strictly without trailing slash) | No |
-| `PLANNER_DATABASE_URL` | `postgresql+psycopg://postgres.[REF]:[PASS]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require` | **Yes** |
-| `PLANNER_DATABASE_SCHEMA`| `planner` | No |
-| `PLANNER_POOL_SIZE` | `4` (Tuned for Supabase Session pooler) | No |
-| `PLANNER_POOL_OVERFLOW` | `2` | No |
-| `PLANNER_SUPABASE_URL` | `https://[REF].supabase.co` | No |
-| `PLANNER_SUPABASE_SERVICE_ROLE_KEY` | Server-only `service_role` JWT token | **Yes** |
-| `PLANNER_SUPABASE_STORAGE_BUCKET` | `planner-private` | No |
-| `PLANNER_WORKER_MODE` | `poll` | No |
-| `PLANNER_RUN_WORKER` | `true` (Runs polling worker alongside FastAPI) | No |
-| `PLANNER_MIGRATE_ON_START` | `true` (Applies Alembic migrations automatically upon boot) | No |
-| `PLANNER_ENCRYPTION_KEY` | 32+ character key or Fernet secret for encrypting sensitive fields | **Yes** |
-| `PLANNER_SMTP_FROM` | `Planner <onboarding@resend.dev>` (or custom verified domain) | No |
-| `PLANNER_RESEND_API_KEY`| Resend API key (`re_...`) | **Yes** |
-
-### Frontend: Vercel (`planner-t1`)
-
-Configured in Vercel under **Settings → Environment Variables**:
-
-| Variable Key | Environments | Value | Description |
-| :--- | :--- | :--- | :--- |
-| `API_ORIGIN` | Production, Preview, Development | `https://planner-api-sg.onrender.com` | Upstream API origin proxied via Next.js rewrites |
-
----
-
-## 3. Deployment Runbook
-
-### A. Deploying Frontend Changes (Vercel)
-
-1. Make sure `apps/web/.vercelignore` exists to prevent uploading unneeded build caches and dependencies.
-2. Deploy directly using Vercel CLI:
-   ```bash
-   cd apps/web
-   npx vercel deploy --prod --yes --token=<VERCEL_TOKEN>
-   ```
-3. Alternatively, link GitHub repository `datphan3201/Notes` (branch `feat/personal-ai-planner-v1`) in Vercel project settings for automatic continuous deployment on push.
-
-### B. Deploying Backend Changes (Render)
-
-1. Commit and push changes to `feat/personal-ai-planner-v1`:
-   ```bash
-   git push origin feat/personal-ai-planner-v1
-   ```
-2. Render will automatically build the Docker image and deploy.
-3. To trigger an immediate manual deploy via Render API:
-   ```bash
-   curl -X POST https://api.render.com/v1/services/srv-dbo21jp5efls73clvcp0/deploys \
-     -H "Authorization: Bearer <RENDER_TOKEN>" \
-     -H "Content-Type: application/json" \
-     -d '{"clearCache": "do_not_clear"}'
-   ```
-4. **Startup lifecycle:**
-   - Container executes [Dockerfile](../../apps/api/Dockerfile) CMD `python -m planner.serve`.
-   - `planner.serve` checks environment configuration.
-   - If `PLANNER_MIGRATE_ON_START=true`, it runs `alembic upgrade head` into the `planner` schema.
-   - Launches `FastAPI` server on `PORT` and starts the asynchronous background polling worker.
-
----
-
-## 4. Operational Playbooks
-
-### Managing User Roles (Promoting to Admin)
-
-To promote or modify a user's role in the production Supabase database:
+Follow [deployment](deployment.md): checks, consistent backups, compatible migration review, manually deploy the intended `main` revision, web rebuild with matching origins and acceptance checks. The helper below prints a plan without publishing:
 
 ```bash
-PLANNER_DATABASE_URL="postgresql+psycopg://postgres.[REF]:[PASS]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require" \
-PLANNER_DATABASE_SCHEMA="planner" \
-python3 -m planner.admin <user_email> admin
+python3 tools/deploy/planner_v1.py vercel --origin https://planner-t1.vercel.app --backend https://planner-api-sg.onrender.com
 ```
 
-- Target roles: `admin`, `user`.
-- An immutable audit trail is logged to `planner.admin_actions`.
+`--execute` invokes the Vercel CLI against its linked project/account; use only as part of an authorized release. It does not configure Render/Supabase. Do not paste long-lived tokens into shell command arguments.
 
-### Database Schema Migrations
+The container runs `python -m planner.serve`. Optional `alembic upgrade head` completes first; then the supervisor starts API and polling worker. Child exit stops its sibling and exits the container. Sleep pauses both processes; database jobs remain durable. A multi-replica rollout requires a controlled migration strategy instead of competing startup migrations.
 
-- Migrations are versioned under [apps/api/migrations/versions](../../apps/api/migrations/versions).
-- Follow expand-and-contract practices: never delete or rename columns in a single deploy while existing instances are serving traffic.
-- To run migrations manually outside container boot:
-  ```bash
-  cd apps/api
-  PLANNER_DATABASE_URL="<CONNECTION_STRING>" \
-  PLANNER_DATABASE_SCHEMA="planner" \
-  alembic upgrade head
-  ```
+## Health and diagnosis
 
-### Data Synchronization / Migration
+Read-only commands from the repository root:
 
-To migrate or sync data from a local environment or baseline backup into Supabase:
-- Use the atomic binary synchronization tool: [tools/deploy/migrate_to_supabase.py](../../tools/deploy/migrate_to_supabase.py).
-- Features: schema mapping (`public` → `planner`), foreign key resolution, sequence alignment, binary embedding preservation, and zero data truncation.
+```bash
+python3 tools/deploy/planner_v1.py check --url https://planner-t1.vercel.app
+curl --fail --silent --show-error https://planner-api-sg.onrender.com/ready
+curl --fail --silent --show-error https://planner-api-sg.onrender.com/health
+```
 
----
+Expected API bodies from source are `{"status":"ready"}` for `/ready` and `/api/v1/health`, `{"status":"ok"}` for `/health` and root GET/HEAD (HEAD has no body). These are expected contracts, not freshly observed responses. Readiness checks DB connectivity, not private storage, mail receipt, AI quality, schema parity or worker progress.
 
-## 5. Health Checks & Latency Monitoring
+| Symptom | Checks |
+| --- | --- |
+| 403 on writes | Exact browser Origin, backend `PLANNER_WEB_ORIGIN`, session/CSRF and email-verification state |
+| Initial timeout/502/504 | Recorded Free sleep/cold-start behavior, upstream logs/readiness, actual provider proxy limits; do not promise a fixed wake time |
+| Jobs stay queued/dead | Worker process, lease/error codes, sleep, provider settings and category preferences; inspect without dumping payloads |
+| Pool exhaustion | Both process pools, connection leaks/waits, Supabase connection mode/project capacity; migrations/admin require headroom |
+| Private file failure | Bucket privacy, backend service key, object existence and owner/share/password authorization |
+| Mail missing | HTTPS provider result/approved sender/recipient restrictions and queued job outcome; no token-log/outbox fallback |
+| Startup crash | Production config diagnostics, schema/migration compatibility and child-process exit reason |
 
-### Verification Endpoints
+## Roles, data and recovery
 
-1. **Frontend Proxy Health:**
-   ```bash
-   curl -s -w "\nHTTP: %{http_code} | Total: %{time_total}s\n" https://planner-t1.vercel.app/api/v1/health
-   # Expected: {"status":"ready"} (HTTP 200)
-   ```
-2. **Backend Direct Readiness (Checks DB connectivity):**
-   ```bash
-   curl -s -w "\nHTTP: %{http_code} | Total: %{time_total}s\n" https://planner-api-sg.onrender.com/ready
-   # Expected: {"status":"ready"} (HTTP 200)
-   ```
-3. **Backend Liveness:**
-   ```bash
-   curl -s -w "\nHTTP: %{http_code} | Total: %{time_total}s\n" https://planner-api-sg.onrender.com/health
-   # Expected: {"status":"ok"} (HTTP 200)
-   ```
-4. **End-to-End Page Latency:**
-   ```bash
-   curl -s -o /dev/null -w "HTTP: %{http_code} | TTFB: %{time_starttransfer}s | Total: %{time_total}s\n" https://planner-t1.vercel.app/login
-   # Expected TTFB: ~0.45s - 0.70s (warm container)
-   ```
+After verifying the intended database/schema and existing account, an authorized server operator runs from `apps/api`:
 
----
+```bash
+uv run python -m planner.admin person@example.com admin
+```
 
-## 6. Known Characteristics & Platform Limits (Free Tier)
+Use `user` to revoke. Both changes write an audit record; no HTTP role-grant endpoint exists. Configure private environment variables before running; do not include DSNs in the command line.
 
-### Render Free Tier
-- **Inactivity Sleep:** Services sleep after 15 minutes of zero incoming HTTP traffic.
-- **Cold Start:** The first request after sleep requires **30 to 50 seconds** to spin up the container and verify readiness. Subsequent requests are fast (~450ms).
-- **Ephemeral Filesystem:** Storage is wiped upon restart; all uploaded files must be uploaded to private Supabase Storage (`planner-private`).
-- **SMTP Port Blocks:** Render blocks outbound TCP ports 25, 465, and 587. Email delivery is routed via HTTPS to the Resend API.
-- **Monthly Usage Limit:** Free tier grants 750 free instance hours per calendar month per account.
+The [cloud COPY helper](../../tools/deploy/migrate_to_supabase.py) copies a fixed table list in one destination transaction and compares counts. It does **not** transfer object bytes, implement incremental merge/idempotency, validate a complete schema/table inventory, reconcile all owner/graph/content checksums or rehearse restoration. It is not a supported general synchronization/backup procedure (ISSUE-065). Further transfer requires separate review, isolated rehearsal and consistent DB+file backups. The guarded legacy importer has different target restrictions and cannot be pointed at cloud data as a workaround.
 
-### Supabase Free Tier
-- **Session Pooling:** Connect using port `5432` with `aws-0-ap-south-1.pooler.supabase.com` to prevent connection exhaustion.
-- **Inactivity Pause:** Supabase projects pause after 7 days without queries. Keeping active usage or scheduled jobs prevents pausing.
-
----
-
-## 7. Incident Troubleshooting Guide
-
-| Symptom / Error | Root Cause | Resolution |
-| :--- | :--- | :--- |
-| **HTTP 403: Untrusted request origin** | `PLANNER_WEB_ORIGIN` in Render does not exactly match the browser's origin `https://planner-t1.vercel.app`. | In Render environment variables, verify `PLANNER_WEB_ORIGIN=https://planner-t1.vercel.app` (no trailing slash). Trigger a service redeploy/restart. |
-| **HTTP 504 / 502 on initial request** | Render container was asleep and cold start exceeded Vercel's edge proxy timeout (~15s). | Wait 30 seconds and retry the request. Once awake, the container remains active for 15 minutes. |
-| **User lost Admin permissions** | Legacy import or default registration sets `role="user"`. | Execute `python3 -m planner.admin <email> admin` with the Supabase connection string and `planner` schema. |
-| **Database connection pool exhaustion** | Excessive concurrent connections or leaked sessions. | Verify `PLANNER_POOL_SIZE=4` and `PLANNER_POOL_OVERFLOW=2` in Render settings. Ensure connection uses Session Pooler port `5432`. |
-| **Render build failure / crash loop** | Missing required production environment variable. | Check container deployment logs via Render Dashboard or API. `planner.serve` outputs a consolidated checklist of any missing production requirements. |
+Confirm current service-plan limits in the provider dashboards before changes. The recorded Free design may sleep/restart and has non-durable container storage; uploads belong in private object storage and background timeliness cannot be guaranteed. Quotas, connection limits, mail sender restrictions, billing and PITR/backup availability are account/plan-dependent. No paid-tier recovery guarantee follows from this runbook. Managed restore, historical reconciliation, provider quality/cost and realistic capacity remain ISSUE-045–048.

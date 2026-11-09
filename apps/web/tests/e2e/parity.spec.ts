@@ -25,7 +25,7 @@ async function saved(page: Page, action: () => Promise<unknown>) {
     );
     await action();
     expect((await result).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
 }
 const noteContent = (page: Page) =>
     page
@@ -72,6 +72,7 @@ test("Escape offers discard for planning drafts and never silently saves", async
 }) => {
     await signInFixture(page);
     await navigate(page, "Công việc");
+    await page.getByRole("button", { name: "Thao tác trang", exact: true }).click();
     await page
         .getByRole("button", { name: "Công việc mới", exact: true })
         .first()
@@ -142,14 +143,14 @@ test("appearance theme and scenery persist across reload", async ({ page }) => {
         .getByRole("button", { name: "Lối mòn trong rừng", exact: true })
         .click();
     expect((await response).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     response = page.waitForResponse(
         (r) =>
             r.url().endsWith("/preferences") && r.request().method() === "PUT",
     );
     await page.getByRole("button", { name: "Tối", exact: true }).click();
     expect((await response).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute(
         "data-visual-theme",

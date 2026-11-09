@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
-import { Check, CircleHelp, Plus, RefreshCw, X } from "lucide-react";
+import { Check, CircleHelp, Plus, X } from "lucide-react";
 import Dialog from "../dialog";
+import LoadingSpinner from "../loading-spinner";
 import { createPortal } from "react-dom";
 import type { Text, ViewState } from "./shared";
 import { entityIcons } from "./entity-icons";
@@ -91,22 +92,14 @@ export function State({
     children: React.ReactNode;
 }) {
     if (state === "ready") return children;
+    if (state === "loading")
+        return <LoadingSpinner label={text("Loading…", "Đang tải…")} />;
     return (
         <section
             className="planning-panel review-state"
             role={state === "error" ? "alert" : "status"}
         >
-            {state === "loading" ? (
-                <>
-                    <RefreshCw className="preview-spin" />
-                    <h2>
-                        {text(
-                            "Loading your workspace…",
-                            "Đang tải không gian của bạn…",
-                        )}
-                    </h2>
-                </>
-            ) : state === "error" ? (
+            {state === "error" ? (
                 <>
                     <CircleHelp />
                     <h2>
@@ -437,9 +430,11 @@ export function Confirm({
 export function Toast({
     message,
     onClose,
+    closeLabel,
 }: {
     message: string;
     onClose: () => void;
+    closeLabel: string;
 }) {
     return message ? (
         <div className="review-toast notice" role="status">
@@ -447,7 +442,7 @@ export function Toast({
             <span>{message}</span>
             <button
                 className="icon-button"
-                aria-label="Close / Đóng"
+                aria-label={closeLabel}
                 onClick={onClose}
             >
                 <X size={16} />

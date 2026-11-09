@@ -1,99 +1,37 @@
-# Shared — Layout, CSS, navigation and Help
+# Shared workspace shell
 
-[Documentation home](../../README.md) · [All routes](../../reference/routes.md)
+[Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-Every authenticated route uses the application layout. The guest layout is separate. `app.js` reads safe bootstrap JSON, starts shared modules, and dispatches page initializers by data attributes.
+Next.js route files mount `Workspace`, which mounts `LiveWorkspace`. It reads an authenticated workspace snapshot and provides the reviewed React components with real data. Several live view components live under `components/preview/`; only explicit `/preview/*` routes mount synthetic data providers.
 
-The application layout also shows a banner for unverified accounts (**Resend email**, gone once the activation link is used) and an **Offline** pill in the top bar while the browser has no connection. Both layouts link the web app manifest and icons; [pwa.js](../../../frontend/src/js/lib/pwa.js) registers the service worker in production builds and clears offline caches on logout ([offline use](../notes/offline.md)). The Notes workspace is loaded as a separate chunk only on `/`.
-
-[Archify: system architecture](../../diagrams/system/index.html) shows the runtime boundaries.
-
-<!-- BEGIN GENERATED TRACE -->
-
-### Sidebar, topbar, mobile navigation and page bootstrap
-
-**Trace ID:** `shell.layout`
-
-AccountController renders page shell/bootstrap; page modules load their own data. Keep root-relative navigation, owned session state and existing data hooks stable.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [app.php · data-app-body](../../../frontend/src/views/layouts/app.php#L102)<br>[guest.php · $view-&gt;assets()](../../../frontend/src/views/layouts/guest.php#L12)<br>[icons.php · &lt;svg](../../../frontend/src/views/layouts/icons.php#L2) |
-| Browser logic | [app.js · DOMContentLoaded](../../../frontend/src/js/app.js#L91)<br>[navigation.js · export function initNavigation](../../../frontend/src/js/lib/navigation.js#L3) |
-| Controller / service / domain | [AccountController.php · private function renderApplicationPage(](../../../backend/src/Http/Controller/AccountController.php#L241) |
-| Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_php_templates_preserve_dom_contract_and_escape_bootstrap_data(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L143) |
-| HTTP | `GET /api/v1/session` (`api.session`) → [AccountController::session](../../../backend/src/Http/Controller/AccountController.php#L106) |
-
-### Typography, themes and component CSS
-
-**Trace ID:** `shell.styles`
-
-CSS entry imports tokens/base/layout/components/feature styles. Change shared tokens for cross-app values; edit feature sheets for scoped presentation. Vite serves source in local mode and hashed /build assets for production.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [app.php · $view-&gt;assets](../../../frontend/src/views/layouts/app.php#L37) |
-| Browser logic | [app.js · import '@fontsource/be-vietnam-pro/400.css'](../../../frontend/src/js/app.js#L8) |
-| Controller / service / domain | [AssetManifest.php · public function tags(](../../../backend/src/Http/View/AssetManifest.php#L19)<br>[AssetManifest.php · private function developmentTags(](../../../backend/src/Http/View/AssetManifest.php#L29)<br>[AssetManifest.php · private function productionTags(](../../../backend/src/Http/View/AssetManifest.php#L55)<br>[ContentSecurityPolicy.php · public function value(](../../../backend/src/Http/Security/ContentSecurityPolicy.php#L16) |
-| Relevant tests (not a pass claim) | [ViewTest.php · public function test_manifest_emits_each_asset_once_and_rejects_unsafe_paths(](../../../backend/tests/Plain/Unit/ViewTest.php#L44)<br>[ViewTest.php · public function test_manifest_rejects_missing_invalid_and_nonlocal_development_configuration(](../../../backend/tests/Plain/Unit/ViewTest.php#L60) |
-| Coverage limit | Manifest/CSP checks do not certify visual rendering or typography; inspect browser loading and appearance separately. |
-
-### Dialogs, sections, Escape, backdrop and leave guards
-
-**Trace ID:** `shell.dialogs`
-
-workspace-ui and dialog-backdrop manage common interactions. Dirty/save/conflict flows are owned by each editor; preserve focus and drafts when moving components.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [app.php · data-leave-guard-form&gt;](../../../frontend/src/views/layouts/app.php#L93) |
-| Browser logic | [workspace-ui.js · export function initWorkspaceUI](../../../frontend/src/js/lib/workspace-ui.js#L134)<br>[dialog-backdrop.js · export function initDialogBackdropClose](../../../frontend/src/js/lib/dialog-backdrop.js#L18) |
-| Relevant tests (not a pass claim) | [workspace-ui.test.js · creation drafts](../../../frontend/tests/js/workspace-ui.test.js#L15)<br>[workspace-ui.test.js · creation serializes](../../../frontend/tests/js/workspace-ui.test.js#L27)<br>[dialog-backdrop.test.js · only clicks beyond](../../../frontend/tests/js/dialog-backdrop.test.js#L5) |
-
-### Help tour and first-visit dismissal
-
-**Trace ID:** `shell.help`
-
-The ? button opens a short tour of eleven steps, each with a real screenshot in the account language (walkthrough-content shot names, /guide/<language>/<shot>.webp) and alternative text; Open the full guide leads to /help. Other dialogs and draft recovery take priority. Skip/Close/Escape/Finish persist account-wide dismissal once.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [walkthrough.php · data-walkthrough aria-labelledby](../../../frontend/src/views/layouts/walkthrough.php#L1) |
-| Browser logic | [walkthrough.js · export function initWalkthrough](../../../frontend/src/js/help/walkthrough.js#L11)<br>[walkthrough-content.js · export](../../../frontend/src/js/help/walkthrough-content.js#L4) |
-| Controller / service / domain | [AccountService.php · public function dismissWalkthrough(](../../../backend/src/Application/Account/AccountService.php#L66) |
-| Persistence | [PdoAccountRepository.php · public function walkthroughDismissed(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L93)<br>[PdoAccountRepository.php · public function dismissWalkthrough(](../../../backend/src/Infrastructure/Persistence/Pdo/Account/PdoAccountRepository.php#L108) |
-| Relevant tests (not a pass claim) | [AccountHttpTest.php · public function test_walkthrough_dismissal_is_owned_idempotent_and_survives_a_new_login(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L177)<br>[AccountHttpTest.php · public function test_walkthrough_shell_is_shared_and_bootstrap_tracks_dismissal(](../../../backend/tests/Plain/Http/AccountHttpTest.php#L216)<br>[walkthrough-content.test.js · test('every tour step is written in both languages](../../../frontend/tests/js/walkthrough-content.test.js#L9) |
-| HTTP | `POST /api/v1/walkthrough/dismiss` (`api.walkthrough.dismiss`) → [AccountController::dismissWalkthrough](../../../backend/src/Http/Controller/AccountController.php#L149) |
-
-### Floating editor for Tasks, Goals and Milestones
-
-**Trace ID:** `shell.quick-editor`
-
-One side sheet (full screen below 600px) edits or creates a Task, Goal or Milestone on the current page. Calendar items, Tasks rows and their Edit item, Dashboard task rows and the roadmap's Milestone task list open it on a plain click; a modified click (Ctrl, Cmd, Shift, middle button) keeps the full page, and Open full page leads there for working notes, Related work and history. Task: name, Add to (Inbox, Goal or open Milestone), status, importance stars, start/due dates, scheduled start/end, reminder, estimate, description, criteria and the completion checklist (tick or add). Goal and Milestone: icon, name, importance, deadline, description and criteria; a new Goal picks its Area and a new Milestone its Goal, while moving them stays on the roadmap. Save sends only the changed fields with base_version; Complete/Reopen use the ordinary transitions and their confirmations. A version conflict keeps the draft and offers Use saved version or Keep my draft, which lays only the fields edited here over the latest version. Closing with unsaved changes asks first; Escape inside the icon picker closes only the picker. Every save dispatches planner:changed, which refreshes the Calendar, Tasks, Goals, Dashboard and roadmap in place. Goals and roadmap creation also use this sheet; sub-Goals retain parent_goal_id rather than selecting an Area, and roadmap Milestone/Task creations preserve their append-position presets.
-
-| Layer | Entry point |
-| --- | --- |
-| UI / DOM | [quick-editor.js · class QuickEditor {](../../../frontend/src/js/planning/quick-editor.js#L151) |
-| CSS | [workspace.css · Floating editor sheet](../../../frontend/src/css/workspace.css#L362) |
-| Browser logic | [quick-editor.js · export function initQuickEditor(](../../../frontend/src/js/planning/quick-editor.js#L634)<br>[quick-editor.js · export function changedFields(](../../../frontend/src/js/planning/quick-editor.js#L91)<br>[quick-editor.js · export function quickEditLink(](../../../frontend/src/js/planning/quick-editor.js#L124) |
-| Controller / service / domain | [PlanningService.php · public function update(string $type, int $userId, string $id, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L188)<br>[PlanningService.php · public function create(string $type, int $userId, array $input): array](../../../backend/src/Application/Planning/PlanningService.php#L103) |
-| Persistence | [PdoPlanningRepository.php · public function update(](../../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php#L94) |
-| Relevant tests (not a pass claim) | [quick-editor.test.js · test('an edit sends only what changed, in API shape'](../../../frontend/tests/js/quick-editor.test.js#L34)<br>[quick-editor.test.js · test('creating sends every field, and Goals and Milestones carry their icon'](../../../frontend/tests/js/quick-editor.test.js#L55) |
-| Coverage limit | Form value and change mapping are unit-tested; opening, saving, conflicts, checklist and transitions were exercised in a browser. |
-| HTTP | `GET /api/v1/tasks/{id}` (`api.tasks.show`) → [PlanningController::show](../../../backend/src/Http/Controller/PlanningController.php#L44)<br>`PATCH /api/v1/tasks/{id}` (`api.tasks.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`POST /api/v1/tasks` (`api.tasks.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`GET /api/v1/goals/{id}` (`api.goals.show`) → [PlanningController::show](../../../backend/src/Http/Controller/PlanningController.php#L44)<br>`PATCH /api/v1/goals/{id}` (`api.goals.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`POST /api/v1/goals` (`api.goals.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`GET /api/v1/milestones/{id}` (`api.milestones.show`) → [PlanningController::show](../../../backend/src/Http/Controller/PlanningController.php#L44)<br>`PATCH /api/v1/milestones/{id}` (`api.milestones.update`) → [PlanningController::update](../../../backend/src/Http/Controller/PlanningController.php#L54)<br>`POST /api/v1/milestones` (`api.milestones.store`) → [PlanningController::store](../../../backend/src/Http/Controller/PlanningController.php#L34)<br>`GET /api/v1/tasks/{id}/checklist` (`api.tasks.checklist.index`) → [PlanningController::checklist](../../../backend/src/Http/Controller/PlanningController.php#L151)<br>`POST /api/v1/tasks/{id}/checklist` (`api.tasks.checklist.store`) → [PlanningController::createChecklist](../../../backend/src/Http/Controller/PlanningController.php#L157)<br>`PATCH /api/v1/tasks/{id}/checklist/{item}` (`api.tasks.checklist.update`) → [PlanningController::updateChecklist](../../../backend/src/Http/Controller/PlanningController.php#L167)<br>`POST /api/v1/tasks/{id}/complete` (`api.tasks.complete`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/tasks/{id}/reopen` (`api.tasks.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/milestones/{id}/complete` (`api.milestones.complete`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/milestones/{id}/reopen` (`api.milestones.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/goals/{id}/complete` (`api.goals.complete`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92)<br>`POST /api/v1/goals/{id}/reopen` (`api.goals.reopen`) → [PlanningController::transition](../../../backend/src/Http/Controller/PlanningController.php#L92) |
-
-<!-- END GENERATED TRACE -->
+Navigation, floating editors, dialogs, notifications and the assistant preserve current page/draft/focus state. Late refresh responses must not close a newly opened panel. Client rendering does not authorize access: every business read/write remains server-scoped.
 
 ## Style file ownership
 
-| Change | Source |
-| --- | --- |
-| Tokens, fonts, basic elements | [tokens.css](../../../frontend/src/css/tokens.css), [base.css](../../../frontend/src/css/base.css), [app.css](../../../frontend/src/css/app.css) |
-| Sidebar/topbar/layout and controls | [layout.css](../../../frontend/src/css/layout.css), [controls.css](../../../frontend/src/css/controls.css), [components.css](../../../frontend/src/css/components.css) |
-| Planning/workspace | [planning.css](../../../frontend/src/css/planning.css), [workspace.css](../../../frontend/src/css/workspace.css) |
-| Notes/editor | [notes.css](../../../frontend/src/css/notes.css), [note-content.css](../../../frontend/src/css/note-content.css) |
-| Settings | [settings.css](../../../frontend/src/css/settings.css) |
-| Theme/reference/illustrations and later feature overrides | [illustrated.css](../../../frontend/src/css/illustrated.css), [reference.css](../../../frontend/src/css/reference.css), [feedback.css](../../../frontend/src/css/feedback.css) |
-| Walkthrough | [walkthrough.css](../../../frontend/src/css/walkthrough.css) |
+The baseline stylesheet set in `src/styles/baseline/`, global/parity/auth styles and reviewed feature styles own the visual system. Inspect import order and component use before changing an override. Five illustrated themes, independent light/dark preferences, readable controls and mobile/keyboard behavior remain product requirements.
 
-For missing CSS/fonts during development, use [the Vite runbook](../../operations/local-development.md).
+Autosave is silent: it shows no global progress banner or automatic success toast; error/retry feedback remains visible. Autosave updates the view immediately and batches nearby edits after a 400 ms quiet period. One write/acknowledgement cycle runs at a time; edits made during it stay visible and are replayed over the acknowledged snapshot for the next batch. Ordinary background saves do not make the workspace inert. Explicit destructive operations retain their separate short blocking state. A failed save keeps the latest draft and requires an explicit retry; leaving with pending/failed work remains guarded.
+
+<!-- BEGIN GENERATED TRACE -->
+
+## Source and verification map
+
+Trace ID: `shared.shell`. Test references identify coverage to inspect; they are not execution results.
+
+| Role | Current source |
+| --- | --- |
+| UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L111) — `export default function LiveWorkspace()` |
+| Mounted feature routing | [apps/web/src/components/preview/workspace.tsx](../../../apps/web/src/components/preview/workspace.tsx#L93) — `export function WorkspaceView(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L327) — `def snapshot(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L465) — `def apply_changes(` |
+| Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
+| Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
+| Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |
+| Related tests | [apps/web/tests/e2e/dashboard-saves.spec.ts](../../../apps/web/tests/e2e/dashboard-saves.spec.ts) |
+| Related tests | [apps/web/tests/workspace-rebase.test.ts](../../../apps/web/tests/workspace-rebase.test.ts) |
+
+<!-- END GENERATED TRACE -->
+
+## Floating page actions
+
+Dashboard, Goals, Tasks, Calendar, Habits and Notes use `apps/web/src/components/floating-actions.tsx` for their page actions instead of header buttons. A fixed trigger at the lower-left of the content area beside the sidebar (screen-left on mobile) opens a native nonmodal popover; outside click or Escape closes it. The component accepts localized labels and arbitrary children, including Notes preferences; `closeOnAction={false}` keeps the panel open for other interactive content. Action buttons close the panel before opening their ordinary editor; manual Refresh controls are removed, while failed-load/save retry controls remain.

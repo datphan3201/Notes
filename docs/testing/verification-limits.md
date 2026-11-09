@@ -2,18 +2,16 @@
 
 [Testing](README.md) · [Open issues](../issues.md)
 
-Record discovered defects and unresolved product decisions in the issue report. This guide defines what each kind of evidence can establish; it is not another issue register.
-
-| Evidence | What it establishes | What it does not establish |
+| Evidence | Establishes | Does not establish |
 | --- | --- | --- |
-| Documentation checker | Registered route coverage, unique source targets, valid local links/anchors, fresh generated output and matching diagram receipts | Correct business behavior or complete UI/authorization coverage |
-| Documentation-tool regression runner | The actual checker/generator accept healthy fixtures and reject the tested forms of drift | Correct behavior of the application or every possible Markdown/registry input |
-| Named PHPUnit/Node test link | The relevant existing case can be inspected at that source location | That the case passed in this environment or exercises a whole browser page |
-| HTTP shell 200 | The shell route rendered successfully | The subsequently fetched object is owned/accessible or the browser applied CSS and initialized controls |
-| Archify final receipts | The listed automated artifact/provenance/browser checks passed for those exact candidate/artifact bytes | Perceptual visual review or application acceptance |
-| Existing-runtime deploy fixtures | Green-main/branch/worktree gates, prepared asset publication and failure paths against temporary Git history with fake external commands | An actual host fast-forward release, real npm installation, live database changes or production rollback |
-| Local/fake provider test | The exercised deterministic protocol/logic path behaves as asserted | Actual SMTP delivery, live AI availability, provider quotas or production configuration |
+| Documentation checker | Local Markdown targets/anchors, unique registered source symbols, UI/page-file ownership, declared API route inventory, issue/case ID consistency and generated freshness | Business correctness, semantic completeness, every inline route claim, hosted health, external URLs or diagram provenance |
+| Checker regression fixtures | The actual code accepts/rejects the tested link/symbol/ownership/drift cases | A complete Markdown/TypeScript parser or all possible future input forms |
+| Test file/symbol link | A current coverage entry point exists | That it passed, or exercises the full UI flow |
+| Ruff/typecheck/unit suite | The executed static/unit contracts for the recorded revision/environment | Database isolation or hosted provider behavior |
+| Isolated API tests | Exercised database/authorization/transaction paths on planner_test | Production scale, complete historical parity or browser accessibility |
+| Browser tests | Exercised desktop/mobile flows in the stated browser/harness | Every browser, layout, localization or real external service |
+| Readiness 200 | API can issue its DB readiness query | Worker progress, mail receipt, storage policy, model quality or backup recovery |
+| Historical Archify receipt | Artifact checks against its recorded historical input | Current Next.js/FastAPI architecture or current visual acceptance |
+| Repository deployment record | The recorded operator/revision history | A fresh live deployment audit or recovery guarantee |
 
-Main Notes has account-scoped recovery. Explicit-save Task/Review drafts do not promise browser-crash recovery. Check each component's `Coverage limit` note and relevant source when deciding what a test actually exercises.
-
-Live SMTP/AI, deployed web-server behavior, concurrency/failure injection and backup restoration require their own scoped evidence. Historical suite totals and unrelated passing checks do not resolve an open issue. Before removing an issue as fixed, record the command, environment, observed result and remaining limits in the commit or pull-request description.
+Record revision, environment, fixture size, command, output and limits for each new run. Keep prompts, tokens, credentials and private data out of reports. Passing local checks do not close ISSUE-045–048 or ISSUE-063 automatically. Production verification is separate from this documentation workflow.

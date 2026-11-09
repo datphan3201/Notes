@@ -6,6 +6,7 @@ test("capture a dated Task, find it on Dashboard, and complete it", async ({
 }) => {
     await signInFixture(page);
     await navigate(page, "Công việc");
+    await page.getByRole("button", { name: "Thao tác trang", exact: true }).click();
     await page
         .getByRole("button", { name: "Công việc mới", exact: true })
         .first()
@@ -36,7 +37,7 @@ test("capture a dated Task, find it on Dashboard, and complete it", async ({
         .getByRole("button", { name: "Tạo công việc", exact: true })
         .click();
     expect((await saved).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     await navigate(page, "Tổng quan");
     await expect(
         page.getByRole("button", { name: /^A small next step/ }),
@@ -59,7 +60,7 @@ test("capture a dated Task, find it on Dashboard, and complete it", async ({
         .getByRole("button", { name: "Xác nhận", exact: true })
         .click();
     expect((await completed).status()).toBe(200);
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     await page.reload();
     const tasks = await (await page.request.get("/api/v1/tasks")).json();
     expect(
@@ -73,6 +74,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
     page,
 }) => {
     await signInFixture(page);
+    await page.getByRole("button", { name: "Thao tác trang", exact: true }).click();
     await page
         .getByRole("button", { name: "Ghi chú mới", exact: true })
         .click();
@@ -95,7 +97,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
             );
         })
         .toBeTruthy();
-    await expect(page.locator(".live-save-status")).toHaveCount(0);
+    await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     await dialog
         .getByRole("button", { name: "Đóng trình soạn thảo", exact: true })
         .click();
@@ -136,4 +138,17 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
         await page.request.get(`/api/v1/notes/${note.id}`)
     ).json();
     expect(saved.content).toBe("A change from another tab.");
+    await dialog.getByRole("button", { name: "Dùng bản đã lưu", exact: true }).click();
+    await expect(content).toHaveText("A change from another tab.");
+    await expect(page.locator(".live-save-error")).toHaveCount(0);
+    const remoteAgain = await page.request.patch(`/api/v1/notes/${note.id}`, {
+        headers: { origin: new URL(page.url()).origin, "x-csrf-token": identity.csrf },
+        data: { version: saved.version, fields: { content: "Another remote revision." } },
+    });
+    expect(remoteAgain.status()).toBe(200);
+    await content.fill("Explicitly keep this newer local draft.");
+    await expect(dialog.getByRole("alert")).toContainText("Ghi chú có thay đổi");
+    await dialog.getByRole("button", { name: "Giữ bản nháp của tôi", exact: true }).click();
+    await expect.poll(async () => (await (await page.request.get(`/api/v1/notes/${note.id}`)).json()).content).toBe("Explicitly keep this newer local draft.");
+    await expect(page.locator(".live-save-error")).toHaveCount(0);
 });

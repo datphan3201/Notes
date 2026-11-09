@@ -1,5 +1,7 @@
 # Complete UI review preview
 
+> Historical migration/design record. Current runtime is `apps/` on `main`; PHP/JS source paths were retired in `8714dc0` and can be inspected in Git history. Earlier pending/integration/branch statements describe that stage only. [Current status](status.md), [live feature maps](../README.md) and [cloud operations](../operations/cloud.md) supersede present-state claims here. Referenced test runs are historical, not freshly executed.
+
 Current status: this is a historical UI-only review record. The user subsequently accepted the revised interface and authorized full integration; see [the current integration record](ui-integration.md) for connected behavior and checks. Earlier deferral/pending statements below apply to that earlier pass.
 
 Written before implementation for the user's request to finish all remaining interface clusters for one combined review. Work stays on `feat/personal-ai-planner-v1`; the PHP/JS baseline, private data and real API implementation remain intact. The user provisionally accepted the revised UI and authorized [backend integration](ui-integration.md) on 2026-11-07. The UI-only observations below describe the earlier review pass.

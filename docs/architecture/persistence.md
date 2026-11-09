@@ -1,46 +1,36 @@
-# Persistence, relationships and transactions
+# Persistence and transactions
 
-[Documentation home](../README.md) · [Planning structure diagram](../diagrams/planning-structure/index.html)
+[Documentation home](../README.md) · [Security](http-security.md)
 
 ## Schema authority
 
-[MySQL migrations](../../backend/database/plain-migrations/) are the physical schema source; [MigrationRunner](../../backend/src/Infrastructure/Database/MigrationRunner.php) records checksums. Do not edit an applied migration. Add a forward migration and run migrate/check against the intended database. Consult [installation](../operations/installation.md) for database setup.
+[SQLAlchemy models](../../apps/api/planner/models.py) describe mappings; [Alembic revisions](../../apps/api/migrations/versions/) and the initial SQL define deployed DDL. The current chain ends at `0005` (private assets). Add forward migrations for changes; do not silently edit applied schema. [Alembic environment](../../apps/api/migrations/env.py) selects the configured application schema and version table.
 
-| Concern | Tables / source owner |
+| Concern | Current model groups |
 | --- | --- |
-| Accounts/security | users, user_preferences, sessions, password_resets, email_tokens, two_factor_codes; [account repositories](../../backend/src/Infrastructure/Persistence/Pdo/Account/) |
-| Personal planning | areas, goals, milestones, tasks, checklist_items; [Planning repository](../../backend/src/Infrastructure/Persistence/Pdo/Planning/PdoPlanningRepository.php) |
-| Classification | labels, label_note, goal_tags/milestone_tags/task_tags/habit_tags; [Tag repository](../../backend/src/Infrastructure/Persistence/Pdo/Tags/PdoTagRepository.php) |
-| Distinct graph relations | goal/milestone/task/habit contributions and milestone_dependencies; [Planning service](../../backend/src/Application/Planning/PlanningService.php) |
-| Habit | habits, habit_check_ins, habit_rest_days; [Habit repository](../../backend/src/Infrastructure/Persistence/Pdo/Habits/PdoHabitRepository.php) |
-| Recurrence | task_series and template relations, tasks.series_id/occurrence_date; [Series repository](../../backend/src/Infrastructure/Persistence/Pdo/Recurrence/PdoTaskSeriesRepository.php) |
-| Activity/Review | activities, goal_daily_snapshots, reviews, daily_task_selections, weekly_task_selections, weekly_milestone_selections; [repositories](../../backend/src/Infrastructure/Persistence/Pdo/) |
-| Notes | notes (incl. lock_hash/locked_at for per-Note passwords), label_note, attachments, note_links, note_summaries, note_embeddings; [Note repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteRepository.php), [AI repository](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteAIRepository.php) |
-| Shared Notes / reports | note_shares, note_reports; [sharing](../../backend/src/Infrastructure/Persistence/Pdo/Notes/PdoNoteShareRepository.php), [reports](../../backend/src/Infrastructure/Persistence/Pdo/Admin/PdoReportRepository.php) |
-| Infrastructure | attachments, pending_file_deletions, user_backgrounds, notifications, ai_actions, rate_limit_buckets, scheduled_jobs, schema_migrations |
+| Accounts | User, LoginSession, AuthToken, RateBucket; profile/preferences on User |
+| Planning | Area, Goal, Milestone, Task, TaskSeries, TaskSelection, Dependency, Focus |
+| Habits / Reviews | Habit, HabitDay, Review, Activity |
+| Notes / files | Note, NoteShare, NoteUnlock, Attachment, AccountFile |
+| AI / jobs | Document, AIRun, Job |
+| Moderation / migration | Report, AdminAction, SystemSetting, ImportReceipt, LegacyRecord |
 
-The offline sync feed reads notes by the `(user_id, updated_at, id)` cursor index (migration 0031); tombstoned rows report deletions. AI summaries and embeddings store a SHA-256 of the title/content they describe, so pinning or recolouring does not make them stale. Password-reset rows also hold a hashed 6-digit code and its attempt counter (migration 0032).
+Read models/migrations for exact table names, columns, constraints/indexes and deletion actions. The current runtime does not retain the old label/checklist/preference pivot schema as active API contracts: checklist/extra metadata use typed JSON fields where defined. Application queries must still enforce `user_id`; database constraints are defense in depth, not a substitute.
 
-Dashboard roadmap selection is stored in user_preferences.dashboard_roadmap_goal_id with a composite owner/Goal foreign key; [migration 0026](../../backend/database/plain-migrations/0026_add_dashboard_roadmap_preference.php) is the DDL source. Archived Goals are excluded on read without silently selecting another Goal.
+## Identity and time
 
-The table groups above are a navigation index, not a replacement for complete DDL. Read migrations for exact columns, indexes, foreign keys and deletion actions.
+Current accounts and owned entities use string UUID identifiers. Instants are timezone-aware PostgreSQL timestamps stored/operated in UTC; user-facing calendar dates use DATE. Account/Habit/series timezones control day boundaries. Legacy integer identifiers and unsupported fields survive through explicit importer mappings/raw archive, not implicit compatibility.
 
-## Identity, time and relationships
+A Goal has exactly one Area or parent Goal; a Task has at most one primary Goal/Milestone, or neither for Inbox. Contributions/related work and Milestone prerequisites are separate edges. Validate ownership, reference types and acyclicity inside the same transaction as graph writes.
 
-Owned UUID entities use lowercase UUIDs; users/labels retain integer IDs. UTC DATETIME(6) stores instants; DATE stores user-facing calendar dates. Serializers convert explicitly via [Timestamp](../../backend/src/Support/Timestamp.php). Use DateTimeImmutable and an injected [Clock](../../backend/src/Support/Clock.php) when time controls behavior.
+## Write boundaries
 
-Goal has exactly one Area or parent Goal. Task has at most one Goal/Milestone primary parent; neither means Inbox. Contributions are additional edges, not primary parents. Milestone prerequisites are separate from both. Composite owner foreign keys and unique owner IDs defend application scoping. Cross-owner object references are not valid edges.
+[Workspace apply_changes](../../apps/api/planner/workspace.py) applies a batch inside the caller's transaction; the HTTP handler commits. [Planning services](../../apps/api/planner/planning.py) validate versions, parent/graph state and acknowledgements. Owner locking serializes related writes. A stale version returns 409; explicit client keys deduplicate identical creation retries. No universal version precondition is implied for preferences, check-ins or invitation decisions: inspect each schema/handler.
 
-## Transaction and locking discipline
+[AI Apply](../../apps/api/planner/ai.py) checks the exact reviewed hash, current source versions/access and proposal state, then commits domain writes, jobs and applied marker atomically. Provider calls are outside those write transactions. Durable jobs use keys, leases and retry state; delivery is at least once.
 
-Application services own transactions using [TransactionManager](../../backend/src/Infrastructure/Database/TransactionManager.php). Lock the owner first, aggregates in stable ID order, then relationship/checklist rows and Activity/action rows. Validate graph changes under the same owner transaction so concurrent inverse edges cannot both succeed. Traverse arbitrary hierarchy iteratively; do not rely on recursive SQL/stack depth.
+Uploads store bytes with compensation for metadata failures; deletion queues private-byte cleanup. Normal planning archival and timed History retention preserve Activity/Review facts. Confirmed permanent deletion and account removal have separate grouped rules.
 
-Different aggregate changes increment version once; exact desired-state replay may be a no-op before stale-version rejection where that endpoint supports it. Archive/delete and relationship APIs have their own exact preconditions; do not invent a universal base_version requirement for check-ins, invitation responses or preferences.
+## Migration limitations
 
-Live collaboration bypasses base_version by design: the realtime hub is the single sequencer for a shared Note's text and saves through `NoteService::writeCollaborativeText`, which re-checks edit access; color/pin/tags change through the separate attribute endpoint, so they never race the text.
-
-Files are written before metadata transactions with compensation on failure. Record deletion intent transactionally; perform actual byte deletion after commit. Provider calls do not belong inside write transactions.
-
-## Archive versus deletion
-
-Personal planning normally archives. Goal/Milestone include_contents is an explicit bulk archive. Retention archives history. Notes, attachments and Reviews have their documented deletion behavior. Never apply a SQL cascade or a cleanup procedure to compensate for unknown application behavior. Activity and Review facts survive normal planning archival.
+The guarded [legacy importer](../../apps/api/planner/migrate_legacy.py) is distinct from the [cloud COPY helper](../../tools/deploy/migrate_to_supabase.py). The latter is not a complete reconciliation/backup/file migration system; see ISSUE-065. Raw archival preservation does not imply that unsupported settings, relations or legacy MFA are active or accepted. Database plus private-file recovery must be rehearsed together (ISSUE-046).

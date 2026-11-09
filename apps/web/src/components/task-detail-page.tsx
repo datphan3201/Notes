@@ -16,7 +16,7 @@ export function TaskDetailPage({ ctx, id }: { ctx: PageContext; id: string }) {
         [saved, setSaved] = useState(false);
     return (
         <>
-            <QueryState queries={[task]} />
+            <QueryState locale={ctx.identity.user.locale} queries={[task]} />
             {task.data && (
                 <>
                     <header className="workspace-header scene-header">

@@ -1,8 +1,10 @@
 # CLAUDE.md
 
-Follow [AGENTS.md](AGENTS.md) as the authoritative repository instruction set and use the [Karpathy Guidelines skill](.ai/skills/karpathy-guidelines/SKILL.md) (also available at `.claude/skills/karpathy-guidelines/SKILL.md` and `.agents/skills/karpathy-guidelines/SKILL.md`).
+Follow [AGENTS.md](AGENTS.md) as the authoritative repository instruction set and use the [Karpathy Guidelines skill](.agents/skills/karpathy-guidelines/SKILL.md) (also discoverable through `.ai/skills/` and `.claude/skills/`).
 
-**Tech-stack migration note:** All previous restrictions locking the repository to framework-free PHP, raw PDO, or vanilla JS have been removed. You may migrate or replace the backend, frontend, database layer, framework, and directory structure as directed by the user while preserving core product behavior documented in [docs/README.md](docs/README.md) and [docs/architecture/decisions.md](docs/architecture/decisions.md).
+**Current runtime:** `apps/api` (FastAPI), `apps/web` (Next.js) on `main`; PHP/JS source has been retired. See [status](docs/migration/status.md) and [cloud operations](docs/operations/cloud.md).
+
+**Tech-stack policy:** All previous restrictions locking the repository to framework-free PHP, raw PDO, or vanilla JS have been removed. You may migrate or replace the backend, frontend, database layer, framework, and directory structure as directed by the user while preserving core product behavior documented in [docs/README.md](docs/README.md) and [docs/architecture/decisions.md](docs/architecture/decisions.md).
 
 ## 1. Think Before Coding
 

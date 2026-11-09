@@ -6,17 +6,8 @@
     padding: 12px 8px 32px;
     margin-bottom: 12px;
     border: 0;
-    border-radius: 0;
+    border-radius: 16px;
     background: transparent;
-}
-.preview-dashboard-header .theme-quote {
-    max-width: 27ch;
-    margin: 56px 10px 0 auto;
-}
-.preview-dashboard-header .workspace-header-actions {
-    position: absolute;
-    top: 0;
-    right: 8px;
 }
 .preview-dashboard .dashboard-roadmap {
     margin-bottom: 14px;
@@ -405,15 +396,6 @@
         flex-direction: column;
         padding-bottom: 22px;
         gap: 16px;
-    }
-    .preview-dashboard-header .workspace-header-actions {
-        position: static;
-        order: 2;
-    }
-    .preview-dashboard-header .theme-quote {
-        margin: 0;
-        max-width: none;
-        width: 100%;
     }
     .preview-dashboard .dashboard-date {
         font-size: 10px;

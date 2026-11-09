@@ -35,18 +35,18 @@ const steps = [
 ];
 
 export function useGuestLocale(initial: GuestLocale | null, preview = false) {
-    const [locale, setLocale] = useState<GuestLocale>(initial || "vi");
+    const [locale, setLocale] = useState<GuestLocale>(initial || "en");
     useEffect(() => {
         let chosen = initial;
         try {
             const stored = sessionStorage.getItem("planner-guest-locale");
             if (!chosen && (stored === "en" || stored === "vi"))
                 chosen = stored;
-            sessionStorage.setItem("planner-guest-locale", chosen || "vi");
+            sessionStorage.setItem("planner-guest-locale", chosen || "en");
         } catch {
             /* Guest language still works when browser storage is disabled. */
         }
-        setLocale(chosen || "vi");
+        setLocale(chosen || "en");
     }, [initial]);
     const text = (message: string) => authText(message, locale);
     const href = (path: string) =>

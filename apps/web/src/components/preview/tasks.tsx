@@ -1,4 +1,5 @@
 "use client";
+import FloatingActions from "../floating-actions";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -650,39 +651,26 @@ export default function TasksPreview({
                                 )}
                             </p>
                         </div>
-                        <div className="workspace-header-actions action-row">
-                            <button
-                                className="button button-quiet"
-                                onClick={() => onNavigate("history")}
-                            >
-                                {text("Task history", "Lịch sử công việc")}
-                            </button>
-                            <button
-                                className="button button-quiet"
-                                onClick={() => {
-                                    if (shared.live) {
-                                        void shared.live.refresh();
-                                        return;
-                                    }
-                                    onReady();
-                                    notify(
-                                        "Preview refreshed.",
-                                        "Đã làm mới bản xem thử.",
-                                    );
-                                }}
-                            >
-                                <RefreshCw size={16} />
-                                {text("Refresh", "Tải lại")}
-                            </button>
-                            <button
-                                className="button button-primary"
-                                onClick={() => openEditor()}
-                            >
-                                <Plus size={18} />
-                                {text("New task", "Công việc mới")}
-                            </button>
-                        </div>
                     </header>
+                    <FloatingActions
+                        label={text("Page actions", "Thao tác trang")}
+                        closeLabel={text("Close actions", "Đóng thao tác")}
+                    >
+                        <button
+                            className="button button-quiet"
+                            onClick={() => onNavigate("history")}
+                        >
+                            {text("Task history", "Lịch sử công việc")}
+                        </button>
+
+                        <button
+                            className="button button-primary"
+                            onClick={() => openEditor()}
+                        >
+                            <Plus size={18} />
+                            {text("New task", "Công việc mới")}
+                        </button>
+                    </FloatingActions>
                     <section className="planning-panel preview-task-collection">
                         <div
                             className="task-view-menu preview-task-views"
