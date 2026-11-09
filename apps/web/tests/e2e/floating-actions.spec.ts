@@ -9,9 +9,21 @@ const pages = [
     ["notes", ["Ask AI", "New note"]],
 ] as const;
 
-test("six pages expose their actions through the floating panel", async ({ page }) => {
+test("six pages expose their actions through floating controls", async ({ page }) => {
     for (const [section, actions] of pages) {
         await page.goto(`/preview/workspace?section=${section}&lang=en`);
+        if (section === "calendar") {
+            const trigger = page.locator(".review-calendar .floating-actions-trigger");
+            await expect(trigger).toHaveAttribute("aria-expanded", "false");
+            await trigger.click();
+            const picker = page.locator("[data-task-picker]");
+            await expect(picker).toBeVisible();
+            await expect(picker.getByRole("button", { name: "New task", exact: true })).toBeVisible();
+            await trigger.click();
+            await expect(picker).toHaveCount(0);
+            await expect(trigger).toHaveAttribute("aria-expanded", "false");
+            continue;
+        }
         const trigger = page.getByRole("button", { name: "Page actions", exact: true });
         await expect(trigger).toBeVisible();
         await expect(trigger).toHaveAttribute("aria-expanded", "false");
