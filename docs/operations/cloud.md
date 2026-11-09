@@ -127,7 +127,7 @@ Local `planner_dev/public` had no duplicate groups; it was backed up privately a
 
 Revision `0007` was applied with `0008` in the backend release recorded below; it was absent from the earlier `4a280e1` release. Back up the intended database before applying it elsewhere. It retains one attached Note per Task, preferring active Notes, then a match to legacy working text, then creation time/ID. Other Notes become independent resource references in the Task details; their content, locks, documents and attachments remain intact. A unique constraint prevents multiple attached Notes. Downgrade removes the constraint but preserves resource links instead of copying content back.
 
-### 2026-11-09 shared UI release — backend deployed, frontend pending
+### 2026-11-09 shared UI release — backend and frontend deployed
 
 Application commit `c0f4f2a` was pushed to `main` and the working branch. Render deployment `dep-dboseg8u01pc7389f3c0` reached `live` at 13:16 UTC on 2026-11-09 with that exact commit. Automatic Render deployment remains disabled. The API was briefly suspended for a final consistent private backup and resumed before the manual deployment.
 
@@ -137,4 +137,6 @@ Cloud revision is now `0008`, with 16 Areas, 186 Tasks and 118 Notes preserved, 
 
 After rollout, the API readiness endpoint, production login page and same-origin proxied health returned HTTP 200. The existing synthetic demo account logged in and read its workspace snapshot successfully; the smoke session logged out with HTTP 204. No planning/Note mutation, email delivery or AI-provider evaluation was performed.
 
-The Vercel access token's scope expired at 06:26 UTC on 2026-11-09; project access returned HTTP 403. The responsive Dashboard roadmap and other frontend changes in this release have **not** been deployed to Vercel. Supply a renewed token with access to the existing `planner-t1` project, verify that project/account instead of using the obsolete local project link, then deploy the prepared frontend and check its stable production alias. Do not interpret the successful backend rollout as frontend release completion.
+The initial Vercel token had expired; a renewed private token restored access to the existing `planner-t1` project. Its ID and production aliases were verified; the local project's stale name was corrected without creating a new project. Vercel deployment `dpl_5wZT9JRHAc4HqqhJdoXNKZkmgEEv` reached `READY` at 13:25 UTC, with `planner-t1.vercel.app` assigned successfully. It contains only tracked frontend files from `0fc01f6`, whose frontend source matches application commit `c0f4f2a`; private environment/credential files were excluded. The hosted Render API origin was supplied for both build and runtime.
+
+Post-release login, authenticated demo workspace reads, logout and proxied readiness succeeded again. A browser loaded the authenticated Dashboard. Responsive geometry assertions on the hosted synthetic Dashboard preview passed at 1440, 390 and 320 px: roadmap columns shared equal widths on one row without horizontal overflow. This preview check uses synthetic data, not mutations of hosted user records. The GitHub application workflow for `c0f4f2a` also completed successfully. These checks do not certify mail delivery, AI-provider quality or complete human acceptance.
