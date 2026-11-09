@@ -172,3 +172,11 @@ Production synthetic browser checks verified labels, importance values and menu 
 ### 2026-11-09 desktop Task action alignment
 
 Frontend commit `5439602` was deployed as Vercel `dpl_CecpNSTTcToXEZPBsYu45tQbSXmf` (READY, production alias assigned). Wide desktop Task actions are again inline on the right; compact/mobile layouts retain wrapping. Local checks covered 1440/1280/1024/390/320 px without horizontal overflow; production checks confirmed inline right-side actions at 1440/1280 px and a separate mobile row at 390 px. The production build passed. The backend/schema were unchanged.
+
+### 2026-11-09 UTC+7 application defaults
+
+Application commit `2d4f138` was deployed to Render (`dep-dboumbajnfac73836g60`, live) and Vercel (`dpl_3cz2GeknDVrAMWM1ntDCCYsJx2J3`, READY, production alias assigned). API/frontend share an explicit UTC+7 default (`Asia/Ho_Chi_Minh`) for accounts, Habits, recurrence and missing-configuration fallbacks. Task schedule labels follow the account timezone. Previously selected account/entity timezones remain authoritative; no existing account/check-in/history timestamps were rewritten. UTC instant storage/logging and DATE semantics remain unchanged.
+
+A fresh private 31-table schema backup with zero private objects was restored into isolated `planner_test`; revision `0009` required no upgrade and row counts/digests matched. The private restored schema was removed. The code-only release required no database or account-data migration. Local checks passed 179 API tests, 41 frontend unit tests, the production build, Ruff and documentation checks/17 documentation tests. Tests covered the UTC+7 midnight boundary and preservation of explicit UTC choices. The hosted synthetic profile preview selected `Asia/Ho_Chi_Minh`; it is not evidence of creating a production account or testing mail delivery.
+
+Post-deployment login, authenticated demo snapshot reads, logout and proxied health succeeded. No hosted planning/profile mutation was performed by the smoke checks.
