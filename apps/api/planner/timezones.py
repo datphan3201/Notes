@@ -4,6 +4,8 @@ from functools import lru_cache
 from pathlib import Path
 from zoneinfo import TZPATH, ZoneInfo
 
+DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh"
+
 
 @lru_cache(maxsize=1)
 def links():
@@ -26,5 +28,5 @@ def canonical_name(value: str):
     return value
 
 
-def zone(value: str):
+def zone(value: str = DEFAULT_TIMEZONE):
     return ZoneInfo(canonical_name(value))

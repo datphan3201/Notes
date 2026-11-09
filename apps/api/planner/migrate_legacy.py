@@ -37,6 +37,7 @@ from planner.models import (
 )
 from planner.planning import MODELS
 from planner.schemas import WorkspacePreferences
+from planner.timezones import DEFAULT_TIMEZONE
 
 
 def encode(value):
@@ -293,7 +294,7 @@ def import_snapshot(root: Path, expected_database: str, *, merge_existing: bool 
                         name=row["display_name"],
                         password_hash=row["password"],
                         created_at=instant(row["created_at"]),
-                        timezone=preference.get("timezone", "UTC"),
+                        timezone=preference.get("timezone") or DEFAULT_TIMEZONE,
                         locale=preference.get("locale", "vi"),
                         theme=preference.get("theme", "light"),
                         preferences={

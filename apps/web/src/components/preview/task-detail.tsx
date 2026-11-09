@@ -268,7 +268,7 @@ export default function TaskPreviewDetail({
                                         {task.scheduledStart.slice(11)}
                                         {task.scheduledEnd &&
                                             ` – ${task.scheduledEnd.slice(11)}`}{" "}
-                                        · Asia/Ho_Chi_Minh
+                                        · {db.profile.timezone}
                                     </dd>
                                 </div>
                             )}

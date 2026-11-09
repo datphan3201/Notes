@@ -1,4 +1,6 @@
-export function localDate(timezone: string, now = new Date()) {
+export const DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
+
+export function localDate(timezone: string = DEFAULT_TIMEZONE, now = new Date()) {
     return new Intl.DateTimeFormat("en-CA", {
         timeZone: timezone,
         year: "numeric",
@@ -36,7 +38,7 @@ export function taskMatches(
 
 export function zonedInput(
     instant: string | null | undefined,
-    timezone: string,
+    timezone: string = DEFAULT_TIMEZONE,
 ) {
     if (!instant) return "";
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -53,7 +55,7 @@ export function zonedInput(
     return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
 }
 
-export function zonedInstant(value: string, timezone: string) {
+export function zonedInstant(value: string, timezone: string = DEFAULT_TIMEZONE) {
     if (!value) return null;
     const target = Date.parse(value + ":00Z");
     let guess = target;
@@ -69,7 +71,7 @@ export function zonedInstant(value: string, timezone: string) {
     );
 }
 
-export function timezones(current: string) {
+export function timezones(current: string = DEFAULT_TIMEZONE) {
     return [
         ...new Set(["UTC", current, ...Intl.supportedValuesOf("timeZone")]),
     ];

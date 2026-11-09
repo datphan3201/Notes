@@ -10,6 +10,8 @@ Repository records report deployment on 2026-11-08 to Vercel web, Render Singapo
 
 ## Product model
 
+The system default user-facing timezone is UTC+7 (`Asia/Ho_Chi_Minh`), including new accounts, Habits, recurrence and missing-configuration fallbacks. Explicit account/Habit/series timezones remain authoritative. Stored instants, worker timing and logs remain UTC; DATE values remain separate calendar dates. Changing the default does not rewrite existing accounts or dated/check-in history.
+
 | Concept | Maintained boundary |
 | --- | --- |
 | Area / Goal | Configurable Areas with owner-scoped case-insensitive, whitespace-normalized unique names including archived Areas; arbitrary-depth single-parent Goal hierarchy; one Area or parent Goal |

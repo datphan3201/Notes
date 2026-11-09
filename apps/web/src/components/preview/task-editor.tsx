@@ -612,7 +612,7 @@ export default function TaskPreviewEditor({
                                                 />
                                             </label>
                                             <small className="subtle-copy">
-                                                Asia/Ho_Chi_Minh
+                                                {db.profile.timezone}
                                             </small>
                                         </>
                                     ) : panel === "reminder" ? (

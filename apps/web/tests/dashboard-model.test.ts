@@ -121,3 +121,9 @@ test("Task completion is binary while Goal progress states remain distinct", () 
     }
     assert.equal(dashboardGoal({ ...entity, status: "doing" }).status, "InProgress");
 });
+
+test("Habits without timezone use UTC+7 and explicit UTC remains authoritative", () => {
+    const at = new Date("2026-11-09T18:30:00Z");
+    assert.equal(dashboardHabit(entity, [], at).today, "2026-11-10");
+    assert.equal(dashboardHabit({ ...entity, timezone: "UTC" }, [], at).today, "2026-11-09");
+});

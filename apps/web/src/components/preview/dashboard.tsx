@@ -1,4 +1,5 @@
 "use client";
+import { DEFAULT_TIMEZONE } from "@/lib/dates";
 import { TASK_RETURN_MIME } from "@/lib/task-picker";
 import { PageHeaderFrame } from "../ui/layout";
 import FloatingActions from "../floating-actions";
@@ -37,7 +38,7 @@ export function DashboardView({
     onNavigate,
     data: db,
     today = day,
-    timezone = "Asia/Ho_Chi_Minh",
+    timezone = DEFAULT_TIMEZONE,
     activity,
     connected = false,
 }: {

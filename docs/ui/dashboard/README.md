@@ -24,8 +24,8 @@ Trace ID: `dashboard`. Test references identify coverage to inspect; they are no
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L32) — `export function DashboardView({` |
-| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1174) — `export function usePreviewData(` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L33) — `export function DashboardView({` |
+| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1176) — `export function usePreviewData(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L823) — `def dashboard(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L301) — `def select_focus(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L530) — `def activity(` |

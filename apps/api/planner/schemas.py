@@ -12,6 +12,7 @@ from pydantic import (
     model_validator,
 )
 
+from planner.timezones import DEFAULT_TIMEZONE
 from planner.timezones import zone as ZoneInfo
 
 
@@ -264,7 +265,7 @@ class NoteInput(Content):
 
 class HabitInput(Presentation):
     primary_goal_id: str | None = None
-    timezone: str = "Asia/Ho_Chi_Minh"
+    timezone: str = DEFAULT_TIMEZONE
     frequency: Literal["daily", "weekly"] = "daily"
     target: int = Field(default=1, ge=1, le=7)
     _timezone = field_validator("timezone")(timezone_name)
@@ -302,7 +303,7 @@ class SeriesInput(Presentation):
     weekdays: list[int] = Field(default_factory=list, max_length=7)
     start_date: date
     end_date: date | None = None
-    timezone: str = "Asia/Ho_Chi_Minh"
+    timezone: str = DEFAULT_TIMEZONE
     state: Literal["active", "paused", "ended"] = "active"
     _timezone = field_validator("timezone")(timezone_name)
 

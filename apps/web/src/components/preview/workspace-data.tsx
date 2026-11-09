@@ -1,5 +1,7 @@
 "use client";
 
+import { DEFAULT_TIMEZONE } from "@/lib/dates";
+
 import {
     createContext,
     useEffect,
@@ -559,7 +561,7 @@ function fixtures(locale: PreviewLocale, section: string): Data {
                 goal: "reading",
                 frequency: "weekly",
                 target: 3,
-                timezone: "Asia/Ho_Chi_Minh",
+                timezone: DEFAULT_TIMEZONE,
                 importance: 3,
                 icon: "leaf",
                 color: palette[1],
@@ -582,7 +584,7 @@ function fixtures(locale: PreviewLocale, section: string): Data {
                 goal: "learning",
                 frequency: "daily",
                 target: 1,
-                timezone: "Asia/Ho_Chi_Minh",
+                timezone: DEFAULT_TIMEZONE,
                 importance: 4,
                 icon: "book",
                 color: palette[0],
@@ -639,7 +641,7 @@ function fixtures(locale: PreviewLocale, section: string): Data {
             email: "minhan@example.test",
             pendingEmail: "",
             avatar: "",
-            timezone: "Asia/Ho_Chi_Minh",
+            timezone: DEFAULT_TIMEZONE,
             mfa: "none",
             passwordChanged: false,
             accountDeleted: false,

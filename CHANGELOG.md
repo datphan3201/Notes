@@ -7,6 +7,7 @@ Entries describe their own historical stage. In particular, earlier 2026-11-08 p
 ## 2026-11-09
 
 ### Changed
+- Centralized UTC+7 (`Asia/Ho_Chi_Minh`) as the application default on API/frontend, including missing Habit/import preferences, and corrected Task schedule timezone labels to follow the account. Preserved explicit timezone choices, UTC instant storage and existing account/history data.
 - Restored the inline right-side Task action layout on wide desktop screens while retaining labeled controls and theme-aware stars. Narrow/mobile layouts retain wrapping controls.
 - Replaced cryptic Task-row plan/menu icons with labeled Today, This week and Actions controls, explicit selected indicators and wrapping actions beneath Task text. Unified importance-star colors through a theme-accent token and shared Task/planning/Habit star rendering. Task-row plan membership now matches the explicit detail/picker selections, including dated Tasks, and completed Tasks disable plan changes.
 - Updated Calendar floating-control regression coverage to use its direct Task picker toggle instead of the retired Page actions menu.

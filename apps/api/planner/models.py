@@ -23,6 +23,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from planner.db import Base
+from planner.timezones import DEFAULT_TIMEZONE
 
 
 def now():
@@ -39,7 +40,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True)
     name: Mapped[str] = mapped_column(String(120))
     password_hash: Mapped[str] = mapped_column(Text)
-    timezone: Mapped[str] = mapped_column(String(80), default="Asia/Ho_Chi_Minh")
+    timezone: Mapped[str] = mapped_column(String(80), default=DEFAULT_TIMEZONE)
     locale: Mapped[str] = mapped_column(String(5), default="vi")
     theme: Mapped[str] = mapped_column(String(20), default="light")
     preferences: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -219,7 +220,7 @@ class NoteShare(Base):
 
 class Habit(Owned, Base):
     __tablename__ = "habits"
-    timezone: Mapped[str] = mapped_column(String(80), default="Asia/Ho_Chi_Minh")
+    timezone: Mapped[str] = mapped_column(String(80), default=DEFAULT_TIMEZONE)
     frequency: Mapped[str] = mapped_column(String(10), default="daily")
     target: Mapped[int] = mapped_column(Integer, default=1)
     first_check_in_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -259,7 +260,7 @@ class TaskSeries(Owned, Base):
     end_date: Mapped[date | None] = mapped_column(Date)
     cursor: Mapped[date | None] = mapped_column(Date)
     state: Mapped[str] = mapped_column(String(10), default="active")
-    timezone: Mapped[str] = mapped_column(String(80), default="Asia/Ho_Chi_Minh")
+    timezone: Mapped[str] = mapped_column(String(80), default=DEFAULT_TIMEZONE)
     __table_args__ = (
         *owned_constraints("task_series"),
         CheckConstraint("state IN ('active','paused','ended')"),

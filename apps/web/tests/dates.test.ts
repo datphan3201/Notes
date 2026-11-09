@@ -47,3 +47,11 @@ test("today uses account timezone, keeping DATE fields separate from instants", 
         ),
     );
 });
+
+test("missing timezone defaults to UTC+7 while an explicit UTC choice is retained", () => {
+    const instant = new Date("2026-11-09T18:30:00Z");
+    assert.equal(localDate(undefined, instant), "2026-11-10");
+    assert.equal(localDate("UTC", instant), "2026-11-09");
+    assert.equal(zonedInput(instant.toISOString()), "2026-11-10T01:30");
+    assert.equal(zonedInstant("2026-11-10T01:30"), instant.toISOString());
+});

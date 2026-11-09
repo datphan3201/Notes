@@ -1,5 +1,5 @@
 import type { Entity, WorkspacePreferences } from "./api";
-import { localDate, zonedInput } from "./dates.ts";
+import { DEFAULT_TIMEZONE, localDate, zonedInput } from "./dates.ts";
 import { matchesView } from "./task-views.ts";
 import type { TaskRecord } from "../components/preview/task-data";
 import type {
@@ -111,7 +111,7 @@ export function dashboardHabit(
     days: { day: string; state: string }[],
     now = new Date(),
 ): Habit {
-    const timezone = row.timezone || "UTC";
+    const timezone = row.timezone || DEFAULT_TIMEZONE;
     return {
         id: row.id,
         title: dashboardLabel(row.title),
