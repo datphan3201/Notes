@@ -67,6 +67,8 @@ export type NoteFile = {
     content?: string;
 };
 export type Note = {
+    archived?: boolean;
+    document?: import("@/lib/note-document").RichNoteDocument | null;
     updatedAt?: string;
     id: string;
     title: string;

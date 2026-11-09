@@ -4,12 +4,12 @@ export type LiveRuntime = {
     historyLimit: number;
     keepNoteDraft: (
         id: string,
-        draft: { title: string; content: string },
+        draft: { title: string; content: string; document?: import("@/lib/note-document").RichNoteDocument | null },
     ) => Promise<void>;
     discardNoteDraft: (id: string) => Promise<void>;
     resolveNoteConflict: (
         id: string,
-        draft?: { title: string; content: string },
+        draft?: { title: string; content: string; document?: import("@/lib/note-document").RichNoteDocument | null },
     ) => Promise<boolean>;
     tags: { id: string; label: [string, string] }[];
     invitations: {

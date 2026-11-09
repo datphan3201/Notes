@@ -80,9 +80,6 @@ export default function TasksPreview({
     const [pageIndex, setPageIndex] = useState(0);
     const [collapsed, setCollapsed] = useState<string[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [workingDrafts, setWorkingDrafts] = useState<Record<number, string>>(
-        {},
-    );
     const completedParents = shared.goals
         .filter((goal) => goal.status === "Done")
         .map((goal) => goal.id);
@@ -602,32 +599,6 @@ export default function TasksPreview({
                 <TaskPreviewDetail
                     key={selected.id}
                     task={selected}
-                    working={
-                        workingDrafts[selected.id] ?? text(...selected.working)
-                    }
-                    onWorking={(value) =>
-                        setWorkingDrafts((drafts) => ({
-                            ...drafts,
-                            [selected.id]: value,
-                        }))
-                    }
-                    onSaveWorking={() => {
-                        const value =
-                            workingDrafts[selected.id] ??
-                            text(...selected.working);
-                        update(selected.id, { working: [value, value] });
-                        notify(
-                            "Working note saved in this preview.",
-                            "Đã lưu ghi chép trong bản xem thử.",
-                        );
-                    }}
-                    onDiscardWorking={() =>
-                        setWorkingDrafts((drafts) => {
-                            const copy = { ...drafts };
-                            delete copy[selected.id];
-                            return copy;
-                        })
-                    }
                     locale={locale}
                     text={text}
                     onUpdate={(patch) => update(selected.id, patch)}

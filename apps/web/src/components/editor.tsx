@@ -56,7 +56,6 @@ function initial(
             "reminder_at",
             "estimated_minutes",
             "checklist",
-            "working_note",
         ],
         notes: ["pinned", "tags", "goal_id", "task_id", "color"],
         habits: ["timezone", "frequency", "target"],
@@ -81,7 +80,6 @@ function initial(
         Object.assign(base, {
             status: "todo",
             checklist: [],
-            working_note: "",
         });
     else if (kind === "habits")
         Object.assign(base, {
@@ -909,16 +907,7 @@ export default function Editor({
                                     </button>
                                 </div>
                             </fieldset>
-                            <label>
-                                {text("Working note")}
-                                <textarea
-                                    rows={5}
-                                    value={String(draft.working_note || "")}
-                                    onChange={(e) =>
-                                        field("working_note", e.target.value)
-                                    }
-                                />
-                            </label>
+
                         </>
                     )}
                     {kind === "habits" && (

@@ -17,8 +17,8 @@ Trace ID: `dashboard`. Test references identify coverage to inspect; they are no
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L30) — `export function DashboardView({` |
-| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1160) — `export function usePreviewData(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L781) — `def dashboard(` |
+| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1162) — `export function usePreviewData(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L786) — `def dashboard(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L301) — `def select_focus(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L530) — `def activity(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |

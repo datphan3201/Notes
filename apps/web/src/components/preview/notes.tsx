@@ -12,6 +12,7 @@ import {
     Pin,
     Plus,
     Search,
+    Save,
     Share2,
     Sparkles,
     Trash2,
@@ -20,7 +21,8 @@ import {
 } from "lucide-react";
 import Dialog from "../dialog";
 import NoteDocument from "../note-document";
-import { noteLines } from "@/vendor/note-text/js/lib/note-checkbox-text.js";
+import NotePreview from "../note-preview";
+import type { RichNoteDocument } from "@/lib/note-document";
 import { tagOptions } from "./task-data";
 import { usePreviewData, type Note, type NoteFile } from "./workspace-data";
 import { BaselineIcon, Confirm, Field, FormDialog, Header } from "./ui";
@@ -44,12 +46,13 @@ export default function NotesPreview({ text }: { text: Text }) {
     }, [db.live?.tags.map((t) => t.id).join("|")]);
     const [manageTags, setManageTags] = useState(false);
     const [drafts, setDrafts] = useState<
-        Record<string, { title: string; content: string }>
+        Record<string, { title: string; content: string; document?: RichNoteDocument | null }>
     >({});
     const [sampleOffline, setOffline] = useState(false);
     const offline = db.live ? db.live.offline : sampleOffline;
     const [conflict, setConflict] = useState("");
     const [saving, setSaving] = useState(false);
+    const [confirmExit, setConfirmExit] = useState(false);
     const [dialog, setDialog] = useState<{
         kind: "share" | "lock" | "unlock" | "delete" | "file";
         id: string;
@@ -65,7 +68,7 @@ export default function NotesPreview({ text }: { text: Text }) {
     const note = db.notes.find((note) => note.id === selectedId);
     const modalNote = db.notes.find((note) => note.id === dialog?.id);
     const draft = note
-        ? drafts[note.id] || { title: note.title, content: note.content }
+        ? drafts[note.id] || { title: note.title, content: note.content, document: note.document }
         : null;
     const locked = !!note?.locked && !note.unlocked;
     const editable = !!note && note.permission !== "read" && !locked;
@@ -73,66 +76,87 @@ export default function NotesPreview({ text }: { text: Text }) {
         () => () => urls.current.forEach((url) => URL.revokeObjectURL(url)),
         [],
     );
+    const draftsRef = useRef(drafts);
+    draftsRef.current = drafts;
     useEffect(() => {
-        if (offline && !db.live) {
-            setSaving(false);
-            return;
-        }
-        const snapshots = Object.entries(drafts).filter(
-            ([id]) => id !== conflict,
-        );
-        if (!snapshots.length) {
-            setSaving(false);
-            return;
-        }
+        if (!Object.keys(drafts).length) return;
+        const warn = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "";
+        };
+        window.addEventListener("beforeunload", warn);
+        return () => window.removeEventListener("beforeunload", warn);
+    }, [drafts]);
+    async function saveNote() {
+        if (!note || !editable || saving || conflict === note.id) return;
+        const id = note.id, snapshot = drafts[id];
+        if (!snapshot) return;
         setSaving(true);
-        const timer = setTimeout(async () => {
-            db.setNotes((notes) =>
-                notes.map((note) => {
-                    const saved = snapshots.find(([id]) => id === note.id)?.[1];
-                    return saved
-                        ? {
-                              ...note,
-                              ...saved,
-                              updatedAt: new Date().toISOString(),
-                              summaryOutdated:
-                                  !!note.summary &&
-                                  saved.content !== note.content,
-                          }
-                        : note;
-                }),
-            );
+        setError("");
+        try {
+            db.setNotes((notes) => notes.map((row) => row.id === id ? {
+                ...row, ...snapshot, updatedAt: new Date().toISOString(),
+                summaryOutdated: !!row.summary && snapshot.content !== row.content,
+            } : row));
             if (db.live && !(await db.live.flush())) {
-                setSaving(false);
-                setConflict(snapshots[0][0]);
+                setConflict(id);
                 return;
             }
-            if (db.live)
-                for (const [id] of snapshots)
-                    await db.live.discardNoteDraft(id);
+            if (db.live && draftsRef.current[id] === snapshot) {
+                await db.live.discardNoteDraft(id);
+                const newer = draftsRef.current[id];
+                if (newer && newer !== snapshot) await db.live.keepNoteDraft(id, newer);
+            }
             setDrafts((current) => {
+                if (current[id] !== snapshot) return current;
                 const next = { ...current };
-                for (const [id, snapshot] of snapshots)
-                    if (next[id] === snapshot) delete next[id];
+                delete next[id];
                 return next;
             });
+        } catch (err) {
+            setError((err as Error).message);
+        } finally {
             setSaving(false);
-        }, 650);
-        return () => clearTimeout(timer);
-    }, [drafts, offline, conflict]);
+        }
+    }
+    function closeEditor() {
+        if (saving) return;
+        if (drafts[selectedId]) setConfirmExit(true);
+        else void discardAndClose();
+    }
+    async function discardAndClose() {
+        if (conflict === selectedId) {
+            if (db.live && !(await db.live.resolveNoteConflict(selectedId))) throw new Error(text(
+                "Could not discard changes. Please try again.",
+                "Chưa thể bỏ thay đổi. Vui lòng thử lại.",
+            ));
+            setConflict("");
+        }
+        if (drafts[selectedId]) {
+            if (db.live) await db.live.discardNoteDraft(selectedId);
+            setDrafts((current) => {
+                const next = { ...current };
+                delete next[selectedId];
+                return next;
+            });
+        }
+        setConfirmExit(false);
+        setSelectedId("");
+        if (db.nav.task) db.navigate("tasks", { task: db.nav.task, note: selectedId });
+    }
     useEffect(() => {
         if (db.nav.section !== "notes") {
             setSelectedId("");
             return;
         }
         if (db.nav.note === "new") {
-            create(db.nav.goal || "");
+            create(db.nav.goal || "", db.nav.task);
         } else if (db.nav.note) {
             const target = db.notes.find((note) => note.id === db.nav.note);
             if (target) open(target);
         }
     }, [db.nav.stamp]);
-    function create(goal = "") {
+    function create(goal = "", task = db.nav.task) {
         const id = `note-${Date.now()}`;
         const row: Note = {
             id,
@@ -142,8 +166,8 @@ export default function NotesPreview({ text }: { text: Text }) {
             color: "#ffffff",
             pinned: false,
             tags: [],
-            goal,
-            task: null,
+            goal: task ? "" : goal,
+            task: task ?? null,
             locked: false,
             lockPassword: "",
             unlocked: true,
@@ -181,7 +205,8 @@ export default function NotesPreview({ text }: { text: Text }) {
                     : note,
             ),
         );
-    const edit = (changes: Partial<{ title: string; content: string }>) => {
+    const edit = (changes: Partial<{ title: string; content: string; document: RichNoteDocument | null }>) => {
+        if ("content" in changes && !("document" in changes)) changes = { ...changes, document: null };
         if (!note || !editable) return;
         if (db.live)
             void db.live
@@ -189,6 +214,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                     ...(drafts[note.id] || {
                         title: note.title,
                         content: note.content,
+                        document: note.document,
                     }),
                     ...changes,
                 })
@@ -199,6 +225,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                 ...(values[note.id] || {
                     title: note.title,
                     content: note.content,
+                    document: note.document,
                 }),
                 ...changes,
             },
@@ -211,6 +238,8 @@ export default function NotesPreview({ text }: { text: Text }) {
                     ? ""
                     : note.title + " " + note.content;
             return (
+                !note.archived &&
+                (!db.nav.task || note.task === db.nav.task || db.tasks.find(task => task.id === db.nav.task)?.noteIds?.includes(note.id)) &&
                 (!query ||
                     privateText
                         .toLocaleLowerCase(db.locale)
@@ -262,7 +291,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                 size: file.size,
                 url,
                 ...(file.type.startsWith("text/")
-                    ? { content: (await file.text()).slice(0, 100000) }
+                    ? { content: (await file.text()).slice(0, 100000), document: null }
                     : {}),
             });
         }
@@ -694,60 +723,12 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                                     )}
                                                                 </p>
                                                             ) : (
-                                                                <p>
-                                                                    {noteLines(
-                                                                        (
-                                                                            drafts[
-                                                                                note
-                                                                                    .id
-                                                                            ]
-                                                                                ?.content ||
-                                                                            note.content
-                                                                        ).slice(
-                                                                            0,
-                                                                            200,
-                                                                        ),
-                                                                    ).map(
-                                                                        (
-                                                                            line,
-                                                                            index,
-                                                                        ) => (
-                                                                            <span
-                                                                                key={
-                                                                                    index
-                                                                                }
-                                                                            >
-                                                                                {index >
-                                                                                    0 &&
-                                                                                    "\n"}
-                                                                                {line.checked !==
-                                                                                    null && (
-                                                                                    <span
-                                                                                        className={`note-preview-box ${line.checked ? "is-checked" : ""}`}
-                                                                                        role="img"
-                                                                                        aria-label={
-                                                                                            line.checked
-                                                                                                ? text(
-                                                                                                      "Checked",
-                                                                                                      "Đã đánh dấu",
-                                                                                                  )
-                                                                                                : text(
-                                                                                                      "Unchecked",
-                                                                                                      "Chưa đánh dấu",
-                                                                                                  )
-                                                                                        }
-                                                                                    >
-                                                                                        {line.checked &&
-                                                                                            "✓"}
-                                                                                    </span>
-                                                                                )}
-                                                                                {
-                                                                                    line.text
-                                                                                }
-                                                                            </span>
-                                                                        ),
-                                                                    )}
-                                                                </p>
+                                                                <NotePreview
+                                                                    content={drafts[note.id]?.content ?? note.content}
+                                                                    document={drafts[note.id] ? drafts[note.id].document : note.document}
+                                                                    checkedLabel={text("Checked", "Đã đánh dấu")}
+                                                                    uncheckedLabel={text("Unchecked", "Chưa đánh dấu")}
+                                                                />
                                                             )}
                                                             <small>
                                                                 {note.permission ===
@@ -958,20 +939,22 @@ export default function NotesPreview({ text }: { text: Text }) {
                                     : draft?.title || note.title}
                             </h2>
                             <span className="save-status" role="status">
-                                {offline
-                                    ? text(
-                                          "Offline · queued",
-                                          "Ngoại tuyến · chờ lưu",
-                                      )
-                                    : saving
-                                      ? text("Saving…", "Đang lưu…")
-                                      : text("Saved", "Đã lưu")}
+                                {saving ? text("Saving…", "Đang lưu…")
+                                    : drafts[note.id] ? text("Unsaved changes", "Thay đổi chưa lưu")
+                                    : offline ? text("Offline · queued", "Ngoại tuyến · chờ đồng bộ")
+                                    : text("Saved", "Đã lưu")}
                             </span>
+                            {editable && <button type="button" className="button button-primary review-note-save"
+                                disabled={saving || !drafts[note.id] || conflict === note.id}
+                                onClick={() => void saveNote()}>
+                                <Save size={17} />
+                                {saving ? text("Saving…", "Đang lưu…") : text("Save", "Lưu")}
+                            </button>}
                         </>
                     }
                     className="preview-dialog review-dialog review-note-modal"
                     closeLabel={text("Close editor", "Đóng trình soạn thảo")}
-                    onClose={() => setSelectedId("")}
+                    onClose={closeEditor}
                 >
                     <div className="preview-dialog-body">
                         <>
@@ -1092,7 +1075,15 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                 <button
                                                     className="button button-primary"
                                                     onClick={async () => {
-                                                        if (db.live && !(await db.live.resolveNoteConflict(note.id, drafts[note.id]))) return;
+                                                        const snapshot = drafts[note.id];
+                                                        if (db.live && !(await db.live.resolveNoteConflict(note.id, snapshot))) return;
+                                                        setDrafts(current => {
+                                                            if (current[note.id] !== snapshot) return current;
+                                                            const next = { ...current };
+                                                            delete next[note.id];
+                                                            return next;
+                                                        });
+                                                        if (db.live && draftsRef.current[note.id] === snapshot) await db.live.discardNoteDraft(note.id);
                                                         setConflict("");
                                                     }}
                                                 >
@@ -1182,8 +1173,9 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                             "Nội dung ghi chú",
                                                         )}
                                                         value={draft!.content}
-                                                        onChange={(content) =>
-                                                            edit({ content })
+                                                        document={draft!.document}
+                                                        onChange={(content, document) =>
+                                                            edit({ content, document })
                                                         }
                                                         readOnly={!editable}
                                                     />
@@ -1206,7 +1198,9 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                                 ? "Offline · changes queued"
                                                                 : saving
                                                                   ? "Saving…"
-                                                                  : db.live
+                                                                  : drafts[note.id]
+                                                                    ? "Unsaved changes"
+                                                                    : db.live
                                                                     ? "Saved"
                                                                     : "Saved in this preview",
                                                         note.permission ===
@@ -1222,7 +1216,9 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                                 ? "Ngoại tuyến · thay đổi chờ lưu"
                                                                 : saving
                                                                   ? "Đang lưu…"
-                                                                  : db.live
+                                                                  : drafts[note.id]
+                                                                    ? "Thay đổi chưa lưu"
+                                                                    : db.live
                                                                     ? "Đã lưu"
                                                                     : "Đã lưu trong bản xem thử",
                                                     )}
@@ -1926,6 +1922,20 @@ export default function NotesPreview({ text }: { text: Text }) {
                         </div>
                     </div>
                 </Dialog>
+            )}
+            {confirmExit && note && (
+                <Confirm text={text}
+                    title={text("Discard unsaved changes?", "Bỏ thay đổi chưa lưu?")}
+                    cancelLabel={text("Keep editing", "Tiếp tục chỉnh sửa")}
+                    label={text("Discard and exit", "Bỏ thay đổi và thoát")}
+                    danger
+                    onClose={() => setConfirmExit(false)}
+                    onConfirm={discardAndClose}>
+                    <p>{text(
+                        "Your changes have not been saved. Exiting will discard them.",
+                        "Các thay đổi của bạn chưa được lưu. Thoát sẽ bỏ những thay đổi này.",
+                    )}</p>
+                </Confirm>
             )}
             {manageTags && (
                 <FormDialog

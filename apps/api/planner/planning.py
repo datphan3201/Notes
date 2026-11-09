@@ -108,11 +108,14 @@ def serialize(item, mask_note=False):
         if column.name not in ("user_id", "lock_hash")
     }
     result.update(result.pop("details", {}) or {})
+    if isinstance(item, Task):
+        # Retained only for legacy migration; canonical working content lives in Notes.
+        result.pop("working_note", None)
     if isinstance(item, Note):
         result["locked"] = item.lock_hash is not None
         if mask_note and item.lock_hash:
             result["title"], result["content"], result["tags"] = "Locked Note", "", []
-            for field in ("summary", "summary_version", "background_id", "goal_id", "task_id"):
+            for field in ("summary", "summary_version", "background_id", "goal_id", "task_id", "document"):
                 result.pop(field, None)
     return result
 
@@ -258,7 +261,7 @@ def update(
     if kind == "notes" and auth:
         # Shared editors serialize against the same owner as ordinary Note edits.
         authorized = access_note(db, entity_id, auth, write=True)
-        if authorized.user_id != user_id and set(fields) - {"title", "content"}:
+        if authorized.user_id != user_id and set(fields) - {"title", "content", "document"}:
             raise HTTPException(404, "Not found")
         user_id = authorized.user_id
     lock_owner(db, user_id)
@@ -335,6 +338,8 @@ def update(
         else (item.details or {}).get(field, definition.get_default(call_default_factory=True))
         for field, definition in INPUTS[kind].model_fields.items()
     }
+    if kind == "notes" and "content" in fields and "document" not in fields:
+        fields = {**fields, "document": None}
     values = validated(kind, {**existing, **fields})
     validate_relations(db, kind, item.user_id, values, item.id)
     if isinstance(item, Habit) and item.first_check_in_at:

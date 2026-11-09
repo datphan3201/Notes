@@ -707,12 +707,6 @@
     color: var(--muted);
     font-size: 11px;
 }
-.preview-task-detail .note-document {
-    margin-top: 20px;
-}
-.preview-task-detail .note-document [contenteditable] {
-    min-height: 240px;
-}
 .preview-task-linked-notes {
     margin-top: 18px;
 }

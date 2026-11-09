@@ -33,7 +33,7 @@ export function dashboardTask(
         description: dashboardLabel(row.content),
         criteria: dashboardLabel(row.completion_criteria),
         outcome: dashboardLabel(row.expected_result),
-        working: dashboardLabel(row.working_note),
+        working: dashboardLabel(""),
         status: dashboardStatus(row.status),
         importance: row.importance,
         parent: row.milestone_id || row.goal_id || "",

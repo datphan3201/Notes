@@ -366,6 +366,7 @@ export function Confirm({
     children,
     danger = false,
     label,
+    cancelLabel,
     disabled = false,
 }: {
     title: string;
@@ -375,6 +376,7 @@ export function Confirm({
     children: React.ReactNode;
     danger?: boolean;
     label?: string;
+    cancelLabel?: string;
     disabled?: boolean;
 }) {
     const [running, setRunning] = useState(false),
@@ -403,7 +405,7 @@ export function Confirm({
                     disabled={running}
                     onClick={onClose}
                 >
-                    {text("Cancel", "Hủy")}
+                    {cancelLabel || text("Cancel", "Hủy")}
                 </button>
                 <button
                     disabled={disabled || running}

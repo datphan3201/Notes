@@ -42,6 +42,7 @@ export type Kind =
     | "reviews"
     | "task-series";
 export type Entity = {
+    document?: import("./note-document").RichNoteDocument | null;
     series_id?: string | null;
     first_check_in_at?: string | null;
     id: string;
@@ -76,7 +77,7 @@ export type Entity = {
     locked?: boolean;
     tags?: string[];
     checklist?: { text: string; checked: boolean }[];
-    working_note?: string;
+    note_ids?: string[];
     timezone?: string;
     frequency?: string;
     target?: number;

@@ -198,3 +198,21 @@ def test_merge_flag_does_not_bypass_configured_database_guard(tmp_path):
     root = snapshot(tmp_path, users=[])
     with pytest.raises(ValueError, match="restricted"):
         import_snapshot(root, "planner_dev", merge_existing=True)
+
+
+def test_legacy_task_working_text_becomes_a_linked_note(tmp_path, db):
+    from planner.models import Task
+
+    common = {"user_id": 1, "created_at": "2026-11-01T12:00:00", "updated_at": "2026-11-02T12:00:00"}
+    root = snapshot(tmp_path, users=[legacy_user()],
+        tasks=[{**common, "id": "legacy-task", "title": "Task title", "status": "NotStarted"}],
+        task_notes=[{"task_id": "legacy-task", "body": "- [ ] Legacy task content"}],
+        notes=[{**common, "id": "linked-note", "title": "Keep existing", "content": "Other content"}],
+        note_links=[{"note_id": "linked-note", "task_id": "legacy-task", "goal_id": None}],
+    )
+    import_snapshot(root, "planner_test")
+    notes = list(db.scalars(select(Note).where(Note.task_id == "legacy-task")))
+    assert len(notes) == 2
+    assert {note.content for note in notes} == {"Other content", "- [ ] Legacy task content"}
+    assert db.get(Task, "legacy-task").working_note == ""
+    assert db.get(Note, "linked-note").title == "Keep existing"

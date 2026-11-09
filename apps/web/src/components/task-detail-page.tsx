@@ -2,18 +2,14 @@
 import { api, type Entity } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
 import { QueryState, type PageContext } from "./workspace-context";
 import { update } from "./workspace-controls";
-import NoteDocument from "./note-document";
 
 export function TaskDetailPage({ ctx, id }: { ctx: PageContext; id: string }) {
     const task = useQuery({
         queryKey: ["entity", "tasks", id],
         queryFn: () => api<Entity>(`/tasks/${id}`),
     });
-    const [working, setWorking] = useState<string | null>(null),
-        [saved, setSaved] = useState(false);
     return (
         <>
             <QueryState locale={ctx.identity.user.locale} queries={[task]} />
@@ -67,42 +63,12 @@ export function TaskDetailPage({ ctx, id }: { ctx: PageContext; id: string }) {
                             </label>
                         ))}
                     </section>
-                    <form
-                        className="planning-panel stack-form"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            void ctx.action(async () => {
-                                await update(ctx, "tasks", task.data!, {
-                                    working_note:
-                                        working ??
-                                        task.data!.working_note ??
-                                        "",
-                                });
-                                setSaved(true);
-                            });
-                        }}
-                    >
-                        <section>
-                            <span>
-                                {ctx.text("Working note", "Ghi chép công việc")}
-                            </span>
-                            <NoteDocument
-                                value={working ?? task.data.working_note ?? ""}
-                                label={ctx.text(
-                                    "Working note",
-                                    "Ghi chép công việc",
-                                )}
-                                onChange={(value) => {
-                                    setWorking(value);
-                                    setSaved(false);
-                                }}
-                            />
-                        </section>
-                        <button className="button button-primary">
-                            {ctx.t.save}
-                        </button>
-                        {saved && <p role="status">{ctx.t.saved}</p>}
-                    </form>
+                    <section className="planning-panel">
+                        <h2>{ctx.text("Notes", "Ghi chú")}</h2>
+                        <Link className="button button-primary" href={`/?task=${encodeURIComponent(id)}`}>
+                            {ctx.text("Open task notes", "Mở ghi chú công việc")}
+                        </Link>
+                    </section>
                 </>
             )}
         </>

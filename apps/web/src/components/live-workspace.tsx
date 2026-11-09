@@ -69,7 +69,7 @@ function route(ids: WorkspaceIds): Nav {
         goal: section === "goals" ? ids.view(id || "") || undefined : undefined,
         milestone: ids.view(p.get("milestone") || "") || undefined,
         note: ids.view(p.get("note") || "") || undefined,
-        task: section === "tasks" && id ? ids.number(id) : undefined,
+        task: section === "tasks" && id ? ids.number(id) : p.get("task") ? ids.number(p.get("task")!) : undefined,
         stamp: Date.now(),
     };
 }
@@ -93,7 +93,7 @@ export function liveHref(
         archive: "/settings/archive",
         reports: "/settings/reports",
     };
-    let path = target.goal
+    let path = section === "notes" ? paths.notes : target.goal
         ? `/goals/${ids?.server(target.goal) || target.goal}`
         : target.task !== undefined
           ? `/tasks/${ids?.id(target.task) || target.task}`
@@ -104,6 +104,7 @@ export function liveHref(
             "milestone",
             ids?.server(target.milestone) || target.milestone,
         );
+    if (section === "notes" && target.task !== undefined) params.set("task", ids?.id(target.task) || String(target.task));
     if (target.note)
         params.set("note", ids?.server(target.note) || target.note);
     return path + (params.size ? "?" + params : "");
@@ -207,6 +208,7 @@ export default function LiveWorkspace() {
                             String(fields.title || "Note") +
                             (server ? " (recovered)" : ""),
                         content: fields.content || "",
+                        document: fields.document || null,
                         tags: fields.tags || [],
                         color: fields.color || "neutral",
                         pinned: fields.pinned || false,
@@ -830,14 +832,16 @@ export default function LiveWorkspace() {
         live: runtime,
         today: localDate(data.profile.timezone),
         parents,
-        navigate: (section: string, target = {}) => {
+        navigate: (section: string, target: Partial<Nav> = {}) => {
             history.pushState(null, "", liveHref(section, target, ids));
             set("nav", { section, ...target, stamp: Date.now() });
             window.scrollTo(0, 0);
             if (!offlineRef.current)
                 void flush()
                     .then((ok) => {
-                        if (ok) return refresh();
+                        // The new Note is created by the destination view; a simultaneous
+                        // navigation refresh would replace it before its first save.
+                        if (ok && !(section === "notes" && target.note === "new")) return refresh();
                     })
                     .catch((err) => setError(err.message));
         },
@@ -878,6 +882,7 @@ export default function LiveWorkspace() {
                                     id: `recovered-${crypto.randomUUID()}`,
                                     title: draft.title + " (recovered)",
                                     content: draft.content,
+                                    document: draft.document || null,
                                     color: "neutral",
                                     pinned: false,
                                     tags: [],

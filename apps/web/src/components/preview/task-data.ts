@@ -54,6 +54,7 @@ export type TaskRecord = Omit<
     seriesId?: number;
     checklist: { id: number; text: string; checked: boolean }[];
     related: string[];
+    noteIds?: string[];
     linkedNotes: { id: number; title: string; content: string }[];
 };
 export type SeriesRecord = {

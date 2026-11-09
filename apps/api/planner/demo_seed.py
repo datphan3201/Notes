@@ -54,8 +54,8 @@ def verify_target(db, expected_database, expected_schema):
     actual = db.execute(text("SELECT current_database(), current_schema() ")).one()
     if tuple(actual) != (expected_database, expected_schema):
         raise ValueError("Connected database/schema does not match the explicitly selected target")
-    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0005":
-        raise ValueError("Demo requires the current 0005 schema; no migrations were performed")
+    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0006":
+        raise ValueError("Demo requires the current 0006 schema; no migrations were performed")
 
 
 def seed_account(db, email, password, as_of):
@@ -209,9 +209,10 @@ def seed_account(db, email, password, as_of):
                     {"text": "Hoàn thành bài tập nhỏ", "checked": status == "done"},
                     {"text": "Ghi lại điều đã học", "checked": status == "done"},
                 ],
-                working_note="[GIẢ LẬP] Đã thử ví dụ, ghi nhận lỗi và các câu hỏi cần kiểm tra.",
                 tags=["demo", "backend"],
             )
+            add("notes", day, title=task.title, task_id=task.id,
+                content="[GIẢ LẬP] Đã thử ví dụ, ghi nhận lỗi và các câu hỏi cần kiểm tra.")
             if status == "done":
                 task.completed_at = stamp(day, 20)
                 db.add(

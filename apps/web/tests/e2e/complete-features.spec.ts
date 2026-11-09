@@ -318,6 +318,7 @@ test("offline Note edits survive reload and create a recovered copy instead of o
     const account = await identity(page);
     await context.setOffline(true);
     await content(page).fill("An offline draft");
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(
         page.getByRole("dialog").locator(".save-status"),
     ).toContainText("Ngoại tuyến");

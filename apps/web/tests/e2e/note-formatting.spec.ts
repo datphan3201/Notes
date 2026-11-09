@@ -1,0 +1,68 @@
+import { expect, test } from "@playwright/test";
+import { signInFixture, createEntity } from "./helpers";
+
+test("rich Note formatting, Tab indentation and prioritized preview survive reload", async ({ page }) => {
+    await signInFixture(page);
+    const row = await createEntity(page, "notes", { title: "Rich formatting", content: "A thought" });
+    const getNote = async () => (await page.request.get(`/api/v1/notes/${row.id}`)).json();
+    const open = async () => {
+        await page.getByRole("heading", { name: "Rich formatting", exact: true }).click();
+        return page.getByRole("textbox", { name: "Nội dung ghi chú", exact: true });
+    };
+    await page.reload();
+    const editor = await open();
+    await editor.fill("Main heading");
+    await page.getByLabel("Kiểu đoạn văn", { exact: true }).selectOption("2");
+    await editor.press("Tab");
+    await expect(editor.locator("h2")).toHaveAttribute("data-indent", "1");
+    await editor.press("Shift+Tab");
+    await expect(editor.locator("h2")).not.toHaveAttribute("data-indent");
+    await editor.press("Control+a");
+    await page.getByRole("button", { name: "In đậm", exact: true }).click();
+    await page.getByRole("button", { name: "Tô sáng", exact: true }).click();
+    await expect(editor.locator("strong")).toContainText("Main heading");
+    await editor.press("End");
+    await editor.press("Enter");
+    await editor.pressSequentially("Checklist entry");
+    await page.getByRole("button", { name: "Ô đánh dấu", exact: true }).click();
+    await editor.press("End");
+    await editor.press("Enter");
+    await editor.pressSequentially("Nested entry");
+    await editor.press("Tab");
+    await expect(editor.locator('ul[data-type="taskList"] ul[data-type="taskList"]')).toHaveCount(1);
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Lưu", exact: true })).toBeDisabled();
+    await expect.poll(async () => (await getNote()).document?.content?.some((node: { type: string }) => node.type === "taskList")).toBeTruthy();
+    await page.reload();
+    const card = page.locator(".review-note-card").filter({ has: page.getByRole("heading", { name: "Rich formatting", exact: true }) });
+    await expect(card.locator('[data-preview-kind="headings"]')).toContainText("Main heading");
+    await expect(card.locator('[data-preview-kind="headings"]')).not.toContainText("Checklist entry");
+    const reopened = await open();
+    await expect(reopened.locator("h2 strong mark, h2 mark strong")).toContainText("Main heading");
+    await expect(reopened.locator('ul[data-type="taskList"] ul[data-type="taskList"]')).toHaveCount(1);
+});
+
+test("unsaved Note changes can be kept open or discarded without a write", async ({ page }) => {
+    await signInFixture(page);
+    const row = await createEntity(page, "notes", { title: "Manual save", content: "Saved text" });
+    await page.reload();
+    await page.getByRole("heading", { name: "Manual save", exact: true }).click();
+    const editor = page.getByRole("textbox", { name: "Nội dung ghi chú", exact: true });
+    await editor.fill("Unsaved text");
+    page.on("dialog", () => { throw new Error("Closing Notes must use the web confirmation"); });
+    await page.getByRole("button", { name: "Đóng trình soạn thảo", exact: true }).click();
+    const confirmation = page.getByRole("dialog", { name: "Bỏ thay đổi chưa lưu?", exact: true });
+    await expect(confirmation).toBeVisible();
+    await confirmation.getByRole("button", { name: "Tiếp tục chỉnh sửa", exact: true }).click();
+    await expect(editor).toHaveText("Unsaved text");
+    await page.getByRole("button", { name: "Đóng trình soạn thảo", exact: true }).click();
+    await confirmation.press("Escape");
+    await expect(confirmation).toHaveCount(0);
+    await expect(editor).toHaveText("Unsaved text");
+    await page.getByRole("button", { name: "Đóng trình soạn thảo", exact: true }).click();
+    await confirmation.getByRole("button", { name: "Bỏ thay đổi và thoát", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect((await (await page.request.get(`/api/v1/notes/${row.id}`)).json()).content).toBe("Saved text");
+    await page.getByRole("heading", { name: "Manual save", exact: true }).click();
+    await expect(editor).toHaveText("Saved text");
+});

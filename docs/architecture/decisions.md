@@ -15,14 +15,14 @@ Repository records report deployment on 2026-11-08 to Vercel web, Render Singapo
 | Area / Goal | Configurable Areas, arbitrary-depth single-parent Goal hierarchy; one Area or parent Goal |
 | Icons / importance | Supported server-validated icon/accent choices on Areas, Goals, Milestones and Habits; importance 1–5, including Areas; Tasks have no icon |
 | Milestone | Goal checkpoint; separate acyclic prerequisite relation, including other owned Goals' Milestones |
-| Task | At most one primary Goal/Milestone, otherwise Inbox; dates/schedule, plain-text criteria, estimate, independent checklist/working text |
+| Task | At most one primary Goal/Milestone, otherwise Inbox; dates/schedule, plain-text criteria, estimate, independent completion checklist and ordinary linked Notes |
 | Main goal | Explicit account focus shared by Dashboard roadmap and Goals; unset/archived focus invites selection, no automatic highest-importance fallback |
 | Calendar | Monday-first month/week and reviewed Gantt projections over Tasks/Milestones/Goals; ordinary versioned writes, no separate event store/external sync; Habits excluded |
 | Daily/weekly plans | Explicit account-local selection, Today also selects current Monday week; never rewrites dates/status or automatically carries to next day |
 | Progress / related work | Finite primary children only; exclude Habits, related contributions and recurring occurrences; avoid double-counting Tasks through Milestones |
 | Recurrence | Personal daily/weekly/monthly/yearly TaskSeries, worker materialization; Ended terminal |
 | Habit | Dedicated local-day check-ins/rest/streaks; timezone/period freeze after history; no Goal percentage contribution |
-| Notes | Plain text, checkboxes, acknowledged autosave/conflict recovery, tags, private attachments and optional owned Goal/Task link; session-bound password unlock; registered-account view/edit sharing |
+| Notes | Rich JSON document with server-derived searchable plain text, prioritized heading/checkbox/text previews, explicit Save/local drafts/conflict recovery, tags, private attachments and optional owned Goal/Task link; session-bound password unlock; registered-account view/edit sharing |
 | Shared editing | Versioned title/content writes and conflict recovery; no V1 realtime OT/WebSocket/presence |
 | Offline | Personal unshared/unlocked Notes only; account-scoped IndexedDB drafts/outbox, conflict copies and unchanged-version deletion; generic Notes shell/static cache, no offline feature promise for other pages/private media |
 | Reviews / Activity | Persisted period snapshot/reflection versus real append-only transition/reversal facts; no fabricated scoring |
@@ -34,7 +34,7 @@ Repository records report deployment on 2026-11-08 to Vercel web, Render Singapo
 
 The recorded Dashboard requirement places insight cards above one full-width checklist in Today/This week. Current mounted desktop source uses a split layout; ISSUE-067 requires an explicit acceptance decision or implementation change. Preserve this distinction rather than silently rewriting the requirement to match source.
 
-Preserve the illustrated five-theme system, independent light/dark, supported scenery/quote/background controls, English/Vietnamese, semantic controls, readable focus and mobile layouts. Shared floating Task/Goal/Milestone editors preserve originating context; full detail/roadmap surfaces remain for sustained work. Main Notes autosave is separate from explicit-save Task/Review text.
+Preserve the illustrated five-theme system, independent light/dark, supported scenery/quote/background controls, English/Vietnamese, semantic controls, readable focus and mobile layouts. Shared floating Task/Goal/Milestone editors preserve originating context; full detail/roadmap surfaces remain for sustained work. Task Notes and standalone Notes use one Note resource/editor and explicit Save; Review reflections remain explicit Save. Note local draft recovery remains separate from server writes.
 
 Owned reads/writes scope `user_id`; sharing/evidence require explicit permission and inaccessible identifiers return 404. Validate graphs and writes atomically, use UTC instants separately from user-facing DATE, keep server validation authoritative and private files authorized. AI/provider calls must not hold business write transactions.
 

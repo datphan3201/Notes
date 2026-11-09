@@ -418,6 +418,14 @@ def snapshot(auth: Auth, db: DB):
                     if row.user_id == user_id:
                         values["shares"] = shares.get(row.id, [])
             result[kind].append(values)
+    # Owner-only linkage lets Task surfaces list locked Notes without exposing their body.
+    task_notes = {}
+    for task_id, note_id in db.execute(select(Note.task_id, Note.id).where(
+        Note.user_id == user_id, Note.task_id.is_not(None), Note.archived_at.is_(None),
+    )):
+        task_notes.setdefault(task_id, []).append(note_id)
+    for task in result["tasks"]:
+        task["note_ids"] = task_notes.get(task["id"], [])
     result["account_files"] = [
         {"id": f.id, "purpose": f.purpose, "url": "/api/v1/account-files/" + f.id}
         for f in db.scalars(select(AccountFile).where(AccountFile.user_id == user_id))

@@ -212,7 +212,6 @@ class TaskInput(Dates):
     reminder_at: AwareDatetime | None = None
     estimated_minutes: int | None = Field(default=None, ge=1, le=1440)
     checklist: list[ChecklistItem] = Field(default_factory=list, max_length=100)
-    working_note: str = Field(default="", max_length=100_000)
     expected_result: str = Field(default="", max_length=10000)
     completion_criteria: str = Field(default="", max_length=10000)
 
@@ -232,6 +231,16 @@ class TaskCapture(TaskInput):
 
 
 class NoteInput(Content):
+    document: dict | None = None
+
+    @model_validator(mode="after")
+    def rich_content(self):
+        if self.document is not None:
+            from planner.note_document import document_text
+
+            self.content = document_text(self.document)
+        return self
+
     color: str = Field(
         default="neutral", pattern=r"^(neutral|lemon|mint|sky|rose|#[0-9a-fA-F]{6})$"
     )

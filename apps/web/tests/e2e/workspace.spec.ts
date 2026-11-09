@@ -70,7 +70,7 @@ test("capture a dated Task, find it on Dashboard, and complete it", async ({
     ).toBe("done");
 });
 
-test("Note autosave survives reload and a concurrent edit preserves the local draft", async ({
+test("Note explicit save survives reload and a concurrent edit preserves the local draft", async ({
     page,
 }) => {
     await signInFixture(page);
@@ -78,13 +78,23 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
     await page
         .getByRole("button", { name: "Ghi chú mới", exact: true })
         .click();
+    await expect.poll(async () => (await (await page.request.get("/api/v1/notes")).json()).items.length).toBe(1);
     let dialog = page.getByRole("dialog");
     await dialog
         .getByLabel("Tên ghi chú", { exact: true })
-        .fill("Autosaved thought");
+        .fill("Saved thought");
     await dialog
         .getByRole("textbox", { name: "Nội dung ghi chú", exact: true })
         .fill("The original thought.");
+    let writes = 0;
+    await page.route("**/api/v1/workspace/changes", async route => {
+        writes++;
+        await route.continue();
+    });
+    // Pass the former debounce interval: typing must not send a write.
+    await page.waitForTimeout(1000);
+    expect(writes).toBe(0);
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect
         .poll(async () => {
             const notes = await (
@@ -92,7 +102,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
             ).json();
             return notes.items.some(
                 (n: { title: string; content: string }) =>
-                    n.title === "Autosaved thought" &&
+                    n.title === "Saved thought" &&
                     n.content === "The original thought.",
             );
         })
@@ -103,7 +113,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
         .click();
     await page.reload();
     await page
-        .getByRole("heading", { name: "Autosaved thought", exact: true })
+        .getByRole("heading", { name: "Saved thought", exact: true })
         .click();
     dialog = page.getByRole("dialog");
     const content = dialog.getByRole("textbox", {
@@ -126,6 +136,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
     });
     expect(remote.status()).toBe(200);
     await content.fill("My local draft must survive.");
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(dialog.getByRole("alert")).toContainText(
         "Ghi chú có thay đổi",
         { timeout: 10000 },
@@ -147,6 +158,7 @@ test("Note autosave survives reload and a concurrent edit preserves the local dr
     });
     expect(remoteAgain.status()).toBe(200);
     await content.fill("Explicitly keep this newer local draft.");
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(dialog.getByRole("alert")).toContainText("Ghi chú có thay đổi");
     await dialog.getByRole("button", { name: "Giữ bản nháp của tôi", exact: true }).click();
     await expect.poll(async () => (await (await page.request.get(`/api/v1/notes/${note.id}`)).json()).content).toBe("Explicitly keep this newer local draft.");

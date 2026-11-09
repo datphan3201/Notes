@@ -4,6 +4,15 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 
 Entries describe their own historical stage. In particular, earlier 2026-11-08 preparation/pause/unprovisioned statements were superseded by the recorded deployment, merge to `main` and legacy retirement. Current operations and unresolved acceptance live in the documentation/status and issue list; historical verification totals are not fresh test results.
 
+## 2026-11-09
+
+### Changed
+- Unified Task working notes with canonical linked Notes: one rich editor, explicit Save/draft/conflict/unlock flow and contextual return to the Task. Revision `0006` preserves legacy working text as linked Notes without overwriting different existing content or duplicating identical content; future imports/demo seeds use linked Notes. Task input/output no longer exposes the retired working-text field. Removed the Task CSS selector that imposed a 240px minimum height on noneditable checkbox labels, and fixed navigation refresh dropping a newly created contextual Note (ISSUE-071).
+- Notes title/content edits now remain drafts until the user presses Save. Save preserves newer in-flight edits and existing version-conflict/offline recovery; closing an unsaved editor uses a web confirmation with Keep editing / Discard and exit actions instead of a browser confirm.
+
+### Added
+- Added rich Notes formatting (bold, italic, strike, highlight, H1–H3, nested lists/checklists, links, quotes and code), Tab/Shift+Tab indentation, validated JSON persistence and formatting-preserving drafts/offline recovery. Card previews exclusively prioritize headings, then checkboxes, then ordinary text. Existing plain Notes remain supported; locked Notes mask both representations.
+
 ## 2026-11-08
 
 ### Removed

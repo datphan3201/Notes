@@ -26,7 +26,7 @@ For execution, configure the intended database URL/schema privately and supply `
 uv run python -m planner.demo_seed --email roadmap.demo@example.com --as-of 2026-11-08 --expect-database postgres --expect-schema planner --execute
 ```
 
-The configured database/schema must match both explicit arguments and the actual connection. The schema must already be revision `0005`; the command performs no upgrades. New account/data/index/audit writes commit in one transaction, with an email advisory lock and existing-account rejection. Failure rolls back the new fixture. The JSON report excludes passwords; retain credentials privately. This command must exist in the checkout/environment from which it is run; adding source locally does not redeploy the hosted image.
+The configured database/schema must match both explicit arguments and the actual connection. The schema must already be revision `0006`; the command performs no upgrades. New account/data/index/audit writes commit in one transaction, with an email advisory lock and existing-account rejection. Failure rolls back the new fixture. The JSON report excludes passwords; retain credentials privately. This command must exist in the checkout/environment from which it is run; adding source locally does not redeploy the hosted image.
 
 ## Verification
 

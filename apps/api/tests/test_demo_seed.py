@@ -38,7 +38,9 @@ def test_demo_history_is_scoped_consistent_and_login_works(client, db):
     assert report["counts"]["goals"] == 4
     assert report["counts"]["milestones"] == 8
     assert report["counts"]["tasks"] > 120
-    assert report["counts"]["notes"] == 10
+    linked_count = db.scalar(select(func.count()).select_from(Note).where(Note.user_id == user_id, Note.task_id.is_not(None)))
+    assert linked_count > 100
+    assert report["counts"]["notes"] == 10 + linked_count
     user = db.get(User, user_id)
     assert user.role == "user" and user.email_verified_at
     assert user.profile["demo_fixture"]["version"] == "two-month-roadmap-v1"

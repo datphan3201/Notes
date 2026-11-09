@@ -15,7 +15,7 @@ Trace ID: `settings.archive`. Test references identify coverage to inspect; they
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L45) — `export default function SettingsPreview({` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L549) — `def archive(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L554) — `def archive(` |
 | API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L161) — `def remove_record(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |

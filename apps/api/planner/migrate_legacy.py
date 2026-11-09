@@ -415,7 +415,6 @@ def import_snapshot(root: Path, expected_database: str, *, merge_existing: bool 
                         expected_result=row.get("expected_result", ""),
                         completion_criteria=row.get("completion_criteria", ""),
                         checklist=checklist.get(row["id"], []),
-                        working_note=working.get(row["id"], ""),
                     )
                 )
             db.flush()
@@ -437,6 +436,18 @@ def import_snapshot(root: Path, expected_database: str, *, merge_existing: bool 
                         task_id=link.get("task_id"),
                     )
                 )
+            db.flush()
+            for task in db.scalars(select(Task).where(Task.user_id.in_(owner_ids))):
+                content = working.get(task.id, "")
+                if not content or db.scalar(select(Note.id).where(
+                    Note.user_id == task.user_id, Note.task_id == task.id, Note.content == content,
+                ).limit(1)):
+                    continue
+                db.add(Note(
+                    id=str(uuid5(NAMESPACE_URL, "planner:task-note:" + task.id)),
+                    user_id=task.user_id, task_id=task.id, title=task.title, content=content,
+                    created_at=task.created_at, updated_at=task.updated_at, archived_at=task.archived_at,
+                ))
             for row in rows(root, manifest, "habits"):
                 db.add(
                     Habit(

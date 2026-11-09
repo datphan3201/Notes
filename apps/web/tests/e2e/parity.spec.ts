@@ -319,7 +319,7 @@ test("calendar date capture saves selected date and week navigation changes peri
     ).not.toHaveAttribute("aria-label", before!);
 });
 
-test("Note checkboxes remain literal text and undo restores their state", async ({
+test("Note checkboxes keep searchable text and undo restores their state", async ({
     page,
 }) => {
     await signInFixture(page);
@@ -331,13 +331,16 @@ test("Note checkboxes remain literal text and undo restores their state", async 
     await page
         .getByRole("heading", { name: "Checklist thought", exact: true })
         .click();
-    const check = page.getByRole("dialog").locator("[data-note-line-check]");
+    const check = page.getByRole("dialog").locator('input[type="checkbox"]');
     await check.check();
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Lưu", exact: true })).toBeDisabled();
     await expect
         .poll(async () => (await note(page, row.id)).content)
         .toBe("- [x] Read a chapter\nA plain line");
     await noteContent(page).press("Control+z");
     await expect(check).not.toBeChecked();
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect
         .poll(async () => (await note(page, row.id)).content)
         .toBe("- [ ] Read a chapter\nA plain line");
@@ -359,6 +362,7 @@ test("a local Note draft survives reload and recovery keeps the last server vers
         route.abort("internetdisconnected"),
     );
     await noteContent(page).fill("A newer local thought");
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByRole("dialog").getByRole("alert")).toBeVisible();
     page.once("dialog", (dialog) => dialog.accept());
     await page.reload();

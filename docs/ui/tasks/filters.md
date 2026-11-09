@@ -19,7 +19,7 @@ Trace ID: `tasks.filters`. Test references identify coverage to inspect; they ar
 | Alternate typed Task-view helper; unit-tested, not mounted by WorkspaceView | [apps/web/src/lib/task-views.ts](../../../apps/web/src/lib/task-views.ts#L30) — `export function matchesView(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L248) — `def task_plan(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L266) — `def select_task(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L781) — `def dashboard(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L786) — `def dashboard(` |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

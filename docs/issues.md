@@ -6,7 +6,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 
 ## Reporting rules
 
-- Next unused ID: **ISSUE-071**. Never reuse an earlier ID.
+- Next unused ID: **ISSUE-072**. Never reuse an earlier ID.
 - Include status, severity, affected source/UI, observed versus expected behavior, evidence type/limits and a concrete next step.
 - Severity: High (data loss/security/core failure), Medium (wrong behavior or material unverified operational/scaling gap), Low (cosmetic/documentation/tooling friction).
 - Status: Open, Needs decision or In progress. Listing an issue alone does not authorize runtime changes.

@@ -6,7 +6,7 @@ The maintained source of implementation is Next.js/FastAPI under `apps/` on `mai
 
 | Browser surface | Documentation |
 | --- | --- |
-| `/`, `/notes` | [Notes](ui/notes/README.md), [autosave](ui/notes/autosave.md), [passwords](ui/notes/locks.md), [sharing](ui/notes/sharing.md), [files](ui/notes/files.md), [AI](ui/notes/ai.md), [offline](ui/notes/offline.md) |
+| `/`, `/notes` | [Notes](ui/notes/README.md), [saving](ui/notes/autosave.md), [passwords](ui/notes/locks.md), [sharing](ui/notes/sharing.md), [files](ui/notes/files.md), [AI](ui/notes/ai.md), [offline](ui/notes/offline.md) |
 | `/dashboard` | [Dashboard](ui/dashboard/README.md) |
 | `/goals`, `/goals/{id}` | [Areas/Goals](ui/goals/README.md), [roadmap](ui/goals/roadmap.md), [Milestones](ui/goals/milestones.md) |
 | `/tasks`, `/tasks/{id}` | [Tasks](ui/tasks/README.md), [filters/planning](ui/tasks/filters.md), [capture](ui/tasks/capture.md), [details](ui/tasks/detail.md), [recurrence](ui/tasks/repeating.md) |

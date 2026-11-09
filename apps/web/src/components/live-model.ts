@@ -179,6 +179,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
             prefs,
         ),
         ...archive(row),
+        noteIds: (row.note_ids || []).map(id => ids.view(id)),
         history: inHistory(row, today, prefs),
         pinned: !!row.pinned,
         seriesId: row.series_id ? ids.number(row.series_id) : undefined,
@@ -193,9 +194,11 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         reminderAt: zonedInput(row.reminder_at, user.timezone),
     });
     const notes: Note[] = s.notes.map((row) => ({
+        archived: !!row.archived_at,
         id: row.id,
         title: row.title,
         content: row.content,
+        document: row.document || null,
         color: row.color || "neutral",
         pinned: !!row.pinned,
         tags: row.tags || [],
@@ -458,7 +461,6 @@ function taskFields(row: TaskRecord, data: Data, ids: WorkspaceIds) {
             text,
             checked,
         })),
-        working_note: row.working[0],
         related: row.related,
     };
 }
@@ -510,6 +512,7 @@ export function changesBetween(
             return {
                 title: value.title || "Untitled",
                 content: value.content,
+                document: value.document || null,
                 color: value.color,
                 pinned: value.pinned,
                 tags: value.tags,

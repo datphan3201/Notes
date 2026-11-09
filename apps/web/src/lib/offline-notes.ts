@@ -158,7 +158,7 @@ export function restoreOfflineDrafts(
     return { ...snapshot, notes };
 }
 
-export type NoteDraft = { version?: number; title: string; content: string };
+export type NoteDraft = { version?: number; title: string; content: string; document?: import("./note-document").RichNoteDocument | null };
 export async function keepNoteDraft(
     userId: string,
     id: string,

@@ -4,7 +4,7 @@
 
 ## Schema authority
 
-[SQLAlchemy models](../../apps/api/planner/models.py) describe mappings; [Alembic revisions](../../apps/api/migrations/versions/) and the initial SQL define deployed DDL. The current chain ends at `0005` (private assets). Add forward migrations for changes; do not silently edit applied schema. [Alembic environment](../../apps/api/migrations/env.py) selects the configured application schema and version table.
+[SQLAlchemy models](../../apps/api/planner/models.py) describe mappings; [Alembic revisions](../../apps/api/migrations/versions/) and the initial SQL define deployed DDL. The current chain ends at `0006` (canonical Task Note backfill; legacy text retained read-only). Add forward migrations for changes; do not silently edit applied schema. [Alembic environment](../../apps/api/migrations/env.py) selects the configured application schema and version table.
 
 | Concern | Current model groups |
 | --- | --- |

@@ -8,11 +8,9 @@ import {
     Check,
     Pencil,
     Plus,
-    Save,
     Trash2,
 } from "lucide-react";
-import Dialog from "../dialog";
-import NoteDocument from "../note-document";
+import NotePreview from "../note-preview";
 import { statuses } from "./dashboard-data";
 import {
     formatTaskDate,
@@ -81,10 +79,6 @@ export function TaskPreviewTabs({
 
 export default function TaskPreviewDetail({
     task,
-    working,
-    onWorking,
-    onSaveWorking,
-    onDiscardWorking,
     locale,
     text,
     onUpdate,
@@ -94,10 +88,6 @@ export default function TaskPreviewDetail({
     onPlan,
 }: {
     task: TaskRecord;
-    working: string;
-    onWorking: (value: string) => void;
-    onSaveWorking: () => void;
-    onDiscardWorking: () => void;
     locale: PreviewLocale;
     text: Text;
     onUpdate: (patch: Partial<TaskRecord>) => void;
@@ -110,24 +100,17 @@ export default function TaskPreviewDetail({
     const tagOptions = db.live?.tags || fixtureTags;
     const { parents } = db;
     const linkedNotes = db.notes.filter(
-        (note) => note.task === task.id && !note.locked,
+        (note) => !note.archived && (note.task === task.id || task.noteIds?.includes(note.id)),
     );
-    const [tab, setTab] = useState("overview");
-    const [noteTab, setNoteTab] = useState("working");
+    const [tab, setTab] = useState(db.nav.note ? "notes" : "overview");
     const [itemText, setItemText] = useState("");
     const [renaming, setRenaming] = useState<number | null>(null);
     const [rename, setRename] = useState("");
     const [related, setRelated] = useState(
         db.live ? db.goals.find((g) => !g.archived)?.id || "" : "reading",
     );
-    const [noteDialog, setNoteDialog] = useState(false);
-    const [noteDraft, setNoteDraft] = useState({ title: "", content: "" });
     const parent = parents.find((parent) => parent.id === task.parent)!;
-    const dirty = working !== text(...task.working);
     const status = statuses.find(([key]) => key === task.status)!;
-    const links = Array.from(
-        new Set(working.match(/https?:\/\/[^\s<>]+/g) || []),
-    );
     const moveItem = (index: number, delta: number) => {
         const items = [...task.checklist];
         const target = index + delta;
@@ -585,115 +568,22 @@ export default function TaskPreviewDetail({
                 aria-labelledby="preview-task-detail-tab-notes"
                 hidden={tab !== "notes"}
             >
-                <article className="planning-panel">
-                    <TaskPreviewTabs
-                        prefix="preview-task-notes"
-                        label={text(
-                            "Working note sections",
-                            "Các mục ghi chép công việc",
-                        )}
-                        value={noteTab}
-                        onChange={setNoteTab}
-                        items={[
-                            [
-                                "working",
-                                text("Working note", "Ghi chép công việc"),
-                            ],
-                            ["resources", text("Resources", "Tài nguyên")],
-                        ]}
-                    />
-                    <div
-                        id="preview-task-notes-panel-working"
-                        role="tabpanel"
-                        aria-labelledby="preview-task-notes-tab-working"
-                        hidden={noteTab !== "working"}
-                    >
-                        <p className="subtle-copy">
-                            {text(
-                                "These check boxes do not change the completion checklist or the Task status.",
-                                "Các ô đánh dấu ở đây không thay đổi danh sách hoàn thành hay trạng thái công việc.",
-                            )}
-                        </p>
-                        <NoteDocument
-                            key={locale}
-                            value={working}
-                            label={text("Working note", "Ghi chép công việc")}
-                            onChange={onWorking}
-                        />
-                        <footer className="preview-task-note-footer">
-                            <span role="status">
-                                {text(
-                                    dirty
-                                        ? "Unsaved draft · kept while you switch tabs"
-                                        : "Saved in this preview",
-                                    dirty
-                                        ? "Bản nháp chưa lưu · được giữ khi đổi tab"
-                                        : "Đã lưu trong bản xem thử",
-                                )}
-                            </span>
-                            <button
-                                className="button button-quiet"
-                                disabled={!dirty}
-                                onClick={onDiscardWorking}
-                            >
-                                {text("Discard draft", "Bỏ bản nháp")}
-                            </button>
-                            <button
-                                className="button button-primary"
-                                disabled={!dirty}
-                                onClick={onSaveWorking}
-                            >
-                                <Save size={15} />
-                                {text("Save note", "Lưu ghi chú")}
-                            </button>
-                        </footer>
-                    </div>
-                    <div
-                        id="preview-task-notes-panel-resources"
-                        role="tabpanel"
-                        aria-labelledby="preview-task-notes-tab-resources"
-                        hidden={noteTab !== "resources"}
-                    >
-                        {links.length ? (
-                            <ul className="preview-task-resources">
-                                {links.map((link) => (
-                                    <li key={link}>
-                                        <a
-                                            href={link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            {link}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="preview-task-inline-empty">
-                                {text(
-                                    "Links in your working note will appear here.",
-                                    "Liên kết trong ghi chép công việc sẽ xuất hiện ở đây.",
-                                )}
-                            </p>
-                        )}
-                    </div>
-                </article>
                 <article className="planning-panel preview-task-linked-notes">
                     <div className="section-heading">
                         <div>
                             <h2>
-                                {text("Related notes", "Ghi chú liên quan")}
+                                {text("Notes", "Ghi chú")}
                             </h2>
                             <p className="subtle-copy">
                                 {text(
-                                    "Notes linked to this task.",
-                                    "Ghi chú được liên kết với công việc này.",
+                                    "These are the same Notes shown in your Notes workspace. Open one to edit and save.",
+                                    "Đây là các ghi chú trong mục Notes. Mở ghi chú để chỉnh sửa và lưu.",
                                 )}
                             </p>
                         </div>
                         <button
                             className="button button-quiet"
-                            onClick={() => setNoteDialog(true)}
+                            onClick={() => db.navigate("notes", { note: "new", task: task.id })}
                         >
                             <Plus size={15} />
                             {text("New linked note", "Ghi chú liên kết mới")}
@@ -705,11 +595,15 @@ export default function TaskPreviewDetail({
                                 key={note.id}
                                 className="preview-linked-note-card"
                                 onClick={() =>
-                                    db.navigate("notes", { note: note.id })
+                                    db.navigate("notes", { note: note.id, task: task.id })
                                 }
                             >
-                                <strong>{note.title}</strong>
-                                <p>{note.content.slice(0, 180)}</p>
+                                <strong>{note.locked && !note.unlocked ? text("Locked note", "Ghi chú đã khóa") : note.title}</strong>
+                                {note.locked && !note.unlocked ? <p>{text("Unlock to read this note.", "Mở khóa để đọc ghi chú.")}</p> :
+                                    <NotePreview content={note.content} document={note.document}
+                                        checkedLabel={text("Checked", "Đã đánh dấu")}
+                                        uncheckedLabel={text("Unchecked", "Chưa đánh dấu")} />}
+
                             </button>
                         ))
                     ) : (
@@ -835,88 +729,6 @@ export default function TaskPreviewDetail({
                     </form>
                 </article>
             </section>
-            {noteDialog && (
-                <Dialog
-                    title={text("New linked note", "Ghi chú liên kết mới")}
-                    closeLabel={text("Close", "Đóng")}
-                    className="preview-dialog preview-confirm"
-                    onClose={() => setNoteDialog(false)}
-                >
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            if (!noteDraft.title.trim()) return;
-                            db.setNotes((notes) => [
-                                ...notes,
-                                {
-                                    id: `note-${Date.now()}`,
-                                    title: noteDraft.title.trim(),
-                                    content: noteDraft.content,
-                                    color: "#fff3dd",
-                                    pinned: false,
-                                    tags: [],
-                                    goal: "",
-                                    task: task.id,
-                                    locked: false,
-                                    lockPassword: "",
-                                    unlocked: false,
-                                    permission: "owner",
-                                    shared: false,
-                                    shares: [],
-                                    files: [],
-                                    background: "",
-                                    summary: "",
-                                    summaryOutdated: false,
-                                },
-                            ]);
-                            setNoteDraft({ title: "", content: "" });
-                            setNoteDialog(false);
-                        }}
-                    >
-                        <div className="preview-dialog-body stack-form">
-                            <label className="field">
-                                {text("Note title", "Tên ghi chú")}
-                                <input
-                                    value={noteDraft.title}
-                                    required
-                                    maxLength={200}
-                                    onChange={(event) =>
-                                        setNoteDraft({
-                                            ...noteDraft,
-                                            title: event.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-                            <label className="field">
-                                {text("Note content", "Nội dung ghi chú")}
-                                <textarea
-                                    rows={4}
-                                    value={noteDraft.content}
-                                    onChange={(event) =>
-                                        setNoteDraft({
-                                            ...noteDraft,
-                                            content: event.target.value,
-                                        })
-                                    }
-                                />
-                            </label>
-                        </div>
-                        <footer className="preview-dialog-footer">
-                            <button
-                                type="button"
-                                className="button button-quiet"
-                                onClick={() => setNoteDialog(false)}
-                            >
-                                {text("Cancel", "Hủy")}
-                            </button>
-                            <button className="button button-primary">
-                                {text("Create note", "Tạo ghi chú")}
-                            </button>
-                        </footer>
-                    </form>
-                </Dialog>
-            )}
         </div>
     );
 }
