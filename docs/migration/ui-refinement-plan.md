@@ -4,7 +4,7 @@
 
 ## Completion and handoff state
 
-**Status: COMPLETED** — All 7 UI refinement tasks, Brevo transactional reminder delivery, documentation behavior contracts, E2E selector updates, and automated test suites have been implemented and verified. No cloud deployment or git pushes have been performed. Work remains local on branch `fix/registration-verification-flow`.
+**Status: COMPLETED & DEPLOYED** — All 7 UI refinement tasks, Brevo transactional reminder delivery, documentation behavior contracts, E2E selector updates, and automated test suites have been implemented, verified, committed, pushed to `main`, and deployed to production (Render Singapore `planner-api-sg` and Vercel `planner-t1`). Production readiness, smoke tests, and Brevo delivery verified live.
 
 ### Verified test runs & execution evidence:
 - **E2E Playwright Regression Suite (against isolated `planner_test` on port 5434 & server 8101):**
@@ -166,7 +166,9 @@ Evidence: Added shared `HabitCheckinDays` component, connected in both `habits.t
 3. [x] Updated affected existing E2E selectors in `dashboard-saves.spec.ts`, `complete-features.spec.ts`, and `crud-audit.spec.ts`.
 4. [x] Executed E2E Playwright regression suites on desktop with full passes (4/4 on `dashboard-saves`, 5/5 on `crud-audit`, 13/13 on `complete-features`).
 5. [x] Inspected responsive layouts (320/390/768/1440 px), verified single-purpose labels with 0 occurrences of middle dots (`·`, `•`).
-6. [x] Executed production build (`PLANNER_DIST_DIR=.next-vercel-check API_ORIGIN=https://planner-api-sg.onrender.com npm --prefix apps/web run build`), unit checks (44 passed), documentation checks (`python3 tools/docs/check.py`), doc tests (17 passed), and `git diff --check`. No new unresolved bugs. Work is completed and ready for handoff. **No cloud deployments or git pushes performed.**
+6. [x] Executed production build (`PLANNER_DIST_DIR=.next-vercel-check API_ORIGIN=https://planner-api-sg.onrender.com npm --prefix apps/web run build`), unit checks (44 passed), documentation checks (`python3 tools/docs/check.py`), doc tests (17 passed), and `git diff --check`.
+7. [x] Changes pushed to `main` and `fix/registration-verification-flow` (commits `afb98e5` and `6094212`). GitHub Actions CI passed (102 tests).
+8. [x] Render deployment triggered via API for service `planner-api-sg` (`dep-dbp059bncjis73ee6ed0`) and verified `live` with `/ready` and `/health` 200. Vercel frontend automatically deployed commit `6094212` at `https://planner-t1.vercel.app`. Post-deployment smoke tests passed.
 
 ### Environment and process notes
 

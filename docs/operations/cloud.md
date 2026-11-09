@@ -4,7 +4,7 @@
 
 ## Recorded resources and evidence
 
-Repository deployment records report production deployment on **2026-11-08**. This runbook synchronizes those records with committed source/configuration; it does not freshly inspect hosted settings, account plans, health, data contents or inbox delivery. Verify intended account/service/revision before an operational change.
+Repository deployment records report production deployment on **2026-11-09** (commit `6094212`, Render deploy `dep-dbp059bncjis73ee6ed0`, Vercel `planner-t1`). This runbook synchronizes those records with committed source/configuration; it does not freshly inspect hosted settings, account plans, health, data contents or inbox delivery. Verify intended account/service/revision before an operational change.
 
 | Component | Recorded resource | Recorded location / endpoint |
 | --- | --- | --- |
