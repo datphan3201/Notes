@@ -6,6 +6,8 @@ A Milestone is a checkpoint in one owned Goal, with Tasks shown in its focused p
 
 Creation/editing uses the shared editor and authoritative parent validation. Completion and reopening apply the server's unfinished-work/prerequisite/ancestor acknowledgement rules. Archive operations clean affected graph relationships atomically; grouped contents and permanent deletion have explicit confirmation/version requirements.
 
+Milestone detail headers keep action menus outside their header bounds visible. Titles/actions wrap on narrow screens, and mobile action menus open toward the available content area. Illustrated page headers retain background clipping and rounded corners.
+
 <!-- BEGIN GENERATED TRACE -->
 
 ## Source and verification map

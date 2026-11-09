@@ -7,6 +7,7 @@ Entries describe their own historical stage. In particular, earlier 2026-11-08 p
 ## 2026-11-09
 
 ### Changed
+- Fixed Milestone header menus being clipped by the shared header: only illustrated headers clip their backgrounds. Milestone title/actions now wrap, with mobile menus aligned inside the viewport.
 - Simplified Task completion to Not completed / Completed across Task views, filters, editing, API schemas, assistant-generated schemas, recurrence templates and demo/import paths. Revision `0009` converts previous doing/blocked Tasks/templates to todo without changing completed work, content, versions or timestamps. Goal/Milestone progress states remain independent. Removed the redundant editable status dropdown; existing Complete/Reopen confirmations remain. ISSUE-078 is superseded by rejecting all removed Task statuses.
 - Raised mobile/touch text-entry controls and rich-text editors to a 16 px minimum to avoid small-field focus zoom. Preserved larger Note titles/body preferences and unrestricted user pinch zoom; no viewport-reset handlers were added.
 - Removed both Calendar sidebar cards and expanded the month/week grid to full width. The floating Task button now directly toggles the shared picker; its panel stays above the trigger on mobile, retaining contextual creation, Add and drag/return controls.

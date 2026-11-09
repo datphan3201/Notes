@@ -571,6 +571,38 @@
 }
 .review-milestone-focus .workspace-header {
     gap: 16px;
+    flex-wrap: wrap;
+}
+.milestone-focus-header > div:first-child {
+    flex: 1 1 260px;
+    min-width: 0;
+    max-width: 100%;
+}
+.milestone-focus-header .entity-title-row {
+    flex-wrap: wrap;
+}
+.milestone-focus-header h2 {
+    overflow-wrap: anywhere;
+}
+.milestone-focus-header > .action-row {
+    max-width: 100%;
+}
+@media (max-width: 600px) {
+    .milestone-focus-header > div:first-child {
+        flex-basis: auto;
+    }
+    .milestone-focus-header .entity-title-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px 12px;
+    }
+    .milestone-focus-header .review-stars {
+        grid-column: 2;
+    }
+    .milestone-focus-header .review-row-menu > div {
+        left: 0;
+        right: auto;
+    }
 }
 .review-milestone-focus .review-task-line {
     border: 1px solid var(--border);
