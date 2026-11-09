@@ -41,3 +41,5 @@ Generated from [traceability.json](../traceability.json). One owner per current 
 | `shared.notifications` | [Notification bell](../ui/shared/notifications.md) | `/`; `/dashboard` |
 | `shared.tags` | [Classification and related links](../ui/shared/tags.md) | `/`; `/tasks`; `/goals`; `/habits` |
 | `shared.ai` | [Floating AI assistant](../ui/shared/ai.md) | `all authenticated workspace pages` |
+| `shared.design-system` | [Shared UI components and templates](../ui/shared/design-system.md) | `/preview/components` |
+| `shared.task-picker` | [Shared floating Task picker](../ui/shared/task-picker.md) | `/dashboard`; `/calendar`; `/goals/{id}`; `/preview/components` |

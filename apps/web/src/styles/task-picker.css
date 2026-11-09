@@ -1,0 +1,40 @@
+.floating-task-picker {
+    position: fixed; z-index: 120; right: 24px; bottom: 24px;
+    display: flex; flex-direction: column; width: min(410px, calc(100vw - 32px));
+    max-height: min(660px, calc(100dvh - 32px));
+    border: 1px solid var(--border); border-radius: var(--ui-radius-panel);
+    background: var(--surface); color: var(--text); box-shadow: var(--shadow); overflow: hidden;
+}
+.task-picker-heading { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.task-picker-heading h2 { flex: 1; margin: 0; font-size: var(--font-size-section); }
+.task-picker-move, .task-picker-grip { display: grid; place-items: center; flex-shrink: 0; width: 36px; min-height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--muted); touch-action: none; cursor: grab; }
+.task-picker-move:active, .task-picker-grip:active { cursor: grabbing; }
+.task-picker-controls { flex: 0 0 auto; max-height: calc(100dvh - 220px); min-height: 0; overflow: auto; padding: 12px 16px; display: grid; gap: 10px; }
+.task-picker-destination { margin: 0; padding: 8px 10px; border-radius: var(--radius-control); background: var(--accent-soft); font-size: var(--font-size-ui); overflow-wrap: anywhere; }
+.task-picker-search { position: relative; display: flex; flex-direction: row; align-items: center; }
+.task-picker-search > svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.task-picker-search .ui-control { padding-left: 38px; }
+.task-picker-filter { display: flex; flex-direction: row; min-height: 28px; align-items: center; gap: 8px; font-size: var(--font-size-ui); }
+.task-picker-filter input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 0; padding: 0; accent-color: var(--accent); }
+.task-picker-hint { margin: 0; color: var(--muted); font-size: var(--font-size-caption); }
+.task-picker-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 8px 8px; }
+.task-picker-row { display: flex; align-items: center; gap: 4px; padding: 8px 4px; border-bottom: 1px solid var(--border); }
+.task-picker-row:last-child { border-bottom: 0; }
+.task-picker-row.is-selected { background: color-mix(in srgb, var(--accent-soft) 50%, var(--surface)); }
+.task-picker-copy { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.task-picker-copy strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-size-ui); }
+.task-picker-copy small { color: var(--muted); font-size: var(--font-size-caption); overflow-wrap: anywhere; }
+.task-picker-row .task-picker-add { flex-shrink: 0; gap: 4px; padding: 7px 9px; min-width: 76px; }
+.task-picker-empty { padding: 16px; margin: 0; color: var(--muted); }
+.task-picker-footer { flex: 0 0 auto; display: flex; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); }
+.task-picker-ghost { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; position: fixed; z-index: 5000; pointer-events: none; width: 210px; padding: 12px; border: 1px solid var(--accent); border-radius: var(--radius-control); background: var(--surface); color: var(--text); box-shadow: var(--shadow); opacity: .95; }
+.task-drop-zone[data-task-picker-open='true'] { outline: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: -2px; }
+.task-drop-zone[data-task-drop-active='true'] { outline: 2px dashed var(--accent); outline-offset: -3px; background-color: var(--accent-soft); }
+@media (max-width: 600px) {
+    .floating-task-picker { right: 16px; bottom: 16px; max-height: min(620px, calc(100dvh - 32px)); }
+}
+
+.task-picker-return { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px dashed var(--accent); border-radius: var(--radius-control); color: var(--muted); font-size: var(--font-size-caption); }
+.task-picker-return > svg { flex-shrink: 0; }
+.task-picker-return[data-task-drop-active='true'] { color: var(--text); background: var(--accent-soft); outline: 2px solid var(--accent); }
+.task-picker-row .task-picker-remove { flex-shrink: 0; }

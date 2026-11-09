@@ -18,9 +18,10 @@ export default function NotePreview({ content, document, checkedLabel, unchecked
                             {line.checked && <Check size={11} aria-hidden="true" />}
                         </span>
                     )}
-                    <span>{line.text}</span>
+                    <span className="note-preview-text">{line.text}{preview.kind === "text" && preview.truncated ? "…" : ""}</span>
                 </span>
             ))}
+            {preview.kind !== "text" && preview.truncated && <span className="note-preview-more" aria-hidden="true">…</span>}
         </div>
     );
 }

@@ -62,3 +62,7 @@ npm run test:e2e
 The [harness](../../apps/web/playwright.config.ts) starts API/web at 8101/3100 with `.next-e2e`, isolated private storage and guarded `planner_test`, and tests desktop/mobile Chromium. Do not run pytest concurrently: they share/reset the same disposable database. No development server reuse is allowed. An existing browser can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
 Historical logged runs are recorded as historical evidence in [status](../migration/status.md), not a guarantee that the current checkout passes. Real providers, hosted proxies/cold starts, private bucket policies, inbox receipt, backup/file restoration, large datasets and human visual/keyboard/localization acceptance require separate checks.
+
+## Latest focused audit
+
+See the [2026-11-09 CRUD audit](crud-audit-2026-11-09.md) for the current operation matrix, executed checks and unresolved API/UI lifecycle gaps.

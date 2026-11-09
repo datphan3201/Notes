@@ -155,6 +155,22 @@ def validate_relations(db: Session, kind: str, user_id: str, values: dict, entit
                 previous_note is not None and getattr(previous_note, field, None) == values[field]
             )
             owned(db, target, values[field], user_id, active=not unchanged_note_link)
+    if kind == "notes" and values.get("task_id"):
+        linked = db.scalar(select(Note.id).where(
+            Note.user_id == user_id, Note.task_id == values["task_id"], Note.id != (entity_id or ""),
+        ).limit(1))
+        if linked:
+            raise HTTPException(409, "This Task already has an attached Note")
+        task = owned(db, "tasks", values["task_id"], user_id)
+        if entity_id in (task.details or {}).get("resource_note_ids", []):
+            raise HTTPException(422, "Remove this Note from Resources before attaching it")
+    if kind == "tasks":
+        task = owned(db, "tasks", entity_id, user_id) if entity_id else None
+        previous = (task.details or {}).get("resource_note_ids", []) if task else []
+        for note_id in values.get("resource_note_ids", []):
+            resource = owned(db, "notes", note_id, user_id, active=note_id not in previous)
+            if entity_id and resource.task_id == entity_id:
+                raise HTTPException(422, "The attached Note is already part of this Task")
     for goal_id in values.get("related", []):
         if kind == "goals" and goal_id == entity_id:
             raise HTTPException(422, "A Goal cannot relate to itself")
@@ -215,11 +231,28 @@ def validated(kind: str, fields: dict):
         raise HTTPException(422, str(exc)) from exc
 
 
+def validate_area_name(db: Session, user_id: str, values: dict, entity_id: str | None = None):
+    # Match the database index, including archived names, under the owner lock.
+    title = db.scalar(select(func.btrim(func.regexp_replace(values["title"], r"\s+", " ", "g"))))
+    key = func.lower(func.btrim(func.regexp_replace(Area.title, r"\s+", " ", "g")))
+    duplicate = db.scalar(select(Area.id).where(
+        Area.user_id == user_id, key == func.lower(title),
+        Area.id != entity_id if entity_id else True,
+    ).limit(1))
+    if not title:
+        raise HTTPException(422, "Area name cannot be empty")
+    if duplicate:
+        raise HTTPException(409, "An Area with this name already exists, including archived Areas")
+    values["title"] = title
+
+
 def create(db: Session, kind: str, user_id: str, fields: dict):
     model = model_for(kind)
     values = validated(kind, fields)
     lock_owner(db, user_id)
     validate_relations(db, kind, user_id, values)
+    if kind == "areas":
+        validate_area_name(db, user_id, values)
     if (
         kind == "areas"
         and db.scalar(
@@ -341,6 +374,8 @@ def update(
     if kind == "notes" and "content" in fields and "document" not in fields:
         fields = {**fields, "document": None}
     values = validated(kind, {**existing, **fields})
+    if kind == "areas":
+        validate_area_name(db, item.user_id, values, item.id)
     validate_relations(db, kind, item.user_id, values, item.id)
     if isinstance(item, Habit) and item.first_check_in_at:
         if values["timezone"] != item.timezone:
@@ -565,6 +600,8 @@ def archive(
     item = owned(db, kind, entity_id, user_id)
     if item.version != version:
         raise HTTPException(409, "This item changed")
+    if archived and kind in ("notes", "reviews"):
+        raise HTTPException(422, "Notes and Reviews use direct deletion, not archiving")
     if bool(item.archived_at) == archived:
         return item
     descendants = []

@@ -1,0 +1,104 @@
+/* Shared dimensions; colors and typography inherit the existing Planner themes. */
+:root {
+    --ui-space-1: 4px;
+    --ui-space-2: 8px;
+    --ui-space-3: 12px;
+    --ui-space-4: 16px;
+    --ui-space-6: 24px;
+    --ui-space-8: 32px;
+    --ui-control-height: 44px;
+    --ui-radius-panel: 16px;
+    --ui-radius-page: 16px;
+    --ui-on-danger: #ffffff;
+}
+[data-theme="dark"] { --ui-on-danger: #35121b; }
+.button-danger { color: var(--ui-on-danger); }
+.ui-button {
+    min-height: var(--ui-control-height);
+    gap: var(--ui-space-2);
+    border-radius: var(--radius-control);
+}
+.ui-button > svg, .ui-icon-button > svg { flex-shrink: 0; }
+.ui-button-spinner { width: 16px; height: 16px; }
+.ui-icon-button { width: var(--ui-control-height); height: var(--ui-control-height); }
+.button-ghost { color: var(--accent); background: transparent; border-color: transparent; }
+.button-ghost:hover { background: var(--accent-soft); }
+.preview-dialog-form[hidden] { display: none; }
+.ui-field { gap: var(--ui-space-2); min-width: 0; }
+.ui-field .field-error { color: var(--danger); }
+.ui-control {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--ui-control-height);
+    padding: 10px 12px;
+    border: 1px solid var(--control-border, var(--border));
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+textarea.ui-control { min-height: 112px; resize: vertical; }
+.ui-field .ui-control[aria-invalid='true'] { border-color: var(--danger); }
+.ui-control:disabled { opacity: .55; cursor: not-allowed; }
+.ui-control:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.ui-page-header { border-radius: var(--ui-radius-page); overflow: clip; }
+.ui-surface {
+    min-width: 0;
+    padding: var(--ui-space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-panel);
+    background: var(--surface);
+    color: var(--text);
+}
+.ui-notice { align-items: flex-start; border-radius: var(--radius-control); }
+.ui-notice > svg { flex-shrink: 0; margin-top: 2px; }
+.ui-notice > div { min-width: 0; overflow-wrap: anywhere; }
+.ui-notice p:last-child { margin-bottom: 0; }
+.ui-notice-info { color: var(--text); background: var(--accent-soft); }
+.ui-notice-success { color: var(--success-text); background: color-mix(in srgb, var(--success) 10%, var(--surface)); }
+.ui-notice-error { color: var(--danger); background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.ui-badge { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: var(--font-size-meta); font-weight: 500; color: var(--muted); background: var(--surface-soft); }
+.ui-badge-accent { color: var(--accent); background: var(--accent-soft); }
+.ui-badge-success { color: var(--success-text); background: color-mix(in srgb, var(--success) 10%, var(--surface)); }
+.ui-badge-danger { color: var(--danger); background: var(--danger-soft); }
+@media (prefers-reduced-motion: reduce) {
+    .ui-button { transition: none; }
+}
+
+/* Confirmation is a compact centered modal in every host, including the catalogue. */
+.drawer.preview-dialog.preview-confirm {
+    inset: 0;
+    margin: auto;
+    width: min(400px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-panel);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+.drawer.preview-dialog.preview-confirm > .drawer-heading {
+    position: static;
+    flex: 0 0 auto;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+.drawer.preview-dialog.preview-confirm .preview-dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px 20px;
+    overflow: auto;
+}
+.drawer.preview-dialog.preview-confirm .preview-dialog-footer {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+    padding: 12px 20px;
+    background: var(--surface);
+}

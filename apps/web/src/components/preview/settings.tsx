@@ -1,4 +1,6 @@
 "use client";
+import { PageHeaderFrame, Surface } from "../ui/layout";
+import { Input, Textarea, Select } from "../ui/field";
 import { timezones } from "@/lib/dates";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -39,6 +41,9 @@ const archiveKinds = [
     "milestones",
     "tasks",
     "habits",
+    "task-series",
+    "notes",
+    "reviews",
 ] as const;
 type Kind = (typeof archiveKinds)[number];
 type ArchivedRow = { kind: Kind; id: string; title: string; group: string };
@@ -117,12 +122,12 @@ export default function SettingsPreview({
         return url;
     };
     const list: ArchivedRow[] = archiveKinds.flatMap((kind) =>
-        db[kind]
+        (kind === "task-series" ? db.series.map(row => ({ ...row.template, id: row.id })) : db[kind])
             .filter((row) => row.archived)
             .map((row) => ({
                 kind,
                 id: String(row.id),
-                title: text(...row.title),
+                title: typeof row.title === "string" ? row.title : text(...row.title),
                 group: row.archivedWith || `${kind}:${row.id}`,
             })),
     );
@@ -190,7 +195,7 @@ export default function SettingsPreview({
             className="review-settings settings-page"
             data-settings-section={section}
         >
-            <header className="settings-header">
+            <PageHeaderFrame illustrated={false} className="settings-header">
                 <div>
                     {section !== "notifications" && (
                         <p className="eyebrow">
@@ -253,7 +258,7 @@ export default function SettingsPreview({
                         {text("Back to Dashboard", "Về Dashboard")}
                     </button>
                 )}
-            </header>
+            </PageHeaderFrame>
             {section === "history" && (
                 <button
                     className="text-button"
@@ -344,7 +349,7 @@ export default function SettingsPreview({
                             )}
                         </div>
                         <Field label={text("Display name", "Tên hiển thị")}>
-                            <input
+                            <Input
                                 name="name"
                                 required
                                 maxLength={100}
@@ -352,7 +357,7 @@ export default function SettingsPreview({
                             />
                         </Field>
                         <Field label={text("Biography", "Giới thiệu")}>
-                            <textarea
+                            <Textarea
                                 name="bio"
                                 rows={3}
                                 maxLength={500}
@@ -360,14 +365,14 @@ export default function SettingsPreview({
                             />
                         </Field>
                         <Field label={text("Timezone", "Múi giờ")}>
-                            <select
+                            <Select
                                 name="timezone"
                                 defaultValue={db.profile.timezone}
                             >
                                 {timezones(db.profile.timezone).map((z) => (
                                     <option key={z}>{z}</option>
                                 ))}
-                            </select>
+                            </Select>
                         </Field>
                         <div className="review-form-footer">
                             <button className="button button-primary">
@@ -523,8 +528,8 @@ export default function SettingsPreview({
                             ],
                         ]}
                     />
-                    <section
-                        className="planning-panel stack-form review-settings-card review-appearance"
+                    <Surface
+                        className="stack-form review-settings-card review-appearance"
                         role="tabpanel"
                         id="review-appearance-panel-themes"
                         aria-labelledby="review-appearance-tab-themes"
@@ -612,9 +617,9 @@ export default function SettingsPreview({
                                 ))}
                             </div>
                         </section>
-                    </section>
-                    <section
-                        className="planning-panel stack-form review-settings-card review-appearance"
+                    </Surface>
+                    <Surface
+                        className="stack-form review-settings-card review-appearance"
                         role="tabpanel"
                         id="review-appearance-panel-decoration"
                         aria-labelledby="review-appearance-tab-decoration"
@@ -707,8 +712,8 @@ export default function SettingsPreview({
                                 {text("Restore preset", "Khôi phục mặc định")}
                             </button>
                         </div>
-                    </section>
-                    <section className="planning-panel review-settings-card">
+                    </Surface>
+                    <Surface className="review-settings-card">
                         <Field label={text("Language", "Ngôn ngữ")}>
                             <select
                                 value={db.locale}
@@ -722,7 +727,7 @@ export default function SettingsPreview({
                                 <option value="vi">Tiếng Việt</option>
                             </select>
                         </Field>
-                    </section>
+                    </Surface>
                     {backgroundOpen && (
                         <Dialog
                             title={text(
@@ -1162,7 +1167,7 @@ export default function SettingsPreview({
                             </button>
                         </div>
                     </form>
-                    <section className="planning-panel review-settings-card">
+                    <Surface className="review-settings-card">
                         <div className="section-heading">
                             <h2>
                                 {text(
@@ -1255,11 +1260,11 @@ export default function SettingsPreview({
                                     </button>
                                 </div>
                             ))}
-                    </section>
+                    </Surface>
                 </>
             )}
             {section === "archive" && (
-                <section className="planning-panel review-settings-card">
+                <Surface className="review-settings-card">
                     <div className="review-toolbar">
                         <div>
                             <h2>
@@ -1324,6 +1329,7 @@ export default function SettingsPreview({
                                             "Milestones",
                                             "Tasks",
                                             "Habits",
+                                            "Repeating series", "Notes (recovery)", "Reviews (recovery)",
                                         ][i],
                                         [
                                             "Lĩnh vực",
@@ -1331,6 +1337,7 @@ export default function SettingsPreview({
                                             "Cột mốc",
                                             "Công việc",
                                             "Thói quen",
+                                            "Chuỗi lặp", "Ghi chú (khôi phục)", "Đánh giá (khôi phục)",
                                         ][i],
                                     )}
                                 </option>
@@ -1358,6 +1365,7 @@ export default function SettingsPreview({
                                                 "Milestone",
                                                 "Task",
                                                 "Habit",
+                                                "Repeating series", "Note", "Review",
                                             ][archiveKinds.indexOf(row.kind)],
                                             [
                                                 "Lĩnh vực",
@@ -1365,6 +1373,7 @@ export default function SettingsPreview({
                                                 "Cột mốc",
                                                 "Công việc",
                                                 "Thói quen",
+                                                "Chuỗi lặp", "Ghi chú", "Đánh giá",
                                             ][archiveKinds.indexOf(row.kind)],
                                         )}
                                         {count > 1
@@ -1383,8 +1392,8 @@ export default function SettingsPreview({
                                     disabled={!!blocked}
                                     title={blocked || undefined}
                                     onClick={async () => {
-                                        db.restoreEntity(row.kind, row.id);
-                                        if (db.live && !(await db.live.flush()))
+                                        const restored = await db.restoreEntity(row.kind, row.id);
+                                        if (restored === false)
                                             return;
                                         db.setMessage(
                                             text(
@@ -1443,7 +1452,7 @@ export default function SettingsPreview({
                             </button>
                         </div>
                     )}
-                </section>
+                </Surface>
             )}
             {verify && (
                 <FormDialog
@@ -1744,12 +1753,10 @@ export default function SettingsPreview({
                     disabled={!ack}
                     onClose={() => setRemove(null)}
                     onConfirm={async () => {
-                        if (remove === "all")
-                            roots.forEach((row) =>
-                                db.deleteEntity(row.kind, row.id),
-                            );
-                        else db.deleteEntity(remove.kind, remove.id);
-                        if (db.live && !(await db.live.flush()))
+                        const deleted = await db.deleteEntities(
+                            remove === "all" ? roots : [remove],
+                        );
+                        if (deleted === false)
                             throw new Error(
                                 text(
                                     "Deletion was not saved. Retry after refreshing.",

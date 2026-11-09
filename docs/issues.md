@@ -6,7 +6,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 
 ## Reporting rules
 
-- Next unused ID: **ISSUE-072**. Never reuse an earlier ID.
+- Next unused ID: **ISSUE-077**. Never reuse an earlier ID.
 - Include status, severity, affected source/UI, observed versus expected behavior, evidence type/limits and a concrete next step.
 - Severity: High (data loss/security/core failure), Medium (wrong behavior or material unverified operational/scaling gap), Low (cosmetic/documentation/tooling friction).
 - Status: Open, Needs decision or In progress. Listing an issue alone does not authorize runtime changes.
@@ -26,6 +26,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 | [ISSUE-068](#issue-068--dashboard-habit-strip-assumes-today-is-saturday) | Dashboard Habit strip assumes today is Saturday | Medium | Open |
 | [ISSUE-069](#issue-069--hosted-ai-is-unconfigured-on-render) | Hosted AI is unconfigured on Render | Medium | Open |
 | [ISSUE-070](#issue-070--hosted-mail-still-uses-the-resend-testing-sender) | Hosted mail still uses the Resend testing sender | Medium | Open |
+| [ISSUE-076](#issue-076--dashboard-roadmap-marks-completed-milestones-by-count) | Dashboard roadmap marks completed milestones by count | Medium | Open |
 
 ## UI refinement queue
 
@@ -157,6 +158,14 @@ The former ISSUE-049–062 implementation gaps were closed by the connected UI w
 - **Observed:** read-only Render environment inspection on 2026-11-08 confirms a nonempty `PLANNER_RESEND_API_KEY` and `PLANNER_SMTP_FROM=Planner <onboarding@resend.dev>`; SMTP host/user/password are absent. The adapter prioritizes Resend HTTPS whenever that key exists. Resend documents its resend.dev sender as testing-only, restricted to the Resend account email; arbitrary recipient delivery requires a verified owned domain and a matching From address.
 - **Expected / next step:** configure a verified sender/domain and update the backend From value, then verify authorized real-recipient delivery for verification/recovery/MFA. Keep HTTPS delivery for the recorded Render Free topology, whose standard SMTP ports are blocked. A present API key alone does not establish validity or delivery.
 - **Evidence and limits:** current configuration/source inspection and official [Resend sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) / [Render Free network limits](https://render.com/docs/free). No email was sent, key validity was not tested, no provider domain state was inspected, and no delivery failure to a particular recipient was reproduced.
+
+## ISSUE-076 — Dashboard roadmap marks completed milestones by count
+
+- **Status / severity:** Open / Medium.
+- **Affected:** [Dashboard roadmap](../apps/web/src/components/preview/dashboard.tsx).
+- **Observed:** the preview calculates an aggregate completed count, then marks the first N milestone buttons as done using `index < focus.completed`, rather than checking the corresponding milestone's status. Out-of-order completion can therefore mark a different named milestone as complete; the total count can still be correct.
+- **Expected / next step:** derive each displayed dot/segment's completion from its corresponding milestone and verify an out-of-order completion fixture. Keep this status correction separate from the responsive-width change.
+- **Evidence and limits:** source-inspected during responsive layout work; the incorrect status case was not executed and no development/cloud records were changed.
 
 ## New issue template
 

@@ -16,7 +16,7 @@ The maintained source of implementation is Next.js/FastAPI under `apps/` on `mai
 | `/login`, `/register`, `/two-factor` | [Authentication](ui/auth/README.md), [MFA challenge](ui/auth/two-factor.md) |
 | `/forgot-password`, `/reset-password`, `/verify-email`, `/confirm-email` | [Recovery](ui/auth/recovery.md), [email links](ui/auth/email.md) |
 | `/help`, `/admin` | [Guide](ui/help/README.md), [administration](ui/admin/README.md) |
-| Shared controls | [Shell/styles](ui/shared/shell.md), [bell](ui/shared/notifications.md), [classification](ui/shared/tags.md), [assistant](ui/shared/ai.md) |
+| Shared controls | [Component library/templates](ui/shared/design-system.md), [Task picker](ui/shared/task-picker.md), [Shell/styles](ui/shared/shell.md), [bell](ui/shared/notifications.md), [classification](ui/shared/tags.md), [assistant](ui/shared/ai.md) |
 
 `/settings` opens the settings shell; `/account/{recover,reset,verify}` are accepted account-action aliases. `/preview/*` is a synthetic comparison surface, not live account data. Milestones and Review editors are in-page; files are streamed through authorized `/api/v1/files/*` or `/api/v1/account-files/*` endpoints. There is no realtime co-editing server in V1; see [shared editing scope](ui/notes/collaboration.md).
 
@@ -25,7 +25,7 @@ The maintained source of implementation is Next.js/FastAPI under `apps/` on `mai
 - [Decisions](architecture/decisions.md), [runtime](architecture/runtime.md), [persistence](architecture/persistence.md), [HTTP/security](architecture/http-security.md), [interaction invariants](architecture/interactions.md).
 - [Routes and handlers](reference/routes.md), [blank route sheet](reference/routes.csv), [components](reference/components.md), [source lookup](reference/source-index.md), [CLI](reference/cli.md).
 - [Installation](operations/installation.md), [development](migration/development.md), [deployment](operations/deployment.md), [cloud operations](operations/cloud.md), [jobs](operations/jobs.md).
-- [Testing](testing/README.md), [manual acceptance plan](testing/manual-checklist.md), [evidence limits](testing/verification-limits.md).
+- [Testing](testing/README.md), [CRUD audit](testing/crud-audit-2026-11-09.md), [manual acceptance plan](testing/manual-checklist.md), [evidence limits](testing/verification-limits.md).
 - [Implementation status](migration/status.md), [approved scope/acceptance plan](migration/personal-ai-planner.md), [UI integration](migration/ui-integration.md), [assistant tools](migration/assistant-tools.md), [historical diagrams](diagrams/README.md).
 - [Open issues](issues.md), [changelog](../CHANGELOG.md), [documentation maintenance](maintenance.md).
 

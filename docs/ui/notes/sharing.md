@@ -16,7 +16,7 @@ Trace ID: `notes.sharing`. Test references identify coverage to inspect; they ar
 
 | Role | Current source |
 | --- | --- |
-| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L31) — `export default function NotesPreview({ text }: { text: Text }) {` |
+| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L39) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L39) — `def invite(` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L82) — `def respond_invitation(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L80) — `def access_note(` |

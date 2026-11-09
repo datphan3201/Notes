@@ -819,10 +819,10 @@ def update_item(kind: str, entity_id: str, body: schemas.Mutation, auth: Auth, d
 
 @app.post("/api/v1/{kind}/{entity_id}/archive")
 def archive_item(kind: str, entity_id: str, body: schemas.Archive, auth: Auth, db: DB):
-    if kind == "notes":
+    if kind == "notes" and body.archived:
         planning.access_note(db, entity_id, auth, owner_only=True)
     row = planning.archive(
         db, kind, auth.user.id, entity_id, body.version, body.archived, body.include_contents
     )
     db.commit()
-    return planning.serialize(row)
+    return planning.serialize(row, mask_note=kind == "notes")

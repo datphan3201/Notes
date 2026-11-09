@@ -18,6 +18,7 @@ import {
 import type { Label, TaskStatus } from "./dashboard-data";
 import { previewSections, type PreviewLocale } from "./shared";
 
+export type ArchiveKind = "areas" | "goals" | "milestones" | "tasks" | "habits" | "task-series" | "notes" | "reviews";
 export type Archived = { archived: boolean; archivedWith?: string };
 export type Area = Archived & {
     id: string;
@@ -68,6 +69,7 @@ export type NoteFile = {
 };
 export type Note = {
     archived?: boolean;
+    archivedWith?: string;
     document?: import("@/lib/note-document").RichNoteDocument | null;
     updatedAt?: string;
     id: string;
@@ -108,6 +110,8 @@ export type Habit = Archived & {
     rests: string[];
 };
 export type Review = {
+    archived?: boolean;
+    archivedWith?: string;
     id: string;
     kind: "daily" | "weekly" | "monthly";
     from: string;
@@ -741,18 +745,19 @@ export type ContextValue = Data &
             },
         ) => void;
         archiveEntity: (
-            kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+            kind: ArchiveKind,
             id: string,
             contents: boolean,
-        ) => void;
+        ) => boolean | void | Promise<boolean>;
         restoreEntity: (
-            kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+            kind: ArchiveKind,
             id: string,
-        ) => void;
+        ) => boolean | void | Promise<boolean>;
         deleteEntity: (
-            kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+            kind: ArchiveKind,
             id: string,
-        ) => void;
+        ) => boolean | void | Promise<boolean>;
+        deleteEntities: (entries: { kind: ArchiveKind; id: string }[]) => boolean | void | Promise<boolean>;
     };
 export const WorkspaceDataContext = createContext<ContextValue | null>(null);
 const Context = WorkspaceDataContext;
@@ -911,7 +916,7 @@ export function PreviewDataProvider({
         return result;
     }
     function archiveEntity(
-        kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+        kind: ArchiveKind,
         id: string,
         contents: boolean,
     ) {
@@ -953,10 +958,9 @@ export function PreviewDataProvider({
                     ),
                 ),
                 series: old.series.map((row) =>
-                    contents &&
-                    (ids.has(row.template.parent) ||
-                        mids.has(row.template.parent))
-                        ? { ...row, state: "ended" }
+                    (kind === "task-series" && String(row.id) === id) ||
+                    (contents && (ids.has(row.template.parent) || mids.has(row.template.parent)))
+                        ? { ...row, template: mark(row.template, true) }
                         : row,
                 ),
                 milestones: old.milestones.map((row) =>
@@ -976,13 +980,15 @@ export function PreviewDataProvider({
         });
     }
     function restoreEntity(
-        kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+        kind: ArchiveKind,
         id: string,
     ) {
         setData((old) => {
-            const own = old[kind].find((row) => String(row.id) === id);
+            const own = kind === "task-series"
+                ? old.series.find((row) => String(row.id) === id)?.template
+                : old[kind].find((row) => String(row.id) === id);
             const stamp = own?.archivedWith || `${kind}:${id}`;
-            const restore = <T extends Archived & { id: string | number }>(
+            const restore = <T extends { archived?: boolean; archivedWith?: string; id: string | number }>(
                 rows: T[],
                 name: string,
             ) =>
@@ -1000,11 +1006,14 @@ export function PreviewDataProvider({
                 milestones: restore(old.milestones, "milestones"),
                 tasks: restore(old.tasks, "tasks"),
                 habits: restore(old.habits, "habits"),
+                notes: restore(old.notes, "notes"),
+                reviews: restore(old.reviews, "reviews"),
+                series: old.series.map(row => ({ ...row, template: restore([row.template], "task-series")[0] })),
             };
         });
     }
     function deleteEntity(
-        kind: "areas" | "goals" | "milestones" | "tasks" | "habits",
+        kind: ArchiveKind,
         id: string,
     ) {
         setData((old) => {
@@ -1068,7 +1077,9 @@ export function PreviewDataProvider({
                         ...row,
                         goal: gids.has(row.goal) ? "" : row.goal,
                     })),
-                notes: old.notes.map((note) => ({
+                series: old.series.filter(row => !(kind === "task-series" && String(row.id) === id)),
+                reviews: old.reviews.filter(row => !(kind === "reviews" && row.id === id)),
+                notes: old.notes.filter(row => !(kind === "notes" && row.id === id)).map((note) => ({
                     ...note,
                     goal: gids.has(note.goal) ? "" : note.goal,
                     task: note.task && tids.has(note.task) ? null : note.task,
@@ -1153,6 +1164,7 @@ export function PreviewDataProvider({
                 archiveEntity,
                 restoreEntity,
                 deleteEntity,
+                deleteEntities: entries => { entries.forEach(row => deleteEntity(row.kind, row.id)); return true; },
             }}
         >
             {children}

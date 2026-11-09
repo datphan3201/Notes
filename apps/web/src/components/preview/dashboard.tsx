@@ -1,4 +1,6 @@
 "use client";
+import { TASK_RETURN_MIME } from "@/lib/task-picker";
+import { PageHeaderFrame } from "../ui/layout";
 import FloatingActions from "../floating-actions";
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -13,7 +15,7 @@ import {
     RefreshCw,
     X,
 } from "lucide-react";
-import Dialog from "../dialog";
+import { TaskDropZone, useTaskPicker } from "../task-picker";
 import { usePreviewData, day, addDays, dateLabel } from "./workspace-data";
 import { blankDraft, isToday } from "./task-data";
 import { ActivityPreview } from "./reviews";
@@ -143,8 +145,7 @@ export function DashboardView({
     };
     const [status, setStatus] = useState("all");
     const [sort, setSort] = useState("importance");
-    const [picker, setPicker] = useState(false);
-    const [pickerQuery, setPickerQuery] = useState("");
+    const taskPicker = useTaskPicker();
     const dueMilestones = db.milestones.filter(
         (m) =>
             !m.archived &&
@@ -162,6 +163,10 @@ export function DashboardView({
     }, [connected, db.tasks, db.focus, db.habits]);
     const empty = state === "empty";
     const week = tab === "week";
+    const openPicker = () => { onReady(); taskPicker.open({ kind: "plan", period: week ? "week" : "today" }); };
+    useEffect(() => {
+        if (taskPicker.target?.kind === "plan") openPicker();
+    }, [week]);
     const selected = empty
         ? []
         : tasks.filter((task) => (week ? task.weekly : task.daily));
@@ -227,7 +232,7 @@ export function DashboardView({
 
     return (
         <div className="preview-dashboard">
-            <header className="workspace-header scene-header preview-dashboard-header">
+            <PageHeaderFrame className="preview-dashboard-header">
                 <div>
                     <p className="dashboard-date">
                         {new Intl.DateTimeFormat(locale, {
@@ -247,7 +252,7 @@ export function DashboardView({
                         )}
                     </p>
                 </div>
-            </header>
+            </PageHeaderFrame>
             <FloatingActions
                 label={text("Page actions", "Thao tác trang")}
                 closeLabel={text("Close actions", "Đóng thao tác")}
@@ -259,6 +264,7 @@ export function DashboardView({
                     <Plus size={18} />
                     {text("New task", "Công việc mới")}
                 </button>
+                <button className="button button-quiet" onClick={openPicker}>{text("Choose tasks", "Chọn công việc")}</button>
             </FloatingActions>
             <article
                 className="planning-panel dashboard-roadmap"
@@ -300,6 +306,7 @@ export function DashboardView({
                             <button
                                 key={index}
                                 className={`roadmap-step ${index < focus.completed ? "is-done" : ""}`}
+                                title={text(...step)}
                                 onClick={() =>
                                     db.setPlanningAction({
                                         kind: "milestone",
@@ -435,7 +442,7 @@ export function DashboardView({
                 ) : (
                     <div className="dashboard-split-layout">
                         <div className="dashboard-split-main">
-                            <section className="planning-panel today-panel">
+                            <TaskDropZone as="section" target={{kind: "plan", period: week ? "week" : "today"}} className="planning-panel today-panel">
                                 <div className="dashboard-task-summary">
                                     <div
                                         className="progress-ring"
@@ -501,8 +508,7 @@ export function DashboardView({
                                                 : "button button-quiet"
                                         }
                                         onClick={() => {
-                                            setPickerQuery("");
-                                            setPicker(true);
+                                            openPicker();
                                         }}
                                     >
                                         <Plus size={15} />
@@ -564,6 +570,8 @@ export function DashboardView({
                                         (task) => (
                                             <article
                                                 key={task.id}
+                                                draggable={!!taskPicker.target && task.status !== "Done"}
+                                                onDragStart={event => event.dataTransfer.setData(TASK_RETURN_MIME, String(task.id))}
                                                 className={`dashboard-item dashboard-checklist-row ${task.status === "Done" ? "is-done" : ""}`}
                                             >
                                                 <button
@@ -747,7 +755,7 @@ export function DashboardView({
                                                 onClick={() =>
                                                     selected.length
                                                         ? setStatus("all")
-                                                        : setPicker(true)
+                                                        : openPicker()
                                                 }
                                             >
                                                 {text(
@@ -770,7 +778,7 @@ export function DashboardView({
                                         </p>
                                     )}
                                 </div>
-                            </section>
+                            </TaskDropZone>
                         </div>
                         <div className="dashboard-split-side">
                             {week ? (
@@ -1319,121 +1327,7 @@ export function DashboardView({
                     </div>
                 )}
             </section>
-            {picker && (
-                <Dialog
-                    title={text(
-                        week
-                            ? "Add to this week's plan"
-                            : "Add to today's plan",
-                        week
-                            ? "Thêm vào kế hoạch tuần"
-                            : "Thêm vào kế hoạch hôm nay",
-                    )}
-                    closeLabel={text("Close", "Đóng")}
-                    className="preview-dialog preview-sheet"
-                    onClose={() => setPicker(false)}
-                >
-                    <div className="preview-dialog-body">
-                        <div className="field">
-                            <label htmlFor="preview-plan-search">
-                                {text(
-                                    "Find an existing task",
-                                    "Tìm công việc có sẵn",
-                                )}
-                            </label>
-                            <input
-                                id="preview-plan-search"
-                                value={pickerQuery}
-                                onChange={(event) =>
-                                    setPickerQuery(event.target.value)
-                                }
-                                placeholder={text(
-                                    "Search tasks…",
-                                    "Tìm công việc…",
-                                )}
-                            />
-                        </div>
-                        <p className="subtle-copy preview-picker-hint">
-                            {text(
-                                "Choosing a task adds it to this plan without changing its dates or status.",
-                                "Chọn công việc để thêm vào kế hoạch, giữ nguyên ngày và trạng thái.",
-                            )}
-                        </p>
-                        {tasks
-                            .filter(
-                                (task) =>
-                                    task.status !== "Done" &&
-                                    !(week ? task.weekly : task.daily) &&
-                                    text(...task.title)
-                                        .toLocaleLowerCase(locale)
-                                        .includes(
-                                            pickerQuery.toLocaleLowerCase(
-                                                locale,
-                                            ),
-                                        ),
-                            )
-                            .map((task) => (
-                                <div className="dashboard-item" key={task.id}>
-                                    <div className="dashboard-item-copy">
-                                        <strong>{text(...task.title)}</strong>
-                                        <small>
-                                            {statusLabel(task.status)}
-                                        </small>
-                                    </div>
-                                    <button
-                                        className="button button-quiet"
-                                        aria-label={
-                                            text("Add: ", "Thêm: ") +
-                                            text(...task.title)
-                                        }
-                                        onClick={() => {
-                                            addToPlan(task.id, !week);
-                                            setPicker(false);
-                                        }}
-                                    >
-                                        <Plus size={16} />
-                                        {text("Add", "Thêm")}
-                                    </button>
-                                </div>
-                            ))}
-                        {!tasks.some(
-                            (task) =>
-                                task.status !== "Done" &&
-                                !(week ? task.weekly : task.daily) &&
-                                text(...task.title)
-                                    .toLocaleLowerCase(locale)
-                                    .includes(
-                                        pickerQuery.toLocaleLowerCase(locale),
-                                    ),
-                        ) && (
-                            <p className="preview-dashboard-empty">
-                                {text(
-                                    "No matching tasks to add. Try another name or create a new task.",
-                                    "Không có công việc phù hợp để thêm. Thử tên khác hoặc tạo công việc mới.",
-                                )}
-                            </p>
-                        )}
-                    </div>
-                    <footer className="preview-dialog-footer">
-                        <button
-                            className="button button-quiet"
-                            onClick={() => setPicker(false)}
-                        >
-                            {text("Cancel", "Hủy")}
-                        </button>
-                        <button
-                            className="button button-primary"
-                            onClick={() => {
-                                setPicker(false);
-                                setEditor(null);
-                            }}
-                        >
-                            <Plus size={16} />
-                            {text("New task", "Công việc mới")}
-                        </button>
-                    </footer>
-                </Dialog>
-            )}
+
         </div>
     );
 }

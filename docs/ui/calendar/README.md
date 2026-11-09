@@ -10,6 +10,10 @@ The UI calculates date changes while retaining the selected entity identity, val
 
 Account-facing dates remain separate from UTC scheduled intervals. Check DST gaps/overlaps, midnight, mobile drag/keyboard fallback and stale versions when changing this surface.
 
+## Existing Task selection
+
+Use the [shared floating Task picker](../shared/task-picker.md) to choose existing Tasks with search/filters, Add or drag-and-drop. It keeps the destination page interactive and the picker open; New task retains the shared editor and current context. See the picker contract for plan selections, whole-interval date moves, primary-parent transfer confirmation and recurring/completed restrictions.
+
 <!-- BEGIN GENERATED TRACE -->
 
 ## Source and verification map
@@ -18,9 +22,9 @@ Trace ID: `calendar`. Test references identify coverage to inspect; they are not
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L39) — `export default function CalendarPreview({ text }: { text: Text }) {` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L41) — `export default function CalendarPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L222) — `def calendar(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L251) — `def update(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_assistant_tools.py](../../../apps/api/tests/test_assistant_tools.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

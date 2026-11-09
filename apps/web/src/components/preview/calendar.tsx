@@ -1,6 +1,8 @@
 "use client";
 import FloatingActions from "../floating-actions";
-import { useState, type CSSProperties } from "react";
+import { TASK_RETURN_MIME } from "@/lib/task-picker";
+import { TaskDropZone, useTaskPicker } from "../task-picker";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
     ChevronLeft,
     ChevronRight,
@@ -38,6 +40,7 @@ type Item = {
 };
 export default function CalendarPreview({ text }: { text: Text }) {
     const db = usePreviewData();
+    const taskPicker = useTaskPicker();
     const day = db.today || fixtureToday;
     const [view, setView] = useState("month"),
         [cursor, setCursor] = useState(day),
@@ -46,6 +49,10 @@ export default function CalendarPreview({ text }: { text: Text }) {
         [goalFilter, setGoalFilter] = useState(""),
         [zoom, setZoom] = useState("day"),
         [group, setGroup] = useState("goal");
+    useEffect(() => {
+        if (taskPicker.target?.kind === "calendar") taskPicker.open({ kind: "calendar", date: selected });
+    }, [selected]);
+    const choose = (date: string) => taskPicker.open({ kind: "calendar", date });
     const [collapsed, setCollapsed] = useState<string[]>([]);
     const [drag, setDrag] = useState<{
         key: string;
@@ -240,7 +247,10 @@ export default function CalendarPreview({ text }: { text: Text }) {
             draggable={!item.done && !item.series}
             className={`review-calendar-item ${item.done ? "is-done" : ""} ${item.end && item.end < day && !item.done ? "is-overdue" : ""}`}
             title={`${item.title} · ${dateLabel(item.start, db.locale)} – ${dateLabel(item.end, db.locale)}`}
-            onDragStart={() => setDrag({ key: item.key, date })}
+            onDragStart={event => {
+                setDrag({ key: item.key, date });
+                if (taskPicker.target && item.kind === "tasks") event.dataTransfer.setData(TASK_RETURN_MIME, item.id);
+            }}
             onDragEnd={() => setDrag(null)}
             onKeyDown={(event) => {
                 const steps: Record<string, number> = {
@@ -490,6 +500,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                     <Plus size={17} />
                     {text("New task", "Công việc mới")}
                 </button>
+                <button className="button button-quiet" onClick={() => choose(selected)}>{text("Choose tasks", "Chọn công việc")}</button>
             </FloatingActions>
             {view !== "gantt" ? (
                 <div
@@ -520,7 +531,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                             </div>
                             <div className="review-calendar-days">
                                 {days.map((date) => (
-                                    <div
+                                    <TaskDropZone target={{kind:"calendar", date}}
                                         key={date}
                                         className={`review-calendar-day ${date === day ? "is-today" : ""} ${date === selected ? "is-selected" : ""} ${date.slice(0, 7) !== cursor.slice(0, 7) ? "is-outside" : ""}`}
                                         onDragOver={(e) => e.preventDefault()}
@@ -584,12 +595,12 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                             }
                                             onClick={() => {
                                                 setSelected(date);
-                                                create(date);
+                                                choose(date);
                                             }}
                                         >
                                             ＋
                                         </button>
-                                    </div>
+                                    </TaskDropZone>
                                 ))}
                             </div>
                         </div>
@@ -600,7 +611,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                 <h2>{dateLabel(selected, db.locale, true)}</h2>
                                 <button
                                     className="button button-quiet"
-                                    onClick={() => create(selected)}
+                                    onClick={() => choose(selected)}
                                 >
                                     <Plus size={15} />
                                     {text("Add task", "Thêm công việc")}
@@ -619,21 +630,9 @@ export default function CalendarPreview({ text }: { text: Text }) {
                             )}
                         </section>
                         <section className="planning-panel review-date-agenda">
-                            <h3>{text("Unscheduled", "Chưa lên lịch")}</h3>
-                            <p className="review-caption">
-                                {text(
-                                    "Drag onto a day, or open to set dates.",
-                                    "Kéo vào một ngày, hoặc mở để đặt ngày.",
-                                )}
-                            </p>
-                            {items
-                                .filter(
-                                    (item) =>
-                                        item.kind === "tasks" &&
-                                        !item.start &&
-                                        !item.done,
-                                )
-                                .map((item) => chip(item, selected))}
+                            <h3>{text("Choose existing tasks", "Chọn công việc có sẵn")}</h3>
+                            <p className="review-caption">{text("Use the shared picker to drag tasks onto a day or add to the selected date.", "Mở bảng chọn chung để kéo công việc vào một ngày hoặc thêm vào ngày đang chọn.")}</p>
+                            <button className="button button-quiet" onClick={() => choose(selected)}>{text("Choose tasks", "Chọn công việc")}</button>
                         </section>
                     </aside>
                 </div>
@@ -802,7 +801,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                     </div>
                                     <div className="review-gantt-track">
                                         {ganttDays.map((date) => (
-                                            <span
+                                            <TaskDropZone as="span" target={{kind:"calendar", date}}
                                                 key={date}
                                                 onDragOver={(e) =>
                                                     e.preventDefault()
@@ -841,12 +840,10 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                 draggable={
                                                     !item.done && !item.series
                                                 }
-                                                onDragStart={() =>
-                                                    setDrag({
-                                                        key: item.key,
-                                                        date: item.start,
-                                                    })
-                                                }
+                                                onDragStart={event => {
+                                                    setDrag({ key: item.key, date: item.start });
+                                                    if (taskPicker.target && item.kind === "tasks") event.dataTransfer.setData(TASK_RETURN_MIME, item.id);
+                                                }}
                                                 onDragEnd={() => setDrag(null)}
                                                 onClick={() => open(item)}
                                                 onKeyDown={(e) => {

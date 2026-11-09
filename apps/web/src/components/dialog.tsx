@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
+import { IconButton } from "./ui/button";
 
 export default function Dialog({
     title,
@@ -57,13 +58,12 @@ export default function Dialog({
                 ) : (
                     <h2 id={titleId}>{title}</h2>
                 )}
-                <button
-                    className="icon-button"
-                    aria-label={closeLabel}
+                <IconButton
+                    label={closeLabel}
                     onClick={onClose}
                 >
-                    <X size={20} />
-                </button>
+                    <X size={20} aria-hidden="true" />
+                </IconButton>
             </div>
             {children}
         </dialog>

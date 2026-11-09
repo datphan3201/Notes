@@ -688,10 +688,19 @@
 .review-note-card {
     position: relative;
     min-height: 220px;
-    border: 1px solid #14284912;
+    --note-tint: #ffffff;
+    border: 1px solid var(--border);
     border-radius: 13px;
     box-shadow: 0 2px 7px #14284906;
+    background: color-mix(in srgb, var(--note-tint) 35%, #ffffff);
     color: #142849;
+}
+[data-theme="dark"] .review-note-card {
+    background: color-mix(in srgb, var(--note-tint) 12%, #19273b);
+    color: #e7effb;
+}
+[data-theme="dark"] .review-note-card[data-note-neutral="true"] {
+    background: #19273b;
 }
 .review-note-card-open {
     border: 0;

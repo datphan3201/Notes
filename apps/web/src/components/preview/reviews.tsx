@@ -192,7 +192,7 @@ export default function ReviewsPreview({ text }: { text: Text }) {
             >
         >({}),
         [remove, setRemove] = useState(false);
-    const review = db.reviews.find((r) => r.id === selected);
+    const review = db.reviews.find((r) => r.id === selected && !r.archived);
     const end =
         kind === "daily"
             ? from
@@ -222,11 +222,11 @@ export default function ReviewsPreview({ text }: { text: Text }) {
         ["nextSteps", text("Next steps", "Bước tiếp theo")],
     ] as const;
     const filtered = db.reviews
-        .filter((review) => tab === "all" || review.kind === tab)
+        .filter((review) => !review.archived && (tab === "all" || review.kind === tab))
         .sort((a, b) => b.from.localeCompare(a.from));
     const siblings = review
         ? db.reviews
-              .filter((row) => row.kind === review.kind)
+              .filter((row) => !row.archived && row.kind === review.kind)
               .sort((a, b) => a.from.localeCompare(b.from))
         : [];
     const index = siblings.findIndex((row) => row.id === review?.id);

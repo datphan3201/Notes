@@ -1,6 +1,9 @@
 import vietnamese from "./baseline-vi.json";
 
 const additions: Record<string, string> = {
+    "Area name cannot be empty": "Tên lĩnh vực không được để trống.",
+    "An Area with this name already exists, including archived Areas": "Tên lĩnh vực đã tồn tại, kể cả trong lưu trữ.",
+    "Notes and Reviews use direct deletion, not archiving": "Ghi chú và Đánh giá dùng thao tác xóa trực tiếp thay vì lưu trữ.",
     "Failed to fetch": "Không kết nối được tới máy chủ. Vui lòng thử lại.",
     "NetworkError when attempting to fetch resource.": "Không kết nối được tới máy chủ. Vui lòng thử lại.",
     "Check the fields and try again.": "Kiểm tra các trường thông tin rồi thử lại.",

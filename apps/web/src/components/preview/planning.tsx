@@ -1,5 +1,8 @@
 "use client";
+import { TASK_RETURN_MIME } from "@/lib/task-picker";
+import { PageHeaderFrame } from "../ui/layout";
 import FloatingActions from "../floating-actions";
+import { TaskDropZone, useTaskPicker } from "../task-picker";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
     ArrowDown,
@@ -16,7 +19,6 @@ import {
 } from "lucide-react";
 import Dialog from "../dialog";
 import { createPortal } from "react-dom";
-import { blankDraft } from "./task-data";
 import { statuses } from "./dashboard-data";
 import {
     usePreviewData,
@@ -65,6 +67,7 @@ type Editing = {
 };
 export default function PlanningPreview({ text }: { text: Text }) {
     const db = usePreviewData();
+    const taskPicker = useTaskPicker();
     const { goals, milestones, tasks, areas } = db;
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -205,8 +208,8 @@ export default function PlanningPreview({ text }: { text: Text }) {
                 areas.some(
                     (area) =>
                         area.id !== id &&
-                        text(...area.title).toLocaleLowerCase(db.locale) ===
-                            title.toLocaleLowerCase(db.locale),
+                        text(...area.title).trim().replace(/\s+/g, " ").toLowerCase() ===
+                            title.trim().replace(/\s+/g, " ").toLowerCase(),
                 )
             ) {
                 setError(
@@ -562,7 +565,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
         : "";
     const strategyDirty = !!selected && strategy !== selected.strategy;
     const milestonePanel = ms && (
-        <section className="planning-panel review-milestone-focus">
+        <TaskDropZone as="section" target={ms.status !== "Done" ? {kind:"parent", id:ms.id} : undefined} className="planning-panel review-milestone-focus">
             <button
                 className="button button-quiet"
                 onClick={() => setSelectedMilestone("")}
@@ -570,7 +573,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                 <ArrowLeft size={17} />
                 {text("Back to roadmap", "Quay lại lộ trình")}
             </button>
-            <header className="workspace-header milestone-focus-header">
+            <PageHeaderFrame illustrated={false} className="workspace-header milestone-focus-header">
                 <div>
                     <div className="entity-title-row">
                         <EntityIcon
@@ -703,7 +706,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                             : text("Complete milestone", "Hoàn thành cột mốc")}
                     </button>
                 </div>
-            </header>
+            </PageHeaderFrame>
             <p className="roadmap-criteria">
                 {ms.criteria ||
                     text(
@@ -819,12 +822,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                         <button
                             className="button button-quiet milestone-add-task"
                             disabled={selected?.status === "Done"}
-                            onClick={() =>
-                                db.setTaskAction({
-                                    kind: "create",
-                                    draft: { ...blankDraft(), parent: ms.id },
-                                })
-                            }
+                            onClick={() => taskPicker.open({ kind: "parent", id: ms.id })}
                         >
                             <Plus size={17} />
                             {text("Add task", "Thêm công việc")}
@@ -832,17 +830,17 @@ export default function PlanningPreview({ text }: { text: Text }) {
                     )}
                 </Panel>
             ))}
-        </section>
+        </TaskDropZone>
     );
     return (
-        <div
+        <TaskDropZone target={selected && selected.status !== "Done" ? {kind:"parent", id:selected.id} : undefined}
             className="review-planning planning-page"
             data-goals-page={!selected || undefined}
             data-goal-detail={!!selected || undefined}
         >
             {selected ? (
                 <>
-                    <header className="workspace-header scene-header">
+                    <PageHeaderFrame>
                         <div>
                             <p className="eyebrow">
                                 <button
@@ -934,8 +932,13 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                 <Plus size={17} />
                                 {text("Add milestone", "Thêm cột mốc")}
                             </button>
+                        <button className="button button-quiet" disabled={selected.status === "Done" || ms?.status === "Done"}
+                            onClick={() => taskPicker.open({ kind: "parent", id: ms?.id || selected.id })}>
+                            <Plus size={17} />{text("Choose tasks", "Chọn công việc")}
+                        </button>
+
                         </div>
-                    </header>
+                    </PageHeaderFrame>
                     {!ms && (
                         <section
                             aria-label={text(
@@ -1785,13 +1788,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                                         }
                                                         onClick={() => {
                                                             setInfoTab("");
-                                                            db.setTaskAction({
-                                                                kind: "create",
-                                                                draft: {
-                                                                    ...blankDraft(),
-                                                                    parent: selected.id,
-                                                                },
-                                                            });
+                                                            taskPicker.open({ kind: "parent", id: selected.id });
                                                         }}
                                                     >
                                                         <Plus size={16} />
@@ -2497,20 +2494,21 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                     !ack
                                 }
                                 danger={confirmation.kind === "archive"}
-                                onConfirm={() => {
+                                onConfirm={async () => {
                                     if (confirmation.kind === "leave") {
                                         setInfoTab(confirmation.target!);
                                         setConfirmation(null);
                                     } else if (
                                         confirmation.kind === "archive"
                                     ) {
-                                        db.archiveEntity(
+                                        const saved = await db.archiveEntity(
                                             confirmation.type === "goal"
                                                 ? "goals"
                                                 : "milestones",
                                             confirmation.id,
                                             true,
                                         );
+                                        if (saved === false) throw new Error(text("Could not archive. Try again.", "Chưa lưu trữ được. Hãy thử lại."));
                                         if (selected?.id === confirmation.id)
                                             db.navigate("goals");
                                         else if (
@@ -2564,15 +2562,17 @@ export default function PlanningPreview({ text }: { text: Text }) {
                     </>,
                     document.body,
                 )}
-        </div>
+        </TaskDropZone>
     );
 }
 function TaskLine({ id, text }: { id: number; text: Text }) {
     const db = usePreviewData(),
         task = db.tasks.find((row) => row.id === id)!;
+    const picker = useTaskPicker();
     const state = statuses.find(([key]) => key === task.status)!;
     return (
-        <div className="review-task-line">
+        <div className="review-task-line" draggable={!!picker.target && task.status !== "Done" && !task.seriesId}
+            onDragStart={event => event.dataTransfer.setData(TASK_RETURN_MIME, String(id))}>
             <button
                 className="review-round-check"
                 aria-pressed={task.status === "Done"}

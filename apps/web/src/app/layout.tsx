@@ -12,6 +12,7 @@ import "../styles/auth.css";
 import "../styles/workspace-preview.css";
 import "../styles/dashboard-preview.css";
 import "../styles/activity.css";
+import "../styles/ui-system.css";
 
 export const metadata: Metadata = {
     title: "Planner — Personal AI Planner",

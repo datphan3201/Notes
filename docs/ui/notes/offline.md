@@ -16,8 +16,8 @@ Trace ID: `notes.offline`. Test references identify coverage to inspect; they ar
 | --- | --- |
 | UI | [apps/web/src/lib/offline-notes.ts](../../../apps/web/src/lib/offline-notes.ts#L53) — `export async function cachedNotes(` |
 | Notes shell/static cache boundary | [apps/web/public/planner-sw.js](../../../apps/web/public/planner-sw.js#L2) — `const CACHE="planner-shell-v1";` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L473) — `def apply_changes(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L251) — `def update(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |
 

@@ -143,7 +143,8 @@
       "tests": [
         "apps/api/tests/test_boundaries.py",
         "apps/api/tests/test_assistant_tools.py",
-        "apps/web/tests/e2e/workspace.spec.ts"
+        "apps/web/tests/e2e/workspace.spec.ts",
+        "apps/web/tests/task-picker.test.ts"
       ]
     },
     {
@@ -174,7 +175,9 @@
         "apps/api/tests/test_ai_jobs.py",
         "apps/api/tests/test_complete_workspace.py",
         "apps/api/tests/test_domain.py",
-        "apps/web/tests/e2e/complete-features.spec.ts"
+        "apps/web/tests/e2e/complete-features.spec.ts",
+        "apps/api/tests/test_crud_matrix.py",
+        "apps/web/tests/e2e/crud-audit.spec.ts"
       ]
     },
     {
@@ -257,7 +260,9 @@
         "apps/api/tests/test_domain.py",
         "apps/api/tests/test_boundaries.py",
         "apps/api/tests/test_complete_workspace.py",
-        "apps/web/tests/e2e/parity.spec.ts"
+        "apps/web/tests/e2e/parity.spec.ts",
+        "apps/api/tests/test_crud_matrix.py",
+        "apps/web/tests/e2e/crud-audit.spec.ts"
       ]
     },
     {
@@ -429,7 +434,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live UI view (via WorkspaceView)",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/planning.py",
@@ -497,7 +502,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live Notes controls",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/main.py",
@@ -533,7 +538,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live Notes controls",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/note_features.py",
@@ -600,7 +605,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live Notes controls",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/main.py",
@@ -636,7 +641,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live Notes controls",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/note_features.py",
@@ -1035,7 +1040,9 @@
       "tests": [
         "apps/api/tests/test_complete_workspace.py",
         "apps/api/tests/test_boundaries.py",
-        "apps/web/tests/e2e/complete-features.spec.ts"
+        "apps/web/tests/e2e/complete-features.spec.ts",
+        "apps/api/tests/test_crud_matrix.py",
+        "apps/web/tests/e2e/crud-audit.spec.ts"
       ]
     },
     {
@@ -1229,7 +1236,7 @@
         {
           "path": "apps/web/src/components/preview/notes.tsx",
           "role": "Live UI view (via WorkspaceView)",
-          "symbol": "export default function NotesPreview({ text }: { text: Text }) {"
+          "symbol": "export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {"
         },
         {
           "path": "apps/api/planner/planning.py",
@@ -1281,6 +1288,82 @@
         "apps/api/tests/test_ai_jobs.py",
         "apps/api/tests/test_assistant_tools.py",
         "apps/web/tests/e2e/complete-features.spec.ts"
+      ]
+    },
+    {
+      "id": "shared.design-system",
+      "doc": "docs/ui/shared/design-system.md",
+      "title": "Shared UI components and templates",
+      "routes": [
+        "/preview/components"
+      ],
+      "sources": [
+        {
+          "path": "apps/web/src/components/ui/button.tsx",
+          "role": "Button and icon controls",
+          "symbol": "export function Button({"
+        },
+        {
+          "path": "apps/web/src/components/ui/field.tsx",
+          "role": "Form controls and accessible text fields",
+          "symbol": "export function TextField({"
+        },
+        {
+          "path": "apps/web/src/components/ui/layout.tsx",
+          "role": "Shared page and surface templates",
+          "symbol": "export function PageHeader({"
+        },
+        {
+          "path": "apps/web/src/components/ui/patterns.tsx",
+          "role": "Async confirmation and form templates",
+          "symbol": "export function Confirm({"
+        },
+        {
+          "path": "apps/web/src/components/component-library.tsx",
+          "role": "Interactive synthetic catalogue",
+          "symbol": "export default function ComponentLibrary({"
+        }
+      ],
+      "tests": [
+        "apps/web/tests/e2e/complete-features.spec.ts",
+        "apps/web/tests/e2e/crud-audit.spec.ts"
+      ]
+    },
+    {
+      "id": "shared.task-picker",
+      "doc": "docs/ui/shared/task-picker.md",
+      "title": "Shared floating Task picker",
+      "routes": [
+        "/dashboard",
+        "/calendar",
+        "/goals/{id}",
+        "/preview/components"
+      ],
+      "sources": [
+        {
+          "path": "apps/web/src/components/ui/floating-task-picker.tsx",
+          "role": "Reusable nonmodal Task selection template",
+          "symbol": "export function FloatingTaskPicker({"
+        },
+        {
+          "path": "apps/web/src/components/task-picker.tsx",
+          "role": "Workspace context, assignment and transfer confirmation",
+          "symbol": "export function TaskPickerProvider({"
+        },
+        {
+          "path": "apps/web/src/components/task-picker.tsx",
+          "role": "Shared native/pointer drop destinations",
+          "symbol": "export function TaskDropZone({"
+        },
+        {
+          "path": "apps/web/src/lib/task-picker.ts",
+          "role": "Date/selection/parent transformations and drag IDs",
+          "symbol": "export function pickedTaskPatch("
+        }
+      ],
+      "tests": [
+        "apps/web/tests/task-picker.test.ts",
+        "apps/web/tests/e2e/parity.spec.ts"
       ]
     }
   ],
@@ -1349,6 +1432,11 @@
       "route": "/verify-email",
       "source": "apps/web/src/app/verify-email/page.tsx",
       "doc": "docs/ui/auth/README.md"
+    },
+    {
+      "route": "/preview/components",
+      "source": "apps/web/src/app/preview/components/page.tsx",
+      "doc": "docs/ui/shared/design-system.md"
     }
   ]
 }

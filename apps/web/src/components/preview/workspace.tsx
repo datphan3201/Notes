@@ -13,6 +13,7 @@ import {
     X,
 } from "lucide-react";
 import PlanningPreview from "./planning";
+import { TaskPickerProvider } from "../task-picker";
 import NotesPreview from "./notes";
 import CalendarPreview from "./calendar";
 import HabitsPreview from "./habits";
@@ -90,13 +91,11 @@ const initialNotices: PreviewNotice[] = [
         destination: "notes",
     },
 ];
-export function WorkspaceView({
-    initialLocale,
-    initialSection = "tasks",
-}: {
-    initialLocale: PreviewLocale;
-    initialSection?: string;
-}) {
+type WorkspaceViewProps = { initialLocale: PreviewLocale; initialSection?: string };
+export function WorkspaceView(props: WorkspaceViewProps) {
+    return <TaskPickerProvider><WorkspaceContent {...props} /></TaskPickerProvider>;
+}
+function WorkspaceContent({ initialLocale, initialSection = "tasks" }: WorkspaceViewProps) {
     const data = usePreviewData();
     const { locale, setLocale } = data;
     const text: Text = (en, vi) => (locale === "vi" ? vi : en);

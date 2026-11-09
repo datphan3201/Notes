@@ -433,21 +433,32 @@ def import_snapshot(root: Path, expected_database: str, *, merge_existing: bool 
                         pinned=bool(row.get("pinned_at")),
                         tags=note_tags.get(row["id"], []),
                         goal_id=link.get("goal_id"),
-                        task_id=link.get("task_id"),
+                        task_id=None,
                     )
                 )
             db.flush()
-            for task in db.scalars(select(Task).where(Task.user_id.in_(owner_ids))):
-                content = working.get(task.id, "")
-                if not content or db.scalar(select(Note.id).where(
-                    Note.user_id == task.user_id, Note.task_id == task.id, Note.content == content,
-                ).limit(1)):
+            resources = {}
+            for note_id, link in links.items():
+                if not link.get("task_id"):
                     continue
-                db.add(Note(
-                    id=str(uuid5(NAMESPACE_URL, "planner:task-note:" + task.id)),
-                    user_id=task.user_id, task_id=task.id, title=task.title, content=content,
-                    created_at=task.created_at, updated_at=task.updated_at, archived_at=task.archived_at,
-                ))
+                task, note = db.get(Task, link["task_id"]), db.get(Note, note_id)
+                if not task or not note or task.user_id != note.user_id:
+                    raise ValueError("Invalid owned Task Note link")
+                resources.setdefault(task.id, []).append(note)
+            for task in db.scalars(select(Task).where(Task.user_id.in_(owner_ids))):
+                linked = sorted(resources.get(task.id, []), key=lambda note: (bool(note.archived_at), note.created_at, note.id))
+                content = working.get(task.id, "")
+                primary = next((note for note in linked if note.content == content and not note.goal_id), None) if content else next((note for note in linked if not note.goal_id), None)
+                if primary:
+                    primary.task_id = task.id
+                elif content:
+                    db.add(Note(
+                        id=str(uuid5(NAMESPACE_URL, "planner:task-note:" + task.id)),
+                        user_id=task.user_id, task_id=task.id, title=task.title, content=content,
+                        created_at=task.created_at, updated_at=task.updated_at, archived_at=task.archived_at,
+                    ))
+                if linked:
+                    task.details = {**(task.details or {}), "resource_note_ids": [note.id for note in linked if note is not primary]}
             for row in rows(root, manifest, "habits"):
                 db.add(
                     Habit(

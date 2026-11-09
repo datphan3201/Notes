@@ -199,6 +199,7 @@ class ChecklistItem(Strict):
 
 
 class TaskInput(Dates):
+    resource_note_ids: list[str] = Field(default_factory=list, max_length=100)
     pinned: bool = False
     reminder_mode: Literal[
         "none", "custom", "start", "before15", "before60", "due", "dayBefore"
@@ -217,6 +218,8 @@ class TaskInput(Dates):
 
     @model_validator(mode="after")
     def parent(self):
+        if len(self.resource_note_ids) != len(set(self.resource_note_ids)):
+            raise ValueError("Duplicate Note resource links")
         if self.goal_id and self.milestone_id:
             raise ValueError("Choose at most one primary parent")
         if self.scheduled_end and (

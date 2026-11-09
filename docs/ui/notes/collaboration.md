@@ -15,7 +15,7 @@ Trace ID: `notes.collaboration`. Test references identify coverage to inspect; t
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L112) — `export default function LiveWorkspace()` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L251) — `def update(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L80) — `def access_note(` |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/api/tests/test_concurrency.py](../../../apps/api/tests/test_concurrency.py) |

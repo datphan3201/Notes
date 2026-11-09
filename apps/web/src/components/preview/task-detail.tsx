@@ -7,14 +7,16 @@ import {
     ArrowUp,
     Check,
     Pencil,
+    Link as LinkIcon,
     Plus,
     Trash2,
 } from "lucide-react";
-import NotePreview from "../note-preview";
+import NotesPreview from "./notes";
+import { FormDialog } from "./ui";
+import { Button } from "../ui/button";
 import { statuses } from "./dashboard-data";
 import {
     formatTaskDate,
-    isToday,
     tagOptions as fixtureTags,
     type TaskRecord,
 } from "./task-data";
@@ -99,10 +101,16 @@ export default function TaskPreviewDetail({
     const db = usePreviewData();
     const tagOptions = db.live?.tags || fixtureTags;
     const { parents } = db;
-    const linkedNotes = db.notes.filter(
-        (note) => !note.archived && (note.task === task.id || task.noteIds?.includes(note.id)),
-    );
     const [tab, setTab] = useState(db.nav.note ? "notes" : "overview");
+    const [notesVisited, setNotesVisited] = useState(!!db.nav.note);
+    const [linkResource, setLinkResource] = useState(false);
+    const [resourceNoteId, setResourceNoteId] = useState<string | null>(null);
+    const [resourceError, setResourceError] = useState("");
+    const resourceIds = task.resourceNoteIds || [];
+    const primaryIds = task.noteIds || db.notes.filter(note => note.task === task.id).map(note => note.id);
+    const resources = db.notes.filter(note => !note.archived && resourceIds.includes(note.id));
+    const availableResources = db.notes.filter(note => !note.archived && note.permission === "owner" &&
+        !resourceIds.includes(note.id) && !primaryIds.includes(note.id) && note.task !== task.id);
     const [itemText, setItemText] = useState("");
     const [renaming, setRenaming] = useState<number | null>(null);
     const [rename, setRename] = useState("");
@@ -155,52 +163,18 @@ export default function TaskPreviewDetail({
                         <Pencil size={15} />
                         {text("Edit task", "Chỉnh sửa công việc")}
                     </button>
-                    <button
-                        className="button button-quiet"
-                        aria-pressed={task.weekly}
-                        onClick={() => onPlan("week")}
-                    >
-                        {task.weekly ? <Check size={16} /> : <Plus size={16} />}
-                        {text(
-                            task.weekly
-                                ? "Selected for this week"
-                                : "Select for this week",
-                            task.weekly
-                                ? "Đã chọn cho tuần này"
-                                : "Chọn cho tuần này",
-                        )}
-                    </button>
-                    <button
-                        className="icon-button"
-                        disabled={
-                            task.status === "Done" ||
-                            (isToday(task, db.today) && !task.daily)
-                        }
-                        aria-pressed={isToday(task, db.today)}
-                        aria-label={text(
-                            isToday(task, db.today)
-                                ? "In today's plan"
-                                : "Add for today",
-                            isToday(task, db.today)
-                                ? "Đã có trong hôm nay"
-                                : "Thêm cho hôm nay",
-                        )}
-                        title={text(
-                            isToday(task, db.today)
-                                ? "In today's plan"
-                                : "Add for today",
-                            isToday(task, db.today)
-                                ? "Đã có trong hôm nay"
-                                : "Thêm cho hôm nay",
-                        )}
-                        onClick={() => onPlan("today")}
-                    >
-                        {isToday(task, db.today) ? (
-                            <Check size={17} />
-                        ) : (
-                            <Plus size={18} />
-                        )}
-                    </button>
+                    <Button className="task-plan-toggle" aria-pressed={task.daily}
+                        disabled={task.status === "Done"} onClick={() => onPlan("today")}
+                        title={text(task.daily ? "Remove from today's plan; keep the weekly selection." : "Add to today's plan without changing dates or status.", task.daily ? "Bỏ khỏi hôm nay, vẫn giữ lựa chọn trong tuần." : "Thêm vào kế hoạch hôm nay, giữ nguyên ngày và trạng thái.")}>
+                        {task.daily ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                        {text(task.daily ? "Remove from today" : "Add to today", task.daily ? "Bỏ khỏi hôm nay" : "Thêm vào hôm nay")}
+                    </Button>
+                    <Button className="task-plan-toggle" aria-pressed={task.weekly}
+                        disabled={task.status === "Done"} onClick={() => onPlan("week")}
+                        title={text(task.weekly ? "Remove from this week's plan, including today's selection." : "Add to this week's plan without changing dates or status.", task.weekly ? "Bỏ khỏi kế hoạch tuần, bao gồm lựa chọn hôm nay." : "Thêm vào kế hoạch tuần, giữ nguyên ngày và trạng thái.")}>
+                        {task.weekly ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                        {text(task.weekly ? "Remove from this week" : "Add to this week", task.weekly ? "Bỏ khỏi tuần này" : "Thêm vào tuần này")}
+                    </Button>
                     <button
                         className="button button-primary"
                         onClick={onTransition}
@@ -216,7 +190,7 @@ export default function TaskPreviewDetail({
                 prefix="preview-task-detail"
                 label={text("Task sections", "Các mục công việc")}
                 value={tab}
-                onChange={setTab}
+                onChange={value => { setTab(value); if (value === "notes") setNotesVisited(true); }}
                 items={[
                     ["overview", text("Overview", "Tổng quan")],
                     ["notes", text("Notes", "Ghi chú")],
@@ -568,52 +542,28 @@ export default function TaskPreviewDetail({
                 aria-labelledby="preview-task-detail-tab-notes"
                 hidden={tab !== "notes"}
             >
-                <article className="planning-panel preview-task-linked-notes">
+                {(notesVisited || tab === "notes") && <NotesPreview text={text} taskId={task.id} />}
+                <article className="planning-panel task-note-resources">
                     <div className="section-heading">
-                        <div>
-                            <h2>
-                                {text("Notes", "Ghi chú")}
-                            </h2>
-                            <p className="subtle-copy">
-                                {text(
-                                    "These are the same Notes shown in your Notes workspace. Open one to edit and save.",
-                                    "Đây là các ghi chú trong mục Notes. Mở ghi chú để chỉnh sửa và lưu.",
-                                )}
-                            </p>
-                        </div>
-                        <button
-                            className="button button-quiet"
-                            onClick={() => db.navigate("notes", { note: "new", task: task.id })}
-                        >
-                            <Plus size={15} />
-                            {text("New linked note", "Ghi chú liên kết mới")}
+                        <h2>{text("Resources", "Tài nguyên")}</h2>
+                        <button type="button" className="button button-quiet" onClick={() => setLinkResource(true)}>
+                            <LinkIcon size={16} />{text("Link note", "Liên kết ghi chú")}
                         </button>
                     </div>
-                    {linkedNotes.length ? (
-                        linkedNotes.map((note) => (
-                            <button
-                                key={note.id}
-                                className="preview-linked-note-card"
-                                onClick={() =>
-                                    db.navigate("notes", { note: note.id, task: task.id })
-                                }
-                            >
-                                <strong>{note.locked && !note.unlocked ? text("Locked note", "Ghi chú đã khóa") : note.title}</strong>
-                                {note.locked && !note.unlocked ? <p>{text("Unlock to read this note.", "Mở khóa để đọc ghi chú.")}</p> :
-                                    <NotePreview content={note.content} document={note.document}
-                                        checkedLabel={text("Checked", "Đã đánh dấu")}
-                                        uncheckedLabel={text("Unchecked", "Chưa đánh dấu")} />}
-
+                    {resourceError && <p className="field-error" role="alert">{resourceError}</p>}
+                    {resources.length ? <ul className="task-note-resource-list">
+                        {resources.map(note => <li key={note.id}>
+                            <button type="button" className="text-button" onClick={() => setResourceNoteId(note.id)}>
+                                <LinkIcon size={15} />{note.locked && !note.unlocked ? text("Locked note", "Ghi chú đã khóa") : note.title}
                             </button>
-                        ))
-                    ) : (
-                        <p className="subtle-copy">
-                            {text(
-                                "No linked notes yet.",
-                                "Chưa có ghi chú liên kết.",
-                            )}
-                        </p>
-                    )}
+                            <button type="button" className="icon-button" aria-label={text("Unlink note: ", "Bỏ liên kết ghi chú: ") + (note.locked && !note.unlocked ? text("Locked note", "Ghi chú đã khóa") : note.title)}
+                                onClick={async () => {
+                                    setResourceError("");
+                                    onUpdate({ resourceNoteIds: resourceIds.filter(id => id !== note.id) });
+                                    if (db.live && !(await db.live.flush())) setResourceError(text("Could not save resource links.", "Chưa lưu được liên kết tài nguyên."));
+                                }}><Trash2 size={15} /></button>
+                        </li>)}
+                    </ul> : <p className="subtle-copy">{text("Link existing Notes as resources for this task.", "Liên kết các ghi chú có sẵn làm tài nguyên cho công việc.")}</p>}
                 </article>
             </section>
             <section
@@ -729,6 +679,26 @@ export default function TaskPreviewDetail({
                     </form>
                 </article>
             </section>
+            {resourceNoteId && <NotesPreview text={text} resourceNoteId={resourceNoteId} onResourceClose={() => setResourceNoteId(null)} />}
+            {linkResource && <FormDialog text={text} title={text("Link note", "Liên kết ghi chú")}
+                submitLabel={text("Link", "Liên kết")} onClose={() => setLinkResource(false)}
+                onSubmit={async form => {
+                    const noteId = String(new FormData(form).get("note") || "");
+                    if (!availableResources.some(note => note.id === noteId)) return false;
+                    onUpdate({ resourceNoteIds: [...resourceIds, noteId] });
+                    if (db.live && !(await db.live.flush())) throw new Error(text("Could not save resource links.", "Chưa lưu được liên kết tài nguyên."));
+                    setLinkResource(false);
+                }}>
+                <label className="field">{text("Note resource", "Ghi chú tài nguyên")}
+                    <select name="note" aria-label={text("Note resource", "Ghi chú tài nguyên")} required defaultValue="">
+                        <option value="" disabled>{text("Select a note", "Chọn ghi chú")}</option>
+                        {availableResources.map(note => <option key={note.id} value={note.id}>
+                            {note.locked && !note.unlocked ? text("Locked note", "Ghi chú đã khóa") : note.title}
+                        </option>)}
+                    </select>
+                </label>
+                {!availableResources.length && <p className="subtle-copy">{text("No available Notes. Create one in Notes first.", "Chưa có ghi chú khả dụng. Hãy tạo ghi chú trong Notes trước.")}</p>}
+            </FormDialog>}
         </div>
     );
 }

@@ -1,5 +1,7 @@
 "use client";
+import { PageHeaderFrame } from "../ui/layout";
 import FloatingActions from "../floating-actions";
+import { pickedTaskPatch, returnedTaskPatch, taskIsPicked } from "@/lib/task-picker";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -19,6 +21,7 @@ import {
     X,
 } from "lucide-react";
 import Dialog from "../dialog";
+import { Confirm } from "./ui";
 import { statuses, type Label } from "./dashboard-data";
 import TaskPreviewEditor from "./task-editor";
 import TaskPreviewDetail from "./task-detail";
@@ -95,6 +98,7 @@ export default function TasksPreview({
     };
     const [editor, setEditor] = useState<Editor | null>(null);
     const [prompt, setPrompt] = useState<Prompt | null>(null);
+    const [archiveSeries, setArchiveSeries] = useState<number | null>(null);
     const [acknowledged, setAcknowledged] = useState(false);
     const [archiveFuture, setArchiveFuture] = useState(false);
     const [reopenMode, setReopenMode] = useState("clear");
@@ -247,16 +251,12 @@ export default function TasksPreview({
         onReady();
     };
     const plan = (task: TaskRecord, period: "today" | "week") => {
-        if (period === "today") {
-            if (task.status === "Done") return;
-            update(task.id, {
-                daily: !task.daily,
-                weekly: task.daily ? task.weekly : true,
-            });
-        } else update(task.id, { weekly: !task.weekly || task.daily });
+        if (task.status === "Done") return;
+        const target = { kind: "plan", period } as const;
+        update(task.id, taskIsPicked(task, target) ? returnedTaskPatch(target) : pickedTaskPatch(task, target));
         notify(
-            "Sample plan updated. Task dates and status stay the same.",
-            "Đã cập nhật kế hoạch mẫu. Ngày và trạng thái công việc được giữ nguyên.",
+            "Plan updated. Task dates and status stay the same.",
+            "Đã cập nhật kế hoạch. Ngày và trạng thái công việc được giữ nguyên.",
         );
     };
     const transition = (task: TaskRecord) => {
@@ -612,7 +612,7 @@ export default function TasksPreview({
                 />
             ) : (
                 <>
-                    <header className="workspace-header scene-header preview-tasks-header">
+                    <PageHeaderFrame className="preview-tasks-header">
                         <div>
                             <h1>{text("Tasks", "Công việc")}</h1>
                             <p>
@@ -622,7 +622,7 @@ export default function TasksPreview({
                                 )}
                             </p>
                         </div>
-                    </header>
+                    </PageHeaderFrame>
                     <FloatingActions
                         label={text("Page actions", "Thao tác trang")}
                         closeLabel={text("Close actions", "Đóng thao tác")}
@@ -1013,6 +1013,10 @@ export default function TasksPreview({
                                                     </div>
                                                 </div>
                                                 <div className="action-row">
+                                                    <button className="button button-quiet"
+                                                        onClick={() => setArchiveSeries(item.id)}>
+                                                        {text("Archive series", "Lưu trữ chuỗi")}
+                                                    </button>
                                                     {item.state !== "ended" ? (
                                                         <>
                                                             <button
@@ -1303,6 +1307,17 @@ export default function TasksPreview({
                     onClose={() => setEditor(null)}
                     onSave={saveEditor}
                 />
+            )}
+            {archiveSeries !== null && (
+                <Confirm text={text} title={text("Archive this repeating series?", "Lưu trữ chuỗi lặp này?")}
+                    onClose={() => setArchiveSeries(null)}
+                    onConfirm={async () => {
+                        const saved = await shared.archiveEntity("task-series", String(archiveSeries), false);
+                        if (saved === false) throw new Error(text("Could not archive. Try again.", "Chưa lưu trữ được. Hãy thử lại."));
+                        setArchiveSeries(null);
+                    }}>
+                    <p>{text("Existing Tasks stay available. Restore the series from Archive.", "Các công việc hiện có vẫn được giữ. Khôi phục chuỗi từ Lưu trữ.")}</p>
+                </Confirm>
             )}
             {prompt && (
                 <Dialog

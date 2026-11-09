@@ -78,6 +78,7 @@ export type Entity = {
     tags?: string[];
     checklist?: { text: string; checked: boolean }[];
     note_ids?: string[];
+    resource_note_ids?: string[];
     timezone?: string;
     frequency?: string;
     target?: number;

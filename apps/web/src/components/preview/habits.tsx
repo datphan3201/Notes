@@ -666,8 +666,9 @@ export default function HabitsPreview({ text }: { text: Text }) {
                         "Lưu trữ thói quen này?",
                     )}
                     onClose={() => setArchive(null)}
-                    onConfirm={() => {
-                        db.archiveEntity("habits", archive.id, false);
+                    onConfirm={async () => {
+                        if (await db.archiveEntity("habits", archive.id, false) === false)
+                            throw new Error(text("Could not archive. Try again.", "Chưa lưu trữ được. Hãy thử lại."));
                         setArchive(null);
                     }}
                 >

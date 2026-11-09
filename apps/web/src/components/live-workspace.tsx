@@ -786,46 +786,43 @@ export default function LiveWorkspace() {
                 m.archived || data.goals.find((g) => g.id === m.goal)?.archived,
         })),
     ];
-    const action = async (
-        kind: Kind,
-        id: string,
+    const mutateEntities = async (
+        entries: { kind: Kind; id: string }[],
         operation: string,
         contents = false,
-    ) => {
-        if (!(await flush())) return;
-        const actual = kind === "tasks" ? ids.id(Number(id)) : ids.server(id),
-            row = raw.current![kind].find((r) => r.id === actual);
-        if (!row) return;
+    ): Promise<boolean> => {
+        if (!(await flush())) return false;
+        const changes = [];
+        for (const { kind, id } of entries) {
+            const actual = kind === "tasks" || kind === "task-series"
+                ? ids.id(Number(id)) : ids.server(id);
+            const row = raw.current![kind].find((r) => r.id === actual);
+            if (!row) {
+                setError(data.locale === "vi" ? "Mục này không còn khả dụng. Hãy tải lại rồi thử lại." : "This item is no longer available. Refresh and retry.");
+                return false;
+            }
+            changes.push({ action: operation, kind, id: actual, version: row.version,
+                fields: { include_contents: contents } });
+        }
         setBlocking(true);
         setBusy(true);
         setError("");
         try {
-            await api(
-                "/workspace/changes",
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        changes: [
-                            {
-                                action: operation,
-                                kind,
-                                id: actual,
-                                version: row.version,
-                                fields: { include_contents: contents },
-                            },
-                        ],
-                    }),
-                },
-                identity.csrf,
-            );
+            await api("/workspace/changes", {
+                method: "POST", body: JSON.stringify({ changes }),
+            }, identity.csrf);
             await refresh();
+            return true;
         } catch (err) {
             setError((err as Error).message);
+            return false;
         } finally {
             setBusy(false);
             setBlocking(false);
         }
     };
+    const action = (kind: Kind, id: string, operation: string, contents = false) =>
+        mutateEntities([{ kind, id }], operation, contents);
     const context = {
         ...data,
         ...setters,
@@ -859,11 +856,12 @@ export default function LiveWorkspace() {
                 ),
             ),
         archiveEntity: (kind: Kind, id: string, contents: boolean) =>
-            void action(kind, id, "archive", contents),
+            action(kind, id, "archive", contents),
         restoreEntity: (kind: Kind, id: string) =>
-            void action(kind, id, "restore"),
+            action(kind, id, "restore"),
         deleteEntity: (kind: Kind, id: string) =>
-            void action(kind, id, "delete"),
+            action(kind, id, "delete"),
+        deleteEntities: (entries: { kind: Kind; id: string }[]) => mutateEntities(entries, "delete"),
     } as ContextValue;
     return (
         <WorkspaceDataContext.Provider value={context}>

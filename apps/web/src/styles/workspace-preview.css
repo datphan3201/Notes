@@ -270,14 +270,7 @@
     width: min(540px, 100vw);
     border-radius: 16px 0 0 16px;
 }
-.preview-workspace .preview-dialog.preview-confirm {
-    inset: 0;
-    margin: auto;
-    width: min(440px, calc(100vw - 32px));
-    height: fit-content;
-    max-height: calc(100dvh - 32px);
-    border-radius: 16px;
-}
+
 .preview-dialog-form {
     display: flex;
     flex-direction: column;

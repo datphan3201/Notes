@@ -1,0 +1,19 @@
+.component-library { max-width: 1120px; margin: 0 auto; padding: 32px 24px 104px; }
+.component-library-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ui-space-4); margin-bottom: var(--ui-space-6); }
+.component-library > .ui-notice { margin-bottom: var(--ui-space-6); }
+.component-library-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: var(--ui-space-6); }
+.component-library-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-space-3); margin-top: var(--ui-space-4); }
+.component-library .ui-page-header { margin-bottom: var(--ui-space-6); }
+.component-library .loading-indicator { min-height: 64px; }
+.component-library [role='tabpanel'] { padding-top: var(--ui-space-4); }
+.component-library .floating-actions { left: 24px; }
+.component-library .floating-actions-panel { left: 24px; }
+@media (max-width: 640px) {
+    .component-library { padding: 16px 16px 104px; }
+    .component-library-grid, .component-library-controls { grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-4); }
+    .component-library .ui-surface { padding: var(--ui-space-4); }
+}
+
+.component-picker-destination { min-height: 100px; margin-top: var(--ui-space-4); padding: var(--ui-space-4); border: 1px dashed var(--accent); border-radius: var(--radius-control); }
+
+.component-picked-task { margin-top: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); cursor: grab; }

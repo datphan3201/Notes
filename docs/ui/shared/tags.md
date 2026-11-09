@@ -14,8 +14,8 @@ Trace ID: `shared.tags`. Test references identify coverage to inspect; they are 
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L31) — `export default function NotesPreview({ text }: { text: Text }) {` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L196) — `def validated(` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L39) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L212) — `def validated(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L143) — `def validate_relations(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

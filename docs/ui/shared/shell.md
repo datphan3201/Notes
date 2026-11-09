@@ -6,6 +6,10 @@ Next.js route files mount `Workspace`, which mounts `LiveWorkspace`. It reads an
 
 Navigation, floating editors, dialogs, notifications and the assistant preserve current page/draft/focus state. Late refresh responses must not close a newly opened panel. Client rendering does not authorize access: every business read/write remains server-scoped.
 
+## Shared component library
+
+[Components and templates](design-system.md) owns the common controls, page headers, surfaces and dialog patterns under `apps/web/src/components/ui/`. `/preview/components` is the synthetic interactive catalogue. Existing preview-path imports re-export shared implementations; feature-specific layouts remain with their modules.
+
 ## Style file ownership
 
 The baseline stylesheet set in `src/styles/baseline/`, global/parity/auth styles and reviewed feature styles own the visual system. Inspect import order and component use before changing an override. Five illustrated themes, independent light/dark preferences, readable controls and mobile/keyboard behavior remain product requirements.
@@ -21,9 +25,9 @@ Trace ID: `shared.shell`. Test references identify coverage to inspect; they are
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L112) — `export default function LiveWorkspace()` |
-| Mounted feature routing | [apps/web/src/components/preview/workspace.tsx](../../../apps/web/src/components/preview/workspace.tsx#L93) — `export function WorkspaceView(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L327) — `def snapshot(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L473) — `def apply_changes(` |
+| Mounted feature routing | [apps/web/src/components/preview/workspace.tsx](../../../apps/web/src/components/preview/workspace.tsx#L95) — `export function WorkspaceView(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L335) — `def snapshot(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

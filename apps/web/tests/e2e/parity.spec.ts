@@ -204,6 +204,7 @@ test("goal tree opens roadmap and milestone capture preserves parent context", a
     await page
         .getByRole("button", { name: "Thêm công việc", exact: true })
         .click();
+    await page.locator("[data-task-picker]").getByRole("button", { name: "Công việc mới", exact: true }).click();
     const editor = page
         .getByRole("dialog")
         .filter({ has: page.getByLabel("Tên công việc", { exact: true }) });
@@ -288,6 +289,7 @@ test("calendar date capture saves selected date and week navigation changes peri
     await page
         .getByRole("button", { name: "Thêm công việc", exact: true })
         .click();
+    await page.locator("[data-task-picker]").getByRole("button", { name: "Công việc mới", exact: true }).click();
     const editor = page.getByRole("dialog");
     await editor
         .getByLabel("Tên công việc", { exact: true })

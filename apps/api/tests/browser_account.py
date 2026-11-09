@@ -38,6 +38,13 @@ with session_factory()() as db:
             secret = base64.b32encode(b"12345678901234567890").decode().rstrip("=")
             user.totp_secret = cipher().encrypt(secret.encode()).decode()
         db.add(user)
+    elif action == "legacy-archive":
+        from planner import planning
+        if values["kind"] not in ("notes", "reviews"):
+            raise RuntimeError("Only legacy Notes/Reviews are supported")
+        row = planning.owned(db, values["kind"], values["id"], user.id)
+        row.archived_at = now()
+        row.version += 1
     elif action == "link":
         queue_email(db, user, values["purpose"])
     elif action == "expire":

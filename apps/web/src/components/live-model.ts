@@ -137,19 +137,22 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         "milestones",
         "tasks",
         "habits",
+        "task-series",
+        "notes",
+        "reviews",
     ] as const)
         for (const row of s[kind]) archivedRows.set(row.id, { kind, row });
     function archiveRoot(kind: Kind, row: Row): string {
         const parentId =
             row.parent_goal_id ||
             row.area_id ||
-            row.goal_id ||
             row.milestone_id ||
-            row.primary_goal_id;
+            row.goal_id ||
+            row.primary_goal_id || row.template?.milestone_id || row.template?.goal_id;
         const parent = parentId ? archivedRows.get(parentId) : undefined;
         return parent && parent.row.archived_at === row.archived_at
             ? archiveRoot(parent.kind, parent.row)
-            : `${kind}:${kind === "tasks" ? ids.number(row.id) : row.id}`;
+            : `${kind}:${(kind === "tasks" || kind === "task-series") ? ids.number(row.id) : row.id}`;
     }
     const archive = (row: Row) => ({
         archived: !!row.archived_at,
@@ -180,6 +183,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         ),
         ...archive(row),
         noteIds: (row.note_ids || []).map(id => ids.view(id)),
+        resourceNoteIds: (row.resource_note_ids || []).map(id => ids.view(id)),
         history: inHistory(row, today, prefs),
         pinned: !!row.pinned,
         seriesId: row.series_id ? ids.number(row.series_id) : undefined,
@@ -331,6 +335,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
             ...archive(row),
         })),
         reviews: s.reviews.map((row) => ({
+            ...archive(row),
             id: row.id,
             kind: row.period as "daily",
             from: row.period_date!,
@@ -462,6 +467,7 @@ function taskFields(row: TaskRecord, data: Data, ids: WorkspaceIds) {
             checked,
         })),
         related: row.related,
+        resource_note_ids: (row.resourceNoteIds || []).map(id => ids.server(id)),
     };
 }
 const collections = [

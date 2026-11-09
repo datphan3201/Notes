@@ -576,7 +576,7 @@
     gap: 18px;
     align-items: start;
 }
-.preview-task-detail .planning-panel h2 {
+.preview-task-detail .planning-panel h2:not(:where(.rich-note-content h2)) {
     margin-bottom: 18px;
     font-size: 15px;
 }
@@ -706,29 +706,6 @@
     margin-right: auto;
     color: var(--muted);
     font-size: 11px;
-}
-.preview-task-linked-notes {
-    margin-top: 18px;
-}
-.preview-linked-note-card {
-    width: min(380px, 100%);
-    padding: 18px;
-    text-align: left;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface-soft);
-    color: var(--text);
-    font: inherit;
-    cursor: pointer;
-}
-.preview-linked-note-card strong {
-    font-size: 13px;
-}
-.preview-linked-note-card p {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.8;
-    white-space: pre-wrap;
 }
 .preview-task-resources {
     padding-left: 20px;
@@ -901,4 +878,48 @@
     .preview-task-detail .workspace-section-menu > button {
         white-space: nowrap;
     }
+}
+
+/* Task embeds the canonical Notes editor instead of opening another page. */
+.task-notes-inline {
+    min-width: 0;
+    margin-top: 18px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+}
+.task-notes-picker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 18px; }
+.task-notes-picker .field { min-width: 0; margin: 0; }
+.task-notes-picker select { width: 100%; min-height: 44px; text-overflow: ellipsis; }
+.task-notes-picker > .button { min-height: 44px; }
+.task-note-discard { grid-column: 1 / -1; justify-self: start; }
+.task-note-editor .drawer-heading { position: static; padding: 0 0 14px; margin: 0; }
+.task-note-editor .drawer-heading > div { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; }
+.task-note-editor .drawer-heading .eyebrow, .task-note-editor .drawer-heading h2 { display: none; }
+.task-note-editor .drawer-heading .save-status { margin: 0; color: var(--muted); }
+.task-note-editor .review-note-save { margin: 0; flex-shrink: 0; }
+.task-note-editor > .preview-dialog-body { padding: 0; }
+.task-note-editor .review-note-title-label input { font-size: 20px; }
+.task-note-editor .review-note-paper { margin-bottom: 0; }
+@media (max-width: 600px) {
+    .task-notes-inline { padding: 14px; }
+    .task-notes-picker { grid-template-columns: minmax(0, 1fr); }
+    .task-notes-picker > .button { justify-self: start; }
+}
+.task-notes-picker .task-note-caption { margin: 0; font-size: 16px; color: var(--text); }
+.task-note-resources { margin-top: 18px; }
+.task-note-resources .section-heading { justify-content: space-between; }
+.task-note-resources .section-heading h2 { margin: 0; }
+.task-note-resource-list { margin: 0; padding: 0; list-style: none; }
+.task-note-resource-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.task-note-resource-list li:last-child { border-bottom: 0; }
+.task-note-resource-list .text-button { display: flex; align-items: center; gap: 8px; min-width: 0; text-align: left; overflow-wrap: anywhere; }
+.task-note-resource-list svg { flex-shrink: 0; }
+
+.task-plan-toggle[aria-pressed='true'] {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
 }

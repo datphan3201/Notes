@@ -94,7 +94,11 @@ def owned_constraints(table):
 
 class Area(Owned, Base):
     __tablename__ = "areas"
-    __table_args__ = owned_constraints("areas")
+    __table_args__ = (
+        *owned_constraints("areas"),
+        Index("areas_owner_name_unique", "user_id",
+              sql_text(r"lower(btrim(regexp_replace(title, '\s+', ' ', 'g')))"), unique=True),
+    )
 
 
 class Goal(Owned, Base):
@@ -183,6 +187,7 @@ class Note(Owned, Base):
     task_id: Mapped[str | None] = mapped_column(String(36))
     __table_args__ = (
         *owned_constraints("notes"),
+        UniqueConstraint("task_id", name="notes_one_per_task"),
         ForeignKeyConstraint(["user_id", "goal_id"], ["goals.user_id", "goals.id"]),
         ForeignKeyConstraint(["user_id", "task_id"], ["tasks.user_id", "tasks.id"]),
         CheckConstraint("goal_id IS NULL OR task_id IS NULL"),

@@ -21,6 +21,7 @@ These are Next.js page-file patterns. Dynamic handlers restrict accepted section
 | `/reset-password` | [apps/web/src/app/reset-password/page.tsx](../../apps/web/src/app/reset-password/page.tsx) | [docs/ui/auth/README.md](../ui/auth/README.md) |
 | `/two-factor` | [apps/web/src/app/two-factor/page.tsx](../../apps/web/src/app/two-factor/page.tsx) | [docs/ui/auth/README.md](../ui/auth/README.md) |
 | `/verify-email` | [apps/web/src/app/verify-email/page.tsx](../../apps/web/src/app/verify-email/page.tsx) | [docs/ui/auth/README.md](../ui/auth/README.md) |
+| `/preview/components` | [apps/web/src/app/preview/components/page.tsx](../../apps/web/src/app/preview/components/page.tsx) | [docs/ui/shared/design-system.md](../ui/shared/design-system.md) |
 
 ## API and private worker
 
@@ -105,8 +106,8 @@ FastAPI also supplies `/openapi.json` and `/redoc`; `/docs` is disabled in produ
 | api | PUT | `/api/v1/profile` | [apps/api/planner/personal.py](../../apps/api/planner/personal.py#L64) — `update_profile` |
 | api | GET | `/api/v1/reports` | [apps/api/planner/moderation.py](../../apps/api/planner/moderation.py#L128) — `reports` |
 | api | POST | `/api/v1/reports` | [apps/api/planner/moderation.py](../../apps/api/planner/moderation.py#L54) — `report` |
-| api | POST | `/api/v1/workspace/changes` | [apps/api/planner/workspace.py](../../apps/api/planner/workspace.py#L467) — `change_workspace` |
-| api | GET | `/api/v1/workspace/snapshot` | [apps/api/planner/workspace.py](../../apps/api/planner/workspace.py#L327) — `snapshot` |
+| api | POST | `/api/v1/workspace/changes` | [apps/api/planner/workspace.py](../../apps/api/planner/workspace.py#L475) — `change_workspace` |
+| api | GET | `/api/v1/workspace/snapshot` | [apps/api/planner/workspace.py](../../apps/api/planner/workspace.py#L335) — `snapshot` |
 | api | GET | `/api/v1/{kind}` | [apps/api/planner/main.py](../../apps/api/planner/main.py#L757) — `list_items` |
 | api | POST | `/api/v1/{kind}` | [apps/api/planner/main.py](../../apps/api/planner/main.py#L770) — `create_item` |
 | api | GET | `/api/v1/{kind}/{entity_id}` | [apps/api/planner/main.py](../../apps/api/planner/main.py#L797) — `get_item` |

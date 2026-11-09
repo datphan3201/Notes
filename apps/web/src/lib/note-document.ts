@@ -37,6 +37,7 @@ export function textDocument(value: string): JSONContent {
 
 export type NotePreview = {
     kind: "headings" | "checkboxes" | "text";
+    truncated?: boolean;
     lines: { text: string; level?: number; checked?: boolean }[];
 };
 
@@ -55,7 +56,8 @@ export function notePreview(content: string, document?: JSONContent | null): Not
         for (const child of node.content || []) visit(child);
     }
     visit(root);
-    if (headings.length) return { kind: "headings", lines: headings.slice(0, 3) };
-    if (checkboxes.length) return { kind: "checkboxes", lines: checkboxes.slice(0, 3) };
-    return { kind: "text", lines: [{ text: documentText(root).slice(0, 200) }] };
+    if (headings.length) return { kind: "headings", lines: headings.slice(0, 3), ...(headings.length > 3 ? { truncated: true } : {}) };
+    if (checkboxes.length) return { kind: "checkboxes", lines: checkboxes.slice(0, 3), ...(checkboxes.length > 3 ? { truncated: true } : {}) };
+    const text = documentText(root);
+    return { kind: "text", lines: [{ text: text.slice(0, 200) }], ...(text.length > 200 ? { truncated: true } : {}) };
 }

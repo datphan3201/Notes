@@ -107,3 +107,22 @@ Before upgrading a populated environment, pause writes and retain a private data
 Runtime commit `4a280e1` was deployed to Render (`dep-dboktjff3r2c73bgaco0`, live) and Vercel (`dpl_CUhY87NKS47jw5Fvsk4xQA8t4N5n`, READY), with the stable production alias retained. Render automatic deploys were disabled to match the manual-release blueprint. The API was suspended for a consistent private schema backup before rollout. Revision `0006` was confirmed on `postgres` / `planner`: Task count remained 186, Notes increased from 12 to 118, and all 106 nonempty legacy Task working bodies had a matching same-owner/task canonical Note afterward. No cross-owner Task/Note link was found. The private backup is retained outside Git.
 
 Production login and proxied readiness returned HTTP 200; authenticated demo login and snapshot reads succeeded. A Playwright production browser check opened a migrated Note from its Task, observed the shared formatting toolbar and disabled Save on the clean document, then closed back to the originating Task Notes tab. These release checks do not certify mail delivery, AI quality or managed restore/PITR.
+
+### Next Area name migration (0008)
+
+Revision `0008` is local preparation, not part of the recorded cloud release. Back up the intended database and rehearse on an isolated restored copy before upgrading. It adds a unique index per owner over `lower(btrim(regexp_replace(title, '\s+', ' ', 'g')))`, including archived Areas. Service writes use the same PostgreSQL normalization. Existing titles are preserved.
+
+The migration checks duplicates before changing schema. If found, it aborts with owner and Area IDs; let the owner choose new names, then retry. Never merge, delete or automatically rename their data to force an upgrade. Read-only preflight query (run against the explicitly selected database/schema):
+
+```sql
+SELECT user_id, array_agg(id ORDER BY id) AS area_ids
+FROM areas
+GROUP BY user_id, lower(btrim(regexp_replace(title, '\s+', ' ', 'g')))
+HAVING count(*) > 1;
+```
+
+Local `planner_dev/public` had no duplicate groups; it was backed up privately and upgraded to `0008`, preserving 13 Areas, 120 Notes and 157 Tasks. This is a local migration/count check, not hosted acceptance or a restore rehearsal.
+
+### Next Task Note cardinality migration (0007)
+
+Revision `0007` is prepared locally and is not part of the recorded `4a280e1` cloud release. Back up the intended database before applying it. It retains one attached Note per Task, preferring active Notes, then a match to legacy working text, then creation time/ID. Other Notes become independent resource references in the Task details; their content, locks, documents and attachments remain intact. A unique constraint prevents multiple attached Notes. Downgrade removes the constraint but preserves resource links instead of copying content back.

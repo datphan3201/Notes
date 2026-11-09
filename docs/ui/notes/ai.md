@@ -14,7 +14,7 @@ Trace ID: `notes.ai`. Test references identify coverage to inspect; they are not
 
 | Role | Current source |
 | --- | --- |
-| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L31) — `export default function NotesPreview({ text }: { text: Text }) {` |
+| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L39) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L158) — `def summarize(` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L194) — `def question(` |
 | API / domain | [apps/api/planner/ai.py](../../../apps/api/planner/ai.py#L243) — `def run_assistant(` |

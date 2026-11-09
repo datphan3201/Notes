@@ -4,6 +4,8 @@
 
 Areas organize arbitrary-depth, single-parent Goals. A Goal has exactly one Area or parent Goal; owner-scoped validation rejects inaccessible references and cycles. Areas/Goals expose supported icon/accent choices and 1–5 importance. An explicit Main goal uses the same account focus as Dashboard.
 
+Area names are unique per account across active and archived Areas. API writes trim/collapse whitespace and compare case-insensitively using the same PostgreSQL expression as the database unique index. Existing migration conflicts require deliberate renaming; no automatic merge or title rewrite occurs.
+
 Goal progress uses finite primary children, excluding Habits, related contributions and repeating occurrences. Archiving is distinct from permanent deletion; including nested contents requires an explicit grouped action. See [roadmaps](roadmap.md) and [Milestones](milestones.md).
 
 <!-- BEGIN GENERATED TRACE -->
@@ -14,13 +16,15 @@ Trace ID: `goals`. Test references identify coverage to inspect; they are not ex
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/planning.tsx](../../../apps/web/src/components/preview/planning.tsx#L66) — `export default function PlanningPreview({ text }: { text: Text }) {` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/planning.tsx](../../../apps/web/src/components/preview/planning.tsx#L68) — `export default function PlanningPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L143) — `def validate_relations(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L874) — `def progress_for_user(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L554) — `def archive(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L911) — `def progress_for_user(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L589) — `def archive(` |
 | Related tests | [apps/api/tests/test_domain.py](../../../apps/api/tests/test_domain.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |
+| Related tests | [apps/api/tests/test_crud_matrix.py](../../../apps/api/tests/test_crud_matrix.py) |
+| Related tests | [apps/web/tests/e2e/crud-audit.spec.ts](../../../apps/web/tests/e2e/crud-audit.spec.ts) |
 
 <!-- END GENERATED TRACE -->

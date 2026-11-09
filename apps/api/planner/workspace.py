@@ -28,6 +28,7 @@ from planner.models import (
     TaskSelection,
     TaskSeries,
     User,
+    now,
 )
 from planner.timezones import zone as ZoneInfo
 
@@ -273,6 +274,8 @@ def remove_record(db, auth, kind, entity_id, version):
     for entity_kind, model in planning.MODELS.items():
         for item in db.scalars(select(model).where(model.user_id == user_id)):
             details = dict(item.details or {})
+            if kind == "notes" and "resource_note_ids" in details:
+                details["resource_note_ids"] = [value for value in details["resource_note_ids"] if value != entity_id]
             if "related" in details:
                 details["related"] = [value for value in details["related"] if value not in gids]
             if details.get("primary_goal_id") in gids:
@@ -282,10 +285,15 @@ def remove_record(db, auth, kind, entity_id, version):
                 template["related"] = [
                     goal_id for goal_id in template.get("related", []) if goal_id not in gids
                 ]
+                if kind == "notes" and "resource_note_ids" in template:
+                    template["resource_note_ids"] = [value for value in template["resource_note_ids"] if value != entity_id]
                 details["template"] = template
             if details != item.details:
                 item.details = details
                 item.version += 1
+                if kind == "notes" and entity_kind in ("tasks", "task-series"):
+                    item.updated_at = now()
+                    planning.invalidate(db, entity_kind, item)
     for task in db.scalars(
         select(Task).where(
             Task.user_id == user_id, Task.series_id.in_(series_ids), Task.id.not_in(tids)
@@ -485,6 +493,16 @@ def apply_changes(body: Changes, auth, db):
         return values
 
     try:
+        # Validate original versions before deletion unlinks resources or cascades
+        # into another selected root. The owner lock covers the entire batch.
+        delete_batch = all(change.action == "delete" for change in body.changes)
+        if delete_batch:
+            for change in body.changes:
+                row = (planning.access_note(db, change.id, auth, owner_only=True)
+                       if change.kind == "notes"
+                       else planning.owned(db, change.kind, change.id, auth.user.id))
+                if row.version != change.version:
+                    raise HTTPException(409, "This item changed. Reload before deleting.")
         for change in body.changes:
             kind, entity_id, fields = (
                 change.kind,
@@ -541,7 +559,9 @@ def apply_changes(body: Changes, auth, db):
                     fields.get("include_contents", False),
                 )
             elif change.action == "delete":
-                remove_record(db, auth, kind, entity_id, change.version)
+                current = db.get(planning.model_for(kind), entity_id) if delete_batch else None
+                if not delete_batch or current is not None:
+                    remove_record(db, auth, kind, entity_id, current.version if delete_batch else change.version)
                 row = None
             elif change.action == "selection":
                 selected_task(db, auth.user.id, entity_id, fields)
@@ -573,7 +593,7 @@ def apply_changes(body: Changes, auth, db):
                 row.snapshot = review_snapshot(db, auth.user.id, row.period, row.period_date)
                 row.version += 1
             if row is not None:
-                results.append({"kind": kind, **planning.serialize(row)})
+                results.append({"kind": kind, **planning.serialize(row, mask_note=kind == "notes" and change.action == "restore")})
     except (ValueError, KeyError) as exc:
         db.rollback()
         raise HTTPException(422, "Check the workspace fields") from exc

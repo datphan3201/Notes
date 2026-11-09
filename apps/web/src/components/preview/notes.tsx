@@ -1,6 +1,6 @@
 "use client";
 import FloatingActions from "../floating-actions";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
     Download,
     FileText,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Dialog from "../dialog";
 import NoteDocument from "../note-document";
+import NoteEditorFrame from "../note-editor-frame";
 import NotePreview from "../note-preview";
 import type { RichNoteDocument } from "@/lib/note-document";
 import { tagOptions } from "./task-data";
@@ -28,8 +29,18 @@ import { usePreviewData, type Note, type NoteFile } from "./workspace-data";
 import { BaselineIcon, Confirm, Field, FormDialog, Header } from "./ui";
 import type { Text } from "./shared";
 
-export default function NotesPreview({ text }: { text: Text }) {
+// Both API tokens and earlier picker values share the same theme-aware tints.
+const noteTints: Record<string, string> = {
+    neutral: "#ffffff", lemon: "#facc15", mint: "#22c55e", sky: "#38bdf8", rose: "#fb7185",
+    "#ffffff": "#ffffff", "#e7f3ef": "#22c55e", "#fff2dc": "#facc15",
+    "#eeeafa": "#a78bfa", "#e9f2fc": "#38bdf8", "#fbe9ed": "#fb7185",
+};
+
+export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {
     const db = usePreviewData();
+    const inline = taskId !== undefined;
+    const embedded = inline || resourceNoteId !== undefined;
+    const contextTask = taskId ?? db.nav.task;
     const [selectedId, setSelectedId] = useState("");
     const [query, setQuery] = useState("");
     const [layout, setLayout] = useState(
@@ -53,6 +64,7 @@ export default function NotesPreview({ text }: { text: Text }) {
     const [conflict, setConflict] = useState("");
     const [saving, setSaving] = useState(false);
     const [confirmExit, setConfirmExit] = useState(false);
+    const [pendingSelection, setPendingSelection] = useState<string | null>(null);
     const [dialog, setDialog] = useState<{
         kind: "share" | "lock" | "unlock" | "delete" | "file";
         id: string;
@@ -142,9 +154,29 @@ export default function NotesPreview({ text }: { text: Text }) {
         }
         setConfirmExit(false);
         setSelectedId("");
+        if (resourceNoteId) { onResourceClose?.(); return; }
+        if (inline) {
+            const target = pendingSelection;
+            setPendingSelection(null);
+            if (target === "new") create("", taskId);
+            else if (target) setSelectedId(target);
+            return;
+        }
         if (db.nav.task) db.navigate("tasks", { task: db.nav.task, note: selectedId });
     }
     useEffect(() => {
+        if (resourceNoteId) {
+            const resource = db.notes.find(row => row.id === resourceNoteId);
+            if (resource) open(resource);
+            return;
+        }
+        if (inline) {
+            const linked = db.notes.filter(row => !row.archived &&
+                (row.task === taskId || db.tasks.find(task => task.id === taskId)?.noteIds?.includes(row.id)));
+            setSelectedId(current => linked.some(row => row.id === current) ? current :
+                (linked.find(row => row.id === db.nav.note) || linked[0])?.id || "");
+            return;
+        }
         if (db.nav.section !== "notes") {
             setSelectedId("");
             return;
@@ -155,8 +187,16 @@ export default function NotesPreview({ text }: { text: Text }) {
             const target = db.notes.find((note) => note.id === db.nav.note);
             if (target) open(target);
         }
-    }, [db.nav.stamp]);
-    function create(goal = "", task = db.nav.task) {
+    }, [db.nav.stamp, taskId, resourceNoteId]);
+    function requestSelection(id: string) {
+        if (saving) return;
+        if (drafts[selectedId]) {
+            setPendingSelection(id);
+            setConfirmExit(true);
+        } else if (id === "new") create("", taskId);
+        else { setSelectedId(id); setError(""); }
+    }
+    function create(goal = "", task = contextTask) {
         const id = `note-${Date.now()}`;
         const row: Note = {
             id,
@@ -239,7 +279,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                     : note.title + " " + note.content;
             return (
                 !note.archived &&
-                (!db.nav.task || note.task === db.nav.task || db.tasks.find(task => task.id === db.nav.task)?.noteIds?.includes(note.id)) &&
+                (!contextTask || note.task === contextTask || db.tasks.find(task => task.id === contextTask)?.noteIds?.includes(note.id) || (!inline && db.tasks.find(task => task.id === contextTask)?.resourceNoteIds?.includes(note.id))) &&
                 (!query ||
                     privateText
                         .toLocaleLowerCase(db.locale)
@@ -347,9 +387,10 @@ export default function NotesPreview({ text }: { text: Text }) {
     );
     return (
         <div
-            className="review-notes workspace"
+            className={inline ? "review-notes task-notes-inline" : resourceNoteId ? "review-notes" : "review-notes workspace"}
             style={{ "--font-size-note": noteSize } as React.CSSProperties}
         >
+            {!embedded && <>
             <Header
                 title={text("Notes", "Ghi chú")}
                 description={text(
@@ -673,10 +714,10 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                     <article
                                                         key={note.id}
                                                         className="review-note-card"
+                                                        data-note-neutral={["neutral", "#ffffff"].includes(note.color.toLowerCase()) || undefined}
                                                         style={{
-                                                            background:
-                                                                note.color,
-                                                        }}
+                                                            "--note-tint": noteTints[note.color.toLowerCase()] || (/^#[0-9a-f]{6}$/i.test(note.color) ? note.color : "#ffffff"),
+                                                        } as CSSProperties}
                                                     >
                                                         <button
                                                             className="review-note-card-open"
@@ -921,8 +962,20 @@ export default function NotesPreview({ text }: { text: Text }) {
                     )}
                 </section>
             </div>
+            </>}
+            {inline && <>
+                <div className="task-notes-picker">
+                    <h2 className="task-note-caption">{text("Task note", "Ghi chú công việc")}</h2>
+                    {!note && <button type="button" className="button button-quiet" disabled={saving}
+                        onClick={() => create("", taskId)}><Plus size={16} />{text("Create note", "Tạo ghi chú")}</button>}
+                    {drafts[selectedId] && <button type="button" className="text-button task-note-discard" disabled={saving}
+                        onClick={() => requestSelection(selectedId)}>{text("Discard draft", "Bỏ bản nháp")}</button>}
+                </div>
+                {!filtered.length && <p className="subtle-copy">{text("This task has no attached note yet.", "Công việc này chưa có ghi chú đi kèm.")}</p>}
+                {error && <p className="field-error" role="alert">{error}</p>}
+            </>}
             {note && (
-                <Dialog
+                <NoteEditorFrame inline={inline}
                     title={
                         locked
                             ? text("Locked note", "Ghi chú đã khóa")
@@ -1224,6 +1277,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                     )}
                                                 </div>
                                             </section>
+                                            {!inline && <>
                                             <details className="goal-information-section">
                                                 <summary>
                                                     {text(
@@ -1433,8 +1487,9 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                     </p>
                                                 )}
                                             </details>
+                                            </>}
                                         </article>
-                                        <aside className="review-note-side review-note-metadata">
+                                        {!inline && <aside className="review-note-side review-note-metadata">
                                             <section className="planning-panel">
                                                 <h2>
                                                     {text(
@@ -1592,7 +1647,9 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                         {db.tasks
                                                             .filter(
                                                                 (task) =>
-                                                                    !task.archived,
+                                                                    !task.archived &&
+                                                                    (task.noteIds || []).every(id => id === note.id) &&
+                                                                    !(task.resourceNoteIds || []).includes(note.id),
                                                             )
                                                             .map((task) => (
                                                                 <option
@@ -1868,13 +1925,13 @@ export default function NotesPreview({ text }: { text: Text }) {
                                                     </button>
                                                 </details>
                                             )}
-                                        </aside>
+                                        </aside>}
                                     </div>
                                 </>
                             )}
                         </>
 
-                        <div className="review-note-modal-actions">
+                        {!inline && <div className="review-note-modal-actions">
                             {db.live && note.permission !== "owner" && (
                                 <button
                                     className="button button-quiet"
@@ -1919,21 +1976,21 @@ export default function NotesPreview({ text }: { text: Text }) {
                                 <LockKeyhole size={17} />
                                 {text("Note password", "Mật khẩu ghi chú")}
                             </button>
-                        </div>
+                        </div>}
                     </div>
-                </Dialog>
+                </NoteEditorFrame>
             )}
             {confirmExit && note && (
                 <Confirm text={text}
                     title={text("Discard unsaved changes?", "Bỏ thay đổi chưa lưu?")}
                     cancelLabel={text("Keep editing", "Tiếp tục chỉnh sửa")}
-                    label={text("Discard and exit", "Bỏ thay đổi và thoát")}
+                    label={pendingSelection !== null ? text("Discard draft", "Bỏ bản nháp") : text("Discard and exit", "Bỏ thay đổi và thoát")}
                     danger
-                    onClose={() => setConfirmExit(false)}
+                    onClose={() => { setConfirmExit(false); setPendingSelection(null); }}
                     onConfirm={discardAndClose}>
                     <p>{text(
-                        "Your changes have not been saved. Exiting will discard them.",
-                        "Các thay đổi của bạn chưa được lưu. Thoát sẽ bỏ những thay đổi này.",
+                        "Your changes have not been saved. Continuing will discard them.",
+                        "Các thay đổi của bạn chưa được lưu. Tiếp tục sẽ bỏ những thay đổi này.",
                     )}</p>
                 </Confirm>
             )}
@@ -2040,6 +2097,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                         setDialog(null);
                         setOpeningNote(false);
                         setError("");
+                        if (resourceNoteId && !selectedId) onResourceClose?.();
                     }}
                     onSubmit={async (form) => {
                         const values = new FormData(form);
@@ -2141,6 +2199,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                             await db.live.refresh();
                             setDialog(null);
                             setSelectedId("");
+                            if (resourceNoteId) onResourceClose?.();
                             return;
                         }
                         if (
@@ -2475,6 +2534,7 @@ export default function NotesPreview({ text }: { text: Text }) {
                             await db.live.discardNoteDraft(modalNote.id);
                         setSelectedId("");
                         setDialog(null);
+                        if (resourceNoteId) onResourceClose?.();
                     }}
                 >
                     <p>{modalNote.title}</p>

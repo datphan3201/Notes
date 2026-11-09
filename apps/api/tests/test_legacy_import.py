@@ -212,7 +212,9 @@ def test_legacy_task_working_text_becomes_a_linked_note(tmp_path, db):
     )
     import_snapshot(root, "planner_test")
     notes = list(db.scalars(select(Note).where(Note.task_id == "legacy-task")))
-    assert len(notes) == 2
-    assert {note.content for note in notes} == {"Other content", "- [ ] Legacy task content"}
+    assert len(notes) == 1
+    assert notes[0].content == "- [ ] Legacy task content"
+    assert db.get(Task, "legacy-task").details["resource_note_ids"] == ["linked-note"]
+    assert db.get(Note, "linked-note").task_id is None
     assert db.get(Task, "legacy-task").working_note == ""
     assert db.get(Note, "linked-note").title == "Keep existing"
