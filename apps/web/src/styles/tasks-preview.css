@@ -138,7 +138,7 @@
 .preview-full-task-row {
     position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 14px;
     padding: 15px 12px;
     margin-bottom: 16px;
@@ -220,11 +220,11 @@
     font-size: 10px;
 }
 .preview-full-task-actions {
-    grid-column: 2;
+    grid-column: auto;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 8px;
     min-width: 0;
 }
@@ -243,7 +243,7 @@
 }
 .preview-task-row-importance {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 6px;
 }
@@ -801,7 +801,8 @@
     }
     .preview-full-task-actions {
         grid-column: 2;
-        justify-content: flex-start;
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
     .preview-series-card {
         flex-direction: column;

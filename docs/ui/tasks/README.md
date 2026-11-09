@@ -8,7 +8,7 @@ Tasks have independent dates, checklist, linked Notes, importance, primary Goal/
 
 The collection supports time views, search, status, sorting and Goal grouping. The shared floating editor preserves page context; `/tasks/{id}` provides the detailed working surface. Capture and manual plan selection can be committed in one workspace batch. See [filters](filters.md), [capture](capture.md), [detail](detail.md) and [recurrence](repeating.md).
 
-Task rows show labeled This week, Today and Actions controls. Selected plans have a checkmark and accent treatment; selections use explicit daily/weekly membership, not inferred due dates. Completed Tasks disable plan changes. Importance is labeled and uses the shared star control; actions wrap beneath Task text so labels remain readable on narrow screens.
+Task rows show labeled This week, Today and Actions controls. Selected plans have a checkmark and accent treatment; selections use explicit daily/weekly membership, not inferred due dates. Completed Tasks disable plan changes. Importance is labeled and uses the shared star control; actions stay on the right in the same row on wide desktop screens, while compact/tablet and mobile layouts move/wrap them below Task text.
 
 <!-- BEGIN GENERATED TRACE -->
 
