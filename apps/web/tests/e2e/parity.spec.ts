@@ -119,7 +119,7 @@ test("workspace refresh preserves an assistant opened while reports are loading"
         await gate;
         await route.fulfill({ response });
     });
-    await page.getByRole("button", { name: "Tải lại", exact: true }).click();
+    await navigate(page, "Lịch");
     await loading;
     await page.getByRole("button", { name: "Hỏi AI", exact: true }).click();
     const message = page.getByRole("textbox", { name: "Tin nhắn", exact: true });
