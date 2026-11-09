@@ -12,7 +12,7 @@ import {
     Trash2,
 } from "lucide-react";
 import NotesPreview from "./notes";
-import { FormDialog } from "./ui";
+import { FormDialog, Stars } from "./ui";
 import { Button } from "../ui/button";
 import { statuses } from "./dashboard-data";
 import {
@@ -149,13 +149,7 @@ export default function TaskPreviewDetail({
                         {task.due &&
                             ` · ${text("Due", "Hạn")} ${formatTaskDate(task.due, locale)}`}{" "}
                         ·{" "}
-                        <span
-                            className="preview-task-stars"
-                            aria-label={`${text("Importance", "Mức quan trọng")} ${task.importance}/5`}
-                        >
-                            {"★".repeat(task.importance)}
-                            {"☆".repeat(5 - task.importance)}
-                        </span>
+                        <Stars value={task.importance} text={text} />
                     </p>
                 </div>
                 <div className="action-row">

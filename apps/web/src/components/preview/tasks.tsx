@@ -13,7 +13,7 @@ import {
     ClipboardList,
     MoreHorizontal,
     Pencil,
-    Pin,
+    CalendarDays,
     Plus,
     RefreshCw,
     Repeat2,
@@ -21,7 +21,7 @@ import {
     X,
 } from "lucide-react";
 import Dialog from "../dialog";
-import { Confirm } from "./ui";
+import { Confirm, Stars } from "./ui";
 import { statuses, type Label } from "./dashboard-data";
 import TaskPreviewEditor from "./task-editor";
 import TaskPreviewDetail from "./task-detail";
@@ -31,7 +31,6 @@ import {
     draftFromRecord,
     formatTaskDate,
     frequencies,
-    isToday,
     matchesTaskView,
     nextDates,
     recordFromDraft,
@@ -422,79 +421,35 @@ export default function TasksPreview({
             </div>
             <div className="preview-full-task-actions">
                 <button
-                    className="icon-button"
+                    type="button"
+                    className="button button-quiet preview-task-plan-action"
                     aria-pressed={task.weekly}
-                    aria-label={
-                        text(
-                            task.weekly
-                                ? "Selected for this week: "
-                                : "Select for this week: ",
-                            task.weekly
-                                ? "Đã chọn cho tuần này: "
-                                : "Chọn cho tuần này: ",
-                        ) + text(...task.title)
-                    }
-                    title={text(
-                        task.weekly
-                            ? "Selected for this week"
-                            : "Select for this week",
-                        task.weekly
-                            ? "Đã chọn cho tuần này"
-                            : "Chọn cho tuần này",
-                    )}
+                    disabled={task.status === "Done"}
+                    aria-label={text(task.weekly ? "Selected for this week: " : "Select for this week: ", task.weekly ? "Đã chọn cho tuần này: " : "Chọn cho tuần này: ") + text(...task.title)}
+                    title={text(task.weekly ? "Remove from this week, including today's selection" : "Add to this week's plan", task.weekly ? "Bỏ khỏi tuần này, bao gồm lựa chọn hôm nay" : "Thêm vào kế hoạch tuần này")}
                     onClick={() => plan(task, "week")}
                 >
-                    <Pin
-                        size={16}
-                        fill={task.weekly ? "currentColor" : "none"}
-                    />
+                    <CalendarDays size={16} aria-hidden="true" />
+                    {text("This week", "Tuần này")}
+                    {task.weekly && <Check size={14} aria-hidden="true" />}
                 </button>
                 <button
-                    className="icon-button"
-                    aria-pressed={isToday(task, shared.today)}
-                    disabled={
-                        task.status === "Done" ||
-                        (isToday(task, shared.today) && !task.daily)
-                    }
-                    aria-label={
-                        text(
-                            isToday(task, shared.today)
-                                ? "In today's plan: "
-                                : "Add for today: ",
-                            isToday(task, shared.today)
-                                ? "Đã có trong hôm nay: "
-                                : "Thêm cho hôm nay: ",
-                        ) + text(...task.title)
-                    }
-                    title={text(
-                        isToday(task, shared.today)
-                            ? "In today's plan"
-                            : "Add for today",
-                        isToday(task, shared.today)
-                            ? "Đã có trong hôm nay"
-                            : "Thêm cho hôm nay",
-                    )}
+                    type="button"
+                    className="button button-quiet preview-task-plan-action"
+                    aria-pressed={task.daily}
+                    disabled={task.status === "Done"}
+                    aria-label={text(task.daily ? "In today's plan: " : "Add for today: ", task.daily ? "Đã có trong hôm nay: " : "Thêm cho hôm nay: ") + text(...task.title)}
+                    title={text(task.daily ? "Remove from today; keep the weekly selection" : "Add to today's plan", task.daily ? "Bỏ khỏi hôm nay, giữ lựa chọn trong tuần" : "Thêm vào kế hoạch hôm nay")}
                     onClick={() => plan(task, "today")}
                 >
-                    <Sun size={17} />
+                    <Sun size={16} aria-hidden="true" />
+                    {text("Today", "Hôm nay")}
+                    {task.daily && <Check size={14} aria-hidden="true" />}
                 </button>
-                <div
-                    className="preview-task-row-stars"
-                    role="group"
-                    aria-label={text("Importance", "Mức quan trọng")}
-                >
-                    {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                            key={value}
-                            aria-label={`${text("Importance", "Mức quan trọng")} ${value}/5: ${text(...task.title)}`}
-                            aria-pressed={task.importance === value}
-                            onClick={() =>
-                                update(task.id, { importance: value })
-                            }
-                        >
-                            {value <= task.importance ? "★" : "☆"}
-                        </button>
-                    ))}
+                <div className="preview-task-row-importance">
+                    <span>{text("Importance", "Mức quan trọng")} {task.importance}/5</span>
+                    <Stars value={task.importance} text={text} labelSuffix={text(...task.title)}
+                        onChange={importance => update(task.id, { importance })} />
                 </div>
                 <details
                     className="preview-task-row-menu"
@@ -504,14 +459,11 @@ export default function TasksPreview({
                     }}
                 >
                     <summary
-                        className="icon-button"
-                        aria-label={
-                            text("More actions: ", "Thao tác khác: ") +
-                            text(...task.title)
-                        }
-                        title={text("More actions", "Thao tác khác")}
+                        className="button button-quiet preview-task-menu-trigger"
+                        aria-label={text("More actions: ", "Thao tác khác: ") + text(...task.title)}
                     >
-                        <MoreHorizontal size={18} />
+                        <MoreHorizontal size={16} aria-hidden="true" />
+                        {text("Actions", "Thao tác")}
                     </summary>
                     <div className="preview-task-row-menu-panel">
                         <button onClick={() => openDetail(task.id)}>

@@ -249,7 +249,7 @@
     align-items: center;
     white-space: nowrap;
     font-size: 14px;
-    color: #f59e0b;
+    color: var(--importance-color);
 }
 .review-stars button {
     border: 0;
@@ -2814,7 +2814,7 @@
     flex: 0 1 auto;
 }
 .preview-workspace .review-planning .goal-tree-meta .review-stars {
-    color: #f59e0b;
+    color: var(--importance-color);
 }
 .preview-workspace .review-appearance {
     gap: 16px;

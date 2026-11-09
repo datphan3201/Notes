@@ -8,6 +8,8 @@ Tasks have independent dates, checklist, linked Notes, importance, primary Goal/
 
 The collection supports time views, search, status, sorting and Goal grouping. The shared floating editor preserves page context; `/tasks/{id}` provides the detailed working surface. Capture and manual plan selection can be committed in one workspace batch. See [filters](filters.md), [capture](capture.md), [detail](detail.md) and [recurrence](repeating.md).
 
+Task rows show labeled This week, Today and Actions controls. Selected plans have a checkmark and accent treatment; selections use explicit daily/weekly membership, not inferred due dates. Completed Tasks disable plan changes. Importance is labeled and uses the shared star control; actions wrap beneath Task text so labels remain readable on narrow screens.
+
 <!-- BEGIN GENERATED TRACE -->
 
 ## Source and verification map
@@ -16,7 +18,7 @@ Trace ID: `tasks`. Test references identify coverage to inspect; they are not ex
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L58) — `export default function TasksPreview({` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L57) — `export default function TasksPreview({` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

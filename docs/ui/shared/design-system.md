@@ -16,6 +16,8 @@ Planner's component library is the shared implementation for reusable interface 
 
 Import from `@/components/ui`. Components accept already localized content; they do not choose the account language or perform business mutations. Existing imports from `components/preview/ui.tsx` re-export the common implementations, preserving feature callers while removing duplicate generic implementations. Feature-specific entity icons/pickers remain in that feature module.
 
+Importance stars share the `--importance-color` semantic token, derived from the active theme accent. Shared `Stars` rendering is used by Task rows, Task editing/detail and planning/Habit controls; retained alternate SVG/text implementations use the same token. Importance colors no longer carry separate fixed gold/light/dark overrides.
+
 ## Component catalogue
 
 | Component | Use and contract |

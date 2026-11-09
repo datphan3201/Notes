@@ -7,6 +7,7 @@
     --border: #e1e7eb;
     --accent: #216e80;
     --accent-soft: #e8f2f5;
+    --importance-color: var(--accent);
     --on-accent: #ffffff;
     /* Same path as the #icon-check sprite symbol. */
     --check-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 4 4L19 6'/%3E%3C/svg%3E");

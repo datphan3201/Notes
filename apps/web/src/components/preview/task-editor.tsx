@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlarmClock, CalendarDays, Check, Repeat2 } from "lucide-react";
 import Dialog from "../dialog";
+import { Stars } from "./ui";
 import { weekdays } from "./dashboard-data";
 import {
     demoToday as fixtureToday,
@@ -1024,23 +1025,8 @@ export default function TaskPreviewEditor({
                                     <legend>
                                         {text("Importance", "Mức quan trọng")}
                                     </legend>
-                                    {[1, 2, 3, 4, 5].map((value) => (
-                                        <button
-                                            key={value}
-                                            type="button"
-                                            aria-label={`${text("Importance", "Mức quan trọng")} ${value}/5`}
-                                            aria-pressed={
-                                                draft.importance === value
-                                            }
-                                            onClick={() =>
-                                                change("importance", value)
-                                            }
-                                        >
-                                            {value <= draft.importance
-                                                ? "★"
-                                                : "☆"}
-                                        </button>
-                                    ))}
+                                    <Stars value={draft.importance} text={text}
+                                        onChange={value => change("importance", value)} />
                                 </fieldset>
                                 <label className="field">
                                     {text(

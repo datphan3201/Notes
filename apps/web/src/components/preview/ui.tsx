@@ -312,7 +312,9 @@ export function Stars({
     value,
     text,
     onChange,
+    labelSuffix = "",
 }: {
+    labelSuffix?: string;
     value: number;
     text: Text;
     onChange?: (value: number) => void;
@@ -328,8 +330,9 @@ export function Stars({
                     <button
                         key={star}
                         type="button"
+                        title={`${text("Importance", "Mức quan trọng")} ${star}/5`}
                         aria-pressed={value === star}
-                        aria-label={`${text("Importance", "Mức quan trọng")} ${star}/5`}
+                        aria-label={`${text("Importance", "Mức quan trọng")} ${star}/5${labelSuffix ? `: ${labelSuffix}` : ""}`}
                         onClick={() => onChange(star)}
                     >
                         {star <= value ? "★" : "☆"}

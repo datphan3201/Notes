@@ -7,6 +7,7 @@ Entries describe their own historical stage. In particular, earlier 2026-11-08 p
 ## 2026-11-09
 
 ### Changed
+- Replaced cryptic Task-row plan/menu icons with labeled Today, This week and Actions controls, explicit selected indicators and wrapping actions beneath Task text. Unified importance-star colors through a theme-accent token and shared Task/planning/Habit star rendering. Task-row plan membership now matches the explicit detail/picker selections, including dated Tasks, and completed Tasks disable plan changes.
 - Updated Calendar floating-control regression coverage to use its direct Task picker toggle instead of the retired Page actions menu.
 - Fixed Milestone header menus being clipped by the shared header: only illustrated headers clip their backgrounds. Milestone title/actions now wrap, with mobile menus aligned inside the viewport.
 - Simplified Task completion to Not completed / Completed across Task views, filters, editing, API schemas, assistant-generated schemas, recurrence templates and demo/import paths. Revision `0009` converts previous doing/blocked Tasks/templates to todo without changing completed work, content, versions or timestamps. Goal/Milestone progress states remain independent. Removed the redundant editable status dropdown; existing Complete/Reopen confirmations remain. ISSUE-078 is superseded by rejecting all removed Task statuses.

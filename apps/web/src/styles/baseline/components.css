@@ -235,7 +235,7 @@
     flex: 0 0 auto;
     gap: 1px;
     align-items: center;
-    color: #f59e0b;
+    color: var(--importance-color);
     vertical-align: middle;
 }
 .star-rating .star-icon {

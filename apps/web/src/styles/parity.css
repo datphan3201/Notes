@@ -93,7 +93,7 @@
     background: var(--accent-soft);
 }
 .baseline-workspace .task-importance {
-    color: #c48818;
+    color: var(--importance-color);
     white-space: nowrap;
 }
 .baseline-workspace .row-menu {
