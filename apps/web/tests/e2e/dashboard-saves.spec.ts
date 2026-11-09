@@ -12,7 +12,7 @@ async function dashboardHabits(page: Page) {
     const first = await createEntity(page, "habits", { title: "First daily habit" });
     const second = await createEntity(page, "habits", { title: "Second daily habit" });
     await navigate(page, "Tổng quan");
-    await expect(page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).and(page.locator(".is-today"))).toBeVisible();
     await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
     return { first, second };
 }
@@ -52,21 +52,21 @@ test("Dashboard stays interactive and coalesces edits across a slow save and ref
         await route.fulfill({ response });
     });
     try {
-        await page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).click();
+        await page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).and(page.locator(".is-today")).click();
         await writeHeld.promise;
         await expect(page.locator(".live-save-status")).toHaveCount(0);
         await expect(page.getByText("Đang lưu… / Saving…", { exact: true })).toHaveCount(0);
         await expect(page.locator('[data-workspace-saving="true"]')).toBeVisible();
-        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).click({ timeout: 1500 });
-        await expect(page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ })).toHaveAttribute("aria-pressed", "true");
-        await page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ }).click();
-        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).click();
+        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).and(page.locator(".is-today")).click({ timeout: 1500 });
+        await expect(page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ }).and(page.locator(".is-today"))).toHaveAttribute("aria-pressed", "true");
+        await page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ }).and(page.locator(".is-today")).click();
+        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).and(page.locator(".is-today")).click();
         await page.getByRole("tab", { name: "Hàng tuần", exact: true }).click();
         await page.getByRole("tab", { name: "Hàng ngày", exact: true }).click();
         expect(writes).toBe(1);
         releaseWrite.release();
         await refreshHeld.promise;
-        await page.getByRole("button", { name: /^First daily habit\..*Bỏ điểm danh$/ }).click();
+        await page.getByRole("button", { name: /^First daily habit\..*Bỏ điểm danh$/ }).and(page.locator(".is-today")).click();
         releaseRefresh.release();
         await expect.poll(() => checkins(page)).toEqual([second.id]);
         await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
@@ -75,8 +75,8 @@ test("Dashboard stays interactive and coalesces edits across a slow save and ref
         expect(writes).toBe(2);
         expect(maxActive).toBe(1);
         await page.reload();
-        await expect(page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ })).toHaveAttribute("aria-pressed", "true");
-        await expect(page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ })).toHaveAttribute("aria-pressed", "false");
+        await expect(page.getByRole("button", { name: /^Second daily habit\..*Bỏ điểm danh$/ }).and(page.locator(".is-today"))).toHaveAttribute("aria-pressed", "true");
+        await expect(page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).and(page.locator(".is-today"))).toHaveAttribute("aria-pressed", "false");
     } finally {
         releaseWrite.release();
         releaseRefresh.release();
@@ -95,16 +95,16 @@ test("Dashboard failed save retains later edits and retries only on explicit act
         } else await route.continue();
     });
     try {
-        await page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).click();
+        await page.getByRole("button", { name: /^First daily habit\..*Điểm danh$/ }).and(page.locator(".is-today")).click();
         await held.promise;
-        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).click({ timeout: 1500 });
+        await page.getByRole("button", { name: /^Second daily habit\..*Điểm danh$/ }).and(page.locator(".is-today")).click({ timeout: 1500 });
         release.release();
         const error = page.locator(".live-save-error");
         await expect(error).toContainText("Không thể lưu thay đổi.");
         await expect(error.getByRole("button", { name: "Thử lưu lại", exact: true })).toBeVisible();
         await expect(page.locator('[data-workspace-saving="true"]')).toHaveCount(0);
         for (const name of ["First daily habit", "Second daily habit"])
-            await expect(page.getByRole("button", { name: new RegExp(`^${name}\\..*Bỏ điểm danh$`) })).toHaveAttribute("aria-pressed", "true");
+            await expect(page.getByRole("button", { name: new RegExp(`^${name}\\..*Bỏ điểm danh$`) }).and(page.locator(".is-today"))).toHaveAttribute("aria-pressed", "true");
         expect(await checkins(page)).toEqual([]);
         expect(writes).toBe(1);
         await error.getByRole("button", { name: "Thử lưu lại", exact: true }).click();

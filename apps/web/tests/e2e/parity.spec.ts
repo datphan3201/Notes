@@ -40,7 +40,7 @@ test("time filters and manual daily planning persist without changing dates", as
     await signInFixture(page);
     const task = await create(page, "tasks", { title: "An inbox task" });
     await navigate(page, "Công việc");
-    await page.getByRole("button", { name: /^Chưa lên lịch/ }).click();
+    await page.getByRole("button", { name: /^Khác/ }).click();
     await expect(
         page.getByRole("button", { name: "An inbox task", exact: true }),
     ).toBeVisible();
@@ -255,6 +255,10 @@ test("Notes pin, tag filtering and list view remain functional after reload", as
         (r) =>
             r.url().endsWith("/preferences") && r.request().method() === "PUT",
     );
+    const toggle = page.locator(".ui-collection-toggle").last();
+    if (await toggle.isVisible()) {
+        await toggle.click();
+    }
     await page.getByRole("button", { name: "Danh sách", exact: true }).click();
     expect((await response).status()).toBe(200);
     await page.reload();

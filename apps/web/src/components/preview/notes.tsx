@@ -590,33 +590,34 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                 </aside>
                 <section className="review-notes-results">
                     <CollectionToolbar className="notes-toolbar" label={text("Find notes", "Tìm ghi chú")} filtersLabel={text("Filters and sorting", "Lọc và sắp xếp")}
-                        search={<div className="search-field">
-                            <Search size={18} />
-                            <input
-                                type="search"
-                                aria-label={text("Search notes", "Tìm ghi chú")}
-                                placeholder={text(
-                                    "Search titles and content",
-                                    "Tìm theo tiêu đề và nội dung",
+                        search={<>
+                            <button
+                                className="icon-button review-mobile-note-filters"
+                                aria-label={text(
+                                    "Show note filters",
+                                    "Hiện bộ lọc ghi chú",
                                 )}
-                                value={query}
-                                onChange={(event) =>
-                                    setQuery(event.target.value)
-                                }
-                            />
-                        </div>}>
-
-                        <button
-                            className="icon-button review-mobile-note-filters"
-                            aria-label={text(
-                                "Show note filters",
-                                "Hiện bộ lọc ghi chú",
-                            )}
-                            aria-expanded={tagsOpen}
-                            onClick={() => setTagsOpen(!tagsOpen)}
-                        >
-                            <BaselineIcon name="settings" />
-                        </button>
+                                aria-expanded={tagsOpen}
+                                onClick={() => setTagsOpen(!tagsOpen)}
+                            >
+                                <BaselineIcon name="settings" />
+                            </button>
+                            <div className="search-field">
+                                <Search size={18} />
+                                <input
+                                    type="search"
+                                    aria-label={text("Search notes", "Tìm ghi chú")}
+                                    placeholder={text(
+                                        "Search titles and content",
+                                        "Tìm theo tiêu đề và nội dung",
+                                    )}
+                                    value={query}
+                                    onChange={(event) =>
+                                        setQuery(event.target.value)
+                                    }
+                                />
+                            </div>
+                        </>}>
 
                         <button
                             className="icon-button"
