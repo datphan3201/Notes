@@ -60,3 +60,6 @@ Thumbs.db
 # Vercel project linkage/build verification is machine-local.
 .vercel/
 apps/web/.next-vercel-check/
+
+# Private operator backups and local credentials.
+/.private/
