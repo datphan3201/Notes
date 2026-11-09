@@ -290,12 +290,6 @@ export default function TaskPreviewEditor({
                                         }
                                     >
                                         {text(...parent.label)}
-                                        {completedParents.includes(parent.goal)
-                                            ? text(
-                                                  " · Completed",
-                                                  " · Đã hoàn thành",
-                                              )
-                                            : ""}
                                     </option>
                                 ))}
                             </select>
@@ -954,15 +948,15 @@ export default function TaskPreviewEditor({
                                                         </div>
                                                         <small>
                                                             {text(
-                                                                "Calendar-date preview · Plan individual occurrences from the task list.",
-                                                                "Xem trước ngày theo lịch · Chọn kế hoạch cho từng lần lặp trong danh sách công việc.",
+                                                                "Plan individual occurrences from the task list.",
+                                                                "Chọn kế hoạch cho từng lần lặp trong danh sách công việc.",
                                                             )}
                                                         </small>
                                                     </div>
                                                     <label className="field">
                                                         {text(
-                                                            "Checklist template · one item per line",
-                                                            "Mẫu danh sách kiểm tra · mỗi dòng một mục",
+                                                            "One checklist item per line",
+                                                            "Mỗi dòng một mục kiểm tra",
                                                         )}
                                                         <textarea
                                                             rows={3}

@@ -15,9 +15,9 @@ Trace ID: `auth.two-factor`. Test references identify coverage to inspect; they 
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/auth-form.tsx](../../../apps/web/src/components/auth-form.tsx#L23) — `export default function AuthForm({` |
-| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L355) — `def complete_login(` |
-| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L374) — `def email_login_code(` |
-| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L56) — `def verify_totp(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L362) — `def complete_login(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L381) — `def email_login_code(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L57) — `def verify_totp(` |
 | Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
 | Related tests | [apps/api/tests/test_auth_refinement.py](../../../apps/api/tests/test_auth_refinement.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

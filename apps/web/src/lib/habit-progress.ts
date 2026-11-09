@@ -4,7 +4,7 @@ import type { Habit } from "../components/preview/workspace-data";
 export function habitStreak(habit: Habit, today: string): number {
     const done = new Set(habit.checkins),
         rest = new Set(habit.rests);
-    const since = habit.created || [...done, ...rest].sort()[0] || today;
+    const since = [habit.created, ...done, ...rest].filter(Boolean).sort()[0] || today;
     if (habit.frequency === "daily") {
         let count = 0;
         for (let day = today; day >= since; day = addDays(day, -1)) {

@@ -43,3 +43,19 @@
     bottom: calc(92px + env(safe-area-inset-bottom));
     max-height: min(660px, calc(100dvh - 116px - env(safe-area-inset-bottom)));
 }
+
+.task-picker-body { display: contents; }
+.task-picker-body[hidden] { display: none; }
+.task-picker-heading h2 { min-width: 0; font-size: var(--font-size-ui); }
+.task-picker-heading > .icon-button { flex-shrink: 0; width: 36px; min-height: 44px; padding: 6px; }
+.task-picker-secondary-filters > summary { min-height: 44px; padding: 10px 0; cursor: pointer; color: var(--accent); }
+.task-picker-secondary-filters[open] { display: grid; gap: 10px; }
+.task-picker-secondary-filters > :not(summary) { margin-bottom: 10px; }
+.task-picker-minimized-destination { margin: 0; padding: 8px 16px; font-size: var(--font-size-caption); color: var(--muted); overflow-wrap: anywhere; }
+.floating-task-picker[data-size='expanded'] { inset: 12px; width: auto; height: auto; max-height: none; }
+.floating-task-picker[data-size='minimized'] { height: auto; }
+@media (max-width: 800px) {
+    .floating-task-picker[data-size='compact'] { max-height: 50dvh; }
+    .floating-task-picker[data-size='compact'] .task-picker-controls { max-height: 26dvh; }
+    .floating-task-picker[data-size='compact'] .task-picker-footer { padding: 8px 12px; }
+}

@@ -63,7 +63,6 @@
 .note-preview-text { flex: 1; display: -webkit-box; min-width: 0; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 [data-preview-kind='text'] .note-preview-text { -webkit-line-clamp: 3; }
 .note-preview-more { line-height: 1; }
-.review-note-card .note-preview-box.is-checked { color: inherit; }
 .note-preview-line { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
 [data-preview-kind='checkboxes'] .note-preview-box { margin-top: .35em; }
 .note-preview-line > .note-preview-box { flex-shrink: 0; }
@@ -74,7 +73,7 @@
     .note-format-button { width: 40px; height: 44px; }
     .rich-note-toolbar select { min-height: 44px; }
 }
-.note-preview-box { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border: 1px solid currentColor; border-radius: 3px; }
-.note-preview-box.is-checked { color: var(--accent); }
+.note-preview-box { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; margin-right: 0; color: inherit; border: 1px solid currentColor; border-radius: 3px; }
+.note-preview-box.is-checked { color: var(--on-accent); background: var(--accent); border-color: var(--accent); }
 .review-note-card .note-card-preview { margin: 0; font-size: 13px; line-height: 1.8; color: inherit; flex: 0 1 auto; width: 100%; }
 .review-note-save { margin-top: 10px; }

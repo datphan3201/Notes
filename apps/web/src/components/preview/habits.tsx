@@ -1,4 +1,5 @@
 "use client";
+import HabitCheckinDays from "../habit-checkin-days";
 import FloatingActions from "../floating-actions";
 import { timezones } from "@/lib/dates";
 import { useState } from "react";
@@ -24,7 +25,6 @@ import {
 } from "./ui";
 import type { Text } from "./shared";
 import { tagOptions as fixtureTags } from "./task-data";
-import { habitStreak } from "@/lib/habit-progress";
 export default function HabitsPreview({ text }: { text: Text }) {
     const db = usePreviewData();
     const tagOptions = db.live?.tags || fixtureTags;
@@ -48,7 +48,7 @@ export default function HabitsPreview({ text }: { text: Text }) {
         );
     const tracked = (habit: Habit, date: string) =>
         atHabitDate(habit, date) >=
-        (habit.created || [...habit.checkins, ...habit.rests].sort()[0] || day);
+        ([habit.created, ...habit.checkins, ...habit.rests].filter(Boolean).sort()[0] || day);
     const dayComplete = (date: string) => {
         const active = daily.filter((habit) => tracked(habit, date));
         return (
@@ -197,26 +197,7 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                     className="planning-list-item planning-list-item-wrap habit-row"
                                     key={habit.id}
                                 >
-                                    <button
-                                        className={`habit-tick ${habit.checkins.includes(day) ? "is-checked" : ""} ${habit.rests.includes(day) ? "is-rest" : ""}`}
-                                        role="checkbox"
-                                        aria-checked={habit.checkins.includes(
-                                            day,
-                                        )}
-                                        aria-label={
-                                            text(
-                                                "Check in or undo: ",
-                                                "Điểm danh hoặc bỏ: ",
-                                            ) + text(...habit.title)
-                                        }
-                                        onClick={() =>
-                                            db.checkHabit(habit.id, day)
-                                        }
-                                    >
-                                        <span className="habit-tick-circle">
-                                            <Check size={17} />
-                                        </span>
-                                    </button>
+
                                     <div className="habit-row-copy">
                                         <strong className="habit-row-name">
                                             <EntityIcon
@@ -266,11 +247,6 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                                       "this week",
                                                       "tuần này",
                                                   )}{" "}
-                                            · {text("Streak", "Chuỗi")}:{" "}
-                                            {habitStreak(habit, day)}{" "}
-                                            {habit.frequency === "daily"
-                                                ? text("days", "ngày")
-                                                : text("weeks", "tuần")}
                                         </small>
                                         {habit.goal && (
                                             <button
@@ -314,74 +290,13 @@ export default function HabitsPreview({ text }: { text: Text }) {
                                         {habit.rests.includes(day) && (
                                             <small className="habit-rest-note">
                                                 {text(
-                                                    "Rest day today · your streak is protected",
-                                                    "Hôm nay là ngày nghỉ · chuỗi của bạn được giữ",
+                                                    "Rest day today",
+                                                    "Hôm nay là ngày nghỉ",
                                                 )}
                                             </small>
                                         )}
                                     </div>
-                                    <div className="habit-checkin-days">
-                                        {dates.map((date) => {
-                                            const checked =
-                                                    habit.checkins.includes(
-                                                        date,
-                                                    ),
-                                                rested =
-                                                    habit.rests.includes(date),
-                                                future = date > day;
-                                            const state = checked
-                                                ? "checked"
-                                                : rested
-                                                  ? "rest"
-                                                  : date < day
-                                                    ? "missed"
-                                                    : "pending";
-                                            return (
-                                                <button
-                                                    className={`habit-checkin-day is-${state} ${future ? "is-future" : ""} ${date === day ? "is-today" : ""}`}
-                                                    key={date}
-                                                    title={dateLabel(
-                                                        date,
-                                                        db.locale,
-                                                        true,
-                                                    )}
-                                                    aria-label={`${text(...habit.title)} · ${dateLabel(date, db.locale, true)} · ${future ? text("Rest day", "Ngày nghỉ") : checked ? text("Undo check-in", "Bỏ điểm danh") : text("Check in", "Điểm danh")}`}
-                                                    aria-pressed={
-                                                        checked || rested
-                                                    }
-                                                    disabled={
-                                                        (!future && rested) ||
-                                                        (!!habit.created &&
-                                                            date <
-                                                                habit.created)
-                                                    }
-                                                    onClick={() =>
-                                                        future
-                                                            ? rest(habit, date)
-                                                            : db.checkHabit(
-                                                                  habit.id,
-                                                                  date,
-                                                              )
-                                                    }
-                                                >
-                                                    <span className="habit-checkin-dot">
-                                                        {checked ? (
-                                                            <Check size={12} />
-                                                        ) : rested ? (
-                                                            "R"
-                                                        ) : date < day ? (
-                                                            <X size={12} aria-hidden="true" />
-                                                        ) : (
-                                                            ""
-                                                        )}
-                                                    </span>
-                                                    <small>
-                                                        {weekday(date)}
-                                                    </small>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                    <HabitCheckinDays habit={habit} dates={dates} today={day} locale={db.locale} text={text} onCheck={db.checkHabit} onRest={rest} />
                                     <div className="habit-row-actions">
                                         <button
                                             className="button button-quiet"

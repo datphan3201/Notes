@@ -427,7 +427,7 @@ export default function Editor({
             <Dialog
                 title={
                     row
-                        ? `${t.details} · ${text(kindName)}`
+                        ? text(kindName)
                         : text(`New ${kindName.toLowerCase()}`)
                 }
                 onClose={() => {
@@ -1265,7 +1265,6 @@ export default function Editor({
                                                     key={person.id}
                                                 >
                                                     <span>
-                                                        {person.name} ·{" "}
                                                         {person.email}
                                                     </span>
                                                     <select

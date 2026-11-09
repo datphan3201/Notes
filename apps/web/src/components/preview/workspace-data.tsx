@@ -1,4 +1,5 @@
 "use client";
+import { DEFAULT_DASHBOARD, type DashboardPreferences } from "@/lib/dashboard-preferences";
 
 import { DEFAULT_TIMEZONE } from "@/lib/dates";
 
@@ -234,6 +235,7 @@ export type Data = {
     reviews: Review[];
     events: ActivityFact[];
     focus: string;
+    dashboard: DashboardPreferences;
     appearance: Appearance;
     appearancePreview: Appearance | null;
     profile: Profile;
@@ -623,6 +625,7 @@ function fixtures(locale: PreviewLocale, section: string): Data {
             at: `${addDays(day, -Math.floor(index * 0.85))}T09:00:00Z`,
         })),
         focus: "learning",
+        dashboard: { ...DEFAULT_DASHBOARD },
         appearance: {
             theme: "light",
             scene: "mountain",
@@ -885,8 +888,8 @@ export function PreviewDataProvider({
         {
             id: "",
             label: [
-                "Inbox · organize later",
-                "Hộp thư đến · sắp xếp sau",
+                "Inbox",
+                "Hộp thư đến",
             ] as Label,
             goal: "inbox",
         },

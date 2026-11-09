@@ -18,7 +18,7 @@ Trace ID: `tasks`. Test references identify coverage to inspect; they are not ex
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L57) — `export default function TasksPreview({` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L58) — `export default function TasksPreview({` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

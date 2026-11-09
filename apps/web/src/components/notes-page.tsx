@@ -170,32 +170,32 @@ export function NotesPage({ ctx }: { ctx: PageContext }) {
                                 {[
                                     [
                                         "updated:desc",
-                                        "Date modified · newest",
+                                        "Recently updated",
                                         "Sửa gần nhất",
                                     ],
                                     [
                                         "updated:asc",
-                                        "Date modified · oldest",
+                                        "Oldest updates",
                                         "Sửa cũ nhất",
                                     ],
                                     [
                                         "title:asc",
-                                        "Title · A to Z",
-                                        "Tiêu đề · A đến Z",
+                                        "Title A–Z",
+                                        "Tiêu đề A–Z",
                                     ],
                                     [
                                         "title:desc",
-                                        "Title · Z to A",
-                                        "Tiêu đề · Z đến A",
+                                        "Title Z–A",
+                                        "Tiêu đề Z–A",
                                     ],
                                     [
                                         "created:desc",
-                                        "Date created · newest",
+                                        "Recently created",
                                         "Tạo gần nhất",
                                     ],
                                     [
                                         "created:asc",
-                                        "Date created · oldest",
+                                        "Oldest created",
                                         "Tạo cũ nhất",
                                     ],
                                 ].map(([key, en, vi]) => (

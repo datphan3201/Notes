@@ -766,7 +766,7 @@ export default function LiveWorkspace() {
     const parents = [
         {
             id: "",
-            label: ["Inbox · organize later", "Hộp thư đến · sắp xếp sau"] as [
+            label: ["Inbox", "Hộp thư đến"] as [
                 string,
                 string,
             ],

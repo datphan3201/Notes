@@ -246,7 +246,7 @@ export function TasksPage({
                                 >
                                     <strong>{row.title}</strong>
                                     <small>
-                                        {row.frequency} · {row.state}
+                                        {row.state}
                                     </small>
                                 </button>
                                 {row.state !== "ended" && (

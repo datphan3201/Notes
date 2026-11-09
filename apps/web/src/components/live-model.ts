@@ -1,3 +1,4 @@
+import { DEFAULT_DASHBOARD } from "@/lib/dashboard-preferences";
 import type { Entity, Identity, Kind } from "@/lib/api";
 import { localDate, zonedInput, zonedInstant } from "@/lib/dates";
 import { inHistory, addDays, monday } from "@/lib/task-views";
@@ -371,6 +372,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         })),
         events,
         focus: s.focus || "",
+        dashboard: { ...DEFAULT_DASHBOARD, ...prefs.dashboard },
         appearance: {
             theme: user.theme,
             scene: prefs.visual_theme || "mountain",

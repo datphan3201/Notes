@@ -66,7 +66,7 @@ test("Repeating series can be archived, restored and permanently deleted through
     });
     const archiveSeries = async () => {
         await page.goto("/tasks");
-        await page.getByRole("button", { name: /^Lặp lại/ }).click();
+        await page.getByRole("button", { name: /^Chuỗi lặp/ }).click();
         await page.locator(".preview-series-card").filter({ hasText: row.title })
             .getByRole("button", { name: "Lưu trữ chuỗi", exact: true }).click();
         await page.getByRole("dialog").getByRole("button", { name: "Xác nhận", exact: true }).click();

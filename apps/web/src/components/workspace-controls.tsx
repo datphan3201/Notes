@@ -114,11 +114,7 @@ export function TaskRow({
             >
                 <strong>{task.title}</strong>
                 <small>
-                    {statusName(ctx, task.status)}
-                    {task.due_date &&
-                        ` · ${ctx.text("Due", "Hạn")} ${task.due_date}`}
-                    {task.scheduled_at &&
-                        ` · ${new Intl.DateTimeFormat(ctx.identity.user.locale, { dateStyle: "short", timeStyle: "short", timeZone: ctx.identity.user.timezone }).format(new Date(task.scheduled_at))}`}
+                    {task.due_date ? `${ctx.text("Due", "Hạn")} ${task.due_date}` : statusName(ctx, task.status)}
                 </small>
             </button>
             {!compact && (
@@ -306,8 +302,7 @@ export function HabitCard({
                 <small>
                     {habit.frequency === "weekly"
                         ? ctx.text("Weekly", "Hàng tuần")
-                        : ctx.text("Daily", "Hàng ngày")}{" "}
-                    · {habit.target}
+                        : ctx.text("Daily", "Hàng ngày")}
                 </small>
             </div>
             <QueryState locale={ctx.identity.user.locale} queries={[history]} />
@@ -429,8 +424,7 @@ export function ActivityPanel({ ctx }: { ctx: PageContext }) {
                             timeStyle: "short",
                             timeZone: ctx.identity.user.timezone,
                         }).format(new Date(item.created_at))}
-                    </time>{" "}
-                    · {item.kind}
+                    </time>
                 </p>
             ))}
             {!activities.isPending && !activities.data?.length && (

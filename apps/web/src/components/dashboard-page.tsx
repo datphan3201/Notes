@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api, type Dashboard, type Entity } from "@/lib/api";
+import { DEFAULT_DASHBOARD } from "@/lib/dashboard-preferences";
 import { localDate } from "@/lib/dates";
 import { addDays, monday } from "@/lib/task-views";
 import {
@@ -194,6 +195,7 @@ export function DashboardPage({ ctx }: { ctx: PageContext }) {
                         />
                     }
                     data={{
+                        dashboard: { ...DEFAULT_DASHBOARD, ...user.preferences.dashboard },
                         focus: dashboard.data!.focus_goal?.id || "",
                         setFocus: (value) => {
                             const id =

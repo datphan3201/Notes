@@ -13,7 +13,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="PLANNER_", env_file=".env", extra="ignore", hide_input_in_errors=True
+        env_prefix="PLANNER_",
+        env_file=(".env", "apps/api/.env", str(Path(__file__).resolve().parents[1] / ".env")),
+        extra="ignore",
+        hide_input_in_errors=True,
     )
     environment: Literal["development", "testing", "production"] = "development"
     database_url: str = "postgresql+psycopg://planner:planner-local-only@127.0.0.1:5433/planner_dev"

@@ -1,5 +1,5 @@
 "use client";
-import { PageHeaderFrame, Surface } from "../ui/layout";
+import { PageHeaderFrame, PageActionBar, Surface } from "../ui/layout";
 import { Input, Textarea, Select } from "../ui/field";
 import { timezones } from "@/lib/dates";
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ import {
 } from "./workspace-data";
 import { Confirm, Field, FormDialog, Tabs } from "./ui";
 import Dialog from "../dialog";
+import DashboardDisplaySettings from "../dashboard-display-settings";
 import LiveSecurity from "../live-security";
 import { forgetOfflineNotes } from "@/lib/offline-notes";
 import type { Text } from "./shared";
@@ -249,7 +250,9 @@ export default function SettingsPreview({
                         </p>
                     )}
                 </div>
-                {["profile", "appearance", "security"].includes(section) && (
+            </PageHeaderFrame>
+            {["profile", "appearance", "security"].includes(section) && (
+                <PageActionBar label={text("Account actions", "Thao tác tài khoản")}>
                     <button
                         className="button button-quiet"
                         onClick={() => db.navigate("dashboard")}
@@ -257,8 +260,8 @@ export default function SettingsPreview({
                         <ArrowLeft size={16} />
                         {text("Back to Dashboard", "Về Dashboard")}
                     </button>
-                )}
-            </PageHeaderFrame>
+                </PageActionBar>
+            )}
             {section === "history" && (
                 <button
                     className="text-button"
@@ -509,6 +512,7 @@ export default function SettingsPreview({
             )}
             {section === "appearance" && (
                 <>
+                    <DashboardDisplaySettings text={text} />
                     <Tabs
                         id="review-appearance"
                         value={appearanceTab}
@@ -1216,7 +1220,6 @@ export default function SettingsPreview({
                                             {text(...t.title)}
                                         </button>
                                         <small>
-                                            {dateLabel(t.due, db.locale)} ·{" "}
                                             {t.status === "Done"
                                                 ? text(
                                                       "Completed",
@@ -1376,13 +1379,15 @@ export default function SettingsPreview({
                                                 "Chuỗi lặp", "Ghi chú", "Đánh giá",
                                             ][archiveKinds.indexOf(row.kind)],
                                         )}
+                                    </small>
+                                    {count > 1 && <small>
                                         {count > 1
                                             ? text(
-                                                  ` · returns with ${count - 1} items`,
-                                                  ` · khôi phục cùng ${count - 1} mục`,
+                                                  `Returns with ${count - 1} items`,
+                                                  `Khôi phục cùng ${count - 1} mục`,
                                               )
                                             : ""}
-                                    </small>
+                                    </small>}
                                     {blocked && (
                                         <p className="field-error">{blocked}</p>
                                     )}

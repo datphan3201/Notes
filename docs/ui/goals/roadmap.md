@@ -2,7 +2,7 @@
 
 [Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-The fishbone head represents the Goal. Goal information, strategy and related work remain focused panels; Milestone branches open their Tasks. Visual placement does not establish dependency ordering.
+The fishbone head represents the Goal. Goal information, strategy and related work remain focused panels; Milestone branches open their Tasks. Visual placement does not establish dependency ordering. Milestone cards omit the Not started label; progress bars are centered across the card with equal side insets and anchored at its bottom, independently of title or prerequisite length.
 
 Primary hierarchy, related contributions and Milestone prerequisites are distinct relationships. Related work must stay within the authenticated account; cycles are rejected for Goal contribution graphs. Progress does not count the same Task both directly and through a Milestone. Editors preserve parent context and use the ordinary versioned workspace transaction.
 

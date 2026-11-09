@@ -53,19 +53,18 @@ test("Habit check-ins feed saved Review facts and finalized reflections persist"
     );
     await saved(page, () =>
         page
-            .getByRole("checkbox", {
-                name: "Điểm danh hoặc bỏ: Daily practice",
-                exact: true,
+            .getByRole("button", {
+                name: /^Daily practice\..*Điểm danh$/,
             })
+            .and(page.locator(".is-today"))
             .click(),
     );
     await page.reload();
     await expect(
-        page.getByRole("checkbox", {
-            name: "Điểm danh hoặc bỏ: Daily practice",
-            exact: true,
-        }),
-    ).toBeChecked();
+        page.getByRole("button", {
+            name: /^Daily practice\..*Bỏ điểm danh$/,
+        }).and(page.locator(".is-today")),
+    ).toHaveAttribute("aria-pressed", "true");
     await navigate(page, "Đánh giá");
     await page
         .getByRole("button", { name: "Đánh giá mới", exact: true })
@@ -130,7 +129,7 @@ test("repeating templates survive reload and pause, resume and end use the real 
     );
     fixtureAction({ action: "materialize", email: account.email });
     await page.reload();
-    await page.getByRole("button", { name: /^Lặp lại/ }).click();
+    await page.getByRole("button", { name: /^Chuỗi lặp/ }).click();
     await expect(
         page.getByRole("heading", { name: "Practice daily", exact: true }),
     ).toBeVisible();
@@ -321,7 +320,7 @@ test("offline Note edits survive reload and create a recovered copy instead of o
     await page.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(
         page.getByRole("dialog").locator(".save-status"),
-    ).toContainText("Ngoại tuyến");
+    ).toContainText("Chờ đồng bộ");
     await expect
         .poll(() =>
             page.evaluate(async () => {

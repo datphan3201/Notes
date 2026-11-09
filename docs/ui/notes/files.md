@@ -14,7 +14,7 @@ Trace ID: `notes.files`. Test references identify coverage to inspect; they are 
 
 | Role | Current source |
 | --- | --- |
-| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L39) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
+| Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L40) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L420) — `def upload_attachment(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L469) — `def download(` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L139) — `def remove_attachment(` |

@@ -14,7 +14,7 @@ Trace ID: `settings.history`. Test references identify coverage to inspect; they
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L50) — `export default function SettingsPreview({` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L51) — `export default function SettingsPreview({` |
 | API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L341) — `def retain_history(` |
 | API / domain | [apps/api/planner/moderation.py](../../../apps/api/planner/moderation.py#L351) — `def history_limit(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

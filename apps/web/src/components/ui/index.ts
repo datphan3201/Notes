@@ -1,6 +1,6 @@
 export { Button, IconButton } from "./button";
 export { Field, Input, Textarea, Select, TextField } from "./field";
-export { PageHeader, PageHeaderFrame, Surface } from "./layout";
+export { PageHeader, PageHeaderFrame, PageActionBar, Surface } from "./layout";
 export { Badge, Notice } from "./feedback";
 export { State, Tabs, Panel, FormDialog, Confirm, Toast } from "./patterns";
 export { default as Dialog } from "../dialog";
@@ -8,3 +8,4 @@ export { default as LoadingSpinner } from "../loading-spinner";
 export { default as FloatingActions } from "../floating-actions";
 export type { LocalizedText, ContentState } from "./types";
 export { FloatingTaskPicker, type PickableTask } from "./floating-task-picker";
+export { CollectionToolbar } from "./collection-toolbar";

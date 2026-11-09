@@ -1,5 +1,6 @@
 "use client";
 import { PageHeaderFrame } from "../ui/layout";
+import { CollectionToolbar } from "../ui/collection-toolbar";
 import FloatingActions from "../floating-actions";
 import { pickedTaskPatch, returnedTaskPatch, taskIsPicked } from "@/lib/task-picker";
 
@@ -138,9 +139,7 @@ export default function TasksPreview({
     );
     const filtered = common
         .filter((task) =>
-            shared.live && view === "week"
-                ? task.weekly
-                : matchesTaskView(task, view, shared.today),
+            matchesTaskView(task, view, shared.today, !!shared.live),
         )
         .sort(
             (a, b) =>
@@ -381,20 +380,10 @@ export default function TasksPreview({
                     {text(...task.title)}
                 </button>
                 <p>
-                    {statusLabel(task.status)}
-                    {task.due &&
-                        ` · ${text(task.due < demoToday && task.status !== "Done" ? "Overdue" : "Due", task.due < demoToday && task.status !== "Done" ? "Quá hạn" : "Hạn")} ${formatTaskDate(task.due, locale)}`}
-                    {task.scheduledStart &&
-                        ` · ${text("Scheduled", "Theo lịch")} ${formatTaskDate(task.scheduledStart.slice(0, 10), locale)} ${task.scheduledStart.slice(11)}`}
-                    {task.daily &&
-                        ` · ${text("Added for today", "Đã thêm vào hôm nay")}`}
-                    {task.seriesId && (
-                        <span>
-                            {" "}
-                            · <Repeat2 size={12} />
-                            {text("Occurrence", "Lần lặp")}
-                        </span>
-                    )}
+                    {task.status === "Done" ? statusLabel(task.status)
+                        : task.due ? `${text(task.due < demoToday ? "Overdue" : "Due", task.due < demoToday ? "Quá hạn" : "Hạn")} ${formatTaskDate(task.due, locale)}`
+                        : task.scheduledStart ? `${text("Scheduled", "Theo lịch")} ${formatTaskDate(task.scheduledStart.slice(0, 10), locale)}`
+                        : statusLabel(task.status)}
                 </p>
                 {task.parent && (
                     <small className="preview-task-parent">
@@ -620,16 +609,22 @@ export default function TasksPreview({
                                                       task,
                                                       key,
                                                       shared.today,
+                                                      !!shared.live,
                                                   ),
                                               ).length}
                                     </span>
                                 </button>
                             ))}
                         </div>
-                        <div
-                            className={`preview-task-filters ${repeating ? "is-repeating" : ""}`}
-                        >
-                            <label className="field">
+                        <button className="button button-quiet task-series-navigation"
+                            aria-pressed={repeating}
+                            onClick={() => { setView(repeating ? "all" : "repeating"); setPageIndex(0); setMessage(null); }}>
+                            <Repeat2 size={16} aria-hidden="true" />
+                            {text(repeating ? "Back to tasks" : "Repeating series", repeating ? "Về công việc" : "Chuỗi lặp")}
+                        </button>
+                        <CollectionToolbar className={`preview-task-filters ${repeating ? "is-repeating" : ""}`}
+                            label={text("Find tasks", "Tìm công việc")} filtersLabel={text("Filters and sorting", "Lọc và sắp xếp")}
+                            search={<label className="field">
                                 {text("Find a task", "Tìm công việc")}
                                 <input
                                     type="search"
@@ -643,7 +638,8 @@ export default function TasksPreview({
                                         "Tìm theo tên công việc",
                                     )}
                                 />
-                            </label>
+                            </label>}>
+
                             {repeating ? (
                                 <label className="field">
                                     {text("Series state", "Trạng thái chuỗi")}
@@ -735,22 +731,11 @@ export default function TasksPreview({
                                     </label>
                                 </>
                             )}
-                        </div>
+                                                </CollectionToolbar>
                         {!repeating && (
                             <details className="preview-task-extra-filters">
                                 <summary>
                                     {text("More filters", "Bộ lọc khác")}
-                                    {tag && (
-                                        <span>
-                                            {" "}
-                                            ·{" "}
-                                            {text(
-                                                ...tagOptions.find(
-                                                    (item) => item.id === tag,
-                                                )!.label,
-                                            )}
-                                        </span>
-                                    )}
                                 </summary>
                                 <label className="field">
                                     {text("Tag", "Nhãn")}
@@ -903,15 +888,7 @@ export default function TasksPreview({
                                                         {text(
                                                             frequency[1],
                                                             frequency[2],
-                                                        )}{" "}
-                                                        · {text("Every", "Mỗi")}{" "}
-                                                        {item.rule.interval} ·{" "}
-                                                        {formatTaskDate(
-                                                            item.rule.start,
-                                                            locale,
                                                         )}
-                                                        {item.rule.end &&
-                                                            ` – ${formatTaskDate(item.rule.end, locale)}`}
                                                     </p>
                                                     <p className="subtle-copy">
                                                         {text(
@@ -923,16 +900,6 @@ export default function TasksPreview({
                                                                         .parent,
                                                             )!.label,
                                                         )}
-                                                        {item.template
-                                                            .estimate &&
-                                                            ` · ${item.template.estimate} ${text("minutes", "phút")}`}
-                                                        {item.template
-                                                            .scheduledStart &&
-                                                            ` · ${item.template.scheduledStart.slice(11)}`}
-                                                        {item.template
-                                                            .reminder !=
-                                                            "none" &&
-                                                            ` · ${text("Reminder set", "Đã đặt nhắc nhở")}`}
                                                     </p>
                                                     <div
                                                         className="preview-series-dates"

@@ -34,7 +34,10 @@ export default function ComponentLibrary({ initialLocale = "en" }: { initialLoca
     }, [theme, scene, locale]);
     return <main className="component-library">
         <PageHeader title={text("Planner component library", "Bộ giao diện Planner")}
-            description={text("Shared components for a consistent workspace.", "Các thành phần dùng chung để giao diện nhất quán.")} />
+            description={text("Shared components for a consistent workspace.", "Các thành phần dùng chung để giao diện nhất quán.")}>
+            <Button variant="primary" onClick={() => setDialog("form")}><Plus size={18} aria-hidden="true" />{text("New task", "Công việc mới")}</Button>
+            <Button onClick={() => setDialog("confirm")}>{text("Open confirmation", "Mở xác nhận")}</Button>
+        </PageHeader>
         <div className="component-library-controls">
             <Field label={text("Language", "Ngôn ngữ")}>
                 <Select value={locale} onChange={event => { setLocale(event.target.value as "en" | "vi"); setMessage(""); }}>

@@ -4,7 +4,7 @@ import { Flag, Target } from "lucide-react";
 import type { Entity } from "@/lib/api";
 import type { PageContext } from "./workspace-context";
 import { Empty, Tabs } from "./workspace-context";
-import { statusName, TaskRow } from "./workspace-controls";
+import { TaskRow } from "./workspace-controls";
 import Dialog from "./dialog";
 
 // The retained layout's ribs express Goal membership, never prerequisite edges.
@@ -157,7 +157,7 @@ export default function GoalFishbone({
                         {goal.progress == null
                             ? "—"
                             : Math.round(goal.progress) + "%"}{" "}
-                        · {statusName(ctx, goal.status)}
+
                     </small>
                     <span className="section-link">
                         {ctx.text("Goal information →", "Thông tin mục tiêu →")}
@@ -205,8 +205,7 @@ export default function GoalFishbone({
                             <strong>{row.title}</strong>
                             <small>
                                 {done}/{children.length}{" "}
-                                {ctx.text("tasks", "công việc")} ·{" "}
-                                {statusName(ctx, row.status)}
+                                {ctx.text("tasks", "công việc")}
                             </small>
                             <small className="task-importance">
                                 {"★".repeat(row.importance)}
@@ -270,8 +269,7 @@ export default function GoalFishbone({
                 >
                     <div className="section-heading">
                         <p>
-                            {statusName(ctx, milestone.status)} ·{" "}
-                            {milestone.due_date || "—"}
+                                                        {milestone.due_date || "—"}
                         </p>
                         <button
                             className="button button-quiet"

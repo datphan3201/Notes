@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { Check, GripHorizontal, GripVertical, Plus, Search, Undo2, X } from "lucide-react";
+import { Check, GripHorizontal, GripVertical, Plus, Search, Undo2, X, Minus, Maximize2, Minimize2 } from "lucide-react";
 import { Button, IconButton } from "./button";
 import { Input, Select } from "./field";
 import { Notice } from "./feedback";
@@ -31,6 +31,7 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
     const headingId = useId();
     const panel = useRef<HTMLElement>(null);
     const search = useRef<HTMLInputElement>(null);
+    const [mode, setMode] = useState<"compact" | "minimized" | "expanded">("compact");
     const [query, setQuery] = useState("");
     const [goal, setGoal] = useState("");
     const [returnOver, setReturnOver] = useState(false);
@@ -55,7 +56,7 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
     };
     useEffect(() => {
         const previous = document.activeElement as HTMLElement | null;
-        search.current?.focus();
+        if (window.matchMedia("(min-width: 801px)").matches) search.current?.focus();
         const resized = () => setPosition(point => point ? clamp(point) : null);
         window.addEventListener("resize", resized);
         const observer = new ResizeObserver(resized);
@@ -85,8 +86,8 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
         `${task.title} ${task.goalLabel}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     return createPortal(<>
         <section ref={panel} className={`floating-task-picker ${className}`} role="dialog" aria-modal="false"
-            aria-labelledby={headingId} data-task-picker
-            style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
+            aria-labelledby={headingId} data-task-picker data-size={mode}
+            style={position && mode !== "expanded" ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
             onKeyDown={event => {
                 if (event.key === "Escape") { event.stopPropagation(); onClose(); }
             }}>
@@ -114,10 +115,25 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
                         setPosition(clamp({ x: rect.x + delta.x, y: rect.y + delta.y }));
                     }}><GripHorizontal size={20} aria-hidden="true" /></button>
                 <h2 id={headingId}>{text("Choose tasks", "Chọn công việc")}</h2>
+                <IconButton label={text(mode === "minimized" ? "Restore task picker" : "Minimize task picker", mode === "minimized" ? "Mở bảng chọn công việc" : "Thu gọn bảng chọn công việc")}
+                    aria-expanded={mode !== "minimized"} onClick={() => setMode(mode === "minimized" ? "compact" : "minimized")}>
+                    {mode === "minimized" ? <Maximize2 size={17} aria-hidden="true" /> : <Minus size={17} aria-hidden="true" />}
+                </IconButton>
+                <IconButton label={text(mode === "expanded" ? "Restore picker size" : "Expand task picker", mode === "expanded" ? "Khôi phục kích thước bảng" : "Phóng to bảng chọn công việc")}
+                    aria-pressed={mode === "expanded"} onClick={() => setMode(mode === "expanded" ? "compact" : "expanded")}>
+                    {mode === "expanded" ? <Minimize2 size={17} aria-hidden="true" /> : <Maximize2 size={17} aria-hidden="true" />}
+                </IconButton>
                 <IconButton label={text("Close task picker", "Đóng bảng chọn công việc")} onClick={onClose}><X size={18} aria-hidden="true" /></IconButton>
             </header>
+            {mode === "minimized" && <p className="task-picker-minimized-destination">{destination}</p>}
+            <div className="task-picker-body" hidden={mode === "minimized"}>
             <div className="task-picker-controls">
                 <p className="task-picker-destination">{text("Add to: ", "Thêm vào: ")}{destination}</p>
+                <label className="task-picker-search"><Search size={17} aria-hidden="true" /><Input ref={search}
+                    aria-label={text("Search tasks", "Tìm công việc")} placeholder={text("Search tasks…", "Tìm công việc…")}
+                    value={query} onChange={event => setQuery(event.target.value)} /></label>
+                <details className="task-picker-secondary-filters">
+                    <summary>{text("Filters", "Bộ lọc")}{goal || unscheduled ? ` (${Number(!!goal) + Number(unscheduled)})` : ""}</summary>
                 {onReturn && returnTarget && <div className="task-picker-return" role="region" aria-label={returnLabel}
                     data-task-return data-task-drop-target={returnTarget} data-task-drop-active={returnOver || undefined}
                     onDragOver={event => {
@@ -131,9 +147,6 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
                         const id = readPickedTask(event.dataTransfer.getData(TASK_RETURN_MIME) || event.dataTransfer.getData(TASK_PICKER_MIME));
                         if (id !== null) onReturn(id);
                     }}><Undo2 size={18} aria-hidden="true" /><span>{returnHint}</span></div>}
-                <label className="task-picker-search"><Search size={17} aria-hidden="true" /><Input ref={search}
-                    aria-label={text("Search tasks", "Tìm công việc")} placeholder={text("Search tasks…", "Tìm công việc…")}
-                    value={query} onChange={event => setQuery(event.target.value)} /></label>
                 <Select aria-label={text("Filter by goal", "Lọc theo mục tiêu")} value={goal} onChange={event => setGoal(event.target.value)}>
                     <option value="">{text("All goals", "Tất cả mục tiêu")}</option>
                     <option value="inbox">{text("Inbox", "Hộp thư đến")}</option>
@@ -141,6 +154,7 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
                 </Select>
                 <label className="task-picker-filter"><input type="checkbox" checked={unscheduled} onChange={event => setUnscheduled(event.target.checked)} />{text("Unscheduled only", "Chỉ công việc chưa lên lịch")}</label>
                 <p className="task-picker-hint">{hint}</p>
+                </details>
                 {error && <Notice tone="error">{error}</Notice>}
             </div>
             <div className="task-picker-list" role="list" aria-label={text("Available tasks", "Công việc có thể chọn")}>
@@ -173,7 +187,7 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
                             }} onPointerCancel={clearTaskDrag}>
                             <GripVertical size={18} aria-hidden="true" />
                         </button>
-                        <div className="task-picker-copy"><strong title={task.title}>{task.title}</strong><small>{task.goalLabel}{task.metadata ? ` · ${task.metadata}` : ""}</small>{task.disabledReason && <small>{task.disabledReason}</small>}</div>
+                        <div className="task-picker-copy"><strong title={task.title}>{task.title}</strong><small>{task.goalLabel || task.metadata}</small>{task.disabledReason && <small>{task.disabledReason}</small>}</div>
                         <Button className="task-picker-add" variant={task.selected ? "ghost" : "secondary"}
                             busy={busy} disabled={disabled} aria-label={text("Add: ", "Thêm: ") + task.title}
                             onClick={() => onAdd(task.id)}>
@@ -189,6 +203,7 @@ export function FloatingTaskPicker({ className = "", tasks, goals, destination, 
                 {!filtered.length && <p className="task-picker-empty">{text("No matching tasks. Try another filter or create a task.", "Không có công việc phù hợp. Thử bộ lọc khác hoặc tạo công việc mới.")}</p>}
             </div>
             <footer className="task-picker-footer"><Button variant="primary" onClick={onCreate}><Plus size={17} aria-hidden="true" />{text("New task", "Công việc mới")}</Button></footer>
+            </div>
         </section>
         {ghost && <div className="task-picker-ghost" aria-hidden="true" style={{ left: Math.min(ghost.point.x + 12, innerWidth - 220), top: ghost.point.y + 12 }}>{ghost.task.title}</div>}
     </>, document.body);

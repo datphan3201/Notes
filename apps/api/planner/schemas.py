@@ -58,7 +58,14 @@ def timezone_name(value: str):
     return "UTC" if name == "Etc/UTC" else name
 
 
+class DashboardPreferences(Strict):
+    tasks: int = Field(default=3, ge=1, le=20)
+    habits: int = Field(default=3, ge=1, le=20)
+    completed: int = Field(default=3, ge=1, le=20)
+
+
 class WorkspacePreferences(Strict):
+    dashboard: DashboardPreferences = Field(default_factory=DashboardPreferences)
     history_retention_days: int | None = Field(default=None, ge=1, le=3650)
     tags: list[str] = Field(default_factory=list, max_length=200)
     accent: str = Field(default="", pattern=r"^(|#[0-9a-fA-F]{6})$")

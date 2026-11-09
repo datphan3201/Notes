@@ -1,6 +1,6 @@
 "use client";
 import { TASK_RETURN_MIME } from "@/lib/task-picker";
-import { PageHeaderFrame } from "../ui/layout";
+import { PageHeaderFrame, PageActionBar } from "../ui/layout";
 import FloatingActions from "../floating-actions";
 import { TaskDropZone, useTaskPicker } from "../task-picker";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -611,7 +611,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
                         />
                     </div>
                     <p>
-                        {status(ms.status)} ·{" "}
                         {
                             tasks.filter(
                                 (task) =>
@@ -634,79 +633,84 @@ export default function PlanningPreview({ text }: { text: Text }) {
                             "finite tasks completed",
                             "công việc hữu hạn đã xong",
                         )}
-                        {ms.due &&
-                            ` · ${text("Due", "Hạn")} ${dateLabel(ms.due, db.locale)}`}
+
                     </p>
                 </div>
-                <div className="action-row">
-                    <button
-                        className={`icon-button ${!!ms.weekly ? "is-selected" : ""}`}
-                        aria-pressed={!!ms.weekly}
-                        aria-label={text(
-                            "Plan for this week",
-                            "Chọn cho tuần này",
-                        )}
-                        onClick={() =>
-                            db.setMilestones((rows) =>
-                                rows.map((row) =>
-                                    row.id === ms.id
-                                        ? { ...row, weekly: !row.weekly }
-                                        : row,
-                                ),
-                            )
-                        }
-                    >
-                        <Pin
-                            size={17}
-                            fill={ms.weekly ? "currentColor" : "none"}
-                        />
-                    </button>
-                    <details className="review-row-menu">
-                        <summary
-                            className="icon-button"
-                            aria-label={text(
-                                "Milestone actions",
-                                "Thao tác cột mốc",
-                            )}
-                        >
-                            <MoreHorizontal size={18} />
-                        </summary>
-                        <div>
-                            <button
-                                onClick={() =>
-                                    open({ kind: "milestone", id: ms.id })
-                                }
-                            >
-                                {text("Edit milestone", "Chỉnh sửa cột mốc")}
-                            </button>
-                            <button
-                                onClick={() =>
-                                    request("archive", "milestone", ms.id)
-                                }
-                            >
-                                {text("Archive milestone", "Lưu trữ cột mốc")}
-                            </button>
-                        </div>
-                    </details>
-                    <button
-                        className="button button-primary"
-                        disabled={
-                            ms.status !== "Done" &&
-                            ms.prerequisites.some(
-                                (id) =>
-                                    milestones.find((row) => row.id === id)
-                                        ?.status !== "Done",
-                            )
-                        }
-                        onClick={() => request("complete", "milestone", ms.id)}
-                    >
-                        <Check size={17} />
-                        {ms.status === "Done"
-                            ? text("Reopen milestone", "Mở lại cột mốc")
-                            : text("Complete milestone", "Hoàn thành cột mốc")}
-                    </button>
-                </div>
             </PageHeaderFrame>
+            <PageActionBar label={text("Milestone actions", "Thao tác cột mốc")} className="milestone-page-actions">
+                <button
+                    className={`button button-quiet ${ms.weekly ? "is-selected" : ""}`}
+                    aria-pressed={!!ms.weekly}
+                    aria-label={text(
+                        "Plan for this week",
+                        "Chọn cho tuần này",
+                    )}
+                    onClick={() =>
+                        db.setMilestones((rows) =>
+                            rows.map((row) =>
+                                row.id === ms.id
+                                    ? { ...row, weekly: !row.weekly }
+                                    : row,
+                            ),
+                        )
+                    }
+                >
+                    <Pin
+                        size={17}
+                        fill={ms.weekly ? "currentColor" : "none"}
+                    />
+                    {text("This week", "Tuần này")}
+                </button>
+                <details className="review-row-menu">
+                    <summary
+                        className="button button-quiet"
+                        aria-label={text(
+                            "Milestone actions",
+                            "Thao tác cột mốc",
+                        )}
+                    >
+                        <MoreHorizontal size={18} />
+                        {text("Actions", "Thao tác")}
+                    </summary>
+                    <div>
+                        <button
+                            onClick={() =>
+                                open({ kind: "milestone", id: ms.id })
+                            }
+                        >
+                            {text("Edit milestone", "Chỉnh sửa cột mốc")}
+                        </button>
+                        <button
+                            onClick={() =>
+                                request("archive", "milestone", ms.id)
+                            }
+                        >
+                            {text("Archive milestone", "Lưu trữ cột mốc")}
+                        </button>
+                    </div>
+                </details>
+                <button
+                    className="button button-primary"
+                    disabled={
+                        ms.status !== "Done" &&
+                        ms.prerequisites.some(
+                            (id) =>
+                                milestones.find((row) => row.id === id)
+                                    ?.status !== "Done",
+                        )
+                    }
+                    onClick={() => request("complete", "milestone", ms.id)}
+                >
+                    <Check size={17} />
+                    {ms.status === "Done"
+                        ? text("Reopen milestone", "Mở lại cột mốc")
+                        : text("Complete milestone", "Hoàn thành cột mốc")}
+                </button>
+                <button className="button button-quiet" disabled={selected?.status === "Done" || ms.status === "Done"}
+                    onClick={() => taskPicker.open({ kind: "parent", id: ms.id })}>
+                    <Plus size={17} />{text("Choose tasks", "Chọn công việc")}
+                </button>
+            </PageActionBar>
             <p className="roadmap-criteria">
                 {ms.criteria ||
                     text(
@@ -750,7 +754,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                     >
                                         {text(...row.title)}
                                     </button>{" "}
-                                    · {status(row.status)}
+
                                 </p>
                             )
                         );
@@ -875,7 +879,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
                             </div>
                             <p className="entity-meta-row">
                                 <span>
-                                    {status(selected.status)} ·{" "}
                                     {progress(selected) === null
                                         ? "—"
                                         : `${progress(selected)}%`}{" "}
@@ -896,7 +899,9 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                 />
                             </p>
                         </div>
-                        <div className="action-row">
+                    </PageHeaderFrame>
+                    {!ms && (
+                        <PageActionBar label={text("Goal actions", "Thao tác mục tiêu")}>
                             <button
                                 className="button button-quiet"
                                 onClick={() => setInfoTab("information")}
@@ -932,13 +937,12 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                 <Plus size={17} />
                                 {text("Add milestone", "Thêm cột mốc")}
                             </button>
-                        <button className="button button-quiet" disabled={selected.status === "Done" || ms?.status === "Done"}
-                            onClick={() => taskPicker.open({ kind: "parent", id: ms?.id || selected.id })}>
-                            <Plus size={17} />{text("Choose tasks", "Chọn công việc")}
-                        </button>
-
-                        </div>
-                    </PageHeaderFrame>
+                            <button className="button button-quiet" disabled={selected.status === "Done"}
+                                onClick={() => taskPicker.open({ kind: "parent", id: selected.id })}>
+                                <Plus size={17} />{text("Choose tasks", "Chọn công việc")}
+                            </button>
+                        </PageActionBar>
+                    )}
                     {!ms && (
                         <section
                             aria-label={text(
@@ -1018,6 +1022,11 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                     color={focus.color}
                                 />
                             )}
+                            <h2>{focus ? text(...focus.title) : text("Choose your main goal", "Chọn mục tiêu chính")}</h2>
+                        </div>
+                        {focus && <div className="main-goal-importance"><Stars value={focus.importance} text={text} /></div>}
+                        <details className="main-goal-selection">
+                            <summary>{text("Change main goal", "Đổi mục tiêu chính")}</summary>
                             <span className="roadmap-title-picker main-goal-picker">
                                 <select
                                     aria-label={text(
@@ -1061,10 +1070,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                         ))}
                                 </select>
                             </span>
-                            {focus && (
-                                <Stars value={focus.importance} text={text} />
-                            )}
-                        </div>
+                        </details>
                         <p>
                             {focus
                                 ? text(...focus.outcome) ||
@@ -1081,7 +1087,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
                         {focus && (
                             <div className="main-goal-footer">
                                 <strong>
-                                    {status(focus.status)} ·{" "}
                                     {progress(focus) === null
                                         ? "—"
                                         : `${progress(focus)}%`}
@@ -1258,14 +1263,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                             />
                                         </span>
                                         <span className="subtle-copy">
-                                            {roots.length}{" "}
-                                            {text(
-                                                roots.length === 1
-                                                    ? "goal"
-                                                    : "goals",
-                                                "mục tiêu",
-                                            )}{" "}
-                                            · {average}%{" "}
+                                            {average}%{" "}
                                             {text(
                                                 "average goal progress",
                                                 "tiến độ trung bình",
@@ -1382,13 +1380,10 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                             <h2>{text(...selected.title)}</h2>
                                         </div>
                                         <p className="subtle-copy">
-                                            {status(selected.status)} ·{" "}
                                             {progress(selected) === null
                                                 ? "—"
                                                 : `${progress(selected)}%`}{" "}
-                                            {text("progress", "tiến độ")} ·{" "}
-                                            {text("Due", "Hạn")}{" "}
-                                            {dateLabel(selected.due, db.locale)}
+                                            {text("progress", "tiến độ")}
                                         </p>
                                     </>
                                 }
@@ -2408,8 +2403,8 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                     <fieldset className="review-checkbox-list">
                                         <legend>
                                             {text(
-                                                "Prerequisites · owned Goals",
-                                                "Điều kiện tiên quyết · các mục tiêu của bạn",
+                                                "Prerequisite goals",
+                                                "Mục tiêu tiên quyết",
                                             )}
                                         </legend>
                                         {milestones
@@ -2569,7 +2564,6 @@ function TaskLine({ id, text }: { id: number; text: Text }) {
     const db = usePreviewData(),
         task = db.tasks.find((row) => row.id === id)!;
     const picker = useTaskPicker();
-    const state = statuses.find(([key]) => key === task.status)!;
     return (
         <div className="review-task-line" draggable={!!picker.target && task.status !== "Done" && !task.seriesId}
             onDragStart={event => event.dataTransfer.setData(TASK_RETURN_MIME, String(id))}>
@@ -2590,7 +2584,6 @@ function TaskLine({ id, text }: { id: number; text: Text }) {
             >
                 {text(...task.title)}
                 <small>
-                    {text(state[1], state[2])} ·{" "}
                     {task.due
                         ? `${text("Due", "Hạn")} ${dateLabel(task.due, db.locale)}`
                         : text("No due date", "Chưa đặt hạn")}
@@ -2625,10 +2618,6 @@ function Fishbone({
     onMilestone: (id: string) => void;
 }) {
     const db = usePreviewData();
-    const stateLabel = (value: string) => {
-        const row = planningStatuses.find(([key]) => key === value)!;
-        return text(row[1], row[2]);
-    };
     const root = useRef<HTMLDivElement>(null),
         head = useRef<HTMLButtonElement>(null);
     const branches = useRef<(HTMLButtonElement | null)[]>([]);
@@ -2745,8 +2734,8 @@ function Fishbone({
                         <strong>{text(...row.title)}</strong>
                         <small>
                             {completed}/{children.length}{" "}
-                            {text("tasks", "công việc")} ·{" "}
-                            {stateLabel(row.status)}
+                            {text("tasks", "công việc")}
+
                         </small>
                         <Stars value={row.importance} text={text} />
                         {!!waiting.length && (
@@ -2803,8 +2792,7 @@ function Fishbone({
                 <EntityIcon name={goal.icon} color={goal.color} />
                 <span className="roadmap-goal-name">{text(...goal.title)}</span>
                 <span className="roadmap-goal-state" data-roadmap-goal-state>
-                    {headProgress === null ? "—" : `${headProgress}%`} ·{" "}
-                    {stateLabel(goal.status)}
+                    {headProgress === null ? "—" : `${headProgress}%`}
                 </span>
                 <span className="roadmap-goal-cta">
                     {text("Goal information", "Thông tin mục tiêu")} →

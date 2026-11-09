@@ -1,4 +1,5 @@
 "use client";
+import { CollectionToolbar } from "../ui/collection-toolbar";
 import "@/styles/floating-actions.css";
 import { TASK_RETURN_MIME } from "@/lib/task-picker";
 import { TaskDropZone, useTaskPicker } from "../task-picker";
@@ -247,7 +248,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
             key={item.key}
             draggable={!item.done && !item.series}
             className={`review-calendar-item ${item.done ? "is-done" : ""} ${item.end && item.end < day && !item.done ? "is-overdue" : ""}`}
-            title={`${item.title} · ${dateLabel(item.start, db.locale)} – ${dateLabel(item.end, db.locale)}`}
+            title={`${item.title}. ${dateLabel(item.start, db.locale)} – ${dateLabel(item.end, db.locale)}`}
             onDragStart={event => {
                 setDrag({ key: item.key, date });
                 if (taskPicker.target && item.kind === "tasks") event.dataTransfer.setData(TASK_RETURN_MIME, item.id);
@@ -435,8 +436,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                 </div>
             </div>
             {view === "gantt" && (
-                <div className="review-gantt-controls">
-                    <input
+                <CollectionToolbar className="review-gantt-controls" label={text("Find calendar items", "Tìm mục trong lịch")} filtersLabel={text("Filters and zoom", "Lọc và thu phóng")} search={<input
                         type="search"
                         aria-label={text(
                             "Find calendar items",
@@ -448,7 +448,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                         )}
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
-                    />
+                    />}>
                     <label>
                         {text("Show by", "Hiển thị theo")}
                         <select
@@ -477,7 +477,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                             </option>
                         </select>
                     </label>
-                </div>
+                </CollectionToolbar>
             )}
         </div>
     );

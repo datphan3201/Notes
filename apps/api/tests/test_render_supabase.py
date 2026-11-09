@@ -392,6 +392,7 @@ def test_brevo_email_payload_retry_identity_and_provider_priority(monkeypatch):
     assert bodies[0]["sender"] == {"name": "Planner", "email": "planner@example.com"}
     assert bodies[0]["to"] == [{"email": "user@example.com"}]
     assert bodies[0]["textContent"] == payload["body"]
+    assert "htmlContent" in bodies[0] and payload["body"] in bodies[0]["htmlContent"]
     assert bodies[0]["headers"] == bodies[1]["headers"]
     assert bodies[0]["headers"] != bodies[2]["headers"]
     status, result = 400, {"code": "duplicate_parameter", "message": "Email for the idempotency key has already been processed"}

@@ -6,6 +6,8 @@ Habits have dedicated dated check-ins, daily/weekly targets, rest planning and s
 
 Actual done/undo transitions feed Activity; planned rest is future-only, cancelable and does not fabricate completion Activity. Rest days do not count as successful days. Server validation and the domain streak functions define weekly boundaries, partial first weeks and unfinished today behavior.
 
+Check-in interactions on both the Habits page and the Dashboard use the shared `HabitCheckinDays` component, providing a single interactive check-in button per day with full date tooltips and accessible actions. Retrospective check-ins and undos are permitted for past days, including dates prior to the habit creation date; streak calculation windows extend to cover earlier retrospective check-ins. Future completion remains strictly rejected; future rest planning is permitted up to 3 days in advance. Past and current rest days are protected and cannot be overwritten by a check-in without clearing the rest day first.
+
 <!-- BEGIN GENERATED TRACE -->
 
 ## Source and verification map
@@ -16,7 +18,7 @@ Trace ID: `habits`. Test references identify coverage to inspect; they are not e
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/habits.tsx](../../../apps/web/src/components/preview/habits.tsx#L28) — `export default function HabitsPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L765) — `def checkin(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L800) — `def habit_days(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L798) — `def habit_days(` |
 | Related tests | [apps/api/tests/test_domain.py](../../../apps/api/tests/test_domain.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

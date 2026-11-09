@@ -67,7 +67,7 @@ export type SeriesRecord = {
 export const parents = [
     {
         id: "",
-        label: ["Inbox · organize later", "Hộp thư đến · sắp xếp sau"] as Label,
+        label: ["Inbox", "Hộp thư đến"] as Label,
         goal: "inbox",
     },
     {
@@ -106,13 +106,10 @@ export const tagOptions: { id: string; label: Label }[] = [
     { id: "study", label: ["Study", "Học tập"] },
 ];
 export const views: [string, string, string][] = [
-    ["today", "Today", "Hôm nay"],
-    ["next", "Next", "Sắp tới"],
-    ["week", "This week", "Tuần này"],
-    ["backlog", "Backlog", "Chưa lên lịch"],
-    ["overdue", "Overdue", "Quá hạn"],
     ["all", "All", "Tất cả"],
-    ["repeating", "Repeating", "Lặp lại"],
+    ["today", "Today", "Hôm nay"],
+    ["week", "This week", "Tuần này"],
+    ["other", "Other", "Khác"],
 ];
 export const seriesStates: [SeriesRecord["state"], string, string][] = [
     ["active", "Active", "Đang hoạt động"],
@@ -460,7 +457,7 @@ export function isToday(task: TaskRecord, today=demoToday): boolean {
         (!!task.due && task.due < today && task.status !== "Done")
     );
 }
-export function matchesTaskView(task: TaskRecord, view: string, today=demoToday): boolean {
+export function matchesTaskView(task: TaskRecord, view: string, today=demoToday, explicitWeek=false): boolean {
     const dates = [
         task.start,
         task.due,
@@ -472,8 +469,9 @@ export function matchesTaskView(task: TaskRecord, view: string, today=demoToday)
     if (view === "week")
         return (
             task.weekly ||
-            dates.some((date) => date >= mondayDate(today) && date <= addDaysLocal(mondayDate(today),6))
+            !explicitWeek && dates.some((date) => date >= mondayDate(today) && date <= addDaysLocal(mondayDate(today),6))
         );
+    if (view === "other") return !isToday(task, today) && !matchesTaskView(task, "week", today, explicitWeek);
     if (view === "backlog") return !dates.length;
     if (view === "overdue")
         return !!task.due && task.due < today && task.status !== "Done";

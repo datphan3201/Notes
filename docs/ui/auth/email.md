@@ -15,7 +15,7 @@ Trace ID: `auth.email`. Test references identify coverage to inspect; they are n
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/confirm-email.tsx](../../../apps/web/src/components/confirm-email.tsx#L7) — `export default function ConfirmEmail() {` |
-| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L334) — `def verify_email(` |
+| API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L341) — `def verify_email(` |
 | API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L268) — `def confirm_email_link(` |
 | API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L250) — `def confirm_email_code(` |
 | Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |

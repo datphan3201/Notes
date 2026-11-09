@@ -2,6 +2,8 @@
 import { DEFAULT_TIMEZONE } from "@/lib/dates";
 import { TASK_RETURN_MIME } from "@/lib/task-picker";
 import { PageHeaderFrame } from "../ui/layout";
+import HabitCheckinDays from "../habit-checkin-days";
+import { DashboardPanel } from "../ui/dashboard-panel";
 import FloatingActions from "../floating-actions";
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -57,6 +59,7 @@ export function DashboardView({
         | "habits"
         | "events"
         | "appearance"
+        | "dashboard"
         | "setTasks"
         | "setTaskAction"
         | "setPlanningAction"
@@ -69,6 +72,7 @@ export function DashboardView({
     connected?: boolean;
 }) {
     const [tab, setTab] = useState("today");
+    const [showTasks, setShowTasks] = useState(false), [showHabits, setShowHabits] = useState(false), [showCompleted, setShowCompleted] = useState(false);
     const day = today;
     const sampleDay = (offset: number) =>
         new Date(`${addDays(day, offset)}T12:00:00Z`);
@@ -144,7 +148,6 @@ export function DashboardView({
                   },
         );
     };
-    const [status, setStatus] = useState("all");
     const [sort, setSort] = useState("importance");
     const taskPicker = useTaskPicker();
     const dueMilestones = db.milestones.filter(
@@ -176,7 +179,7 @@ export function DashboardView({
         ? Math.round((done / selected.length) * 100)
         : null;
     const rows = selected
-        .filter((task) => status === "all" || task.status === status)
+        .filter((task) => task.status !== "Done")
         .sort((a, b) =>
             sort === "importance"
                 ? Number(b.importance) - Number(a.importance)
@@ -240,7 +243,7 @@ export function DashboardView({
                             dateStyle: "full",
                             timeZone: "UTC",
                         }).format(sampleDay(0))}{" "}
-                        · {timezone}
+
                     </p>
                     <h1>
                         {text("Hello there!", "Chào bạn!")}{" "}
@@ -267,11 +270,7 @@ export function DashboardView({
                 </button>
                 <button className="button button-quiet" onClick={openPicker}>{text("Choose tasks", "Chọn công việc")}</button>
             </FloatingActions>
-            <article
-                className="planning-panel dashboard-roadmap"
-                aria-label={text("Chosen roadmap", "Lộ trình đang chọn")}
-            >
-                <div className="section-heading">
+            <DashboardPanel className="dashboard-roadmap" text={text} label={text("Roadmap", "Lộ trình")} header={<div className="section-heading">
                     <label className="roadmap-title-picker">
                         <span className="sr-only">
                             {text("Choose a roadmap", "Chọn lộ trình")}
@@ -300,7 +299,8 @@ export function DashboardView({
                         {text("View full roadmap", "Xem toàn bộ lộ trình")}
                         <ArrowRight size={14} />
                     </button>
-                </div>
+                </div>}>
+
                 {focus ? (
                     <div className="roadmap-preview preview-dashboard-roadmap">
                         {focus.steps.slice(0, 6).map((step, index) => (
@@ -337,7 +337,7 @@ export function DashboardView({
                         )}
                     </p>
                 )}
-            </article>
+            </DashboardPanel>
             <nav
                 className="workspace-section-menu"
                 role="tablist"
@@ -443,7 +443,40 @@ export function DashboardView({
                 ) : (
                     <div className="dashboard-split-layout">
                         <div className="dashboard-split-main">
-                            <TaskDropZone as="section" target={{kind: "plan", period: week ? "week" : "today"}} className="planning-panel today-panel">
+                            <TaskDropZone as="section" target={{kind: "plan", period: week ? "week" : "today"}} className="dashboard-task-drop"><DashboardPanel className="today-panel" text={text} label={text("Tasks", "Công việc")} header={<div className="section-heading preview-dashboard-task-heading">
+                                    <h2>
+                                        <ClipboardList size={17} />
+                                        {text(
+                                            week
+                                                ? "Weekly tasks"
+                                                : "Daily tasks",
+                                            week
+                                                ? "Công việc trong tuần"
+                                                : "Công việc hàng ngày",
+                                        )}
+                                        <span className="count-badge">
+                                            {rows.length}
+                                        </span>
+                                    </h2>
+                                    <button
+                                        className={
+                                            week
+                                                ? "text-button"
+                                                : "button button-quiet"
+                                        }
+                                        onClick={() => {
+                                            openPicker();
+                                        }}
+                                    >
+                                        <Plus size={15} />
+                                        {text(
+                                            week ? "Select tasks" : "Add task",
+                                            week
+                                                ? "Chọn công việc"
+                                                : "Thêm công việc",
+                                        )}
+                                    </button>
+                                </div>}>
                                 <div className="dashboard-task-summary">
                                     <div
                                         className="progress-ring"
@@ -485,42 +518,7 @@ export function DashboardView({
                                         </small>
                                     </div>
                                 </div>
-                                <div className="section-heading preview-dashboard-task-heading">
-                                    <h2>
-                                        <ClipboardList size={17} />
-                                        {text(
-                                            week
-                                                ? "Weekly tasks"
-                                                : "Daily tasks",
-                                            week
-                                                ? "Công việc trong tuần"
-                                                : "Công việc hàng ngày",
-                                        )}
-                                        <span className="count-badge">
-                                            {status === "all"
-                                                ? selected.length
-                                                : `${rows.length}/${selected.length}`}
-                                        </span>
-                                    </h2>
-                                    <button
-                                        className={
-                                            week
-                                                ? "text-button"
-                                                : "button button-quiet"
-                                        }
-                                        onClick={() => {
-                                            openPicker();
-                                        }}
-                                    >
-                                        <Plus size={15} />
-                                        {text(
-                                            week ? "Select tasks" : "Add task",
-                                            week
-                                                ? "Chọn công việc"
-                                                : "Thêm công việc",
-                                        )}
-                                    </button>
-                                </div>
+
                                 <div className="dashboard-week-filters">
                                     <label className="field">
                                         {text("Sort by", "Sắp xếp theo")}
@@ -544,30 +542,10 @@ export function DashboardView({
                                             </option>
                                         </select>
                                     </label>
-                                    <label className="field">
-                                        {text("Status", "Trạng thái")}
-                                        <select
-                                            value={status}
-                                            onChange={(event) =>
-                                                setStatus(event.target.value)
-                                            }
-                                        >
-                                            <option value="all">
-                                                {text(
-                                                    "All tasks",
-                                                    "Tất cả công việc",
-                                                )}
-                                            </option>
-                                            {statuses.map(([key, en, vi]) => (
-                                                <option key={key} value={key}>
-                                                    {text(en, vi)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
+
                                 </div>
                                 <div className="preview-dashboard-checklist">
-                                    {(week ? rows : rows.slice(0, 4)).map(
+                                    {(showTasks ? rows : rows.slice(0, db.dashboard.tasks)).map(
                                         (task) => (
                                             <article
                                                 key={task.id}
@@ -728,7 +706,8 @@ export function DashboardView({
                                             </article>
                                         ),
                                     )}
-                                    {!rows.length && (
+                                    {rows.length > db.dashboard.tasks && <button className="text-button" onClick={() => setShowTasks(!showTasks)}>{text(showTasks ? "Show less" : "Show more", showTasks ? "Thu gọn" : "Xem thêm")}</button>}
+                                {!rows.length && (
                                         <div className="preview-dashboard-empty">
                                             <ClipboardList size={25} />
                                             <strong>
@@ -737,34 +716,32 @@ export function DashboardView({
                                                         ? "No tasks with this status"
                                                         : "A little room to focus",
                                                     selected.length
-                                                        ? "Không có công việc ở trạng thái này"
+                                                        ? "Không có công việc chưa hoàn thành"
                                                         : "Một chút không gian để tập trung",
                                                 )}
                                             </strong>
                                             <p>
                                                 {text(
                                                     selected.length
-                                                        ? "Choose another status to see the rest of your plan."
+                                                        ? "Completed tasks are listed in their own panel."
                                                         : "Choose an existing task or create a small next step.",
                                                     selected.length
-                                                        ? "Chọn trạng thái khác để xem phần còn lại của kế hoạch."
+                                                        ? "Công việc đã hoàn thành được hiển thị ở khung riêng."
                                                         : "Chọn công việc có sẵn hoặc tạo một bước tiếp theo nhỏ.",
                                                 )}
                                             </p>
                                             <button
                                                 className="text-button"
                                                 onClick={() =>
-                                                    selected.length
-                                                        ? setStatus("all")
-                                                        : openPicker()
+                                                    openPicker()
                                                 }
                                             >
                                                 {text(
                                                     selected.length
-                                                        ? "Show all tasks"
+                                                        ? "Choose tasks"
                                                         : "Select tasks",
                                                     selected.length
-                                                        ? "Hiện tất cả công việc"
+                                                        ? "Chọn công việc"
                                                         : "Chọn công việc",
                                                 )}
                                             </button>
@@ -779,13 +756,12 @@ export function DashboardView({
                                         </p>
                                     )}
                                 </div>
-                            </TaskDropZone>
+                            </DashboardPanel></TaskDropZone>
                         </div>
                         <div className="dashboard-split-side">
                             {week ? (
                                 <>
-                                    <article className="planning-panel dashboard-week-side">
-                                        <div className="section-heading">
+                                    <DashboardPanel className="dashboard-week-side" text={text} label={text("Milestones", "Cột mốc")} header={<div className="section-heading">
                                             <h2>
                                                 <Flag size={17} />
                                                 {text("Milestones", "Cột mốc")}
@@ -795,7 +771,8 @@ export function DashboardView({
                                                         : dueMilestones.length}
                                                 </span>
                                             </h2>
-                                        </div>
+                                        </div>}>
+
                                         {empty || !dueMilestones.length ? (
                                             <p className="subtle-copy">
                                                 {text(
@@ -824,10 +801,6 @@ export function DashboardView({
                                                             )}
                                                         </strong>
                                                         <small>
-                                                            {statusLabel(
-                                                                milestone.status,
-                                                            )}{" "}
-                                                            ·{" "}
                                                             {dateLabel(
                                                                 milestone.due,
                                                                 locale,
@@ -899,9 +872,8 @@ export function DashboardView({
                                                 </div>
                                             ))
                                         )}
-                                    </article>
-                                    <article className="planning-panel dashboard-week-panel">
-                                        <div className="section-heading">
+                                    </DashboardPanel>
+                                    <DashboardPanel className="dashboard-week-panel" text={text} label={text("Weekly progress", "Tiến độ tuần")} header={<div className="section-heading">
                                             <h2>
                                                 {text(
                                                     "Weekly activity",
@@ -911,7 +883,8 @@ export function DashboardView({
                                             <small>
                                                 {dayLabel(-5)} – {dayLabel(1)}
                                             </small>
-                                        </div>
+                                        </div>}>
+
                                         <p className="dashboard-week-activity-summary">
                                             <strong>
                                                 {empty
@@ -983,12 +956,11 @@ export function DashboardView({
                                                   )
                                                 : `${dateLabel(addDays(monday(day), weekDay), locale)}: ${empty ? 0 : weekCounts[weekDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
                                         </p>
-                                    </article>
+                                    </DashboardPanel>
                                 </>
                             ) : (
                                 <>
-                                    <article className="planning-panel dashboard-habits-panel">
-                                        <div className="section-heading">
+                                    <DashboardPanel className="dashboard-habits-panel" text={text} label={text("Habits", "Thói quen")} header={<div className="section-heading">
                                             <h2>
                                                 {text("Habits", "Thói quen")}
                                                 <span className="count-badge">
@@ -1009,7 +981,8 @@ export function DashboardView({
                                                 )}
                                                 <ArrowRight size={13} />
                                             </button>
-                                        </div>
+                                        </div>}>
+
                                         {empty ? (
                                             <div className="preview-dashboard-empty">
                                                 <Flame size={24} />
@@ -1021,7 +994,7 @@ export function DashboardView({
                                                 </p>
                                             </div>
                                         ) : (
-                                            sampleHabits.map((habit) => {
+                                            (showHabits ? sampleHabits : sampleHabits.slice(0, db.dashboard.habits)).map((habit) => {
                                                 const checked =
                                                     habitChecks.includes(
                                                         habit.id,
@@ -1032,40 +1005,7 @@ export function DashboardView({
                                                         key={habit.id}
                                                     >
                                                         <div className="dashboard-item">
-                                                            <button
-                                                                className={`task-completion-button ${checked ? "is-complete" : ""}`}
-                                                                aria-pressed={
-                                                                    checked
-                                                                }
-                                                                aria-label={
-                                                                    text(
-                                                                        checked
-                                                                            ? "Undo check-in: "
-                                                                            : "Check in: ",
-                                                                        checked
-                                                                            ? "Bỏ điểm danh: "
-                                                                            : "Điểm danh: ",
-                                                                    ) +
-                                                                    text(
-                                                                        ...habit.title,
-                                                                    )
-                                                                }
-                                                                onClick={() =>
-                                                                    db.checkHabit(
-                                                                        habit.id,
-                                                                        habit.today ||
-                                                                            day,
-                                                                    )
-                                                                }
-                                                            >
-                                                                {checked && (
-                                                                    <Check
-                                                                        size={
-                                                                            16
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </button>
+
                                                             <div className="dashboard-item-copy">
                                                                 <strong>
                                                                     {text(
@@ -1085,93 +1025,27 @@ export function DashboardView({
                                                                         "this week",
                                                                         "tuần này",
                                                                     )}{" "}
-                                                                    ·{" "}
-                                                                    <Flame
-                                                                        size={
-                                                                            12
-                                                                        }
-                                                                    />{" "}
-                                                                    {
-                                                                        habit.streak
-                                                                    }{" "}
-                                                                    {text(
-                                                                        habit.frequency ===
-                                                                            "weekly"
-                                                                            ? "weeks"
-                                                                            : "days",
-                                                                        habit.frequency ===
-                                                                            "weekly"
-                                                                            ? "tuần"
-                                                                            : "ngày",
-                                                                    )}
                                                                 </small>
                                                             </div>
                                                         </div>
-                                                        <div
-                                                            className="preview-dashboard-habit-days"
-                                                            role="group"
-                                                            aria-label={text(
-                                                                "Sample check-ins this week",
-                                                                "Điểm danh mẫu trong tuần",
-                                                            )}
-                                                        >
-                                                            {weekdays.map(
-                                                                (
-                                                                    label,
-                                                                    index,
-                                                                ) => (
-                                                                    <span
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        className={
-                                                                            index <
-                                                                            5
-                                                                                ? habit
-                                                                                      .history[
-                                                                                      index
-                                                                                  ]
-                                                                                    ? "is-checked"
-                                                                                    : "is-missed"
-                                                                                : index ===
-                                                                                        5 &&
-                                                                                    checked
-                                                                                  ? "is-checked"
-                                                                                  : ""
-                                                                        }
-                                                                        title={`${dayLabel(index - 5)}: ${text(index === 6 ? "Upcoming" : (index === 5 ? checked : habit.history[index]) ? "Checked in" : "Not checked in", index === 6 ? "Sắp tới" : (index === 5 ? checked : habit.history[index]) ? "Đã điểm danh" : "Chưa điểm danh")}`}
-                                                                    >
-                                                                        <i aria-hidden="true">
-                                                                            {index <
-                                                                            5
-                                                                                ? habit
-                                                                                      .history[
-                                                                                      index
-                                                                                  ]
-                                                                                    ? "✓"
-                                                                                    : "×"
-                                                                                : index ===
-                                                                                        5 &&
-                                                                                    checked
-                                                                                  ? "✓"
-                                                                                  : ""}
-                                                                        </i>
-                                                                        <small>
-                                                                            {text(
-                                                                                ...label,
-                                                                            )}
-                                                                        </small>
-                                                                    </span>
-                                                                ),
-                                                            )}
-                                                        </div>
+                                                        <HabitCheckinDays habit={habit} dates={Array.from({ length: 7 }, (_, index) => addDays(monday(habit.today || day), index))} today={habit.today || day} locale={locale} text={text} onCheck={db.checkHabit} />
                                                     </div>
                                                 );
                                             })
                                         )}
-                                    </article>
-                                    <article className="planning-panel dashboard-recent-panel">
-                                        <div className="section-heading">
+                                    {sampleHabits.length > db.dashboard.habits && <button className="text-button" onClick={() => setShowHabits(!showHabits)}>{text(showHabits ? "Show less" : "Show more", showHabits ? "Thu gọn" : "Xem thêm")}</button>}
+                                    </DashboardPanel>
+                                    <DashboardPanel className="dashboard-completed-panel" text={text} label={text("Completed tasks", "Công việc đã hoàn thành")}
+                                        header={<h2>{text("Completed tasks", "Công việc đã hoàn thành")} <span className="count-badge">{done}</span></h2>}>
+                                        <ul className="dashboard-completed-list">
+                                            {(showCompleted ? selected.filter(task => task.status === "Done") : selected.filter(task => task.status === "Done").slice(0, db.dashboard.completed)).map(task =>
+                                                <li key={task.id}><button className="text-button" onClick={() => db.navigate("tasks", { task: task.id })}><Check size={15} aria-hidden="true" />{text(...task.title)}</button></li>)}
+                                        </ul>
+                                        {!done && <p className="subtle-copy">{text("No completed tasks yet", "Chưa có công việc hoàn thành")}</p>}
+                                        {done > db.dashboard.completed && <button className="text-button" onClick={() => setShowCompleted(!showCompleted)}>{text(showCompleted ? "Show less" : "Show more", showCompleted ? "Thu gọn" : "Xem thêm")}</button>}
+                                    </DashboardPanel>
+
+                                    <DashboardPanel className="dashboard-recent-panel" text={text} label={text("Activity", "Hoạt động")} header={<div className="section-heading">
                                             <h2>
                                                 {text("Activity", "Hoạt động")}
                                             </h2>
@@ -1181,7 +1055,8 @@ export function DashboardView({
                                                     "30 ngày gần đây",
                                                 )}
                                             </small>
-                                        </div>
+                                        </div>}>
+
                                         <div className="recent-activity-section">
                                             <div className="recent-activity-overview">
                                                 <div className="recent-activity-stats-summary">
@@ -1321,7 +1196,7 @@ export function DashboardView({
                                                     : `${dayLabel(activityDay - 29)}: ${empty ? 0 : recentCounts[activityDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
                                             </p>
                                         </div>
-                                    </article>
+                                    </DashboardPanel>
                                 </>
                             )}
                         </div>

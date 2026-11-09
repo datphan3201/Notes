@@ -664,7 +664,7 @@ export default function LiveAssistant({ text }: { text: Text }) {
                                                                                   "Update",
                                                                                   "Cập nhật",
                                                                               )}{" "}
-                                                                ·{" "}
+
                                                                 {op.id
                                                                     ? referenceTitle(
                                                                           op.kind,

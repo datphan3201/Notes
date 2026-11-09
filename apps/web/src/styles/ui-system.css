@@ -117,3 +117,81 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
         font-size: max(16px, var(--font-size-note, 1em)) !important;
     }
 }
+
+/* Entity/page actions sit on a solid surface below the heading/banner. */
+.ui-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-panel);
+    background: var(--surface);
+    color: var(--text);
+    overflow: visible;
+}
+.ui-page-actions > .button,
+.ui-page-actions > details > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 14px;
+    font-size: var(--font-size-ui);
+    white-space: normal;
+}
+.ui-page-actions .button-quiet { background: var(--surface); }
+.ui-page-actions > .button[aria-pressed='true'] {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+@media (max-width: 600px) {
+    .ui-page-actions { padding: 10px; }
+    .ui-page-actions > .button { flex: 1 1 auto; }
+    .milestone-page-actions .review-row-menu > div { left: 0; right: auto; }
+}
+
+/* Search stays readable; secondary controls share a compact responsive row. */
+.preview-workspace .ui-collection-toolbar,
+.ui-collection-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; width: 100%; min-width: 0; }
+.ui-collection-search { flex: 1 1 240px; min-width: 0; }
+.ui-collection-search > .field { width: 100%; margin: 0; }
+.preview-workspace .ui-collection-search .search-field { width: 100%; min-width: 0; }
+.ui-collection-search input { width: 100%; min-width: 0; min-height: 44px; }
+.ui-collection-controls { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: end; gap: 10px; min-width: 0; }
+.ui-collection-controls > .field { flex: 1 1 140px; min-width: 0; margin: 0; }
+.ui-collection-controls select { min-height: 44px; width: 100%; max-width: 100%; }
+.ui-collection-toolbar > .ui-collection-toggle { display: none; }
+@media (max-width: 800px) {
+    .ui-collection-search { flex-basis: 100%; }
+    .ui-collection-toolbar > .ui-collection-toggle { display: inline-flex; gap: 8px; align-items: center; }
+    .ui-collection-controls { display: none; flex-basis: 100%; }
+    .ui-collection-controls[data-open='true'] { display: flex; }
+    .preview-workspace .ui-collection-toolbar .ui-collection-controls > select { width: 100%; max-width: 100%; flex: 1 1 160px; }
+}
+
+.ui-dashboard-panel { min-width: 0; }
+.ui-dashboard-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.ui-dashboard-panel-title { flex: 1; min-width: 0; }
+.ui-dashboard-panel-title > .section-heading { margin: 0; flex-wrap: wrap; }
+.ui-dashboard-panel-title h2 { margin: 0; }
+.ui-dashboard-panel-controls { display: flex; flex: 0 0 auto; }
+.ui-dashboard-panel-controls > .icon-button { width: 36px; min-height: 44px; padding: 6px; }
+.ui-dashboard-panel-body { min-width: 0; }
+.ui-dashboard-panel-body[hidden] { display: none; }
+.ui-dashboard-panel[data-expanded='true'] { position: fixed; inset: 12px; z-index: 130; margin: 0; overflow: auto; background: var(--surface); box-shadow: var(--shadow); }
+.ui-dashboard-panel[data-expanded='true'] .ui-dashboard-panel-heading { position: sticky; top: 0; z-index: 2; padding-bottom: 8px; background: var(--surface); }
+.dashboard-completed-list { list-style: none; margin: 0; padding: 0; }
+.dashboard-completed-list li { padding: 8px 0; }
+.dashboard-completed-list .text-button { display: flex; gap: 8px; align-items: flex-start; text-align: left; overflow-wrap: anywhere; }
+.dashboard-habits-panel .habit-checkin-days { display: flex; max-width: 100%; overflow-x: auto; margin-top: 8px; }
+.dashboard-habits-panel .habit-checkin-day { flex: 1 0 36px; min-height: 44px; }
+.ui-collection-controls > label { display: grid; gap: 6px; min-width: 0; }
+.ui-collection-search input[type='search'] { border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text); }

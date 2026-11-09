@@ -68,3 +68,7 @@ test("a partial first week caps the required target at tracked days", () => {
         1,
     );
 });
+
+test("retrospective check-ins extend a streak before the Habit creation date", () => {
+    assert.equal(habitStreak(habit({ created: "2026-11-09", checkins: ["2026-11-07", "2026-11-08", "2026-11-09"] }), "2026-11-09"), 3);
+});

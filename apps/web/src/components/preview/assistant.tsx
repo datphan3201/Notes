@@ -110,7 +110,7 @@ export default function AssistantPreview({ text }: { text: Text }) {
                         before: create
                             ? text("No new task", "Chưa có công việc mới")
                             : text(...task!.title) +
-                              " · " +
+                              ". " +
                               text(
                                   "Not selected today",
                                   "Chưa chọn cho hôm nay",
@@ -121,7 +121,7 @@ export default function AssistantPreview({ text }: { text: Text }) {
                                   "Công việc mới: Xem lại bước tiếp theo",
                               )
                             : text(...task!.title) +
-                              " · " +
+                              ". " +
                               text(
                                   "Selected for today and this week; dates unchanged",
                                   "Chọn hôm nay và tuần này; giữ nguyên ngày",

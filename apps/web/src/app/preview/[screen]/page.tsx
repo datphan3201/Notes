@@ -32,8 +32,8 @@ export default async function Page({
             >
                 <p>
                     {locale === "vi"
-                        ? "Xem thử giao diện · Không gửi dữ liệu, không gửi email"
-                        : "Interface preview · No data or email is sent"}
+                        ? "Xem thử giao diện"
+                        : "Interface preview"}
                 </p>
                 <nav>
                     <Link href={`/preview/workspace?lang=${locale}`}>

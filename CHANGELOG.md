@@ -7,6 +7,18 @@ Entries describe their own historical stage. In particular, earlier 2026-11-08 p
 ## 2026-11-09
 
 ### Changed
+- Replaced joined middle-dot (`·`, `•`) captions across the website with single-purpose natural labels in Task rows, Goals, Milestones, Reviews, Notes and pickers, prioritizing completion status when done or due/schedule context when active.
+- Added a shared responsive `CollectionToolbar` unifying desktop search expansion and mobile expandable secondary filters for Notes, Tasks and Gantt views.
+- Streamlined Task navigation to exactly four primary tabs: `All`, `Today`, `This week` and `Other`, moving recurring series management to a dedicated secondary action button.
+- Rendered main Goal titles with full wrapping, and separated importance stars and Goal selection into distinct metadata rows.
+- Enhanced `FloatingTaskPicker` with compact, minimized and expanded sizing modes, collapsible secondary filters, mobile height clamping and safe non-autofocusing mobile search.
+- Added `DashboardPanel` with collapse/restore and full-viewport expansion; separated completed Tasks into their own panel with count badges; added configurable item density settings (1–20 per list) under account Appearance settings with authoritative FastAPI validation.
+- Unified Habit check-in controls with `HabitCheckinDays` across Dashboard and Habits pages, removing duplicate checkboxes and enabling retrospective check-ins and undos for past days.
+- Fixed Brevo transactional email delivery by including formatted `htmlContent` alongside `textContent`, and added multi-directory `.env` fallback paths in `SettingsConfigDict` so Brevo credentials and background queue processing function reliably across workspace paths.
+- Redesigned the Notes filter sidebar with a solid theme surface, readable tag selection rows, a full-width Manage tags control and a localized empty state/Add tag action.
+- Fixed Note checklist preview contrast: unchecked outlines follow card text, while checked boxes use the theme accent and contrasting tick color.
+- Anchored roadmap Milestone progress bars at the bottom of each card with equal horizontal insets, and removed the Not started label from those cards.
+- Standardized Goal/Milestone, Task, Review and account-settings page actions in a shared solid-theme action bar below the heading. Added visible Milestone action labels and kept overview floating controls, contextual actions and existing confirmations.
 - Centralized UTC+7 (`Asia/Ho_Chi_Minh`) as the application default on API/frontend, including missing Habit/import preferences, and corrected Task schedule timezone labels to follow the account. Preserved explicit timezone choices, UTC instant storage and existing account/history data.
 - Restored the inline right-side Task action layout on wide desktop screens while retaining labeled controls and theme-aware stars. Narrow/mobile layouts retain wrapping controls.
 - Replaced cryptic Task-row plan/menu icons with labeled Today, This week and Actions controls, explicit selected indicators and wrapping actions beneath Task text. Unified importance-star colors through a theme-accent token and shared Task/planning/Habit star rendering. Task-row plan membership now matches the explicit detail/picker selections, including dated Tasks, and completed Tasks disable plan changes.

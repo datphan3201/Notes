@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import html
 import json
 import secrets
 import smtplib
@@ -138,6 +139,11 @@ def send_email(payload, delivery_key=None):
         if not address or "@" not in address:
             raise RuntimeError("EMAIL_NOT_CONFIGURED")
         identity = delivery_key or json.dumps(payload, sort_keys=True)
+        html_body = payload.get("html") or (
+            "<p style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.5; color: #24323b;\">"
+            + html.escape(payload["body"]).replace("\n", "<br>")
+            + "</p>"
+        )
         with httpx.Client(timeout=20) as client:
             response = client.post(
                 "https://api.brevo.com/v3/smtp/email",
@@ -146,6 +152,7 @@ def send_email(payload, delivery_key=None):
                     "sender": {"name": name or "Planner", "email": address},
                     "to": [{"email": payload["to"]}],
                     "subject": payload["subject"],
+                    "htmlContent": html_body,
                     "textContent": payload["body"],
                     "headers": {"idempotencyKey": str(uuid5(NAMESPACE_URL, "planner:" + identity))},
                 },

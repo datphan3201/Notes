@@ -12,6 +12,14 @@ The roadmap is the explicit account focus Goal, shared with Main goal on Goals. 
 
 Autosave is silent: it shows no global progress banner or automatic success toast; error/retry feedback remains visible. Autosave updates the view immediately and batches nearby edits after a 400 ms quiet period. One write/acknowledgement cycle runs at a time; edits made during it stay visible and are replayed over the acknowledged snapshot for the next batch. Ordinary background saves do not make the workspace inert. Explicit destructive operations retain their separate short blocking state. Queued versioned edits keep their original read version (or the version acknowledged for this client's preceding write); an unrelated concurrent edit still conflicts. A failed save keeps the latest draft and requires an explicit retry; leaving with pending/failed work remains guarded.
 
+## Panel controls and information density
+
+Dashboard cards (Roadmap, Today/Week Tasks, Habits, Completed tasks, and Activity) are wrapped in reusable `DashboardPanel` containers with labeled collapse/restore (`ChevronUp`/`ChevronDown`) and full-viewport expansion (`Maximize2`/`Minimize2`, dismissible with Escape). Collapse/expand states remain session-only.
+
+Tasks, Habits, and Completed tasks lists default to displaying 3 items each, with explicit "Show more" / "Show less" controls so long lists cannot push supporting cards indefinitely below the fold. Per-list visible item limits (1–20) can be configured and saved under account Appearance settings (`DashboardDisplaySettings`), persisted in `User.preferences["dashboard"]` and validated on the server via `DashboardPreferences`. Completed tasks render in their own dedicated panel with total count badges, keeping active task checklists focused.
+
+Habit check-in rows use the shared `HabitCheckinDays` component displaying a 7-day strip based on the habit-local Monday, allowing direct check-in/undo for past days and current day without duplicate checkboxes.
+
 ## Existing Task selection
 
 Use the [shared floating Task picker](../shared/task-picker.md) to choose existing Tasks with search/filters, Add or drag-and-drop. It keeps the destination page interactive and the picker open; New task retains the shared editor and current context. See the picker contract for plan selections, whole-interval date moves, primary-parent transfer confirmation and recurring/completed restrictions.
@@ -24,9 +32,9 @@ Trace ID: `dashboard`. Test references identify coverage to inspect; they are no
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L33) — `export function DashboardView({` |
-| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1176) — `export function usePreviewData(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L823) — `def dashboard(` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L35) — `export function DashboardView({` |
+| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1179) — `export function usePreviewData(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L821) — `def dashboard(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L301) — `def select_focus(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L530) — `def activity(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |

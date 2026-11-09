@@ -767,13 +767,11 @@ def checkin(db: Session, user_id: str, habit_id: str, day: date, state: str):
     habit = owned(db, "habits", habit_id, user_id, active=True)
     today = now().astimezone(ZoneInfo(habit.timezone)).date()
     current = db.get(HabitDay, (habit_id, day))
-    if day < habit.created_at.astimezone(
-        ZoneInfo(habit.timezone)
-    ).date() or day > today + timedelta(days=3 if state in ("rest", "clear") else 0):
+    if day > today + timedelta(days=3 if state in ("rest", "clear") else 0):
         raise HTTPException(422, "Date is outside this Habit's check-in window")
     if state == "rest" and (day <= today or (current and current.state == "done")):
         raise HTTPException(422, "Plan rest only for tomorrow through the next three days")
-    if state == "clear" and current and current.state == "rest" and day <= today:
+    if state in ("clear", "done") and current and current.state == "rest" and day <= today:
         raise HTTPException(422, "Past and current Rest Days are preserved")
     was_done = current is not None and current.state == "done"
     if state == "clear":
@@ -806,7 +804,7 @@ def habit_days(db: Session, user_id: str, habit_id: str, start: date, end: date)
     ).all()
     done = {row.day for row in rows if row.state == "done"}
     rest = {row.day for row in rows if row.state == "rest"}
-    since = max(start, habit.created_at.astimezone(ZoneInfo(habit.timezone)).date())
+    since = max(start, min([habit.created_at.astimezone(ZoneInfo(habit.timezone)).date(), *done, *rest]))
     today = min(end, now().astimezone(ZoneInfo(habit.timezone)).date())
     streak = (
         weekly_streak(done, rest, habit.target, since, today)

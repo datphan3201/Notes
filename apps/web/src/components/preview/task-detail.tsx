@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import NotesPreview from "./notes";
 import { FormDialog, Stars } from "./ui";
+import { PageActionBar } from "../ui/layout";
 import { Button } from "../ui/button";
 import { statuses } from "./dashboard-data";
 import {
@@ -145,41 +146,38 @@ export default function TaskPreviewDetail({
                     </button>
                     <h1>{text(...task.title)}</h1>
                     <p>
-                        {text(status[1], status[2])}
-                        {task.due &&
-                            ` · ${text("Due", "Hạn")} ${formatTaskDate(task.due, locale)}`}{" "}
-                        ·{" "}
+                        {text(status[1], status[2])}{" "}
                         <Stars value={task.importance} text={text} />
                     </p>
                 </div>
-                <div className="action-row">
-                    <button className="button button-quiet" onClick={onEdit}>
-                        <Pencil size={15} />
-                        {text("Edit task", "Chỉnh sửa công việc")}
-                    </button>
-                    <Button className="task-plan-toggle" aria-pressed={task.daily}
-                        disabled={task.status === "Done"} onClick={() => onPlan("today")}
-                        title={text(task.daily ? "Remove from today's plan; keep the weekly selection." : "Add to today's plan without changing dates or status.", task.daily ? "Bỏ khỏi hôm nay, vẫn giữ lựa chọn trong tuần." : "Thêm vào kế hoạch hôm nay, giữ nguyên ngày và trạng thái.")}>
-                        {task.daily ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
-                        {text(task.daily ? "Remove from today" : "Add to today", task.daily ? "Bỏ khỏi hôm nay" : "Thêm vào hôm nay")}
-                    </Button>
-                    <Button className="task-plan-toggle" aria-pressed={task.weekly}
-                        disabled={task.status === "Done"} onClick={() => onPlan("week")}
-                        title={text(task.weekly ? "Remove from this week's plan, including today's selection." : "Add to this week's plan without changing dates or status.", task.weekly ? "Bỏ khỏi kế hoạch tuần, bao gồm lựa chọn hôm nay." : "Thêm vào kế hoạch tuần, giữ nguyên ngày và trạng thái.")}>
-                        {task.weekly ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
-                        {text(task.weekly ? "Remove from this week" : "Add to this week", task.weekly ? "Bỏ khỏi tuần này" : "Thêm vào tuần này")}
-                    </Button>
-                    <button
-                        className="button button-primary"
-                        onClick={onTransition}
-                    >
-                        {text(
-                            task.status === "Done" ? "Reopen" : "Complete",
-                            task.status === "Done" ? "Mở lại" : "Hoàn thành",
-                        )}
-                    </button>
-                </div>
             </header>
+            <PageActionBar label={text("Task actions", "Thao tác công việc")}>
+                <button className="button button-quiet" onClick={onEdit}>
+                    <Pencil size={15} />
+                    {text("Edit task", "Chỉnh sửa công việc")}
+                </button>
+                <Button className="task-plan-toggle" aria-pressed={task.daily}
+                    disabled={task.status === "Done"} onClick={() => onPlan("today")}
+                    title={text(task.daily ? "Remove from today's plan; keep the weekly selection." : "Add to today's plan without changing dates or status.", task.daily ? "Bỏ khỏi hôm nay, vẫn giữ lựa chọn trong tuần." : "Thêm vào kế hoạch hôm nay, giữ nguyên ngày và trạng thái.")}>
+                    {task.daily ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                    {text(task.daily ? "Remove from today" : "Add to today", task.daily ? "Bỏ khỏi hôm nay" : "Thêm vào hôm nay")}
+                </Button>
+                <Button className="task-plan-toggle" aria-pressed={task.weekly}
+                    disabled={task.status === "Done"} onClick={() => onPlan("week")}
+                    title={text(task.weekly ? "Remove from this week's plan, including today's selection." : "Add to this week's plan without changing dates or status.", task.weekly ? "Bỏ khỏi kế hoạch tuần, bao gồm lựa chọn hôm nay." : "Thêm vào kế hoạch tuần, giữ nguyên ngày và trạng thái.")}>
+                    {task.weekly ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                    {text(task.weekly ? "Remove from this week" : "Add to this week", task.weekly ? "Bỏ khỏi tuần này" : "Thêm vào tuần này")}
+                </Button>
+                <button
+                    className="button button-primary"
+                    onClick={onTransition}
+                >
+                    {text(
+                        task.status === "Done" ? "Reopen" : "Complete",
+                        task.status === "Done" ? "Mở lại" : "Hoàn thành",
+                    )}
+                </button>
+            </PageActionBar>
             <TaskPreviewTabs
                 prefix="preview-task-detail"
                 label={text("Task sections", "Các mục công việc")}
@@ -253,7 +251,7 @@ export default function TaskPreviewDetail({
                                                       )!.label,
                                                   ),
                                               )
-                                              .join(" · ")
+                                              .join(", ")
                                         : "—"}
                                 </dd>
                             </div>
@@ -268,7 +266,7 @@ export default function TaskPreviewDetail({
                                         {task.scheduledStart.slice(11)}
                                         {task.scheduledEnd &&
                                             ` – ${task.scheduledEnd.slice(11)}`}{" "}
-                                        · {db.profile.timezone}
+
                                     </dd>
                                 </div>
                             )}

@@ -1,4 +1,5 @@
 "use client";
+import { CollectionToolbar } from "../ui/collection-toolbar";
 import FloatingActions from "../floating-actions";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
@@ -477,8 +478,8 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                     <WifiOff size={17} />
                     <span>
                         {text(
-                            "Offline · pending changes:",
-                            "Ngoại tuyến · thay đổi chờ lưu:",
+                            "Pending offline changes:",
+                            "Thay đổi chờ lưu ngoại tuyến:",
                         )}{" "}
                         {Object.keys(drafts).length}
                     </span>
@@ -555,51 +556,41 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                             }
                         </span>
                     </button>
-                    <div className="filter-divider" />
-                    <div className="filter-heading">
-                        <span>{text("Tags", "Nhãn")}</span>
+                    <section className="note-tag-filter" aria-label={text("Tags", "Nhãn")}>
+                        <h2>{text("Tags", "Nhãn")}</h2>
+                        <div className="label-filter-list">
+                            {!tags.length && <p className="note-tags-empty">{text("No tags yet", "Chưa có nhãn")}</p>}
+                            {tags.map((tag) => (
+                                <label className="label-filter-option" key={tag.id}>
+                                    <input
+                                        type="checkbox"
+                                        checked={activeTags.includes(tag.id)}
+                                        onChange={() =>
+                                            setActiveTags((ids) =>
+                                                ids.includes(tag.id)
+                                                    ? ids.filter(
+                                                          (id) => id !== tag.id,
+                                                      )
+                                                    : [...ids, tag.id],
+                                            )
+                                        }
+                                    />
+                                    <span>{text(...tag.label)}</span>
+                                </label>
+                            ))}
+                        </div>
                         <button
-                            className="text-button"
+                            className="button button-quiet note-tags-manage"
                             onClick={() => setManageTags(true)}
                         >
-                            {text("Manage", "Quản lý")}
+                            {tags.length ? <BaselineIcon name="settings" /> : <Plus size={16} aria-hidden="true" />}
+                            {tags.length ? text("Manage tags", "Quản lý nhãn") : text("Add tag", "Thêm nhãn")}
                         </button>
-                    </div>
-                    <div className="label-filter-list">
-                        {tags.map((tag) => (
-                            <label className="label-filter-option" key={tag.id}>
-                                <input
-                                    type="checkbox"
-                                    checked={activeTags.includes(tag.id)}
-                                    onChange={() =>
-                                        setActiveTags((ids) =>
-                                            ids.includes(tag.id)
-                                                ? ids.filter(
-                                                      (id) => id !== tag.id,
-                                                  )
-                                                : [...ids, tag.id],
-                                        )
-                                    }
-                                />
-                                <span>{text(...tag.label)}</span>
-                            </label>
-                        ))}
-                    </div>
+                    </section>
                 </aside>
                 <section className="review-notes-results">
-                    <div className="notes-toolbar">
-                        <button
-                            className="icon-button review-mobile-note-filters"
-                            aria-label={text(
-                                "Show note filters",
-                                "Hiện bộ lọc ghi chú",
-                            )}
-                            aria-expanded={tagsOpen}
-                            onClick={() => setTagsOpen(!tagsOpen)}
-                        >
-                            <BaselineIcon name="settings" />
-                        </button>
-                        <div className="search-field">
+                    <CollectionToolbar className="notes-toolbar" label={text("Find notes", "Tìm ghi chú")} filtersLabel={text("Filters and sorting", "Lọc và sắp xếp")}
+                        search={<div className="search-field">
                             <Search size={18} />
                             <input
                                 type="search"
@@ -613,7 +604,20 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                     setQuery(event.target.value)
                                 }
                             />
-                        </div>
+                        </div>}>
+
+                        <button
+                            className="icon-button review-mobile-note-filters"
+                            aria-label={text(
+                                "Show note filters",
+                                "Hiện bộ lọc ghi chú",
+                            )}
+                            aria-expanded={tagsOpen}
+                            onClick={() => setTagsOpen(!tagsOpen)}
+                        >
+                            <BaselineIcon name="settings" />
+                        </button>
+
                         <button
                             className="icon-button"
                             aria-label={
@@ -644,24 +648,24 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                         >
                             <option value="updated-desc">
                                 {text(
-                                    "Last edited · newest",
-                                    "Ngày sửa · mới nhất",
+                                    "Recently updated",
+                                    "Mới cập nhật",
                                 )}
                             </option>
                             <option value="updated-asc">
                                 {text(
-                                    "Last edited · oldest",
-                                    "Ngày sửa · cũ nhất",
+                                    "Oldest updates",
+                                    "Cập nhật lâu nhất",
                                 )}
                             </option>
                             <option value="title-asc">
-                                {text("Title · A–Z", "Tiêu đề · A–Z")}
+                                {text("Title A–Z", "Tiêu đề A–Z")}
                             </option>
                             <option value="title-desc">
-                                {text("Title · Z–A", "Tiêu đề · Z–A")}
+                                {text("Title Z–A", "Tiêu đề Z–A")}
                             </option>
                         </select>
-                    </div>
+                                        </CollectionToolbar>
                     {!!activeTags.length && (
                         <div className="active-filter-row">
                             <span>
@@ -775,8 +779,8 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                                                 {note.permission ===
                                                                 "read"
                                                                     ? text(
-                                                                          "Shared · Read-only",
-                                                                          "Được chia sẻ · Chỉ đọc",
+                                                                          "Read-only",
+                                                                          "Chỉ đọc",
                                                                       )
                                                                     : note.tags
                                                                           .map(
@@ -795,7 +799,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                                                                   ),
                                                                           )
                                                                           .join(
-                                                                              " · ",
+                                                                              ", ",
                                                                           )}
                                                             </small>
                                                         </button>
@@ -994,7 +998,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                             <span className="save-status" role="status">
                                 {saving ? text("Saving…", "Đang lưu…")
                                     : drafts[note.id] ? text("Unsaved changes", "Thay đổi chưa lưu")
-                                    : offline ? text("Offline · queued", "Ngoại tuyến · chờ đồng bộ")
+                                    : offline ? text("Waiting to sync", "Chờ đồng bộ")
                                     : text("Saved", "Đã lưu")}
                             </span>
                             {editable && <button type="button" className="button button-primary review-note-save"
@@ -1037,8 +1041,8 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                     {note.permission === "read" && (
                                         <p className="notice">
                                             {text(
-                                                "Shared with you · Read-only. Changes are disabled.",
-                                                "Được chia sẻ với bạn · Chỉ đọc. Các thao tác chỉnh sửa bị tắt.",
+                                                "This note is read-only.",
+                                                "Ghi chú này chỉ cho phép đọc.",
                                             )}
                                         </p>
                                     )}
@@ -1248,7 +1252,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                                                   drafts[
                                                                       note.id
                                                                   ]
-                                                                ? "Offline · changes queued"
+                                                                ? "Waiting to sync"
                                                                 : saving
                                                                   ? "Saving…"
                                                                   : drafts[note.id]
@@ -1266,7 +1270,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                                                   drafts[
                                                                       note.id
                                                                   ]
-                                                                ? "Ngoại tuyến · thay đổi chờ lưu"
+                                                                ? "Chờ đồng bộ"
                                                                 : saving
                                                                   ? "Đang lưu…"
                                                                   : drafts[note.id]

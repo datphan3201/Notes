@@ -10,6 +10,7 @@ import {
     type ActivityFact,
 } from "./workspace-data";
 import { monday } from "./calendar";
+import { PageActionBar } from "../ui/layout";
 import { Confirm, Field, FormDialog, Header, ReferenceDecoration } from "./ui";
 import type { Text } from "./shared";
 export function ActivityView({
@@ -309,14 +310,13 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                     "Nhìn lại. Học hỏi. Tiến bước.",
                 )}
             >
-                <button
-                    hidden={!!review}
+                {!review && <button
                     className="button button-primary"
                     onClick={() => setCreate(true)}
                 >
                     <Plus size={17} />
                     {text("New review", "Đánh giá mới")}
-                </button>
+                </button>}
             </Header>
             {review ? (
                 <article className="planning-panel review-reflection">
@@ -331,96 +331,92 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                         <div>
                             <h2>{review.title}</h2>
                             <p className="subtle-copy">
-                                {kindLabel(review.kind)} ·{" "}
                                 {dateLabel(review.from, db.locale)} –{" "}
-                                {dateLabel(review.to, db.locale)} ·{" "}
-                                {review.finalized
-                                    ? text("Finalized", "Đã hoàn tất")
-                                    : text("Draft", "Bản nháp")}
+                                {dateLabel(review.to, db.locale)}
                             </p>
                         </div>
-                        <div className="action-row">
-                            <button
-                                className="button button-quiet"
-                                disabled={review.finalized}
-                                onClick={() => {
-                                    if (db.live) {
-                                        void db.live
-                                            .flush()
-                                            .then(async (ok) => {
-                                                if (!ok) return;
-                                                const rows =
-                                                    await db.live!.request<{
-                                                        reviews: {
-                                                            id: string;
-                                                            version: number;
-                                                        }[];
-                                                    }>("/workspace/snapshot");
-                                                const row = rows.reviews.find(
-                                                    (r) =>
-                                                        r.id ===
-                                                        db.live!.serverId(
-                                                            review.id,
-                                                        ),
-                                                );
-                                                if (row) {
-                                                    await db.live!.request(
-                                                        "/workspace/changes",
-                                                        {
-                                                            method: "POST",
-                                                            body: JSON.stringify(
-                                                                {
-                                                                    changes: [
-                                                                        {
-                                                                            action: "review-refresh",
-                                                                            kind: "reviews",
-                                                                            id: row.id,
-                                                                            version:
-                                                                                row.version,
-                                                                        },
-                                                                    ],
-                                                                },
-                                                            ),
-                                                        },
-                                                    );
-                                                    await db.live!.refresh();
-                                                }
-                                            });
-                                        return;
-                                    }
-                                    db.setReviews((rows) =>
-                                        rows.map((row) =>
-                                            row.id === review.id
-                                                ? {
-                                                      ...row,
-                                                      snapshot: snapshot(
-                                                          row.from,
-                                                          row.to,
-                                                      ),
-                                                  }
-                                                : row,
-                                        ),
-                                    );
-                                }}
-                            >
-                                {text("Refresh facts", "Cập nhật dữ liệu")}
-                            </button>
-                            <button
-                                className="button button-primary"
-                                onClick={() => save(!review.finalized)}
-                            >
-                                {review.finalized
-                                    ? text("Reopen", "Mở lại")
-                                    : text("Finalize", "Hoàn tất")}
-                            </button>
-                            <button
-                                className="button button-danger-quiet"
-                                onClick={() => setRemove(true)}
-                            >
-                                {text("Delete", "Xóa")}
-                            </button>
-                        </div>
                     </div>
+                    <PageActionBar label={text("Review actions", "Thao tác đánh giá")}>
+                        <button
+                            className="button button-quiet"
+                            disabled={review.finalized}
+                            onClick={() => {
+                                if (db.live) {
+                                    void db.live
+                                        .flush()
+                                        .then(async (ok) => {
+                                            if (!ok) return;
+                                            const rows =
+                                                await db.live!.request<{
+                                                    reviews: {
+                                                        id: string;
+                                                        version: number;
+                                                    }[];
+                                                }>("/workspace/snapshot");
+                                            const row = rows.reviews.find(
+                                                (r) =>
+                                                    r.id ===
+                                                    db.live!.serverId(
+                                                        review.id,
+                                                    ),
+                                            );
+                                            if (row) {
+                                                await db.live!.request(
+                                                    "/workspace/changes",
+                                                    {
+                                                        method: "POST",
+                                                        body: JSON.stringify(
+                                                            {
+                                                                changes: [
+                                                                    {
+                                                                        action: "review-refresh",
+                                                                        kind: "reviews",
+                                                                        id: row.id,
+                                                                        version:
+                                                                            row.version,
+                                                                    },
+                                                                ],
+                                                            },
+                                                        ),
+                                                    },
+                                                );
+                                                await db.live!.refresh();
+                                            }
+                                        });
+                                    return;
+                                }
+                                db.setReviews((rows) =>
+                                    rows.map((row) =>
+                                        row.id === review.id
+                                            ? {
+                                                  ...row,
+                                                  snapshot: snapshot(
+                                                      row.from,
+                                                      row.to,
+                                                  ),
+                                              }
+                                            : row,
+                                    ),
+                                );
+                            }}
+                        >
+                            {text("Refresh facts", "Cập nhật dữ liệu")}
+                        </button>
+                        <button
+                            className="button button-primary"
+                            onClick={() => save(!review.finalized)}
+                        >
+                            {review.finalized
+                                ? text("Reopen", "Mở lại")
+                                : text("Finalize", "Hoàn tất")}
+                        </button>
+                        <button
+                            className="button button-danger-quiet"
+                            onClick={() => setRemove(true)}
+                        >
+                            {text("Delete", "Xóa")}
+                        </button>
+                    </PageActionBar>
                     <div className="review-period-navigation">
                         <button
                             className="icon-button"
@@ -531,8 +527,8 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                         <summary>
                             {review.snapshot.actions ?? "—"}{" "}
                             {text(
-                                "recorded actions · this period's snapshot",
-                                "hoạt động đã ghi nhận · dữ liệu của kỳ này",
+                                "recorded actions",
+                                "hoạt động đã ghi nhận",
                             )}
                         </summary>
                         {review.snapshot.facts?.map((fact) => (
@@ -548,8 +544,7 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                                     }
                                 >
                                     {text(...fact.title)}
-                                </button>{" "}
-                                · {dateLabel(fact.date, db.locale)}
+                                </button>
                             </p>
                         ))}
                         <p className="subtle-copy">
@@ -645,7 +640,6 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                             <span>
                                 <strong>{row.title}</strong>
                                 <small>
-                                    {kindLabel(row.kind)} ·{" "}
                                     {dateLabel(row.from, db.locale)} –{" "}
                                     {dateLabel(row.to, db.locale)}
                                 </small>

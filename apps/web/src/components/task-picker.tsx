@@ -91,7 +91,7 @@ export function TaskPickerProvider({ children }: { children: ReactNode }) {
                 const milestone = db.milestones.find(item => item.id === row.parent);
                 const goalId = milestone?.goal || (db.goals.some(item => item.id === row.parent) ? row.parent : "inbox");
                 const status = statuses.find(([key]) => key === row.status)!;
-                const metadata = [text(status[1], status[2]), row.estimate ? `${row.estimate} ${text("min", "phút")}` : "", taskDate(row) ? dateLabel(taskDate(row), db.locale) : ""].filter(Boolean).join(" · ");
+                const metadata = taskDate(row) ? dateLabel(taskDate(row), db.locale) : text(status[1], status[2]);
                 return { id: row.id, title: text(...row.title), goalId, goalLabel: parentLabel(row.parent), metadata,
                     scheduled: !!taskDate(row), selected: taskIsPicked(row, target), returnable: taskCanReturn(row, target),
                     disabledReason: target.kind !== "plan" && row.seriesId ? text("Edit in the repeating series", "Chỉnh trong chuỗi lặp") : undefined };

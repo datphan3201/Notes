@@ -533,9 +533,18 @@
     width: 24px;
     height: 24px;
 }
-.review-planning .roadmap-branch .progress-track {
-    margin: 4px 0 0;
-    width: 100%;
+.review-planning .goal-roadmap .roadmap-branch {
+    padding-bottom: 28px;
+}
+.review-planning .goal-roadmap[data-roadmap-layout] .roadmap-branch .progress-track {
+    position: absolute;
+    grid-column: auto;
+    grid-row: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    margin: 0;
+    width: auto;
 }
 .review-planning .roadmap-center > .review-entity-icon {
     display: inline-flex;
@@ -584,9 +593,6 @@
 .milestone-focus-header h2 {
     overflow-wrap: anywhere;
 }
-.milestone-focus-header > .action-row {
-    max-width: 100%;
-}
 @media (max-width: 600px) {
     .milestone-focus-header > div:first-child {
         flex-basis: auto;
@@ -598,10 +604,6 @@
     }
     .milestone-focus-header .review-stars {
         grid-column: 2;
-    }
-    .milestone-focus-header .review-row-menu > div {
-        left: 0;
-        right: auto;
     }
 }
 .review-milestone-focus .review-task-line {
@@ -2261,9 +2263,62 @@
     display: block;
     min-height: 0;
 }
-.preview-workspace .review-notes-collection .label-filter-option {
-    flex-direction: row;
+/* Keep Notes navigation readable over illustrated scenery. */
+.preview-workspace .review-notes-collection .notes-filter-panel {
+    min-width: 0;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ui-radius-panel);
+    overflow: visible;
 }
+.preview-workspace .review-notes-collection .filter-all { width: 100%; }
+.note-tag-filter {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+.note-tag-filter h2 {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: var(--font-size-ui);
+    font-weight: 600;
+}
+.note-tag-filter .note-tags-empty {
+    display: block;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: var(--font-size-meta);
+}
+.note-tag-filter .label-filter-list { display: grid; gap: 4px; }
+.preview-workspace .review-notes-collection .note-tag-filter .label-filter-option {
+    flex-direction: row;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+}
+.preview-workspace .review-notes-collection .note-tag-filter .label-filter-option:has(input:checked) {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+.preview-workspace .review-notes-collection .note-tag-filter input { display: block; }
+.note-tag-filter .note-tags-manage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 8px;
+    padding: 8px;
+    font-size: var(--font-size-meta);
+}
+.note-tags-manage svg { width: 16px; height: 16px; flex-shrink: 0; }
 .preview-workspace .review-notes .review-page-header {
     overflow: visible;
     z-index: 5;
@@ -2852,3 +2907,22 @@
 
 .live-save-error { position:fixed;z-index:2000;top:12px;left:50%;transform:translateX(-50%);max-width:min(90vw,760px);padding:10px 16px;border-radius:12px;box-shadow:0 8px 30px #0002;background:var(--surface,#fff);color:var(--text,#24323b); }
 .live-save-error { border:1px solid #d56e6e;display:flex;align-items:center;gap:12px; }
+
+/* Give the selected Goal its full title; selection and importance have separate rows. */
+.review-planning .main-goal-title { display: flex; flex-wrap: nowrap; align-items: flex-start; }
+.review-planning .main-goal-title h2 { min-width: 0; flex: 1; margin: 0; white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; }
+.main-goal-importance { margin: 8px 0; }
+.main-goal-selection { margin: 10px 0; }
+.main-goal-selection summary { width: fit-content; min-height: 44px; padding: 10px 0; cursor: pointer; color: var(--accent); }
+.review-planning .main-goal-selection .main-goal-picker { display: block; width: 100%; margin: 0; }
+.review-planning .main-goal-selection select { width: 100%; max-width: 100%; }
+.task-series-navigation { margin: 12px 0; }
+
+/* A single per-day control replaces the duplicate Habit checkbox. */
+.review-habits .habit-row { grid-template-columns: minmax(0, 1fr) max-content; }
+.review-habits .habit-row > .habit-checkin-days { grid-column: 1 / -1; grid-row: auto; }
+.review-habits .habit-row-actions { grid-column: 2; grid-row: 1; }
+@media (max-width: 600px) {
+    .review-habits .habit-row { grid-template-columns: minmax(0, 1fr); }
+    .review-habits .habit-row-actions { grid-column: 1; grid-row: auto; }
+}

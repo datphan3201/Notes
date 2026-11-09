@@ -18,7 +18,7 @@ Trace ID: `goals`. Test references identify coverage to inspect; they are not ex
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/planning.tsx](../../../apps/web/src/components/preview/planning.tsx#L68) — `export default function PlanningPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L143) — `def validate_relations(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L911) — `def progress_for_user(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L909) — `def progress_for_user(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L589) — `def archive(` |
 | Related tests | [apps/api/tests/test_domain.py](../../../apps/api/tests/test_domain.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |

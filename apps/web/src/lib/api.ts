@@ -25,6 +25,7 @@ export type WorkspacePreferences = {
     show_quote?: boolean;
     custom_quote?: string;
     background_color?: string | null;
+    dashboard?: { tasks: number; habits: number; completed: number };
     notes_view?: "grid" | "list";
     notifications_enabled?: boolean;
     email_notifications?: boolean;

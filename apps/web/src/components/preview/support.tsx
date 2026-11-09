@@ -412,7 +412,7 @@ export default function SupportPreview({
                 ) +
                     report.id +
                     (!dismiss
-                        ? " · " + actions.map(actionLabel).join(", ")
+                        ? ". " + actions.map(actionLabel).join(", ")
                         : ""),
             );
             db.setMessage(

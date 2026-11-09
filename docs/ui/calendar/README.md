@@ -24,7 +24,7 @@ Trace ID: `calendar`. Test references identify coverage to inspect; they are not
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L42) — `export default function CalendarPreview({ text }: { text: Text }) {` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L43) — `export default function CalendarPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L222) — `def calendar(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

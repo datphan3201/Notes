@@ -22,7 +22,7 @@ Trace ID: `tasks.detail`. Test references identify coverage to inspect; they are
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/task-detail.tsx](../../../apps/web/src/components/preview/task-detail.tsx#L82) — `export default function TaskPreviewDetail(` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/task-detail.tsx](../../../apps/web/src/components/preview/task-detail.tsx#L83) — `export default function TaskPreviewDetail(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L143) — `def validate_relations(` |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |

@@ -14,7 +14,7 @@ Trace ID: `reviews`. Test references identify coverage to inspect; they are not 
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/reviews.tsx](../../../apps/web/src/components/preview/reviews.tsx#L174) — `export default function ReviewsPreview(` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/reviews.tsx](../../../apps/web/src/components/preview/reviews.tsx#L175) — `export default function ReviewsPreview(` |
 | API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L91) — `def review_snapshot(` |
 | API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

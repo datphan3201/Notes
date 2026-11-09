@@ -531,8 +531,8 @@ function WorkspaceContent({ initialLocale, initialSection = "tasks" }: Workspace
                                         "Điều khiển xem thử",
                                     )}
                                     title={text(
-                                        "Preview · sample data",
-                                        "Xem thử · dữ liệu mẫu",
+                                        "Sample data",
+                                        "Dữ liệu mẫu",
                                     )}
                                 >
                                     <SlidersHorizontal size={18} />
