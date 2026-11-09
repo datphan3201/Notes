@@ -307,7 +307,7 @@ def test_private_schema_migrates_without_using_public_accounts(client, db):
                 "c=engine().connect(); "
                 "assert c.scalar(text('SELECT current_database()')) == 'planner_test'; "
                 "assert c.scalar(text('SELECT current_schema()')) == 'planner_test_cloud'; "
-                "assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0008'; "
+                "assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0009'; "
                 "assert c.scalar(text('SELECT count(*) FROM users')) == 0; "
                 "c.close()",
             ],

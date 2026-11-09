@@ -6,7 +6,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 
 ## Reporting rules
 
-- Next unused ID: **ISSUE-077**. Never reuse an earlier ID.
+- Next unused ID: **ISSUE-079**. Never reuse an earlier ID.
 - Include status, severity, affected source/UI, observed versus expected behavior, evidence type/limits and a concrete next step.
 - Severity: High (data loss/security/core failure), Medium (wrong behavior or material unverified operational/scaling gap), Low (cosmetic/documentation/tooling friction).
 - Status: Open, Needs decision or In progress. Listing an issue alone does not authorize runtime changes.
@@ -27,6 +27,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 | [ISSUE-069](#issue-069--hosted-ai-is-unconfigured-on-render) | Hosted AI is unconfigured on Render | Medium | Open |
 | [ISSUE-070](#issue-070--hosted-mail-still-uses-the-resend-testing-sender) | Hosted mail still uses the Resend testing sender | Medium | Open |
 | [ISSUE-076](#issue-076--dashboard-roadmap-marks-completed-milestones-by-count) | Dashboard roadmap marks completed milestones by count | Medium | Open |
+| [ISSUE-077](#issue-077--task-reopen-prompts-do-not-cover-all-completed-ancestors) | Task reopen prompts do not cover all completed ancestors | Medium | Open |
 
 ## UI refinement queue
 
@@ -166,6 +167,14 @@ The former ISSUE-049–062 implementation gaps were closed by the connected UI w
 - **Observed:** the preview calculates an aggregate completed count, then marks the first N milestone buttons as done using `index < focus.completed`, rather than checking the corresponding milestone's status. Out-of-order completion can therefore mark a different named milestone as complete; the total count can still be correct.
 - **Expected / next step:** derive each displayed dot/segment's completion from its corresponding milestone and verify an out-of-order completion fixture. Keep this status correction separate from the responsive-width change.
 - **Evidence and limits:** source-inspected during responsive layout work; the incorrect status case was not executed and no development/cloud records were changed.
+
+## ISSUE-077 — Task reopen prompts do not cover all completed ancestors
+
+- **Status / severity:** Open / Medium.
+- **Affected:** [Task collection](../apps/web/src/components/preview/tasks.tsx), [shared Task interactions](../apps/web/src/components/preview/task-interaction.tsx), [domain transitions](../apps/api/planner/planning.py).
+- **Observed:** frontend reopen acknowledgement detection checks the directly associated Goal against completed Goals. The server checks a completed Milestone and the full ancestor Goal chain, requiring `reopen_parents` and rejecting a completed dependent Milestone. A done Task under a completed Milestone or higher ancestor can therefore reach a server rejection without the UI offering the required acknowledgement. The frontend's synthetic parent updates also reset a detected Goal to NotStarted whereas the server reopens completed ancestors as doing.
+- **Expected / next step:** share a complete ancestor/dependency projection for Task reopen prompts, describe all affected parents and match acknowledged server states. Cover a completed Milestone with an active Goal, a completed higher Goal, and a completed dependent Milestone.
+- **Evidence and limits:** source inspection on 2026-11-09; these transition cases were not executed against development or production, and no Task records were changed.
 
 ## New issue template
 

@@ -113,3 +113,11 @@ test("Goal focus uses the stored identifier and completion state", () => {
     assert.equal(goal.area, "owned-area");
     assert.equal(goal.status, "Done");
 });
+
+test("Task completion is binary while Goal progress states remain distinct", () => {
+    for (const status of ["todo", "doing", "blocked", "done"]) {
+        const row = dashboardTask({ ...entity, status }, 1, "2026-11-09", "UTC", { daily: [], weekly: [] }, {});
+        assert.equal(row.status, status === "done" ? "Done" : "NotStarted");
+    }
+    assert.equal(dashboardGoal({ ...entity, status: "doing" }).status, "InProgress");
+});

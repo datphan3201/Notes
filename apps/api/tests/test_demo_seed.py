@@ -48,7 +48,7 @@ def test_demo_history_is_scoped_consistent_and_login_works(client, db):
     assert db.get(User, original.id).password_hash == original_hash
     assert db.scalar(select(func.count()).select_from(Job).where(Job.user_id == user_id)) == 0
     tasks = db.scalars(select(Task).where(Task.user_id == user_id)).all()
-    assert {row.status for row in tasks} == {"todo", "doing", "blocked", "done"}
+    assert {row.status for row in tasks} == {"todo", "done"}
     assert any(row.archived_at for row in tasks)
     assert all(not row.due_date or date(2026, 9, 8) <= row.due_date < AS_OF for row in tasks)
     for row in tasks:

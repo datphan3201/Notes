@@ -102,6 +102,7 @@ export class WorkspaceIds {
 }
 const pair = (value = ""): [string, string] => [value, value];
 export const backendStatus = (status: string, kind: Kind) =>
+    kind === "tasks" ? (status === "Done" ? "done" : "todo") :
     status === "Done"
         ? kind === "goals"
             ? "completed"

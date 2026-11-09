@@ -1,12 +1,13 @@
 "use client";
-import FloatingActions from "../floating-actions";
+import "@/styles/floating-actions.css";
 import { TASK_RETURN_MIME } from "@/lib/task-picker";
 import { TaskDropZone, useTaskPicker } from "../task-picker";
 import { useEffect, useState, type CSSProperties } from "react";
 import {
     ChevronLeft,
     ChevronRight,
-    Plus,
+    ListPlus,
+    X,
     CalendarDays,
     Flag,
     Target,
@@ -489,19 +490,24 @@ export default function CalendarPreview({ text }: { text: Text }) {
                     "Mọi mốc thời gian trong kế hoạch, và chỗ để dời công việc sang ngày phù hợp.",
                 )}
             />
-            <FloatingActions
-                label={text("Page actions", "Thao tác trang")}
-                closeLabel={text("Close actions", "Đóng thao tác")}
-            >
+            <div className="floating-actions">
                 <button
-                    className="button button-primary"
-                    onClick={() => create(selected)}
+                    type="button"
+                    className="floating-actions-trigger"
+                    aria-expanded={taskPicker.target?.kind === "calendar"}
+                    aria-label={taskPicker.target?.kind === "calendar"
+                        ? text("Close task picker", "Đóng bảng chọn công việc")
+                        : text("Choose tasks", "Chọn công việc")}
+                    title={text("Choose tasks", "Chọn công việc")}
+                    onClick={() => taskPicker.target?.kind === "calendar"
+                        ? taskPicker.close()
+                        : choose(selected)}
                 >
-                    <Plus size={17} />
-                    {text("New task", "Công việc mới")}
+                    {taskPicker.target?.kind === "calendar"
+                        ? <X size={24} aria-hidden="true" />
+                        : <ListPlus size={24} aria-hidden="true" />}
                 </button>
-                <button className="button button-quiet" onClick={() => choose(selected)}>{text("Choose tasks", "Chọn công việc")}</button>
-            </FloatingActions>
+            </div>
             {view !== "gantt" ? (
                 <div
                     className="review-calendar-layout"
@@ -605,36 +611,6 @@ export default function CalendarPreview({ text }: { text: Text }) {
                             </div>
                         </div>
                     </div>
-                    <aside className="review-agenda-stack">
-                        <section className="planning-panel review-date-agenda">
-                            <div className="section-heading">
-                                <h2>{dateLabel(selected, db.locale, true)}</h2>
-                                <button
-                                    className="button button-quiet"
-                                    onClick={() => choose(selected)}
-                                >
-                                    <Plus size={15} />
-                                    {text("Add task", "Thêm công việc")}
-                                </button>
-                            </div>
-                            {visible(selected).map((item) =>
-                                chip(item, selected),
-                            )}
-                            {!visible(selected).length && (
-                                <p className="review-inline-empty">
-                                    {text(
-                                        "A little room to plan.",
-                                        "Còn chỗ cho kế hoạch mới.",
-                                    )}
-                                </p>
-                            )}
-                        </section>
-                        <section className="planning-panel review-date-agenda">
-                            <h3>{text("Choose existing tasks", "Chọn công việc có sẵn")}</h3>
-                            <p className="review-caption">{text("Use the shared picker to drag tasks onto a day or add to the selected date.", "Mở bảng chọn chung để kéo công việc vào một ngày hoặc thêm vào ngày đang chọn.")}</p>
-                            <button className="button button-quiet" onClick={() => choose(selected)}>{text("Choose tasks", "Chọn công việc")}</button>
-                        </section>
-                    </aside>
                 </div>
             ) : (
                 <div

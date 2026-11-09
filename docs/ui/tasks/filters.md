@@ -15,7 +15,7 @@ Trace ID: `tasks.filters`. Test references identify coverage to inspect; they ar
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L58) — `export default function TasksPreview({` |
-| Live Task projection | [apps/web/src/components/live-model.ts](../../../apps/web/src/components/live-model.ts#L114) — `export function fromSnapshot(` |
+| Live Task projection | [apps/web/src/components/live-model.ts](../../../apps/web/src/components/live-model.ts#L115) — `export function fromSnapshot(` |
 | Alternate typed Task-view helper; unit-tested, not mounted by WorkspaceView | [apps/web/src/lib/task-views.ts](../../../apps/web/src/lib/task-views.ts#L30) — `export function matchesView(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L248) — `def task_plan(` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L266) — `def select_task(` |

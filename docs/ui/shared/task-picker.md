@@ -13,6 +13,8 @@ Dashboard, Calendar and Goal/Milestone task selection use one nonmodal floating 
 | Calendar date | An undated Task gains that due date. Dated work shifts its full start/due/scheduled interval together, anchored on the scheduled start, otherwise start/due; local clock times and duration remain intact. The ordinary API adapter converts scheduled instants. |
 | Goal / Milestone | Changes the Task's primary parent. Inbox Tasks attach directly; a Task already owned by another parent requires a compact confirmation. It creates no duplicate Task and does not change content, dates or status. |
 
+Calendar uses a single floating Task button to toggle this picker directly, with no selected-day/task-selection sidebar cards. Its default panel position leaves the trigger available for a second click, including on mobile.
+
 The current Calendar provides date cells and Gantt day targets, not a new hourly calendar. The destination label always identifies the Add button's target. Selecting another Calendar date or changing Dashboard Today/This week updates that label. Dragging may choose another visible drop destination directly. Navigation to another section, Goal or Milestone dismisses the picker to avoid retaining a stale destination.
 
 Recurring occurrences can be selected into plans, but their date/primary-parent changes must be made through the recurring series. Archived/completed parents cannot receive newly attached Tasks. All owned writes still pass existing versioned server validation. Explicit Add/drop awaits ordinary workspace saving and shows row progress; failures retain the app's draft/save-error recovery. The selected state describes the local selection, with save errors visible separately.
@@ -64,8 +66,8 @@ Trace ID: `shared.task-picker`. Test references identify coverage to inspect; th
 | Role | Current source |
 | --- | --- |
 | Reusable nonmodal Task selection template | [apps/web/src/components/ui/floating-task-picker.tsx](../../../apps/web/src/components/ui/floating-task-picker.tsx#L19) — `export function FloatingTaskPicker({` |
-| Workspace context, assignment and transfer confirmation | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L24) — `export function TaskPickerProvider({` |
-| Shared native/pointer drop destinations | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L129) — `export function TaskDropZone({` |
+| Workspace context, assignment and transfer confirmation | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L25) — `export function TaskPickerProvider({` |
+| Shared native/pointer drop destinations | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L130) — `export function TaskDropZone({` |
 | Date/selection/parent transformations and drag IDs | [apps/web/src/lib/task-picker.ts](../../../apps/web/src/lib/task-picker.ts#L29) — `export function pickedTaskPatch(` |
 | Related tests | [apps/web/tests/task-picker.test.ts](../../../apps/web/tests/task-picker.test.ts) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

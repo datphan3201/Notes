@@ -209,7 +209,7 @@ export const taskFixtures: TaskRecord[] = [
     sample(1, ["Practise one listening exercise", "Luyện một bài nghe"], {
         parent: "listening",
         importance: 5,
-        status: "InProgress",
+        status: "NotStarted",
         due: demoToday,
         daily: true,
         weekly: true,
@@ -276,7 +276,7 @@ export const taskFixtures: TaskRecord[] = [
     }),
     sample(5, ["Ask for feedback", "Xin góp ý"], {
         parent: "learning",
-        status: "Blocked",
+        status: "NotStarted",
         weekly: true,
         importance: 3,
         tags: ["english"],
@@ -297,7 +297,7 @@ export const taskFixtures: TaskRecord[] = [
         due: demoToday,
         start: demoToday,
         seriesId: 1,
-        status: "InProgress",
+        status: "NotStarted",
         weekly: true,
     }),
 ];

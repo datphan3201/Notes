@@ -15,7 +15,7 @@ import {
     type TaskRecord,
     type TaskDraft,
 } from "./task-data";
-import type { Label, TaskStatus } from "./dashboard-data";
+import type { Label, PlanningStatus } from "./dashboard-data";
 import { previewSections, type PreviewLocale } from "./shared";
 
 export type ArchiveKind = "areas" | "goals" | "milestones" | "tasks" | "habits" | "task-series" | "notes" | "reviews";
@@ -32,7 +32,7 @@ export type Goal = Archived & {
     title: Label;
     area: string;
     parent: string;
-    status: TaskStatus;
+    status: PlanningStatus;
     importance: number;
     icon: string;
     color: string;
@@ -50,7 +50,7 @@ export type Milestone = Archived & {
     id: string;
     title: Label;
     goal: string;
-    status: TaskStatus;
+    status: PlanningStatus;
     importance: number;
     icon: string;
     color: string;

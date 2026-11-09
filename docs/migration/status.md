@@ -12,7 +12,7 @@ Repository deployment records identify Vercel frontend, Render Singapore API/pol
 
 [UI integration](ui-integration.md) maps the connected personal workspace: authenticated planning/graph edits, Task/date/recurrence/Calendar, Habit check-ins/Reviews, Notes/autosave/invitations/passwords/files/offline, account settings/MFA/email, moderation/History/Archive and the durable assistant. Synthetic previews remain explicit `/preview/*` surfaces. Teamwork is removed and realtime co-editing deliberately excluded.
 
-Alembic currently ends at `0008` (owner-scoped normalized Area names, following the single attached Task Note/resource-link migration). API and worker use bounded pools, persisted jobs/leases, ordinary scoped domain transactions and private storage. AI exposes the [35-tool catalogue](assistant-tools.md), confirmed hash/version-bound Apply, durable Reject/history and SSE/read fallback. Source context relevance and cost/quality remain unresolved; existence of implementation is not complete acceptance.
+Alembic currently ends at `0009` (binary Task completion, following normalized Area names and the single attached Task Note/resource-link migration). API and worker use bounded pools, persisted jobs/leases, ordinary scoped domain transactions and private storage. AI exposes the [35-tool catalogue](assistant-tools.md), confirmed hash/version-bound Apply, durable Reject/history and SSE/read fallback. Source context relevance and cost/quality remain unresolved; existence of implementation is not complete acceptance.
 
 ## Historical execution evidence
 

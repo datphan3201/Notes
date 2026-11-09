@@ -287,7 +287,7 @@ test("calendar date capture saves selected date and week navigation changes peri
         )
         .click();
     await page
-        .getByRole("button", { name: "Thêm công việc", exact: true })
+        .getByRole("button", { name: "Chọn công việc", exact: true })
         .click();
     await page.locator("[data-task-picker]").getByRole("button", { name: "Công việc mới", exact: true }).click();
     const editor = page.getByRole("dialog");

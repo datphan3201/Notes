@@ -75,7 +75,7 @@ export default function TasksPreview({
 
     const [view, setView] = useState("all");
     const [query, setQuery] = useState("");
-    const [status, setStatus] = useState("open");
+    const [status, setStatus] = useState("NotStarted");
     const [sort, setSort] = useState("importance");
     const [group, setGroup] = useState("goal");
     const [tag, setTag] = useState("");
@@ -135,9 +135,7 @@ export default function TasksPreview({
                 .includes(query.toLocaleLowerCase(locale)) &&
             (!tag || task.tags.includes(tag)) &&
             (status === "all" ||
-                (status === "open"
-                    ? task.status !== "Done"
-                    : task.status === status)),
+                task.status === status),
     );
     const filtered = common
         .filter((task) =>
@@ -732,12 +730,6 @@ export default function TasksPreview({
                                                 {text(
                                                     "All tasks",
                                                     "Tất cả công việc",
-                                                )}
-                                            </option>
-                                            <option value="open">
-                                                {text(
-                                                    "Unfinished tasks",
-                                                    "Công việc chưa hoàn thành",
                                                 )}
                                             </option>
                                             {statuses.map(([key, en, vi]) => (

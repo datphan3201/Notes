@@ -168,7 +168,7 @@ class Task(Owned, Base):
         ForeignKeyConstraint(["user_id", "goal_id"], ["goals.user_id", "goals.id"]),
         ForeignKeyConstraint(["user_id", "milestone_id"], ["milestones.user_id", "milestones.id"]),
         CheckConstraint("goal_id IS NULL OR milestone_id IS NULL"),
-        CheckConstraint("status IN ('todo','doing','blocked','done')"),
+        CheckConstraint("status IN ('todo','done')", name="tasks_binary_status"),
         CheckConstraint(
             "scheduled_end IS NULL OR (scheduled_at IS NOT NULL AND scheduled_end > scheduled_at)"
         ),

@@ -1,7 +1,8 @@
 import type { PreviewTask } from "./shared";
 
 export type Label = [string, string];
-export type TaskStatus = "NotStarted" | "InProgress" | "Blocked" | "Done";
+export type PlanningStatus = "NotStarted" | "InProgress" | "Blocked" | "Done";
+export type TaskStatus = "NotStarted" | "Done";
 export type DashboardTask = Omit<PreviewTask, "title" | "done"> & {
     title: Label;
     status: TaskStatus;
@@ -10,10 +11,14 @@ export type DashboardTask = Omit<PreviewTask, "title" | "done"> & {
     scheduled: string;
     automaticToday?: boolean;
 };
-export const statuses: [TaskStatus, string, string][] = [
+export const planningStatuses: [PlanningStatus, string, string][] = [
     ["NotStarted", "Not started", "Chưa bắt đầu"],
     ["InProgress", "In progress", "Đang thực hiện"],
     ["Blocked", "Blocked", "Đang bị chặn"],
+    ["Done", "Completed", "Đã hoàn thành"],
+];
+export const statuses: [TaskStatus, string, string][] = [
+    ["NotStarted", "Not completed", "Chưa hoàn thành"],
     ["Done", "Completed", "Đã hoàn thành"],
 ];
 export const weekdays: Label[] = [

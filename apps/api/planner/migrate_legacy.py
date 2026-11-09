@@ -400,8 +400,8 @@ def import_snapshot(root: Path, expected_database: str, *, merge_existing: bool 
                         milestone_id=row.get("milestone_id"),
                         status={
                             "NotStarted": "todo",
-                            "InProgress": "doing",
-                            "Blocked": "blocked",
+                            "InProgress": "todo",
+                            "Blocked": "todo",
                             "Done": "done",
                         }[row["status"]],
                         start_date=day(row.get("start_date")),

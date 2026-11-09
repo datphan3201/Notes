@@ -38,3 +38,8 @@
 .task-picker-return > svg { flex-shrink: 0; }
 .task-picker-return[data-task-drop-active='true'] { color: var(--text); background: var(--accent-soft); outline: 2px solid var(--accent); }
 .task-picker-row .task-picker-remove { flex-shrink: 0; }
+
+.floating-task-picker.calendar-task-picker {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    max-height: min(660px, calc(100dvh - 116px - env(safe-area-inset-bottom)));
+}

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Dialog from "../dialog";
 import { createPortal } from "react-dom";
-import { statuses } from "./dashboard-data";
+import { statuses, planningStatuses } from "./dashboard-data";
 import {
     usePreviewData,
     dateLabel,
@@ -140,7 +140,7 @@ export default function PlanningPreview({ text }: { text: Text }) {
     const progress = (goal: Goal) =>
         goalProgress(goal.id, goals, milestones, tasks);
     const status = (value: string) => {
-        const row = statuses.find(([key]) => key === value)!;
+        const row = planningStatuses.find(([key]) => key === value)!;
         return text(row[1], row[2]);
     };
     function open(edit: Editing) {
@@ -2626,7 +2626,7 @@ function Fishbone({
 }) {
     const db = usePreviewData();
     const stateLabel = (value: string) => {
-        const row = statuses.find(([key]) => key === value)!;
+        const row = planningStatuses.find(([key]) => key === value)!;
         return text(row[1], row[2]);
     };
     const root = useRef<HTMLDivElement>(null),

@@ -7,10 +7,10 @@ import type {
     Habit,
     Milestone,
 } from "../components/preview/workspace-data";
-import type { TaskStatus } from "../components/preview/dashboard-data";
+import type { PlanningStatus } from "../components/preview/dashboard-data";
 
 export const dashboardLabel = (value = ""): [string, string] => [value, value];
-export function dashboardStatus(value: Entity["status"]): TaskStatus {
+export function dashboardStatus(value: Entity["status"]): PlanningStatus {
     return value === "done" || value === "completed"
         ? "Done"
         : value === "doing"
@@ -34,7 +34,7 @@ export function dashboardTask(
         criteria: dashboardLabel(row.completion_criteria),
         outcome: dashboardLabel(row.expected_result),
         working: dashboardLabel(""),
-        status: dashboardStatus(row.status),
+        status: row.status === "done" ? "Done" : "NotStarted",
         importance: row.importance,
         parent: row.milestone_id || row.goal_id || "",
         start: row.start_date || "",

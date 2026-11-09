@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlarmClock, CalendarDays, Check, Repeat2 } from "lucide-react";
 import Dialog from "../dialog";
-import { statuses, weekdays } from "./dashboard-data";
+import { weekdays } from "./dashboard-data";
 import {
     demoToday as fixtureToday,
     formatTaskDate,
@@ -331,38 +331,13 @@ export default function TaskPreviewEditor({
                             </label>
                         )}
                         {mode === "edit" && (
-                            <label className="field">
-                                {text("Status", "Trạng thái")}
-                                <select
-                                    value={draft.status}
-                                    disabled={initial.status === "Done"}
-                                    onChange={(event) =>
-                                        change(
-                                            "status",
-                                            event.target
-                                                .value as TaskDraft["status"],
-                                        )
-                                    }
-                                >
-                                    {statuses.map(([key, en, vi]) => (
-                                        <option
-                                            key={key}
-                                            value={key}
-                                            disabled={key === "Done"}
-                                        >
-                                            {text(en, vi)}
-                                        </option>
-                                    ))}
-                                </select>
-                                {initial.status === "Done" && (
-                                    <small>
-                                        {text(
-                                            "Reopen the task to change its status.",
-                                            "Mở lại công việc để đổi trạng thái.",
-                                        )}
-                                    </small>
-                                )}
-                            </label>
+                            <div className="field">
+                                <span>{text("Status", "Trạng thái")}</span>
+                                <strong>{initial.status === "Done"
+                                    ? text("Completed", "Đã hoàn thành")
+                                    : text("Not completed", "Chưa hoàn thành")}</strong>
+                                <small>{text("Use Complete or Reopen on the task to change completion.", "Dùng nút Hoàn thành hoặc Mở lại trên công việc để đổi trạng thái.")}</small>
+                            </div>
                         )}
                         <details className="preview-task-disclosure">
                             <summary>

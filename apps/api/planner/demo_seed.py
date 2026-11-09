@@ -54,8 +54,8 @@ def verify_target(db, expected_database, expected_schema):
     actual = db.execute(text("SELECT current_database(), current_schema() ")).one()
     if tuple(actual) != (expected_database, expected_schema):
         raise ValueError("Connected database/schema does not match the explicitly selected target")
-    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0008":
-        raise ValueError("Demo requires the current 0008 schema; no migrations were performed")
+    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0009":
+        raise ValueError("Demo requires the current 0009 schema; no migrations were performed")
 
 
 def seed_account(db, email, password, as_of):
@@ -187,7 +187,7 @@ def seed_account(db, email, password, as_of):
             status = (
                 "done"
                 if index < len(days) - 12 and (index + slot) % 9
-                else ("todo", "doing", "blocked")[(index + slot) % 3]
+                else "todo"
             )
             # A completed Milestone has completed Tasks; open states remain on later phases.
             if phase < 5:

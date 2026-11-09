@@ -12,6 +12,8 @@ Account-facing dates remain separate from UTC scheduled intervals. Check DST gap
 
 ## Existing Task selection
 
+Month/week calendars occupy the full content width, with no selected-day agenda or separate task-selection sidebar. The floating task button directly toggles the shared picker over the Calendar; its panel leaves the trigger accessible on mobile. The picker retains contextual New task, Add and drag/return actions. Clicking another date updates the destination while it is open.
+
 Use the [shared floating Task picker](../shared/task-picker.md) to choose existing Tasks with search/filters, Add or drag-and-drop. It keeps the destination page interactive and the picker open; New task retains the shared editor and current context. See the picker contract for plan selections, whole-interval date moves, primary-parent transfer confirmation and recurring/completed restrictions.
 
 <!-- BEGIN GENERATED TRACE -->
@@ -22,7 +24,7 @@ Trace ID: `calendar`. Test references identify coverage to inspect; they are not
 
 | Role | Current source |
 | --- | --- |
-| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L41) — `export default function CalendarPreview({ text }: { text: Text }) {` |
+| Live UI view (via WorkspaceView) | [apps/web/src/components/preview/calendar.tsx](../../../apps/web/src/components/preview/calendar.tsx#L42) — `export default function CalendarPreview({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L222) — `def calendar(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

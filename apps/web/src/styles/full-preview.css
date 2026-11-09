@@ -903,7 +903,7 @@
 /* Calendar. */
 .review-calendar-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 235px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
     align-items: start;
 }
@@ -1001,20 +1001,6 @@
     color: var(--muted);
     font-size: 17px;
     cursor: pointer;
-}
-.review-date-agenda {
-    padding: 18px;
-}
-.review-date-agenda h2 {
-    font-size: 14px;
-}
-.review-date-agenda h3 {
-    margin-top: 26px;
-}
-.review-date-agenda .review-calendar-item {
-    font-size: 12px;
-    padding: 9px;
-    margin-bottom: 7px;
 }
 .review-calendar-grid.is-week .review-calendar-day {
     min-height: 450px;
@@ -1818,33 +1804,10 @@
     .review-note-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
-    .review-calendar-layout {
-        grid-template-columns: minmax(0, 1fr) 260px;
-    }
 }
 @media (max-width: 1150px) {
     .review-note-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .review-calendar-layout {
-        grid-template-columns: 1fr;
-    }
-    .review-date-agenda {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-    .review-date-agenda h2,
-    .review-date-agenda h3 {
-        flex-basis: 100%;
-        margin: 0;
-    }
-    .review-date-agenda .review-calendar-item {
-        width: auto;
-    }
-    .review-date-agenda p {
-        flex-basis: 100%;
     }
     .review-habit-card {
         grid-template-columns: minmax(160px, 1fr) 225px;
@@ -2477,7 +2440,6 @@
     display: block;
 }
 .preview-workspace .review-calendar-layout {
-    grid-template-columns: minmax(0, 1fr) 320px;
     gap: 20px;
 }
 .preview-workspace .review-calendar-scroll {
@@ -2489,26 +2451,6 @@
 .review-calendar .calendar-controls > select {
     width: auto;
     max-width: 240px;
-}
-.review-calendar .review-agenda-stack {
-    display: grid;
-    gap: 20px;
-}
-.review-calendar .review-date-agenda {
-    padding: 18px;
-}
-.review-calendar .review-date-agenda .section-heading {
-    gap: 10px;
-    align-items: flex-start;
-}
-.review-calendar .review-date-agenda h2 {
-    font-size: 16px;
-    font-weight: 600;
-}
-.review-calendar .review-date-agenda .button {
-    flex-shrink: 0;
-    padding: 8px 10px;
-    font-size: 13px;
 }
 .review-calendar .review-calendar-day.is-selected {
     background: var(--surface);
@@ -2539,14 +2481,6 @@
 .review-calendar .review-gantt-controls select {
     width: auto;
 }
-@media (max-width: 1100px) {
-    .preview-workspace .review-calendar-layout {
-        grid-template-columns: minmax(0, 1fr);
-    }
-    .review-calendar .review-agenda-stack {
-        grid-template-columns: 1fr 1fr;
-    }
-}
 @media (max-width: 800px) {
     .preview-workspace .review-notes-collection {
         grid-template-columns: 1fr;
@@ -2576,9 +2510,6 @@
     }
     .review-habit-streak {
         flex-wrap: wrap;
-    }
-    .review-calendar .review-agenda-stack {
-        grid-template-columns: 1fr;
     }
     .preview-workspace .review-calendar-scroll {
         padding: 14px;

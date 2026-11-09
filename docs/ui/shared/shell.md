@@ -10,6 +10,10 @@ Navigation, floating editors, dialogs, notifications and the assistant preserve 
 
 [Components and templates](design-system.md) owns the common controls, page headers, surfaces and dialog patterns under `apps/web/src/components/ui/`. `/preview/components` is the synthetic interactive catalogue. Existing preview-path imports re-export shared implementations; feature-specific layouts remain with their modules.
 
+## Mobile text entry
+
+Shared control styles give text inputs, textareas, selects and editable rich-text surfaces a minimum 16 px font on narrow or touch-capable screens. Larger Note title fields keep their existing sizing, and the Note body honors larger font preferences. This addresses small-field focus zoom without disabling pinch zoom or resetting user zoom when a field blurs. Desktop typography remains unchanged on non-touch wide screens. Real iOS keyboard show/dismiss behavior still requires an on-device check; browser emulation only verifies styles and viewport configuration.
+
 ## Style file ownership
 
 The baseline stylesheet set in `src/styles/baseline/`, global/parity/auth styles and reviewed feature styles own the visual system. Inspect import order and component use before changing an override. Five illustrated themes, independent light/dark preferences, readable controls and mobile/keyboard behavior remain product requirements.

@@ -16,8 +16,9 @@ export type PickableTask = {
 };
 type Point = { x: number; y: number };
 
-export function FloatingTaskPicker({ tasks, goals, destination, hint, busyIds, error, text,
+export function FloatingTaskPicker({ className = "", tasks, goals, destination, hint, busyIds, error, text,
     onAdd, onClose, onCreate, onPointerDrop, onReturn, returnTarget, returnLabel, returnHint }: {
+    className?: string;
     tasks: PickableTask[];
     goals: { id: string; title: string }[];
     destination: string; hint: string; busyIds: number[]; error: string;
@@ -83,7 +84,7 @@ export function FloatingTaskPicker({ tasks, goals, destination, hint, busyIds, e
         (!goal || task.goalId === goal) && (!unscheduled || !task.scheduled) &&
         `${task.title} ${task.goalLabel}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     return createPortal(<>
-        <section ref={panel} className="floating-task-picker" role="dialog" aria-modal="false"
+        <section ref={panel} className={`floating-task-picker ${className}`} role="dialog" aria-modal="false"
             aria-labelledby={headingId} data-task-picker
             style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
             onKeyDown={event => {

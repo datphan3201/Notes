@@ -2,7 +2,9 @@
 
 [Documentation home](../../README.md) · [Route inventory](../../reference/routes.md)
 
-Tasks have independent status, dates, checklist, linked Notes, importance, primary Goal/Milestone and related work. No primary parent means Inbox. Completing a checklist does not itself complete the Task. Completion with unchecked items and reopening beneath completed ancestors require explicit acknowledgements.
+Tasks have exactly two completion states: Not completed (`todo`) and Completed (`done`). New and reopened Tasks are Not completed; the Complete/Reopen actions switch between these states. The editor displays completion read-only, and status filters expose only these two states plus All. Dates, plans and checklist changes never automatically change completion.
+
+Tasks have independent dates, checklist, linked Notes, importance, primary Goal/Milestone and related work. No primary parent means Inbox. Completing a checklist does not itself complete the Task. Completion with unchecked items and reopening beneath completed ancestors require explicit acknowledgements.
 
 The collection supports time views, search, status, sorting and Goal grouping. The shared floating editor preserves page context; `/tasks/{id}` provides the detailed working surface. Capture and manual plan selection can be committed in one workspace batch. See [filters](filters.md), [capture](capture.md), [detail](detail.md) and [recurrence](repeating.md).
 

@@ -11,6 +11,7 @@ import { TASK_PICKER_MIME, pickedTaskPatch, returnedTaskPatch, readPickedTask, t
 type PickerActions = {
     target: TaskPickerTarget | null;
     open: (target: TaskPickerTarget) => void;
+    close: () => void;
     add: (id: number, target: TaskPickerTarget) => void;
     remove: (id: number, target: TaskPickerTarget) => void;
 };
@@ -82,9 +83,9 @@ export function TaskPickerProvider({ children }: { children: ReactNode }) {
     const add = (id: number, destination: TaskPickerTarget) => { void commit(id, destination); };
     const remove = (id: number, destination: TaskPickerTarget) => { void commit(id, destination, false, true); };
     const moveTask = transfer ? db.tasks.find(row => row.id === transfer.id) : null;
-    return <Context.Provider value={{ target, open, add, remove }}>
+    return <Context.Provider value={{ target, open, close: () => setTarget(null), add, remove }}>
         {children}
-        {target && <FloatingTaskPicker text={text} destination={targetLabel(target)} error={error} busyIds={busyIds}
+        {target && <FloatingTaskPicker className={target.kind === "calendar" ? "calendar-task-picker" : undefined} text={text} destination={targetLabel(target)} error={error} busyIds={busyIds}
             goals={db.goals.filter(row => !row.archived).map(row => ({ id: row.id, title: text(...row.title) }))}
             tasks={db.tasks.filter(row => !row.archived && row.status !== "Done").map(row => {
                 const milestone = db.milestones.find(item => item.id === row.parent);

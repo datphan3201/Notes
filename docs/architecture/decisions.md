@@ -15,7 +15,7 @@ Repository records report deployment on 2026-11-08 to Vercel web, Render Singapo
 | Area / Goal | Configurable Areas with owner-scoped case-insensitive, whitespace-normalized unique names including archived Areas; arbitrary-depth single-parent Goal hierarchy; one Area or parent Goal |
 | Icons / importance | Supported server-validated icon/accent choices on Areas, Goals, Milestones and Habits; importance 1–5, including Areas; Tasks have no icon |
 | Milestone | Goal checkpoint; separate acyclic prerequisite relation, including other owned Goals' Milestones |
-| Task | At most one primary Goal/Milestone, otherwise Inbox; dates/schedule, plain-text criteria, estimate, independent completion checklist, at most one attached Note and multiple owned Note resource links |
+| Task | Exactly two completion states (Not completed / Completed), independent of Goal/Milestone progress states; at most one primary Goal/Milestone, otherwise Inbox; dates/schedule, plain-text criteria, estimate, independent completion checklist, at most one attached Note and multiple owned Note resource links |
 | Main goal | Explicit account focus shared by Dashboard roadmap and Goals; unset/archived focus invites selection, no automatic highest-importance fallback |
 | Calendar | Monday-first month/week and reviewed Gantt projections over Tasks/Milestones/Goals; ordinary versioned writes, no separate event store/external sync; Habits excluded |
 | Daily/weekly plans | Explicit account-local selection, Today also selects current Monday week; never rewrites dates/status or automatically carries to next day |

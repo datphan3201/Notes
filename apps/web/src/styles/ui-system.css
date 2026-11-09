@@ -102,3 +102,17 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
     padding: 12px 20px;
     background: var(--surface);
 }
+
+/* Keep mobile focus readable without triggering the browser's form zoom.
+   Important overrides also cover feature styles loaded after the shared controls. */
+@media (max-width: 800px), (any-pointer: coarse) {
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='hidden'], [type='image']):not(.review-note-title-label input, .review-note-title-row input),
+    textarea,
+    select {
+        font-size: max(16px, 1em) !important;
+    }
+    [contenteditable='true'],
+    [contenteditable='plaintext-only'] {
+        font-size: max(16px, var(--font-size-note, 1em)) !important;
+    }
+}

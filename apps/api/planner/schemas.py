@@ -207,7 +207,7 @@ class TaskInput(Dates):
     related: list[str] = Field(default_factory=list, max_length=100)
     goal_id: str | None = None
     milestone_id: str | None = None
-    status: Literal["todo", "doing", "blocked", "done"] = "todo"
+    status: Literal["todo", "done"] = "todo"
     scheduled_at: AwareDatetime | None = None
     scheduled_end: AwareDatetime | None = None
     reminder_at: AwareDatetime | None = None
