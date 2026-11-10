@@ -1227,15 +1227,53 @@ export function DashboardView({
                                         text={text}
                                         label={text("Activity", "Hoạt động")}
                                         summary={
-                                            <div className="recent-activity-collapsed-strip" role="group" aria-label={text("Activity for the last 30 days", "Hoạt động 30 ngày gần đây")}>
-                                                {recentCounts.map((count, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="activity-day"
-                                                        data-level={empty ? 0 : Math.min(count, 4)}
-                                                        title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
-                                                    />
-                                                ))}
+                                            <div
+                                                className="recent-activity-mini-calendar"
+                                                role="group"
+                                                aria-label={text(
+                                                    "Activity for the last 30 days",
+                                                    "Hoạt động 30 ngày gần đây",
+                                                )}
+                                            >
+                                                <div
+                                                    className="recent-activity-mini-weekdays"
+                                                    aria-hidden="true"
+                                                >
+                                                    {weekdays.map((label) => (
+                                                        <span key={label[0]}>
+                                                            {text(...label)}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <div className="recent-activity-mini-grid">
+                                                    {Array.from(
+                                                        { length: 4 },
+                                                        (_, index) => (
+                                                            <span
+                                                                key={`blank-${index}`}
+                                                                className="activity-day-blank"
+                                                                aria-hidden="true"
+                                                            />
+                                                        ),
+                                                    )}
+                                                    {recentCounts.map(
+                                                        (count, index) => (
+                                                            <span
+                                                                key={index}
+                                                                className="activity-day"
+                                                                data-level={
+                                                                    empty
+                                                                        ? 0
+                                                                        : Math.min(
+                                                                              count,
+                                                                              4,
+                                                                          )
+                                                                }
+                                                                title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                                                            />
+                                                        ),
+                                                    )}
+                                                </div>
                                             </div>
                                         }
                                         header={<div className="section-heading">
