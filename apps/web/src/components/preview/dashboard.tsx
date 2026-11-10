@@ -321,65 +321,34 @@ export function DashboardView({
                 </button>
                 <button className="button button-quiet" onClick={openPicker}>{text("Choose tasks", "Chọn công việc")}</button>
             </FloatingActions>
-            <DashboardPanel
-                className="dashboard-roadmap"
-                text={text}
-                label={text("Roadmap & Activity", "Lộ trình & Hoạt động")}
-                summary={
-                    <div className="dashboard-roadmap-summary-split">
-                        {focus ? (
-                            <div className="dashboard-collapsed-progress">
-                                <span className="progress-pill">
-                                    {focus.steps.length ? `${Math.round((focus.completed / focus.steps.length) * 100)}%` : "0%"}
-                                </span>
-                                <span>
-                                    {text(
-                                        `${focus.completed} of ${focus.steps.length} milestones completed`,
-                                        `Đã hoàn thành ${focus.completed}/${focus.steps.length} cột mốc`,
-                                    )}
-                                </span>
-                            </div>
-                        ) : (
-                            <span className="subtle-copy">
-                                {text("No roadmap selected", "Chưa chọn lộ trình")}
-                            </span>
-                        )}
-                        {miniActivityCalendar}
-                    </div>
-                }
-                header={<div className="section-heading">
-                    <label className="roadmap-title-picker">
-                        <span className="sr-only">
-                            {text("Choose a roadmap", "Chọn lộ trình")}
-                        </span>
-                        <select
-                            value={empty ? "" : focusId}
-                            onChange={(event) => setFocusId(event.target.value)}
-                        >
-                            <option value="">
-                                {text("Choose a roadmap", "Chọn lộ trình")}
-                            </option>
-                            {!empty &&
-                                focusGoals.map((goal) => (
-                                    <option key={goal.id} value={goal.id}>
-                                        {text(...goal.title)}
-                                    </option>
-                                ))}
-                        </select>
-                    </label>
-                    <button
-                        className="section-link text-button"
-                        onClick={() =>
-                            db.navigate("goals", { goal: focusId || undefined })
-                        }
-                    >
-                        {text("View full roadmap", "Xem toàn bộ lộ trình")}
-                        <ArrowRight size={14} />
-                    </button>
-                </div>}>
-
+            <section
+                className="planning-panel dashboard-roadmap"
+                aria-label={text("Roadmap & Activity", "Lộ trình & Hoạt động")}
+            >
                 <div className="dashboard-roadmap-activity-layout">
                     <div className="dashboard-roadmap-content">
+                        <div className="dashboard-roadmap-heading">
+                            <label className="roadmap-title-picker">
+                                <span className="sr-only">
+                                    {text("Choose a roadmap", "Chọn lộ trình")}
+                                </span>
+                                <select
+                                    value={empty ? "" : focusId}
+                                    onChange={(event) => setFocusId(event.target.value)}
+                                >
+                                    <option value="">
+                                        {text("Choose a roadmap", "Chọn lộ trình")}
+                                    </option>
+                                    {!empty &&
+                                        focusGoals.map((goal) => (
+                                            <option key={goal.id} value={goal.id}>
+                                                {text(...goal.title)}
+                                            </option>
+                                        ))}
+                                </select>
+                            </label>
+                        </div>
+
                         {focus ? (
                             <div className="roadmap-preview preview-dashboard-roadmap">
                                 {focus.steps.slice(0, 6).map((step, index) => (
@@ -427,7 +396,7 @@ export function DashboardView({
                         </div>
                     </div>
                 </div>
-            </DashboardPanel>
+            </section>
             <nav
                 className="workspace-section-menu"
                 role="tablist"
