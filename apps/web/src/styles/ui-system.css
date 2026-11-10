@@ -196,6 +196,8 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
 .dashboard-habit-summary { margin-bottom: 20px; }
 .dashboard-collapsed-progress { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
 .dashboard-collapsed-progress .progress-pill { display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(45, 126, 247, 0.15); color: #2d7ef7; font-size: 0.8rem; font-weight: 600; }
+.recent-activity-collapsed-strip { display: flex; align-items: center; gap: 3px; width: 100%; padding: 2px 0; }
+.recent-activity-collapsed-strip .activity-day { flex: 1 1 0; height: 12px; min-width: 5px; max-width: 12px; border-radius: 2px; padding: 0; }
 .recent-activity-strip-container { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; width: 100%; }
 .recent-activity-strip-container.is-collapsed { padding: 0; }
 .recent-activity-strip { display: flex; align-items: center; gap: 4px; width: 100%; overflow-x: auto; padding: 6px 2px; }

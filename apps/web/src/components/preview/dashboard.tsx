@@ -1227,8 +1227,15 @@ export function DashboardView({
                                         text={text}
                                         label={text("Activity", "Hoạt động")}
                                         summary={
-                                            <div className="dashboard-collapsed-progress">
-                                                <span>{text("30-day activity overview", "Tổng quan hoạt động 30 ngày")}</span>
+                                            <div className="recent-activity-collapsed-strip" role="group" aria-label={text("Activity for the last 30 days", "Hoạt động 30 ngày gần đây")}>
+                                                {recentCounts.map((count, index) => (
+                                                    <span
+                                                        key={index}
+                                                        className="activity-day"
+                                                        data-level={empty ? 0 : Math.min(count, 4)}
+                                                        title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                                                    />
+                                                ))}
                                             </div>
                                         }
                                         header={<div className="section-heading">
