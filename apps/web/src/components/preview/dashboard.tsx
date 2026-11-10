@@ -307,6 +307,15 @@ export function DashboardView({
                         )}
                     </p>
                 </div>
+
+                <div className="dashboard-header-activity">
+                    <div className="dashboard-header-activity-heading">
+                        <h4>{text("Activity", "Hoạt động")}</h4>
+                    </div>
+                    <div className="dashboard-header-activity-box">
+                        {miniActivityCalendar}
+                    </div>
+                </div>
             </PageHeaderFrame>
             <FloatingActions
                 label={text("Page actions", "Thao tác trang")}
@@ -323,79 +332,75 @@ export function DashboardView({
             </FloatingActions>
             <section
                 className="planning-panel dashboard-roadmap"
-                aria-label={text("Roadmap & Activity", "Lộ trình & Hoạt động")}
+                aria-label={text("Roadmap", "Lộ trình")}
             >
-                <div className="dashboard-roadmap-activity-layout">
-                    <div className="dashboard-roadmap-content">
-                        <div className="dashboard-roadmap-heading">
-                            <label className="roadmap-title-picker">
-                                <span className="sr-only">
-                                    {text("Choose a roadmap", "Chọn lộ trình")}
-                                </span>
-                                <select
-                                    value={empty ? "" : focusId}
-                                    onChange={(event) => setFocusId(event.target.value)}
-                                >
-                                    <option value="">
-                                        {text("Choose a roadmap", "Chọn lộ trình")}
+                <div className="section-heading">
+                    <label className="roadmap-title-picker">
+                        <span className="sr-only">
+                            {text("Choose a roadmap", "Chọn lộ trình")}
+                        </span>
+                        <select
+                            value={empty ? "" : focusId}
+                            onChange={(event) => setFocusId(event.target.value)}
+                        >
+                            <option value="">
+                                {text("Choose a roadmap", "Chọn lộ trình")}
+                            </option>
+                            {!empty &&
+                                focusGoals.map((goal) => (
+                                    <option key={goal.id} value={goal.id}>
+                                        {text(...goal.title)}
                                     </option>
-                                    {!empty &&
-                                        focusGoals.map((goal) => (
-                                            <option key={goal.id} value={goal.id}>
-                                                {text(...goal.title)}
-                                            </option>
-                                        ))}
-                                </select>
-                            </label>
-                        </div>
-
-                        {focus ? (
-                            <div className="roadmap-preview preview-dashboard-roadmap">
-                                {focus.steps.slice(0, 6).map((step, index) => (
-                                    <button
-                                        key={index}
-                                        className={`roadmap-step ${index < focus.completed ? "is-done" : ""}`}
-                                        title={text(...step)}
-                                        onClick={() =>
-                                            db.setPlanningAction({
-                                                kind: "milestone",
-                                                id: focus.milestones[index].id,
-                                                view: true,
-                                            })
-                                        }
-                                    >
-                                        <span className="preview-roadmap-dot">
-                                            {index < focus.completed && (
-                                                <Check size={12} />
-                                            )}
-                                        </span>
-                                        <span>{text(...step)}</span>
-                                    </button>
                                 ))}
-                            </div>
-                        ) : (
-                            <p className="subtle-copy preview-roadmap-empty">
-                                {text(
-                                    empty
-                                        ? "Your roadmaps will appear here when you create a Goal."
-                                        : "Choose a roadmap to display here.",
-                                    empty
-                                        ? "Lộ trình sẽ xuất hiện ở đây khi bạn tạo Mục tiêu."
-                                        : "Chọn lộ trình để hiển thị ở đây.",
-                                )}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="dashboard-roadmap-activity-card">
-                        <div className="dashboard-roadmap-activity-heading">
-                            <h4>{text("Activity", "Hoạt động")}</h4>
-                        </div>
-                        <div className="dashboard-roadmap-activity-box">
-                            {miniActivityCalendar}
-                        </div>
-                    </div>
+                        </select>
+                    </label>
+                    <button
+                        className="section-link text-button"
+                        onClick={() =>
+                            db.navigate("goals", { goal: focusId || undefined })
+                        }
+                    >
+                        {text("View full roadmap", "Xem toàn bộ lộ trình")}
+                        <ArrowRight size={14} />
+                    </button>
                 </div>
+
+                {focus ? (
+                    <div className="roadmap-preview preview-dashboard-roadmap">
+                        {focus.steps.slice(0, 6).map((step, index) => (
+                            <button
+                                key={index}
+                                className={`roadmap-step ${index < focus.completed ? "is-done" : ""}`}
+                                title={text(...step)}
+                                onClick={() =>
+                                    db.setPlanningAction({
+                                        kind: "milestone",
+                                        id: focus.milestones[index].id,
+                                        view: true,
+                                    })
+                                }
+                            >
+                                <span className="preview-roadmap-dot">
+                                    {index < focus.completed && (
+                                        <Check size={12} />
+                                    )}
+                                </span>
+                                <span>{text(...step)}</span>
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="subtle-copy preview-roadmap-empty">
+                        {text(
+                            empty
+                                ? "Your roadmaps will appear here when you create a Goal."
+                                : "Choose a roadmap to display here.",
+                            empty
+                                ? "Lộ trình sẽ xuất hiện ở đây khi bạn tạo Mục tiêu."
+                                : "Chọn lộ trình để hiển thị ở đây.",
+                        )}
+                    </p>
+                )}
             </section>
             <nav
                 className="workspace-section-menu"

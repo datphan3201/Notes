@@ -138,7 +138,8 @@
 }
 .activity-panel,
 .dashboard-recent-panel,
-.dashboard-roadmap {
+.dashboard-roadmap,
+.preview-dashboard-header {
     --activity-empty: #ebedf0;
     --activity-level-1: #9be9a8;
     --activity-level-2: #40c463;
@@ -153,7 +154,8 @@
 }
 [data-theme='dark'] .activity-panel,
 [data-theme='dark'] .dashboard-recent-panel,
-[data-theme='dark'] .dashboard-roadmap {
+[data-theme='dark'] .dashboard-roadmap,
+[data-theme='dark'] .preview-dashboard-header {
     --activity-empty: #161b22;
     --activity-level-1: #0e4429;
     --activity-level-2: #006d32;

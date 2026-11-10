@@ -2,8 +2,11 @@
     position: relative;
     isolation: isolate;
     min-height: 170px;
-    align-items: flex-start;
-    padding: 12px 8px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px 24px;
     margin-bottom: 12px;
     border: 0;
     border-radius: 16px;
