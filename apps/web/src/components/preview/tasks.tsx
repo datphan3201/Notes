@@ -73,7 +73,13 @@ export default function TasksPreview({
     const demoToday = shared.today || fixtureToday;
     const { tasks, setTasks, series, setSeries, parents } = shared;
 
-    const [view, setView] = useState("all");
+    const [view, setView] = useState(() => {
+        if (typeof window !== "undefined") {
+            const param = new URLSearchParams(window.location.search).get("view");
+            if (param) return param;
+        }
+        return "all";
+    });
     const [query, setQuery] = useState("");
     const [status, setStatus] = useState("NotStarted");
     const [sort, setSort] = useState("importance");
@@ -616,12 +622,19 @@ export default function TasksPreview({
                                 </button>
                             ))}
                         </div>
-                        <button className="button button-quiet task-series-navigation"
-                            aria-pressed={repeating}
-                            onClick={() => { setView(repeating ? "all" : "repeating"); setPageIndex(0); setMessage(null); }}>
-                            <Repeat2 size={16} aria-hidden="true" />
-                            {text(repeating ? "Back to tasks" : "Repeating series", repeating ? "Về công việc" : "Chuỗi lặp")}
-                        </button>
+                        {repeating && (
+                            <button
+                                className="button button-quiet task-series-navigation"
+                                onClick={() => {
+                                    setView("all");
+                                    setPageIndex(0);
+                                    setMessage(null);
+                                }}
+                            >
+                                <Repeat2 size={16} aria-hidden="true" />
+                                {text("Back to tasks", "Về công việc")}
+                            </button>
+                        )}
                         <CollectionToolbar className={`preview-task-filters ${repeating ? "is-repeating" : ""}`}
                             label={text("Find tasks", "Tìm công việc")} filtersLabel={text("Filters and sorting", "Lọc và sắp xếp")}
                             search={<label className="field">
