@@ -124,6 +124,9 @@ export function DashboardView({
     const habitChecks = db.habits
         .filter((h) => h.checkins.includes(h.today || day))
         .map((h) => h.id);
+    const habitPercentage = sampleHabits.length
+        ? Math.round((habitChecks.length / sampleHabits.length) * 100)
+        : null;
     const recentCounts = Array.from(
         { length: 30 },
         (_, i) =>
@@ -468,16 +471,46 @@ export function DashboardView({
                                 text={text}
                                 label={text("Tasks", "Công việc")}
                                 summary={
-                                    <div className="dashboard-collapsed-progress">
-                                        <span className="progress-pill">
-                                            {percentage === null ? "0%" : `${percentage}%`}
-                                        </span>
-                                        <span>
-                                            {text(
-                                                `${done} of ${selected.length} tasks completed`,
-                                                `Đã hoàn thành ${done}/${selected.length} công việc`,
-                                            )}
-                                        </span>
+                                    <div className="dashboard-task-summary">
+                                        <div
+                                            className="progress-ring is-compact"
+                                            style={
+                                                {
+                                                    "--progress": `${percentage || 0}%`,
+                                                } as CSSProperties
+                                            }
+                                            role="img"
+                                            aria-label={
+                                                text("Completion: ", "Tiến độ: ") +
+                                                (percentage === null
+                                                    ? text(
+                                                          "No tasks selected",
+                                                          "Chưa chọn công việc",
+                                                      )
+                                                    : `${percentage}%`)
+                                            }
+                                        >
+                                            <strong>
+                                                {percentage === null
+                                                    ? "—"
+                                                    : `${percentage}%`}
+                                            </strong>
+                                        </div>
+                                        <div className="dashboard-task-summary-copy">
+                                            <strong>
+                                                {done} / {selected.length}
+                                            </strong>
+                                            <small>
+                                                {text(
+                                                    week
+                                                        ? "selected tasks completed"
+                                                        : "tasks completed today",
+                                                    week
+                                                        ? "công việc đã chọn đã hoàn thành"
+                                                        : "công việc hôm nay đã hoàn thành",
+                                                )}
+                                            </small>
+                                        </div>
                                     </div>
                                 }
                                 header={<div className="section-heading preview-dashboard-task-heading">
@@ -1036,13 +1069,42 @@ export function DashboardView({
                                         text={text}
                                         label={text("Habits", "Thói quen")}
                                         summary={
-                                            <div className="dashboard-collapsed-progress">
-                                                <span>
-                                                    {text(
-                                                        `${habitChecks.length} of ${sampleHabits.length} habits checked today`,
-                                                        `Đã điểm danh ${habitChecks.length}/${sampleHabits.length} thói quen hôm nay`,
-                                                    )}
-                                                </span>
+                                            <div className="dashboard-task-summary">
+                                                <div
+                                                    className="progress-ring is-compact"
+                                                    style={
+                                                        {
+                                                            "--progress": `${habitPercentage || 0}%`,
+                                                        } as CSSProperties
+                                                    }
+                                                    role="img"
+                                                    aria-label={
+                                                        text("Habit completion: ", "Tiến độ thói quen: ") +
+                                                        (habitPercentage === null
+                                                            ? text(
+                                                                  "No habits",
+                                                                  "Chưa có thói quen",
+                                                              )
+                                                            : `${habitPercentage}%`)
+                                                    }
+                                                >
+                                                    <strong>
+                                                        {habitPercentage === null
+                                                            ? "—"
+                                                            : `${habitPercentage}%`}
+                                                    </strong>
+                                                </div>
+                                                <div className="dashboard-task-summary-copy">
+                                                    <strong>
+                                                        {habitChecks.length} / {sampleHabits.length}
+                                                    </strong>
+                                                    <small>
+                                                        {text(
+                                                            "habits checked today",
+                                                            "thói quen đã điểm danh hôm nay",
+                                                        )}
+                                                    </small>
+                                                </div>
                                             </div>
                                         }
                                         header={<div className="section-heading">
@@ -1079,7 +1141,45 @@ export function DashboardView({
                                                 </p>
                                             </div>
                                         ) : (
-                                            (showHabits ? sampleHabits : sampleHabits.slice(0, db.dashboard.habits)).map((habit) => {
+                                            <>
+                                                <div className="dashboard-task-summary dashboard-habit-summary">
+                                                    <div
+                                                        className="progress-ring"
+                                                        style={
+                                                            {
+                                                                "--progress": `${habitPercentage || 0}%`,
+                                                            } as CSSProperties
+                                                        }
+                                                        role="img"
+                                                        aria-label={
+                                                            text("Habit completion: ", "Tiến độ thói quen: ") +
+                                                            (habitPercentage === null
+                                                                ? text(
+                                                                      "No habits",
+                                                                      "Chưa có thói quen",
+                                                                  )
+                                                                : `${habitPercentage}%`)
+                                                        }
+                                                    >
+                                                        <strong>
+                                                            {habitPercentage === null
+                                                                ? "—"
+                                                                : `${habitPercentage}%`}
+                                                        </strong>
+                                                    </div>
+                                                    <div className="dashboard-task-summary-copy">
+                                                        <strong>
+                                                            {habitChecks.length} / {sampleHabits.length}
+                                                        </strong>
+                                                        <small>
+                                                            {text(
+                                                                "habits checked today",
+                                                                "thói quen đã điểm danh hôm nay",
+                                                            )}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                {(showHabits ? sampleHabits : sampleHabits.slice(0, db.dashboard.habits)).map((habit) => {
                                                 const checked =
                                                     habitChecks.includes(
                                                         habit.id,
@@ -1116,8 +1216,9 @@ export function DashboardView({
                                                         <HabitCheckinDays habit={habit} dates={Array.from({ length: 7 }, (_, index) => addDays(monday(habit.today || day), index))} today={habit.today || day} locale={locale} text={text} onCheck={db.checkHabit} />
                                                     </div>
                                                 );
-                                            })
-                                        )}
+                                            })}
+                                        </>
+                                    )}
                                     {sampleHabits.length > db.dashboard.habits && <button className="text-button" onClick={() => setShowHabits(!showHabits)}>{text(showHabits ? "Show less" : "Show more", showHabits ? "Thu gọn" : "Xem thêm")}</button>}
                                     </DashboardPanel>
 
@@ -1126,8 +1227,21 @@ export function DashboardView({
                                         text={text}
                                         label={text("Activity", "Hoạt động")}
                                         summary={
-                                            <div className="dashboard-collapsed-progress">
-                                                <span>{text("30-day activity overview", "Tổng quan hoạt động 30 ngày")}</span>
+                                            <div className="recent-activity-strip-container is-collapsed">
+                                                <div className="recent-activity-strip" role="group" aria-label={text("Activity for the last 30 days", "Hoạt động 30 ngày gần đây")}>
+                                                    {recentCounts.map((count, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="activity-day"
+                                                            data-level={empty ? 0 : Math.min(count, 4)}
+                                                            title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <div className="recent-activity-strip-labels">
+                                                    <small>{dayLabel(-29)}</small>
+                                                    <small>{dayLabel(0)} ({text("Today", "Hôm nay")})</small>
+                                                </div>
                                             </div>
                                         }
                                         header={<div className="section-heading">
@@ -1142,144 +1256,52 @@ export function DashboardView({
                                             </small>
                                         </div>}>
 
-                                        <div className="recent-activity-section">
-                                            <div className="recent-activity-overview">
-                                                <div className="recent-activity-stats-summary">
-                                                    <strong>
-                                                        {empty
-                                                            ? 0
-                                                            : recentCounts.reduce(
-                                                                  (a, b) =>
-                                                                      a + b,
-                                                                  0,
-                                                              )}
-                                                    </strong>
-                                                    <span>
-                                                        {text(
-                                                            "contributions",
-                                                            "đóng góp",
-                                                        )}
-                                                    </span>
-                                                    <small>
-                                                        {dayLabel(-29)} –{" "}
-                                                        {dayLabel(0)}
-                                                    </small>
-                                                </div>
-                                                <div className="recent-activity-calendar">
-                                                    <div
-                                                        className="recent-activity-weekdays"
-                                                        aria-hidden="true"
-                                                    >
-                                                        {weekdays.map(
-                                                            (label) => (
-                                                                <span
-                                                                    key={
-                                                                        label[0]
-                                                                    }
-                                                                >
-                                                                    {text(
-                                                                        ...label,
-                                                                    )}
-                                                                </span>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                    <div
-                                                        data-recent-activity-grid
-                                                        role="group"
-                                                        aria-label={text(
-                                                            "Activity for the last 30 days",
-                                                            "Hoạt động 30 ngày gần đây",
-                                                        )}
-                                                    >
-                                                        {Array.from(
-                                                            { length: 4 },
-                                                            (_, index) => (
-                                                                <span
-                                                                    key={`blank-${index}`}
-                                                                    aria-hidden="true"
-                                                                />
-                                                            ),
-                                                        )}
-                                                        {recentCounts.map(
-                                                            (count, index) => (
-                                                                <button
-                                                                    key={index}
-                                                                    className="activity-day"
-                                                                    data-level={
-                                                                        empty
-                                                                            ? 0
-                                                                            : Math.min(
-                                                                                  count,
-                                                                                  4,
-                                                                              )
-                                                                    }
-                                                                    aria-pressed={
-                                                                        activityDay ===
-                                                                        index
-                                                                    }
-                                                                    aria-label={`${dayLabel(index - 29)}: ${empty ? 0 : count} ${text("contributions", "đóng góp")}`}
-                                                                    title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
-                                                                    onClick={() =>
-                                                                        setActivityDay(
-                                                                            index,
-                                                                        )
-                                                                    }
-                                                                />
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="recent-activity-footer">
-                                                <div
-                                                    className="activity-legend"
-                                                    aria-label={text(
-                                                        "Less to more activity",
-                                                        "Mức hoạt động từ ít đến nhiều",
-                                                    )}
-                                                >
-                                                    <span>
-                                                        {text("Less", "Ít")}
-                                                    </span>
-                                                    {[0, 1, 2, 3, 4].map(
-                                                        (level) => (
-                                                            <i
-                                                                key={level}
-                                                                data-level={
-                                                                    level
-                                                                }
-                                                            />
-                                                        ),
-                                                    )}
-                                                    <span>
-                                                        {text("More", "Nhiều")}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    className="text-button"
-                                                    onClick={() =>
-                                                        setTab("activity")
-                                                    }
-                                                >
-                                                    {text(
-                                                        "View activity",
-                                                        "Xem hoạt động",
-                                                    )}
-                                                    <ArrowRight size={13} />
-                                                </button>
-                                            </div>
-                                            <p
-                                                className="recent-activity-detail"
-                                                role="status"
+                                        <div className="recent-activity-strip-container">
+                                            <div
+                                                className="recent-activity-strip"
+                                                role="group"
+                                                aria-label={text(
+                                                    "Activity for the last 30 days",
+                                                    "Hoạt động 30 ngày gần đây",
+                                                )}
                                             >
-                                                {activityDay === null
-                                                    ? text(
-                                                          "Select a day to see its activity.",
-                                                          "Chọn một ngày để xem hoạt động.",
-                                                      )
-                                                    : `${dayLabel(activityDay - 29)}: ${empty ? 0 : recentCounts[activityDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
-                                            </p>
+                                                {recentCounts.map((count, index) => (
+                                                    <button
+                                                        key={index}
+                                                        className="activity-day"
+                                                        data-level={
+                                                            empty
+                                                                ? 0
+                                                                : Math.min(
+                                                                      count,
+                                                                      4,
+                                                                  )
+                                                        }
+                                                        aria-pressed={
+                                                            activityDay === index
+                                                        }
+                                                        aria-label={`${dayLabel(index - 29)}: ${empty ? 0 : count} ${text("contributions", "đóng góp")}`}
+                                                        title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                                                        onClick={() =>
+                                                            setActivityDay(
+                                                                activityDay === index ? null : index,
+                                                            )
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                            <div className="recent-activity-strip-labels">
+                                                <small>{dayLabel(-29)}</small>
+                                                <small>{dayLabel(0)} ({text("Today", "Hôm nay")})</small>
+                                            </div>
+                                            {activityDay !== null && (
+                                                <p
+                                                    className="recent-activity-detail"
+                                                    role="status"
+                                                >
+                                                    {`${dayLabel(activityDay - 29)}: ${empty ? 0 : recentCounts[activityDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
+                                                </p>
+                                            )}
                                         </div>
                                     </DashboardPanel>
                                 </>
