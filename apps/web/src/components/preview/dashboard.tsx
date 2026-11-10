@@ -72,7 +72,8 @@ export function DashboardView({
     connected?: boolean;
 }) {
     const [tab, setTab] = useState("today");
-    const [showTasks, setShowTasks] = useState(false), [showHabits, setShowHabits] = useState(false), [showCompleted, setShowCompleted] = useState(false);
+    const [status, setStatus] = useState("all");
+    const [showTasks, setShowTasks] = useState(false), [showHabits, setShowHabits] = useState(false);
     const day = today;
     const sampleDay = (offset: number) =>
         new Date(`${addDays(day, offset)}T12:00:00Z`);
@@ -179,7 +180,7 @@ export function DashboardView({
         ? Math.round((done / selected.length) * 100)
         : null;
     const rows = selected
-        .filter((task) => task.status !== "Done")
+        .filter((task) => status === "all" || task.status === status)
         .sort((a, b) =>
             sort === "importance"
                 ? Number(b.importance) - Number(a.importance)
@@ -270,7 +271,26 @@ export function DashboardView({
                 </button>
                 <button className="button button-quiet" onClick={openPicker}>{text("Choose tasks", "Chọn công việc")}</button>
             </FloatingActions>
-            <DashboardPanel className="dashboard-roadmap" text={text} label={text("Roadmap", "Lộ trình")} header={<div className="section-heading">
+            <DashboardPanel
+                className="dashboard-roadmap"
+                text={text}
+                label={text("Roadmap", "Lộ trình")}
+                summary={
+                    focus ? (
+                        <div className="dashboard-collapsed-progress">
+                            <span className="progress-pill">
+                                {focus.steps.length ? `${Math.round((focus.completed / focus.steps.length) * 100)}%` : "0%"}
+                            </span>
+                            <span>
+                                {text(
+                                    `${focus.completed} of ${focus.steps.length} milestones completed`,
+                                    `Đã hoàn thành ${focus.completed}/${focus.steps.length} cột mốc`,
+                                )}
+                            </span>
+                        </div>
+                    ) : null
+                }
+                header={<div className="section-heading">
                     <label className="roadmap-title-picker">
                         <span className="sr-only">
                             {text("Choose a roadmap", "Chọn lộ trình")}
@@ -443,7 +463,24 @@ export function DashboardView({
                 ) : (
                     <div className="dashboard-split-layout">
                         <div className="dashboard-split-main">
-                            <TaskDropZone as="section" target={{kind: "plan", period: week ? "week" : "today"}} className="dashboard-task-drop"><DashboardPanel className="today-panel" text={text} label={text("Tasks", "Công việc")} header={<div className="section-heading preview-dashboard-task-heading">
+                            <TaskDropZone as="section" target={{kind: "plan", period: week ? "week" : "today"}} className="dashboard-task-drop"><DashboardPanel
+                                className="today-panel"
+                                text={text}
+                                label={text("Tasks", "Công việc")}
+                                summary={
+                                    <div className="dashboard-collapsed-progress">
+                                        <span className="progress-pill">
+                                            {percentage === null ? "0%" : `${percentage}%`}
+                                        </span>
+                                        <span>
+                                            {text(
+                                                `${done} of ${selected.length} tasks completed`,
+                                                `Đã hoàn thành ${done}/${selected.length} công việc`,
+                                            )}
+                                        </span>
+                                    </div>
+                                }
+                                header={<div className="section-heading preview-dashboard-task-heading">
                                     <h2>
                                         <ClipboardList size={17} />
                                         {text(
@@ -455,7 +492,7 @@ export function DashboardView({
                                                 : "Công việc hàng ngày",
                                         )}
                                         <span className="count-badge">
-                                            {rows.length}
+                                            {done}/{selected.length}
                                         </span>
                                     </h2>
                                     <button
@@ -521,6 +558,27 @@ export function DashboardView({
 
                                 <div className="dashboard-week-filters">
                                     <label className="field">
+                                        {text("Filter by", "Lọc theo")}
+                                        <select
+                                            value={status}
+                                            onChange={(event) =>
+                                                setStatus(event.target.value)
+                                            }
+                                        >
+                                            <option value="all">
+                                                {text(
+                                                    "All tasks",
+                                                    "Tất cả công việc",
+                                                )}
+                                            </option>
+                                            {statuses.map(([key, en, vi]) => (
+                                                <option key={key} value={key}>
+                                                    {text(en, vi)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label className="field">
                                         {text("Sort by", "Sắp xếp theo")}
                                         <select
                                             value={sort}
@@ -542,7 +600,6 @@ export function DashboardView({
                                             </option>
                                         </select>
                                     </label>
-
                                 </div>
                                 <div className="preview-dashboard-checklist">
                                     {(showTasks ? rows : rows.slice(0, db.dashboard.tasks)).map(
@@ -716,17 +773,17 @@ export function DashboardView({
                                                         ? "No tasks with this status"
                                                         : "A little room to focus",
                                                     selected.length
-                                                        ? "Không có công việc chưa hoàn thành"
+                                                        ? "Không có công việc ở trạng thái này"
                                                         : "Một chút không gian để tập trung",
                                                 )}
                                             </strong>
                                             <p>
                                                 {text(
                                                     selected.length
-                                                        ? "Completed tasks are listed in their own panel."
+                                                        ? "Choose another status to see the rest of your plan."
                                                         : "Choose an existing task or create a small next step.",
                                                     selected.length
-                                                        ? "Công việc đã hoàn thành được hiển thị ở khung riêng."
+                                                        ? "Chọn trạng thái khác để xem phần còn lại của kế hoạch."
                                                         : "Chọn công việc có sẵn hoặc tạo một bước tiếp theo nhỏ.",
                                                 )}
                                             </p>
@@ -761,7 +818,21 @@ export function DashboardView({
                         <div className="dashboard-split-side">
                             {week ? (
                                 <>
-                                    <DashboardPanel className="dashboard-week-side" text={text} label={text("Milestones", "Cột mốc")} header={<div className="section-heading">
+                                    <DashboardPanel
+                                        className="dashboard-week-side"
+                                        text={text}
+                                        label={text("Milestones", "Cột mốc")}
+                                        summary={
+                                            <div className="dashboard-collapsed-progress">
+                                                <span>
+                                                    {text(
+                                                        `${dueMilestones.filter((m) => m.status === "Done").length} of ${dueMilestones.length} milestones completed`,
+                                                        `Đã hoàn thành ${dueMilestones.filter((m) => m.status === "Done").length}/${dueMilestones.length} cột mốc`,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        }
+                                        header={<div className="section-heading">
                                             <h2>
                                                 <Flag size={17} />
                                                 {text("Milestones", "Cột mốc")}
@@ -960,7 +1031,21 @@ export function DashboardView({
                                 </>
                             ) : (
                                 <>
-                                    <DashboardPanel className="dashboard-habits-panel" text={text} label={text("Habits", "Thói quen")} header={<div className="section-heading">
+                                    <DashboardPanel
+                                        className="dashboard-habits-panel"
+                                        text={text}
+                                        label={text("Habits", "Thói quen")}
+                                        summary={
+                                            <div className="dashboard-collapsed-progress">
+                                                <span>
+                                                    {text(
+                                                        `${habitChecks.length} of ${sampleHabits.length} habits checked today`,
+                                                        `Đã điểm danh ${habitChecks.length}/${sampleHabits.length} thói quen hôm nay`,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        }
+                                        header={<div className="section-heading">
                                             <h2>
                                                 {text("Habits", "Thói quen")}
                                                 <span className="count-badge">
@@ -1035,17 +1120,17 @@ export function DashboardView({
                                         )}
                                     {sampleHabits.length > db.dashboard.habits && <button className="text-button" onClick={() => setShowHabits(!showHabits)}>{text(showHabits ? "Show less" : "Show more", showHabits ? "Thu gọn" : "Xem thêm")}</button>}
                                     </DashboardPanel>
-                                    <DashboardPanel className="dashboard-completed-panel" text={text} label={text("Completed tasks", "Công việc đã hoàn thành")}
-                                        header={<h2>{text("Completed tasks", "Công việc đã hoàn thành")} <span className="count-badge">{done}</span></h2>}>
-                                        <ul className="dashboard-completed-list">
-                                            {(showCompleted ? selected.filter(task => task.status === "Done") : selected.filter(task => task.status === "Done").slice(0, db.dashboard.completed)).map(task =>
-                                                <li key={task.id}><button className="text-button" onClick={() => db.navigate("tasks", { task: task.id })}><Check size={15} aria-hidden="true" />{text(...task.title)}</button></li>)}
-                                        </ul>
-                                        {!done && <p className="subtle-copy">{text("No completed tasks yet", "Chưa có công việc hoàn thành")}</p>}
-                                        {done > db.dashboard.completed && <button className="text-button" onClick={() => setShowCompleted(!showCompleted)}>{text(showCompleted ? "Show less" : "Show more", showCompleted ? "Thu gọn" : "Xem thêm")}</button>}
-                                    </DashboardPanel>
 
-                                    <DashboardPanel className="dashboard-recent-panel" text={text} label={text("Activity", "Hoạt động")} header={<div className="section-heading">
+                                    <DashboardPanel
+                                        className="dashboard-recent-panel"
+                                        text={text}
+                                        label={text("Activity", "Hoạt động")}
+                                        summary={
+                                            <div className="dashboard-collapsed-progress">
+                                                <span>{text("30-day activity overview", "Tổng quan hoạt động 30 ngày")}</span>
+                                            </div>
+                                        }
+                                        header={<div className="section-heading">
                                             <h2>
                                                 {text("Activity", "Hoạt động")}
                                             </h2>

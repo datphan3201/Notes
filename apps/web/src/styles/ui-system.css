@@ -179,6 +179,7 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
 
 .ui-dashboard-panel { min-width: 0; }
 .ui-dashboard-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.ui-dashboard-panel[data-collapsed='true'] .ui-dashboard-panel-heading { margin-bottom: 0; }
 .ui-dashboard-panel-title { flex: 1; min-width: 0; }
 .ui-dashboard-panel-title > .section-heading { margin: 0; flex-wrap: wrap; }
 .ui-dashboard-panel-title h2 { margin: 0; }
@@ -186,11 +187,11 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
 .ui-dashboard-panel-controls > .icon-button { width: 36px; min-height: 44px; padding: 6px; }
 .ui-dashboard-panel-body { min-width: 0; }
 .ui-dashboard-panel-body[hidden] { display: none; }
+.ui-dashboard-panel-summary { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-top: 8px; background: rgba(255, 255, 255, 0.04); border-radius: 8px; font-size: 0.88rem; color: var(--muted); }
+.dashboard-collapsed-progress { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.dashboard-collapsed-progress .progress-pill { display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(45, 126, 247, 0.15); color: #2d7ef7; font-size: 0.8rem; font-weight: 600; }
 .ui-dashboard-panel[data-expanded='true'] { position: fixed; inset: 12px; z-index: 130; margin: 0; overflow: auto; background: var(--surface); box-shadow: var(--shadow); }
 .ui-dashboard-panel[data-expanded='true'] .ui-dashboard-panel-heading { position: sticky; top: 0; z-index: 2; padding-bottom: 8px; background: var(--surface); }
-.dashboard-completed-list { list-style: none; margin: 0; padding: 0; }
-.dashboard-completed-list li { padding: 8px 0; }
-.dashboard-completed-list .text-button { display: flex; gap: 8px; align-items: flex-start; text-align: left; overflow-wrap: anywhere; }
 .dashboard-habits-panel .habit-checkin-days { display: flex; max-width: 100%; overflow-x: auto; margin-top: 8px; }
 .dashboard-habits-panel .habit-checkin-day { flex: 1 0 36px; min-height: 44px; }
 .ui-collection-controls > label { display: grid; gap: 6px; min-width: 0; }

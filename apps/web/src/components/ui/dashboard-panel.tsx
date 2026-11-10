@@ -5,8 +5,8 @@ import { ChevronDown, ChevronUp, Maximize2, Minimize2 } from "lucide-react";
 import { IconButton } from "./button";
 import type { LocalizedText } from "./types";
 
-export function DashboardPanel({ header, children, className = "", label, text }: {
-    header: ReactNode; children: ReactNode; className?: string; label: string; text: LocalizedText;
+export function DashboardPanel({ header, children, summary, className = "", label, text }: {
+    header: ReactNode; children: ReactNode; summary?: ReactNode; className?: string; label: string; text: LocalizedText;
 }) {
     const [collapsed, setCollapsed] = useState(false), [expanded, setExpanded] = useState(false);
     const body = useId();
@@ -18,7 +18,7 @@ export function DashboardPanel({ header, children, className = "", label, text }
         document.addEventListener("keydown", close);
         return () => document.removeEventListener("keydown", close);
     }, [expanded]);
-    return <section className={`planning-panel ui-dashboard-panel ${className}`} aria-label={label} data-expanded={expanded}>
+    return <section className={`planning-panel ui-dashboard-panel ${className}`} aria-label={label} data-expanded={expanded} data-collapsed={collapsed}>
         <div className="ui-dashboard-panel-heading">
             <div className="ui-dashboard-panel-title">{header}</div>
             <div className="ui-dashboard-panel-controls">
@@ -32,6 +32,7 @@ export function DashboardPanel({ header, children, className = "", label, text }
                 </IconButton>
             </div>
         </div>
+        {collapsed && summary && <div className="ui-dashboard-panel-summary">{summary}</div>}
         <div className="ui-dashboard-panel-body" id={body} hidden={collapsed}>{children}</div>
     </section>;
 }
