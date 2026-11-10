@@ -4,6 +4,7 @@ import { ArrowUp, Check, Compass, Sparkles } from "lucide-react";
 import { api, type Identity, type Run } from "@/lib/api";
 import type { Words } from "@/lib/i18n";
 import Dialog from "./dialog";
+import { AssistantCompiledMessage } from "./assistant-compiled-message";
 
 export default function Assistant({
     identity,
@@ -97,7 +98,15 @@ export default function Assistant({
                             : "Find ideas, break down goals and make plans with your context. You confirm every change."}
                     </p>
                 </div>
-                {run?.answer && <div className="answer">{run.answer}</div>}
+                {run?.answer && (
+                    <div className="answer">
+                        <AssistantCompiledMessage
+                            content={run.answer}
+                            proposal={run.proposal}
+                            text={(en, vi) => (identity.user.locale === "vi" ? vi : en)}
+                        />
+                    </div>
+                )}
                 {busy && (
                     <p role="status" className="thinking">
                         <Sparkles size={16} />

@@ -218,3 +218,30 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
 .dashboard-habits-panel .habit-checkin-day { flex: 1 0 36px; min-height: 44px; }
 .ui-collection-controls > label { display: grid; gap: 6px; min-width: 0; }
 .ui-collection-search input[type='search'] { border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text); }
+
+/* Compiled Assistant Message Formatting */
+.assistant-compiled-content { font-size: 0.92rem; line-height: 1.68; color: var(--text); }
+.assistant-compiled-content p { margin: 8px 0; }
+.assistant-compiled-content p:first-child { margin-top: 0; }
+.assistant-compiled-content p:last-child { margin-bottom: 0; }
+.assistant-compiled-content strong { font-weight: 600; color: var(--text-heading, inherit); }
+.assistant-compiled-content em { font-style: italic; }
+.assistant-compiled-content code { padding: 1px 5px; font-size: 0.85em; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+.assistant-compiled-content h3, .assistant-compiled-content h4, .assistant-compiled-content h5 { margin: 12px 0 6px 0; font-weight: 600; }
+.assistant-message-ol { margin: 8px 0 12px 0; padding-left: 20px; list-style-type: decimal; }
+.assistant-message-ol > li { margin-bottom: 10px; line-height: 1.6; }
+.assistant-ol-item-head { display: inline; }
+.assistant-message-ul { margin: 6px 0 6px 0; padding-left: 18px; list-style-type: disc; }
+.assistant-message-ul > li { margin-bottom: 4px; line-height: 1.5; }
+
+/* Entity Badges / Chips */
+.assistant-entity-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; margin: 0 3px; font-size: 11px; font-weight: 500; line-height: 1.4; border-radius: 9999px; vertical-align: middle; text-decoration: none; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.05); color: var(--text); transition: all 0.15s ease; }
+.assistant-entity-chip.is-clickable { cursor: pointer; background: rgba(255, 255, 255, 0.07); }
+.assistant-entity-chip.is-clickable:hover { filter: brightness(1.15); border-color: currentColor; transform: translateY(-0.5px); }
+.assistant-entity-chip.is-proposal { border-style: dashed; }
+.assistant-entity-chip[data-kind='tasks'] { background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.35); color: #22c55e; }
+.assistant-entity-chip[data-kind='milestones'] { background: rgba(234, 179, 8, 0.12); border-color: rgba(234, 179, 8, 0.35); color: #eab308; }
+.assistant-entity-chip[data-kind='goals'] { background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.35); color: #3b82f6; }
+.assistant-entity-chip[data-kind='areas'] { background: rgba(168, 85, 247, 0.12); border-color: rgba(168, 85, 247, 0.35); color: #a855f7; }
+.assistant-entity-chip[data-kind='notes'] { background: rgba(236, 72, 153, 0.12); border-color: rgba(236, 72, 153, 0.35); color: #ec4899; }
+.assistant-entity-chip[data-kind='habits'] { background: rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.35); color: #f97316; }

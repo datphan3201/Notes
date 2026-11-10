@@ -14,6 +14,7 @@ import { api, ApiError, type Kind, type Run } from "@/lib/api";
 import { usePreviewData } from "./preview/workspace-data";
 import { Confirm } from "./preview/ui";
 import type { Text } from "./preview/shared";
+import { AssistantCompiledMessage } from "./assistant-compiled-message";
 
 export class RunObservationPaused extends Error {
     constructor(public reason: "stopped" | "timeout") {
@@ -551,13 +552,13 @@ export default function LiveAssistant({ text }: { text: Text }) {
                                     </article>
                                     <article className="review-chat-message is-assistant">
                                         {message.run?.answer && (
-                                            <p
-                                                style={{
-                                                    whiteSpace: "pre-wrap",
-                                                }}
-                                            >
-                                                {message.run.answer}
-                                            </p>
+                                            <AssistantCompiledMessage
+                                                content={message.run.answer}
+                                                proposal={message.run.proposal}
+                                                db={db}
+                                                live={live}
+                                                text={text}
+                                            />
                                         )}
                                         {message.run?.sources?.map((source) => (
                                             <button

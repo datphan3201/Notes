@@ -14,6 +14,7 @@ import { usePreviewData } from "./workspace-data";
 import { blankDraft, recordFromDraft } from "./task-data";
 import { BaselineIcon, Confirm } from "./ui";
 import type { Text } from "./shared";
+import { AssistantCompiledMessage } from "../assistant-compiled-message";
 type Proposal = {
     id: string;
     kind: "plan" | "create";
@@ -323,7 +324,15 @@ export default function AssistantPreview({ text }: { text: Text }) {
                                             ? db.profile.name
                                             : text("Planner", "Planner")}
                                     </small>
-                                    <p>{row.content}</p>
+                                    {row.role === "assistant" ? (
+                                        <AssistantCompiledMessage
+                                            content={row.content}
+                                            db={db}
+                                            text={text}
+                                        />
+                                    ) : (
+                                        <p>{row.content}</p>
+                                    )}
                                     {row.note &&
                                         (() => {
                                             const note = db.notes.find(
