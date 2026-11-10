@@ -1227,21 +1227,8 @@ export function DashboardView({
                                         text={text}
                                         label={text("Activity", "Hoạt động")}
                                         summary={
-                                            <div className="recent-activity-strip-container is-collapsed">
-                                                <div className="recent-activity-strip" role="group" aria-label={text("Activity for the last 30 days", "Hoạt động 30 ngày gần đây")}>
-                                                    {recentCounts.map((count, index) => (
-                                                        <span
-                                                            key={index}
-                                                            className="activity-day"
-                                                            data-level={empty ? 0 : Math.min(count, 4)}
-                                                            title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <div className="recent-activity-strip-labels">
-                                                    <small>{dayLabel(-29)}</small>
-                                                    <small>{dayLabel(0)} ({text("Today", "Hôm nay")})</small>
-                                                </div>
+                                            <div className="dashboard-collapsed-progress">
+                                                <span>{text("30-day activity overview", "Tổng quan hoạt động 30 ngày")}</span>
                                             </div>
                                         }
                                         header={<div className="section-heading">
@@ -1256,52 +1243,144 @@ export function DashboardView({
                                             </small>
                                         </div>}>
 
-                                        <div className="recent-activity-strip-container">
-                                            <div
-                                                className="recent-activity-strip"
-                                                role="group"
-                                                aria-label={text(
-                                                    "Activity for the last 30 days",
-                                                    "Hoạt động 30 ngày gần đây",
-                                                )}
-                                            >
-                                                {recentCounts.map((count, index) => (
-                                                    <button
-                                                        key={index}
-                                                        className="activity-day"
-                                                        data-level={
-                                                            empty
-                                                                ? 0
-                                                                : Math.min(
-                                                                      count,
-                                                                      4,
-                                                                  )
-                                                        }
-                                                        aria-pressed={
-                                                            activityDay === index
-                                                        }
-                                                        aria-label={`${dayLabel(index - 29)}: ${empty ? 0 : count} ${text("contributions", "đóng góp")}`}
-                                                        title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
-                                                        onClick={() =>
-                                                            setActivityDay(
-                                                                activityDay === index ? null : index,
-                                                            )
-                                                        }
-                                                    />
-                                                ))}
+                                        <div className="recent-activity-section">
+                                            <div className="recent-activity-overview">
+                                                <div className="recent-activity-stats-summary">
+                                                    <strong>
+                                                        {empty
+                                                            ? 0
+                                                            : recentCounts.reduce(
+                                                                  (a, b) =>
+                                                                      a + b,
+                                                                  0,
+                                                              )}
+                                                    </strong>
+                                                    <span>
+                                                        {text(
+                                                            "contributions",
+                                                            "đóng góp",
+                                                        )}
+                                                    </span>
+                                                    <small>
+                                                        {dayLabel(-29)} –{" "}
+                                                        {dayLabel(0)}
+                                                    </small>
+                                                </div>
+                                                <div className="recent-activity-calendar">
+                                                    <div
+                                                        className="recent-activity-weekdays"
+                                                        aria-hidden="true"
+                                                    >
+                                                        {weekdays.map(
+                                                            (label) => (
+                                                                <span
+                                                                    key={
+                                                                        label[0]
+                                                                    }
+                                                                >
+                                                                    {text(
+                                                                        ...label,
+                                                                    )}
+                                                                </span>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                    <div
+                                                        data-recent-activity-grid
+                                                        role="group"
+                                                        aria-label={text(
+                                                            "Activity for the last 30 days",
+                                                            "Hoạt động 30 ngày gần đây",
+                                                        )}
+                                                    >
+                                                        {Array.from(
+                                                            { length: 4 },
+                                                            (_, index) => (
+                                                                <span
+                                                                    key={`blank-${index}`}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            ),
+                                                        )}
+                                                        {recentCounts.map(
+                                                            (count, index) => (
+                                                                <button
+                                                                    key={index}
+                                                                    className="activity-day"
+                                                                    data-level={
+                                                                        empty
+                                                                            ? 0
+                                                                            : Math.min(
+                                                                                  count,
+                                                                                  4,
+                                                                              )
+                                                                    }
+                                                                    aria-pressed={
+                                                                        activityDay ===
+                                                                        index
+                                                                    }
+                                                                    aria-label={`${dayLabel(index - 29)}: ${empty ? 0 : count} ${text("contributions", "đóng góp")}`}
+                                                                    title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                                                                    onClick={() =>
+                                                                        setActivityDay(
+                                                                            index,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="recent-activity-strip-labels">
-                                                <small>{dayLabel(-29)}</small>
-                                                <small>{dayLabel(0)} ({text("Today", "Hôm nay")})</small>
-                                            </div>
-                                            {activityDay !== null && (
-                                                <p
-                                                    className="recent-activity-detail"
-                                                    role="status"
+                                            <div className="recent-activity-footer">
+                                                <div
+                                                    className="activity-legend"
+                                                    aria-label={text(
+                                                        "Less to more activity",
+                                                        "Mức hoạt động từ ít đến nhiều",
+                                                    )}
                                                 >
-                                                    {`${dayLabel(activityDay - 29)}: ${empty ? 0 : recentCounts[activityDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
-                                                </p>
-                                            )}
+                                                    <span>
+                                                        {text("Less", "Ít")}
+                                                    </span>
+                                                    {[0, 1, 2, 3, 4].map(
+                                                        (level) => (
+                                                            <i
+                                                                key={level}
+                                                                data-level={
+                                                                    level
+                                                                }
+                                                            />
+                                                        ),
+                                                    )}
+                                                    <span>
+                                                        {text("More", "Nhiều")}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    className="text-button"
+                                                    onClick={() =>
+                                                        setTab("activity")
+                                                    }
+                                                >
+                                                    {text(
+                                                        "View activity",
+                                                        "Xem hoạt động",
+                                                    )}
+                                                    <ArrowRight size={13} />
+                                                </button>
+                                            </div>
+                                            <p
+                                                className="recent-activity-detail"
+                                                role="status"
+                                            >
+                                                {activityDay === null
+                                                    ? text(
+                                                          "Select a day to see its activity.",
+                                                          "Chọn một ngày để xem hoạt động.",
+                                                      )
+                                                    : `${dayLabel(activityDay - 29)}: ${empty ? 0 : recentCounts[activityDay]} ${text(connected ? "contributions" : "sample contributions", connected ? "đóng góp" : "đóng góp minh họa")}`}
+                                            </p>
                                         </div>
                                     </DashboardPanel>
                                 </>
