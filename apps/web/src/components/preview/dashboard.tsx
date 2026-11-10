@@ -200,6 +200,53 @@ export function DashboardView({
             month: "short",
             timeZone: "UTC",
         }).format(sampleDay(offset));
+    const miniActivityCalendar = (
+        <div
+            className="recent-activity-mini-calendar"
+            role="group"
+            aria-label={text(
+                "Activity for the last 30 days",
+                "Hoạt động 30 ngày gần đây",
+            )}
+        >
+            <div
+                className="recent-activity-mini-weekdays"
+                aria-hidden="true"
+            >
+                {weekdays.map((label) => (
+                    <span key={label[0]}>
+                        {text(...label)}
+                    </span>
+                ))}
+            </div>
+            <div className="recent-activity-mini-grid">
+                {Array.from(
+                    { length: 4 },
+                    (_, index) => (
+                        <span
+                            key={`blank-${index}`}
+                            className="activity-day-blank"
+                            aria-hidden="true"
+                        />
+                    ),
+                )}
+                {recentCounts.map(
+                    (count, index) => (
+                        <span
+                            key={index}
+                            className="activity-day"
+                            data-level={
+                                empty
+                                    ? 0
+                                    : Math.min(count, 4)
+                            }
+                            title={`${dayLabel(index - 29)}: ${empty ? 0 : count}`}
+                        />
+                    ),
+                )}
+            </div>
+        </div>
+    );
     const statusLabel = (value: string) => {
         const item = statuses.find(([key]) => key === value)!;
         return text(item[1], item[2]);
@@ -277,21 +324,28 @@ export function DashboardView({
             <DashboardPanel
                 className="dashboard-roadmap"
                 text={text}
-                label={text("Roadmap", "Lộ trình")}
+                label={text("Roadmap & Activity", "Lộ trình & Hoạt động")}
                 summary={
-                    focus ? (
-                        <div className="dashboard-collapsed-progress">
-                            <span className="progress-pill">
-                                {focus.steps.length ? `${Math.round((focus.completed / focus.steps.length) * 100)}%` : "0%"}
+                    <div className="dashboard-roadmap-summary-split">
+                        {focus ? (
+                            <div className="dashboard-collapsed-progress">
+                                <span className="progress-pill">
+                                    {focus.steps.length ? `${Math.round((focus.completed / focus.steps.length) * 100)}%` : "0%"}
+                                </span>
+                                <span>
+                                    {text(
+                                        `${focus.completed} of ${focus.steps.length} milestones completed`,
+                                        `Đã hoàn thành ${focus.completed}/${focus.steps.length} cột mốc`,
+                                    )}
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="subtle-copy">
+                                {text("No roadmap selected", "Chưa chọn lộ trình")}
                             </span>
-                            <span>
-                                {text(
-                                    `${focus.completed} of ${focus.steps.length} milestones completed`,
-                                    `Đã hoàn thành ${focus.completed}/${focus.steps.length} cột mốc`,
-                                )}
-                            </span>
-                        </div>
-                    ) : null
+                        )}
+                        {miniActivityCalendar}
+                    </div>
                 }
                 header={<div className="section-heading">
                     <label className="roadmap-title-picker">
@@ -324,42 +378,55 @@ export function DashboardView({
                     </button>
                 </div>}>
 
-                {focus ? (
-                    <div className="roadmap-preview preview-dashboard-roadmap">
-                        {focus.steps.slice(0, 6).map((step, index) => (
-                            <button
-                                key={index}
-                                className={`roadmap-step ${index < focus.completed ? "is-done" : ""}`}
-                                title={text(...step)}
-                                onClick={() =>
-                                    db.setPlanningAction({
-                                        kind: "milestone",
-                                        id: focus.milestones[index].id,
-                                        view: true,
-                                    })
-                                }
-                            >
-                                <span className="preview-roadmap-dot">
-                                    {index < focus.completed && (
-                                        <Check size={12} />
-                                    )}
-                                </span>
-                                <span>{text(...step)}</span>
-                            </button>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="subtle-copy preview-roadmap-empty">
-                        {text(
-                            empty
-                                ? "Your roadmaps will appear here when you create a Goal."
-                                : "Choose a roadmap to display here.",
-                            empty
-                                ? "Lộ trình sẽ xuất hiện ở đây khi bạn tạo Mục tiêu."
-                                : "Chọn lộ trình để hiển thị ở đây.",
+                <div className="dashboard-roadmap-activity-layout">
+                    <div className="dashboard-roadmap-content">
+                        {focus ? (
+                            <div className="roadmap-preview preview-dashboard-roadmap">
+                                {focus.steps.slice(0, 6).map((step, index) => (
+                                    <button
+                                        key={index}
+                                        className={`roadmap-step ${index < focus.completed ? "is-done" : ""}`}
+                                        title={text(...step)}
+                                        onClick={() =>
+                                            db.setPlanningAction({
+                                                kind: "milestone",
+                                                id: focus.milestones[index].id,
+                                                view: true,
+                                            })
+                                        }
+                                    >
+                                        <span className="preview-roadmap-dot">
+                                            {index < focus.completed && (
+                                                <Check size={12} />
+                                            )}
+                                        </span>
+                                        <span>{text(...step)}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="subtle-copy preview-roadmap-empty">
+                                {text(
+                                    empty
+                                        ? "Your roadmaps will appear here when you create a Goal."
+                                        : "Choose a roadmap to display here.",
+                                    empty
+                                        ? "Lộ trình sẽ xuất hiện ở đây khi bạn tạo Mục tiêu."
+                                        : "Chọn lộ trình để hiển thị ở đây.",
+                                )}
+                            </p>
                         )}
-                    </p>
-                )}
+                    </div>
+
+                    <div className="dashboard-roadmap-activity-card">
+                        <div className="dashboard-roadmap-activity-heading">
+                            <h4>{text("Activity", "Hoạt động")}</h4>
+                        </div>
+                        <div className="dashboard-roadmap-activity-box">
+                            {miniActivityCalendar}
+                        </div>
+                    </div>
+                </div>
             </DashboardPanel>
             <nav
                 className="workspace-section-menu"

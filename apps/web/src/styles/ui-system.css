@@ -202,6 +202,16 @@ textarea.ui-control { min-height: 112px; resize: vertical; }
 .recent-activity-mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 4px; }
 .recent-activity-mini-grid .activity-day { width: 18px; height: 18px; min-width: 0; min-height: 0; border-radius: 4px; padding: 0; display: block; }
 .recent-activity-mini-grid .activity-day-blank { width: 18px; height: 18px; visibility: hidden; }
+.dashboard-roadmap-activity-layout { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+@media (max-width: 860px) { .dashboard-roadmap-activity-layout { flex-direction: column; align-items: stretch; gap: 16px; } }
+.dashboard-roadmap-content { flex: 1 1 0; min-width: 0; }
+.dashboard-roadmap-activity-card { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+@media (max-width: 860px) { .dashboard-roadmap-activity-card { align-items: flex-start; } }
+.dashboard-roadmap-activity-heading { display: flex; align-items: center; gap: 8px; }
+.dashboard-roadmap-activity-heading h4 { margin: 0; font-size: 0.92rem; font-weight: 600; color: var(--text); }
+.dashboard-roadmap-activity-box { padding: 10px 12px; background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; }
+[data-theme='light'] .dashboard-roadmap-activity-box { background: rgba(0, 0, 0, 0.04); border-color: rgba(0, 0, 0, 0.08); }
+.dashboard-roadmap-summary-split { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px; flex-wrap: wrap; }
 .ui-dashboard-panel[data-expanded='true'] { position: fixed; inset: 12px; z-index: 130; margin: 0; overflow: auto; background: var(--surface); box-shadow: var(--shadow); }
 .ui-dashboard-panel[data-expanded='true'] .ui-dashboard-panel-heading { position: sticky; top: 0; z-index: 2; padding-bottom: 8px; background: var(--surface); }
 .dashboard-habits-panel .habit-checkin-days { display: flex; max-width: 100%; overflow-x: auto; margin-top: 8px; }
