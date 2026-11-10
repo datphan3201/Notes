@@ -84,7 +84,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
             db.setPlanningAction(null);
         }
     }, [db.planningAction]);
-    const [view, setView] = useState("tree");
     const [expanded, setExpanded] = useState<string[]>([]);
     const [expandedAreas, setExpandedAreas] = useState<string[]>([]);
     const [relatedKind, setRelatedKind] = useState("child_goals");
@@ -1129,21 +1128,12 @@ export default function PlanningPreview({ text }: { text: Text }) {
                         aria-label={text("Goal views", "Chế độ mục tiêu")}
                     >
                         <button
-                            aria-pressed={view === "tree"}
-                            onClick={() => setView("tree")}
+                            aria-pressed={true}
                         >
                             {text("Areas", "Lĩnh vực")}
                         </button>
                         <button
-                            id="review-goals-tab-timeline"
-                            aria-pressed={view === "timeline"}
-                            onClick={() => setView("timeline")}
-                        >
-                            {text("Timeline", "Dòng thời gian")}
-                        </button>
-                        <button
                             className="review-expand-goals"
-                            hidden={view !== "tree"}
                             onClick={() => {
                                 const allOpen =
                                     activeAreas.every((area) =>
@@ -1172,7 +1162,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
                         </button>
                     </div>
                     <section
-                        hidden={view !== "tree"}
                         aria-label={text("Areas", "Lĩnh vực")}
                     >
                         {activeAreas.map((area) => {
@@ -1318,40 +1307,6 @@ export default function PlanningPreview({ text }: { text: Text }) {
                                 "Thêm lĩnh vực cuộc sống",
                             )}
                         </button>
-                    </section>
-                    <section
-                        className="planning-panel"
-                        data-goal-timeline
-                        hidden={view !== "timeline"}
-                        aria-label={text("Timeline", "Dòng thời gian")}
-                    >
-                        {goals
-                            .filter((goal) => !goal.archived)
-                            .sort((a, b) =>
-                                (a.due || "9999").localeCompare(
-                                    b.due || "9999",
-                                ),
-                            )
-                            .map((goal) => (
-                                <div
-                                    className={`goal-timeline-item ${goal.status === "Done" ? "is-completed" : ""} ${goal.due ? "has-deadline" : ""}`}
-                                    key={goal.id}
-                                >
-                                    <span
-                                        className="goal-timeline-dot"
-                                        aria-hidden="true"
-                                    />
-                                    <time dateTime={goal.due || undefined}>
-                                        {goal.due
-                                            ? dateLabel(goal.due, db.locale)
-                                            : text(
-                                                  "No deadline",
-                                                  "Không có hạn",
-                                              )}
-                                    </time>
-                                    {goalRow(goal)}
-                                </div>
-                            ))}
                     </section>
                 </>
             )}

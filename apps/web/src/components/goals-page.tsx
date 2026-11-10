@@ -7,7 +7,6 @@ import { useState } from "react";
 import Dialog from "./dialog";
 import {
     QueryState,
-    Tabs,
     useItems,
     type PageContext,
 } from "./workspace-context";
@@ -21,8 +20,7 @@ export function GoalsPage({ ctx }: { ctx: PageContext }) {
         queryFn: () =>
             api<Dashboard & { focus_goal: Entity | null }>("/dashboard"),
     });
-    const [view, setView] = useState("areas"),
-        [manage, setManage] = useState(false),
+    const [manage, setManage] = useState(false),
         [expanded, setExpanded] = useState(true);
     const renderGoal = (goal: Entity): React.ReactNode => (
         <div key={goal.id}>
@@ -86,15 +84,6 @@ export function GoalsPage({ ctx }: { ctx: PageContext }) {
                 </div>
             </div>
             <div className="action-row">
-                <Tabs
-                    label={ctx.text("Goal views", "Kiểu xem mục tiêu")}
-                    value={view}
-                    onChange={setView}
-                    items={[
-                        ["areas", ctx.text("Areas", "Lĩnh vực")],
-                        ["timeline", ctx.text("Timeline", "Dòng thời gian")],
-                    ]}
-                />
                 <button
                     className="button button-quiet"
                     onClick={() => setExpanded(!expanded)}
@@ -110,79 +99,59 @@ export function GoalsPage({ ctx }: { ctx: PageContext }) {
                     {ctx.text("Manage areas", "Quản lý lĩnh vực")}
                 </button>
             </div>
-            {view === "areas" ? (
-                <div className="planning-panel">
-                    {areas.data?.map((area) => (
-                        <details
-                            className="area-block"
-                            key={area.id}
-                            open={expanded}
-                        >
-                            <summary>
-                                <strong>{area.title}</strong>
-                                <span className="count-badge">
-                                    {
-                                        goals.data?.filter(
-                                            (goal) => goal.area_id === area.id,
-                                        ).length
-                                    }
-                                </span>
-                            </summary>
-                            {goals.data
-                                ?.filter(
-                                    (goal) =>
-                                        goal.area_id === area.id &&
-                                        !goal.parent_goal_id,
-                                )
-                                .map(renderGoal)}
-                            <button
-                                className="text-button"
-                                onClick={() =>
-                                    ctx.open("goals", null, {
-                                        area_id: area.id,
-                                    })
-                                }
-                            >
-                                <span aria-hidden="true">＋</span>{" "}
-                                {ctx.text("New goal", "Mục tiêu mới")}
-                            </button>
-                        </details>
-                    ))}
-                    {goals.data
-                        ?.filter(
-                            (goal) => !goal.area_id && !goal.parent_goal_id,
-                        )
-                        .map(renderGoal)}
-                    <button
-                        className="button button-quiet"
-                        onClick={() => setManage(true)}
+            <div className="planning-panel">
+                {areas.data?.map((area) => (
+                    <details
+                        className="area-block"
+                        key={area.id}
+                        open={expanded}
                     >
-                        ＋{" "}
-                        {ctx.text(
-                            "Add another life area",
-                            "Thêm lĩnh vực cuộc sống",
-                        )}
-                    </button>
-                </div>
-            ) : (
-                <div className="planning-panel">
-                    {goals.data?.map((goal) => (
-                        <div className="goal-tree-row" key={goal.id}>
-                            <Link
-                                className="goal-tree-link"
-                                href={`/goals/${goal.id}`}
-                            >
-                                {goal.title}
-                            </Link>
-                            <span>
-                                {goal.start_date || "—"} →{" "}
-                                {goal.due_date || "—"}
+                        <summary>
+                            <strong>{area.title}</strong>
+                            <span className="count-badge">
+                                {
+                                    goals.data?.filter(
+                                        (goal) => goal.area_id === area.id,
+                                    ).length
+                                }
                             </span>
-                            <progress max={100} value={goal.progress || 0} />
-                        </div>
-                    ))}
-                </div>
-            )}
+                        </summary>
+                        {goals.data
+                            ?.filter(
+                                (goal) =>
+                                    goal.area_id === area.id &&
+                                    !goal.parent_goal_id,
+                            )
+                            .map(renderGoal)}
+                        <button
+                            className="text-button"
+                            onClick={() =>
+                                ctx.open("goals", null, {
+                                    area_id: area.id,
+                                })
+                            }
+                        >
+                            <span aria-hidden="true">＋</span>{" "}
+                            {ctx.text("New goal", "Mục tiêu mới")}
+                        </button>
+                    </details>
+                ))}
+                {goals.data
+                    ?.filter(
+                        (goal) => !goal.area_id && !goal.parent_goal_id,
+                    )
+                    .map(renderGoal)}
+                <button
+                    className="button button-quiet"
+                    onClick={() => setManage(true)}
+                >
+                    ＋{" "}
+                    {ctx.text(
+                        "Add another life area",
+                        "Thêm lĩnh vực cuộc sống",
+                    )}
+                </button>
+            </div>
             {manage && (
                 <Dialog
                     title={ctx.text("Manage areas", "Quản lý lĩnh vực")}
