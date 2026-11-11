@@ -405,6 +405,91 @@ def test_series_checkpoint_backfill_is_dry_run_by_default(client, db):
     assert backfill(session_factory()) == (1, 0)
 
 
+def test_scheduler_mode_change_waits_for_active_tick(db, monkeypatch):
+    import threading
+
+    from planner import jobs
+    from planner.models import SystemSetting
+    from planner.scheduler_admin import set_mode
+
+    db.add(SystemSetting(key="scheduler:desired", value={"mode": "legacy"}))
+    db.commit()
+    started, release, switched = threading.Event(), threading.Event(), threading.Event()
+    observed = []
+
+    def tick(_factory, mode):
+        observed.append(mode)
+        started.set()
+        assert release.wait(3)
+
+    monkeypatch.setattr(jobs, "_schedule_mode", tick)
+    worker = threading.Thread(target=jobs.schedule, args=(session_factory(),))
+    changer = threading.Thread(target=lambda: (set_mode(session_factory(), "due"), switched.set()))
+    try:
+        worker.start()
+        assert started.wait(2)
+        changer.start()
+        assert not switched.wait(0.2)
+        release.set()
+        worker.join(3)
+        changer.join(3)
+        assert switched.is_set() and observed == ["legacy"]
+        db.expire_all()
+        assert db.get(SystemSetting, "scheduler:desired").value == {"mode": "due"}
+    finally:
+        release.set()
+        worker.join(3)
+        if changer.ident is not None:
+            changer.join(3)
+
+
+def test_due_mode_requires_continuous_clean_comparison(db):
+    from planner.models import SystemSetting
+    from planner.scheduler_admin import set_mode
+
+    started = (now() - timedelta(hours=25)).isoformat()
+    db.add_all([
+        SystemSetting(key="scheduler:desired", value={"mode": "compare"}),
+        SystemSetting(key="scheduler:mode", value={"mode": "compare", "since": started}),
+        SystemSetting(key="scheduler:comparison", value={
+            "matched": True, "since": started, "last_at": (now() - timedelta(minutes=5)).isoformat(),
+            "mode_since": started,
+        }),
+    ])
+    db.commit()
+    with pytest.raises(ValueError):
+        set_mode(session_factory(), "due", expected="compare", clean_hours=24)
+    row = db.get(SystemSetting, "scheduler:comparison")
+    row.value = {**row.value, "last_at": now().isoformat()}
+    db.commit()
+    with pytest.raises(ValueError):
+        set_mode(session_factory(), "due", expected="legacy", clean_hours=24)
+    set_mode(session_factory(), "due", expected="compare", clean_hours=24)
+    db.expire_all()
+    assert db.get(SystemSetting, "scheduler:desired").value == {"mode": "due"}
+
+
+def test_comparison_streak_resets_on_gap_or_mismatch(db, monkeypatch):
+    from planner import jobs
+    from planner.models import SystemSetting
+
+    start = now()
+    db.add(SystemSetting(key="scheduler:mode", value={"mode": "compare", "since": start.isoformat()}))
+    db.commit()
+    monkeypatch.setattr(jobs, "now", lambda: start)
+    jobs.record_comparison(db, True)
+    db.commit()
+    row = db.get(SystemSetting, "scheduler:comparison")
+    assert row.value["since"] == start.isoformat()
+    monkeypatch.setattr(jobs, "now", lambda: start + timedelta(minutes=4))
+    jobs.record_comparison(db, True)
+    db.commit()
+    assert row.value["since"] == (start + timedelta(minutes=4)).isoformat()
+    jobs.record_comparison(db, False)
+    db.commit()
+    assert row.value["matched"] is False and "since" not in row.value
+
+
 def test_due_scheduler_mode_does_not_create_legacy_reminder_jobs(client, db, monkeypatch):
     from planner import jobs
 
@@ -415,6 +500,35 @@ def test_due_scheduler_mode_does_not_create_legacy_reminder_jobs(client, db, mon
     db.expire_all()
     assert len(list(db.scalars(select(Job).where(Job.kind == "reminder-dispatch")))) == 1
     assert list(db.scalars(select(Job).where(Job.kind == "reminders"))) == []
+
+
+def test_mixed_legacy_and_due_jobs_do_not_duplicate_effects(client, db, monkeypatch):
+    from planner import jobs
+    from planner.models import Notification, User
+
+    monkeypatch.setattr(settings(), "smtp_host", "fake.smtp.invalid")
+    make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
+    series = make(client, "task-series", frequency="daily", start_date=str(now().date()))
+    owner = db.scalar(select(User.id))
+    enqueue(db, owner, "reminders", "legacy-reminders", {})
+    enqueue(db, owner, "recurrence", "legacy-recurrence", {})
+    db.commit()
+    with session_factory()() as session:
+        jobs.schedule_due_reminders(session)
+        jobs.schedule_due_series(session)
+        session.commit()
+    db.expire_all()
+    scheduled = list(db.scalars(select(Job).where(Job.kind.in_(["reminders", "reminder-dispatch", "recurrence"]))))
+    assert len(scheduled) == 4
+    for job in sorted(scheduled, key=lambda row: row.key.startswith("legacy")):
+        assert jobs.process_one(session_factory(), job_id=job.id)
+    db.expire_all()
+    assert len(list(db.scalars(select(Notification)))) == 1
+    assert len(list(db.scalars(select(Job).where(
+        Job.kind == "email", Job.key.like("reminder-email:%")
+    )))) == 1
+    occurrences = list(db.scalars(select(Task).where(Task.series_id == series["id"])))
+    assert len(occurrences) == len({task.occurrence_date for task in occurrences})
 
 
 def test_due_scheduler_creates_no_periodic_jobs_for_an_idle_account(client, db, monkeypatch):

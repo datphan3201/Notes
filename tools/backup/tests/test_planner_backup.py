@@ -4,6 +4,7 @@ import importlib.util
 import io
 import pathlib
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -13,9 +14,23 @@ spec = importlib.util.spec_from_file_location(
 )
 backup = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(backup)
+rollout_spec = importlib.util.spec_from_file_location(
+    "rollout_when_verified", pathlib.Path(__file__).resolve().parents[1] / "rollout_when_verified.py"
+)
+sys.modules["planner_backup"] = backup
+rollout = importlib.util.module_from_spec(rollout_spec)
+rollout_spec.loader.exec_module(rollout)
 
 
 class BackupTests(unittest.TestCase):
+    def test_uptime_window_rejects_missing_and_gapped_samples(self):
+        start = dt.datetime(2026, 11, 11, tzinfo=dt.UTC)
+        end = start + dt.timedelta(minutes=30)
+        samples = [start + dt.timedelta(minutes=5 * index) for index in range(7)]
+        assert rollout.samples_cover_window(samples, start, end, dt.timedelta(minutes=10))
+        assert not rollout.samples_cover_window(samples[:2] + samples[5:], start, end, dt.timedelta(minutes=10))
+        assert not rollout.samples_cover_window([], start, end, dt.timedelta(minutes=10))
+
     def test_private_objects_are_checked_and_encrypted(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)

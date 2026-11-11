@@ -1,6 +1,7 @@
 """Backfill recurrence checkpoints without logging account data."""
 import argparse
 import re
+from datetime import datetime, timedelta
 
 from sqlalchemy import select, text
 from sqlalchemy.engine import make_url
@@ -9,7 +10,7 @@ from planner.auth import lock_owner
 from planner.config import settings
 from planner.db import session_factory
 from planner.domain import next_materialization
-from planner.models import TaskSeries
+from planner.models import SystemSetting, TaskSeries, now
 
 
 def backfill(factory, *, execute=False, batch_size=100):
@@ -47,10 +48,44 @@ def backfill(factory, *, execute=False, batch_size=100):
     return scanned, changed
 
 
+def set_mode(factory, mode, *, expected=None, clean_hours=0):
+    if mode not in ("legacy", "compare", "due"):
+        raise ValueError("Invalid scheduler mode")
+    with factory() as db:
+        row = db.scalar(select(SystemSetting).where(
+            SystemSetting.key == "scheduler:desired"
+        ).with_for_update())
+        if row is None:
+            raise ValueError("Scheduler has not initialized its mode")
+        if expected is not None and row.value.get("mode") != expected:
+            raise ValueError("Scheduler mode changed before the switch")
+        if mode == "due" and clean_hours:
+            comparison = db.get(SystemSetting, "scheduler:comparison")
+            recorded = db.get(SystemSetting, "scheduler:mode")
+            state = comparison.value if comparison else {}
+            mode_state = recorded.value if recorded else {}
+            try:
+                since = datetime.fromisoformat(state["since"])
+                last = datetime.fromisoformat(state["last_at"])
+                valid = (state.get("matched") is True
+                         and mode_state.get("mode") == "compare"
+                         and state.get("mode_since") == mode_state.get("since")
+                         and since <= now() - timedelta(hours=clean_hours)
+                         and timedelta(0) <= now() - last <= timedelta(seconds=180))
+            except (KeyError, TypeError, ValueError):
+                valid = False
+            if not valid:
+                raise ValueError("A continuous clean comparison is required before due mode")
+        row.value = {"mode": mode}
+        db.commit()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--expect-project", required=True)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--set-mode", choices=["legacy", "compare", "due"])
+    parser.add_argument("--expect-mode", choices=["legacy", "compare", "due"])
     args = parser.parse_args()
     config = settings()
     url = make_url(config.database_url)
@@ -65,8 +100,14 @@ def main():
         revision = db.scalar(text("SELECT version_num FROM alembic_version"))
         if tuple(actual) != ("postgres", "planner") or revision != "0012":
             raise SystemExit("Refusing unexpected connected database/schema/revision")
-    scanned, changed = backfill(factory, execute=args.execute)
-    print(f"{'Updated' if args.execute else 'Would update'} {changed} of {scanned} active recurrence checkpoints")
+    if args.set_mode:
+        if args.execute:
+            set_mode(factory, args.set_mode, expected=args.expect_mode,
+                     clean_hours=24 if args.set_mode == "due" else 0)
+        print(f"{'Set' if args.execute else 'Would set'} scheduler mode to {args.set_mode}")
+    else:
+        scanned, changed = backfill(factory, execute=args.execute)
+        print(f"{'Updated' if args.execute else 'Would update'} {changed} of {scanned} active recurrence checkpoints")
 
 
 if __name__ == "__main__":

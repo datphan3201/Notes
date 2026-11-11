@@ -19,8 +19,8 @@ def ready(config):
             database, schema, stamp = cur.fetchone()
             if (database, schema) != ("postgres", "planner"):
                 raise ValueError("Unexpected database identity")
-            cur.execute("SELECT key, value FROM system_settings WHERE key IN (%s, %s, %s, %s)", (
-                "scheduler:mode", "worker:heartbeat:scheduler", "worker:heartbeat:fast", "worker:heartbeat:slow",
+            cur.execute("SELECT key, value FROM system_settings WHERE key IN (%s, %s, %s, %s, %s)", (
+                "scheduler:desired", "scheduler:mode", "worker:heartbeat:scheduler", "worker:heartbeat:fast", "worker:heartbeat:slow",
             ))
             rows = dict(cur.fetchall())
             state = rows.get("scheduler:mode", {})
@@ -28,7 +28,7 @@ def ready(config):
                 since = dt.datetime.fromisoformat(state["since"])
                 drained = dt.datetime.fromisoformat(state["legacy_drained_at"])
                 last_tick = dt.datetime.fromisoformat(state["last_tick"])
-                if (state.get("mode") != "due" or max(since, drained) > stamp - dt.timedelta(hours=48)
+                if (rows.get("scheduler:desired", {}).get("mode") != "due" or state.get("mode") != "due" or max(since, drained) > stamp - dt.timedelta(hours=48)
                         or not dt.timedelta(0) <= stamp - last_tick <= dt.timedelta(seconds=180)):
                     return False
                 for lane, seconds in (("scheduler", 180), ("fast", 180), ("slow", 360)):

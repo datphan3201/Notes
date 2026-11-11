@@ -45,6 +45,11 @@ def legacy_waiting(db):
 
 
 def require_stable_scheduler(db):
+    desired = db.scalar(select(SystemSetting).where(
+        SystemSetting.key == "scheduler:desired"
+    ).with_for_update())
+    if desired is None or desired.value.get("mode") != "due":
+        raise ValueError("Scheduler is not set to due mode")
     row = db.scalar(select(SystemSetting).where(SystemSetting.key == "scheduler:mode").with_for_update())
     state = row.value if row else {}
     try:

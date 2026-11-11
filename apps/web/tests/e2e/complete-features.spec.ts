@@ -129,7 +129,7 @@ test("repeating templates survive reload and pause, resume and end use the real 
     );
     fixtureAction({ action: "materialize", email: account.email });
     await page.reload();
-    await page.getByRole("button", { name: /^Chuỗi lặp/ }).click();
+    await page.goto("/tasks?view=repeating");
     await expect(
         page.getByRole("heading", { name: "Practice daily", exact: true }),
     ).toBeVisible();

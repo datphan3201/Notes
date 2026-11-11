@@ -527,19 +527,60 @@ def record_scheduler_mode(db, mode):
         row.value = state
 
 
+def record_comparison(db, matched):
+    from datetime import datetime
+
+    key = "scheduler:comparison"
+    db.execute(insert(SystemSetting).values(key=key, value={}).on_conflict_do_nothing())
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == key).with_for_update())
+    mode_row = db.get(SystemSetting, "scheduler:mode")
+    state = dict(row.value or {})
+    stamp = now()
+    try:
+        last = datetime.fromisoformat(state["last_at"])
+    except (KeyError, TypeError, ValueError):
+        last = None
+    continuous = last is not None and timedelta(0) <= stamp - last <= timedelta(seconds=180)
+    generation = (mode_row.value or {}).get("since") if mode_row else None
+    if not matched:
+        state = {"matched": False, "last_at": stamp.isoformat(), "mode_since": generation}
+    else:
+        if not continuous or not state.get("matched") or state.get("mode_since") != generation:
+            state = {"since": stamp.isoformat()}
+        state.update(matched=True, last_at=stamp.isoformat(), mode_since=generation)
+    row.value = state
+
+
 def schedule(factory=None):
+    """Serialize scheduler ticks and mode changes through one database row."""
+    factory = factory or session_factory()
+    with factory() as gate:
+        key = "scheduler:desired"
+        gate.execute(insert(SystemSetting).values(
+            key=key, value={"mode": settings().scheduler_mode}
+        ).on_conflict_do_nothing())
+        row = gate.scalar(select(SystemSetting).where(SystemSetting.key == key).with_for_update())
+        mode = (row.value or {}).get("mode")
+        if mode not in ("legacy", "compare", "due"):
+            raise ValueError("Invalid stored scheduler mode")
+        _schedule_mode(factory, mode)
+        gate.commit()
+
+
+def _schedule_mode(factory, mode):
     from planner.models import User
     from planner.planning import enqueue
     from planner.timezones import zone as ZoneInfo
 
-    factory = factory or session_factory()
     with factory() as db:
-        record_scheduler_mode(db, settings().scheduler_mode)
+        record_scheduler_mode(db, mode)
         db.commit()
-    if settings().scheduler_mode == "compare":
+    if mode == "compare":
         with factory() as db:
-            compare_scheduler(db)
-    if settings().scheduler_mode == "due":
+            matched = compare_scheduler(db)
+            record_comparison(db, matched)
+            db.commit()
+    if mode == "due":
         with factory() as db:
             schedule_due_reminders(db)
             schedule_due_series(db)

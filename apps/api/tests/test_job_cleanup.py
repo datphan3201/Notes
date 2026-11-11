@@ -29,10 +29,20 @@ def test_cleanup_requires_48_hours_since_legacy_queue_drained(client, db):
     past = (now() - timedelta(hours=49)).isoformat()
     state = SystemSetting(key="scheduler:mode", value={"mode": "due", "since": past, "legacy_drained_at": past, "last_tick": now().isoformat()})
     db.add(state)
+    db.add(SystemSetting(key="scheduler:desired", value={"mode": "due"}))
     db.add_all([SystemSetting(key="worker:heartbeat:" + lane, value={"at": now().isoformat()})
                 for lane in ("scheduler", "fast", "slow")])
     db.commit()
     require_stable_scheduler(db)
+    desired = db.get(SystemSetting, "scheduler:desired")
+    desired.value = {"mode": "legacy"}
+    db.commit()
+    with pytest.raises(ValueError):
+        require_stable_scheduler(db)
+    db.rollback()
+    desired = db.get(SystemSetting, "scheduler:desired")
+    desired.value = {"mode": "due"}
+    db.commit()
     db.add(Job(kind="reminders", user_id=owner, key="legacy-pending", payload={}, status="queued"))
     db.commit()
     with pytest.raises(ValueError):
