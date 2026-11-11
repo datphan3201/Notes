@@ -15,8 +15,8 @@ Trace ID: `notes.locks`. Test references identify coverage to inspect; they are 
 | Role | Current source |
 | --- | --- |
 | Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L40) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L317) — `def note_password(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L338) — `def note_unlock(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L340) — `def note_password(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L361) — `def note_unlock(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L80) — `def access_note(` |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

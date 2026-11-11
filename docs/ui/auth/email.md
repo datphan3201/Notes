@@ -16,8 +16,8 @@ Trace ID: `auth.email`. Test references identify coverage to inspect; they are n
 | --- | --- |
 | UI | [apps/web/src/components/confirm-email.tsx](../../../apps/web/src/components/confirm-email.tsx#L7) — `export default function ConfirmEmail() {` |
 | API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L341) — `def verify_email(` |
-| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L268) — `def confirm_email_link(` |
-| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L250) — `def confirm_email_code(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L270) — `def confirm_email_link(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L252) — `def confirm_email_code(` |
 | Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/authentication.spec.ts](../../../apps/web/tests/e2e/authentication.spec.ts) |

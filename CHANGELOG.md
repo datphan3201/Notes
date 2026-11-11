@@ -4,6 +4,12 @@ Notable user-visible and operational changes, newest first. Dates are Asia/Ho_Ch
 
 Entries describe their own historical stage. In particular, earlier 2026-11-08 preparation/pause/unprovisioned statements were superseded by the recorded deployment, merge to `main` and legacy retirement. Current operations and unresolved acceptance live in the documentation/status and issue list; historical verification totals are not fresh test results.
 
+## 2026-11-12
+
+### Changed
+- Prepared a feature-gated due-work scheduler, bounded worker lanes, AI output buffering, private-file streaming, Activity/Archive pagination and local encrypted backup/restore tools. The scheduler defaults to the legacy mode during rollout.
+- Recorded the Supabase Singapore cutover, isolated restore verification and local backup timer.
+
 ## 2026-11-09
 
 ### Changed

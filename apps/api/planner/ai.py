@@ -304,24 +304,42 @@ def run_assistant(job, factory, provider):
     tool_session = ToolSession(user_id, prompt, account_context["timezone"], references)
     proposal, input_tokens, output_tokens = None, 0, 0
 
-    def publish(text):
-        if time.monotonic() - started > 240:
-            raise TimeoutError("AI_RUN_DEADLINE")
+    pending = []
+    last_flush = None
+
+    def flush():
+        nonlocal last_flush
+        if not pending:
+            return
         with factory() as db:
             current = db.get(AIRun, run_id)
             for reference in current.sources:
                 source = owned(db, reference["kind"], reference["id"], user_id, active=True)
                 if isinstance(source, Note) and source.lock_hash:
                     raise ValueError("SOURCE_LOCKED_DURING_GENERATION")
-            current.answer += text
+            current.answer += "".join(pending)
             db.commit()
+        pending.clear()
+        last_flush = time.monotonic()
+
+    def publish(text):
+        if time.monotonic() - started > 240:
+            raise TimeoutError("AI_RUN_DEADLINE")
+        pending.append(text)
+        if last_flush is None or time.monotonic() - last_flush >= 0.5:
+            flush()
 
     for _ in range(6):
         if time.monotonic() - started > 240:
             raise TimeoutError("AI_RUN_DEADLINE")
         if len(json.dumps(messages).encode()) > 64000:
             break
-        message, usage = provider.stream(messages, publish)
+        try:
+            message, usage = provider.stream(messages, publish)
+        except Exception:
+            flush()
+            raise
+        flush()
         input_tokens += usage.get("prompt_tokens", 0)
         output_tokens += usage.get("completion_tokens", 0)
         messages.append(message)

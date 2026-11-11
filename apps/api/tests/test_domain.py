@@ -1,9 +1,15 @@
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
 
-from planner.domain import assert_acyclic, daily_streak, goal_progress, recurrence_dates
+from planner.domain import (
+    assert_acyclic,
+    daily_streak,
+    goal_progress,
+    next_materialization,
+    recurrence_dates,
+)
 
 
 def rule(start, frequency, **kwargs):
@@ -22,6 +28,26 @@ def test_goal_graph_supports_deep_trees_and_detects_cycles():
     edges["2500"] = ["0"]
     with pytest.raises(ValueError, match="cycle"):
         assert_acyclic(edges)
+
+
+def test_recurrence_checkpoint_uses_local_horizon_and_leap_anchor():
+    recurrence = rule("2024-01-31", "monthly")
+    recurrence.cursor = date(2024, 1, 31)
+    recurrence.timezone = "Asia/Ho_Chi_Minh"
+    assert next_materialization(recurrence) == datetime(2024, 2, 21, 17, tzinfo=UTC)
+    recurrence.end_date = date(2024, 1, 31)
+    assert next_materialization(recurrence) == datetime.max.replace(tzinfo=UTC)
+
+
+def test_recurrence_handles_supported_date_boundaries():
+    recurrence = rule("0001-01-01", "daily")
+    recurrence.cursor = None
+    recurrence.timezone = "Asia/Ho_Chi_Minh"
+    assert recurrence_dates(recurrence, None, date.min, limit=1) == [date.min]
+    assert next_materialization(recurrence) == datetime.min.replace(tzinfo=UTC)
+    recurrence.cursor = date.max
+    assert recurrence_dates(recurrence, date.max, date.max) == []
+    assert next_materialization(recurrence) == datetime.max.replace(tzinfo=UTC)
 
 
 @pytest.mark.parametrize(

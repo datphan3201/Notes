@@ -17,7 +17,7 @@ Trace ID: `settings.reports`. Test references identify coverage to inspect; they
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L51) — `export default function SettingsPreview({` |
 | API / domain | [apps/api/planner/moderation.py](../../../apps/api/planner/moderation.py#L54) — `def report(` |
 | API / domain | [apps/api/planner/moderation.py](../../../apps/api/planner/moderation.py#L128) — `def reports(` |
-| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L144) — `def account_file(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L146) — `def account_file(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |
 

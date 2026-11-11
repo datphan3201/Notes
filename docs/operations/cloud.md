@@ -2,15 +2,31 @@
 
 [Operations](README.md) · [Release procedure](deployment.md) · [Topology setup](../migration/render-vercel-supabase.md)
 
+### 2026-11-11 compact Dashboard header
+
+Frontend deployment `dpl_Fmw83krTpuHQ8VSuZiAwA2YrhoHz` reached READY and was assigned `planner-t1.vercel.app`. It was built from tracked frontend files in the local working tree based on `fda5e93`, including uncommitted Dashboard header changes; it is not a Git commit deployment. No backend or database changes were made. The login page and proxied health returned HTTP 200. The hosted synthetic preview was checked at 320, 390 and 1280 px: the compact strip appeared at narrow widths, the calendar appeared at 1280 px and document width did not overflow. These checks do not establish authenticated or physical-device behavior.
+
+Frontend deployment `dpl_FSL7bJqjhtPYUa3vhP3GTgsbGCkP` superseded it, changing the compact strip to the seven days of the current week. The hosted synthetic preview at 320 px displayed seven cells without horizontal page overflow. This deployment also used the uncommitted frontend working tree; no backend or database changes were made.
+
+Frontend deployment `dpl_HnVsPfEg6RmaXs762qh7HFf5kWzm` superseded it, hiding the redundant Activity heading on narrow screens. The hosted synthetic preview at 320 px showed seven cells without the heading or horizontal page overflow. It used the uncommitted frontend working tree and made no backend or database changes.
+
+Frontend deployment `dpl_EvY6hJDY4Pyccyf6ZGP1ikBssGgr` superseded it and removed the compact strip's “This week” text. The frontend build passed. It used the uncommitted frontend working tree and made no backend or database changes.
+
+Frontend deployment `dpl_H3UALXHgoEtJvwbDeVQq6ujLy1tq` reached READY and was assigned `planner-t1.vercel.app` for the all-day Task Calendar frontend. It used the uncommitted frontend working tree; the backend and database were not changed. Local frontend verification passed TypeScript, 47 unit tests, the production and E2E builds, and the focused Calendar capture browser test on desktop/mobile against isolated `planner_test`. A hosted synthetic mobile preview at 390 px showed two date inputs, no timed schedule or estimate controls, and no horizontal page overflow. No authenticated production Task mutation or database migration was performed.
+
+Frontend deployment `dpl_9ZwZ9tUgJD9DBi65Z9MmoTFKmVf2` reached READY and was assigned `planner-t1.vercel.app` for separate Notes Add tag and Manage tags actions. It used the uncommitted tracked frontend working tree. Local TypeScript, 47 frontend unit tests, production build and documentation checks passed. The hosted synthetic Notes preview showed a one-field Add tag dialog and a separate Manage tags dialog with existing tags only. The authenticated browser test was added but not run because Docker/`planner_test` was unavailable in the WSL environment; no production Note mutation was performed.
+
+Frontend deployment `dpl_B2W3pqGK6jxJNHNLoXuqHZxZJUJX` reached READY and was assigned `planner-t1.vercel.app` for the Dashboard Task checklist completion-control move. It used the uncommitted tracked frontend working tree. TypeScript, production build and documentation checks passed; the local synthetic Dashboard preview was checked in Daily and Weekly at 390 px, and the hosted preview showed the completion control at the right edge with a 44 px hit area. No authenticated production Task mutation was performed.
+
 ## Recorded resources and evidence
 
-Repository deployment records report production deployment on **2026-11-09** (commit `6094212`, Render deploy `dep-dbp059bncjis73ee6ed0`, Vercel `planner-t1`). This runbook synchronizes those records with committed source/configuration; it does not freshly inspect hosted settings, account plans, health, data contents or inbox delivery. Verify intended account/service/revision before an operational change.
+The API deployment on **2026-11-11** uses commit `6094212`, Render deploy `dep-dbq9iljbc2fs739ch6k0`, and Vercel `planner-t1`. The database was moved to Singapore as recorded below. Verify current hosted settings, health and account plans before an operational change.
 
 | Component | Recorded resource | Recorded location / endpoint |
 | --- | --- | --- |
 | Frontend | Vercel `planner-t1` | `https://planner-t1.vercel.app` |
 | API / polling worker | Render `planner-api-sg` | Singapore; `https://planner-api-sg.onrender.com` |
-| PostgreSQL / pgvector | Supabase project `mybfctyrtdjrrmndfdvf` | Mumbai; private application schema `planner` |
+| PostgreSQL / pgvector | Supabase project `brmmkaunlnjxmsbfvrsf` | Singapore; private application schema `planner` |
 | Private files | Supabase Storage `planner-private` | Authenticated API byte proxy, no public object URLs |
 | Account mail | Resend HTTPS adapter | Server-configured approved sender/key |
 
@@ -95,6 +111,14 @@ uv run python -m planner.admin person@example.com admin
 Use `user` to revoke. Both changes write an audit record; no HTTP role-grant endpoint exists. Configure private environment variables before running; do not include DSNs in the command line.
 
 The [cloud COPY helper](../../tools/deploy/migrate_to_supabase.py) copies a fixed table list in one destination transaction and compares counts. It does **not** transfer object bytes, implement incremental merge/idempotency, validate a complete schema/table inventory, reconcile all owner/graph/content checksums or rehearse restoration. It is not a supported general synchronization/backup procedure (ISSUE-065). Further transfer requires separate review, isolated rehearsal and consistent DB+file backups. The guarded legacy importer has different target restrictions and cannot be pointed at cloud data as a workaround.
+
+### Singapore database move (2026-11-11)
+
+The previously active Mumbai project `mybfctyrtdjrrmndfdvf` was copied to Singapore project `brmmkaunlnjxmsbfvrsf`. With the API and worker suspended, an encrypted `planner` schema archive was created and restored; all 31 table counts and row-content digests matched, and the source remained unchanged during verification. Both Supabase Auth and Storage contained zero records/objects at cutover. The destination has a private `planner-private` bucket and revision `0009`. The existing API image was deployed with the new connection and service role; Render's internal `/ready` probe returned 200 and the bucket was accessible using the destination server credential. Browser login, private file transfer, mail, AI and background job execution were not independently tested.
+
+The former source is retained with `default_transaction_read_only` enabled for its `postgres` role, preventing the resumed old deployment from writing during cutover. That setting is a safeguard, not a substitute for access control or reconciliation. Do not resume writing to the old database as a rollback: any writes made in Singapore after cutover must first be reconciled. The final encrypted schema archive and its separately stored key file are retained locally outside Git under `/home/thanhdat/.local/share/planner-backups/singapore-rehearsal-z1dpd37b/`; both files reside in the same restricted directory and do not constitute an independent disaster-recovery backup. The Free plan was confirmed by the project owner; organization billing access was unavailable to the operator token.
+
+An additional local [backup tool](../../tools/backup/planner_backup.py) snapshots the application schema and private bucket with an exported repeatable-read PostgreSQL snapshot, checks referenced Note attachment checksums, encrypts database/object files and the manifest, validates the database archive, and retains seven daily and four weekly versions. It stops if Supabase Auth users appear, a referenced object is missing, or disk space is insufficient. The user-level `planner-backup.timer` is enabled for 03:10 Asia/Ho_Chi_Minh with missed runs caught up when the user service manager is available; Docker, network, local credentials and this checkout must also be available. A successful timer service was observed and one archive was restored to isolated `planner_test` with all 31 table counts and row digests matching its live comparison. Backups and the decryption key are in separate directories on the same machine, not an independent off-site copy. Check `systemctl --user status planner-backup.timer planner-backup.service` and the most recent backup before relying on recovery.
 
 Confirm current service-plan limits in the provider dashboards before changes. The recorded Free design may sleep/restart and has non-durable container storage; uploads belong in private object storage and background timeliness cannot be guaranteed. Quotas, connection limits, mail sender restrictions, billing and PITR/backup availability are account/plan-dependent. No paid-tier recovery guarantee follows from this runbook. Managed restore, historical reconciliation, provider quality/cost and realistic capacity remain ISSUE-045–048.
 

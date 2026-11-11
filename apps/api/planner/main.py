@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
 from uuid import uuid4
@@ -12,6 +12,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import delete, select, text
 from sqlalchemy.exc import IntegrityError
+from starlette.background import BackgroundTask
 
 from planner import accounts, ai, planning, schemas, storage
 from planner.auth import (
@@ -39,6 +40,7 @@ from planner.models import (
     NoteShare,
     NoteUnlock,
     Notification,
+    SystemSetting,
     User,
     new_id,
     now,
@@ -113,6 +115,27 @@ def health():
 @app.get("/api/v1/health")
 def ready(db: DB):
     db.execute(text("SELECT 1"))
+    return {"status": "ready"}
+
+
+@app.get("/health/worker")
+def worker_health(db: DB):
+    limits = {"scheduler": 180, "fast": 180, "slow": 360}
+    rows = db.scalars(select(SystemSetting).where(
+        SystemSetting.key.in_(["worker:heartbeat:" + lane for lane in limits])
+    )).all()
+    timestamps = {row.key.removeprefix("worker:heartbeat:"): row.value.get("at") for row in rows}
+    try:
+        healthy = all(
+            timestamps.get(lane)
+            and -timedelta(seconds=60) <= now() - datetime.fromisoformat(timestamps[lane])
+            <= timedelta(seconds=seconds)
+            for lane, seconds in limits.items()
+        )
+    except (TypeError, ValueError):
+        healthy = False
+    if not healthy:
+        raise HTTPException(503, "Worker unavailable")
     return {"status": "ready"}
 
 
@@ -471,13 +494,15 @@ def download(attachment_id: str, auth: Auth, db: DB):
     if row is None:
         raise HTTPException(404, "File not found")
     planning.access_note(db, row.note_id, auth)
-    return Response(
-        storage.read(row.storage_key),
-        media_type=row.mime,
+    key, mime, filename = row.storage_key, row.mime, row.filename
+    db.rollback()
+    chunks, close = storage.open_download(key)
+    return StreamingResponse(
+        chunks, media_type=mime, background=BackgroundTask(close),
         headers={
-            "Content-Disposition": ("inline" if row.mime == "image/webp" else "attachment")
+            "Content-Disposition": ("inline" if mime == "image/webp" else "attachment")
             + "; filename*=UTF-8''"
-            + quote(row.filename, safe="")
+            + quote(filename, safe="")
         },
     )
 
@@ -689,35 +714,34 @@ def events(run_id: str, auth: Auth, db: DB):
     owner_id, session_hash = auth.user.id, auth.session.token_hash
     db.rollback()
 
+    def read_event():
+        with session_factory()() as current:
+            session = current.get(LoginSession, session_hash)
+            if session is None or session.expires_at <= now():
+                return None
+            row = current.scalar(
+                select(AIRun).where(AIRun.id == run_id, AIRun.user_id == owner_id)
+            )
+            if row is None:
+                return None
+            try:
+                return jsonable_encoder(run_result(row, current)), row.status
+            except HTTPException:
+                return {
+                    "id": run_id,
+                    "status": "failed",
+                    "answer": "",
+                    "sources": [],
+                    "error_code": "SOURCE_UNAVAILABLE",
+                }, "failed"
+
     async def stream():
-        # Each read gets a short transaction; a stream never holds a pooled connection.
+        # Each read gets a short transaction outside the event loop.
         for _ in range(240):
-            with session_factory()() as current:
-                session = current.get(LoginSession, session_hash)
-                if session is None or session.expires_at <= now():
-                    break
-                row = current.scalar(
-                    select(AIRun).where(AIRun.id == run_id, AIRun.user_id == owner_id)
-                )
-                if row is None:
-                    break
-                try:
-                    payload, status = jsonable_encoder(run_result(row, current)), row.status
-                except HTTPException:
-                    yield (
-                        "data: "
-                        + json.dumps(
-                            {
-                                "id": run_id,
-                                "status": "failed",
-                                "answer": "",
-                                "sources": [],
-                                "error_code": "SOURCE_UNAVAILABLE",
-                            }
-                        )
-                        + "\n\n"
-                    )
-                    break
+            event = await asyncio.to_thread(read_event)
+            if event is None:
+                break
+            payload, status = event
             yield "data: " + json.dumps(payload) + "\n\n"
             if status in ("completed", "failed", "rejected"):
                 break

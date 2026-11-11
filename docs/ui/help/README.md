@@ -15,7 +15,7 @@ Trace ID: `help`. Test references identify coverage to inspect; they are not exe
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/preview/support.tsx](../../../apps/web/src/components/preview/support.tsx#L176) — `export default function SupportPreview(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L194) — `def preferences(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L217) — `def preferences(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |
 

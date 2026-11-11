@@ -15,9 +15,9 @@ Trace ID: `shared.notifications`. Test references identify coverage to inspect; 
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/preview/notifications.tsx](../../../apps/web/src/components/preview/notifications.tsx#L15) — `export default function PreviewNotifications({` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L561) — `def notifications(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L519) — `def read_notifications(` |
-| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L140) — `def reminders(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L586) — `def notifications(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L544) — `def read_notifications(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L199) — `def reminders(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 

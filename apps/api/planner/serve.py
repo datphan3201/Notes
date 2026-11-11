@@ -5,22 +5,41 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 
 from planner.config import settings
 
 
-def supervise(commands):
+def supervise(commands, worker_retry_delay=1.0):
     stopped = threading.Event()
     previous = {}
     for sig in (signal.SIGINT, signal.SIGTERM):
         previous[sig] = signal.signal(sig, lambda *_: stopped.set())
     children = []
+    worker_failures = 0
+    worker_started = time.monotonic()
+    next_worker_start = 0.0
+    worker_abandoned = False
     try:
         for command in commands:
             children.append(subprocess.Popen(command, start_new_session=True))
         while not stopped.wait(0.2):
-            if any(child.poll() is not None for child in children):
+            if children[0].poll() is not None:
                 return 1
+            if len(children) > 1 and children[1].poll() is not None and not worker_abandoned:
+                if not next_worker_start:
+                    if time.monotonic() - worker_started >= 300:
+                        worker_failures = 0
+                    worker_failures += 1
+                    if worker_failures > 3:
+                        print("Planner worker stopped after repeated failures", file=sys.stderr)
+                        worker_abandoned = True
+                        continue
+                    next_worker_start = time.monotonic() + worker_retry_delay * 2 ** (worker_failures - 1)
+                if time.monotonic() >= next_worker_start:
+                    children[1] = subprocess.Popen(commands[1], start_new_session=True)
+                    worker_started = time.monotonic()
+                    next_worker_start = 0.0
         return 0
     finally:
         for child in children:

@@ -18,7 +18,7 @@ Trace ID: `tasks.capture`. Test references identify coverage to inspect; they ar
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/task-editor.tsx](../../../apps/web/src/components/preview/task-editor.tsx#L20) — `export default function TaskPreviewEditor({` |
 | Shared capture and acknowledgement coordinator | [apps/web/src/components/preview/task-interaction.tsx](../../../apps/web/src/components/preview/task-interaction.tsx#L14) — `export default function SharedTaskInteraction({ text }: { text: Text }) {` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L481) — `def apply_changes(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L580) — `def apply_changes(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L249) — `def create(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

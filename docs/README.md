@@ -25,6 +25,7 @@ The maintained source of implementation is Next.js/FastAPI under `apps/` on `mai
 - [Decisions](architecture/decisions.md), [runtime](architecture/runtime.md), [persistence](architecture/persistence.md), [HTTP/security](architecture/http-security.md), [interaction invariants](architecture/interactions.md).
 - [Routes and handlers](reference/routes.md), [blank route sheet](reference/routes.csv), [components](reference/components.md), [source lookup](reference/source-index.md), [CLI](reference/cli.md).
 - [Installation](operations/installation.md), [development](migration/development.md), [deployment](operations/deployment.md), [cloud operations](operations/cloud.md), [jobs](operations/jobs.md).
+- [Free-tier backend optimization plan](operations/free-tier-backend-plan.md).
 - [Testing](testing/README.md), [CRUD audit](testing/crud-audit-2026-11-09.md), [manual acceptance plan](testing/manual-checklist.md), [evidence limits](testing/verification-limits.md).
 - [Implementation status](migration/status.md), [approved scope/acceptance plan](migration/personal-ai-planner.md), [UI integration](migration/ui-integration.md), [assistant tools](migration/assistant-tools.md), [historical diagrams](diagrams/README.md).
 - [Open issues](issues.md), [changelog](../CHANGELOG.md), [documentation maintenance](maintenance.md).

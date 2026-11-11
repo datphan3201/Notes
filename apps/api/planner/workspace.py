@@ -1,12 +1,12 @@
 """Authenticated workspace reads and atomic multi-record UI actions."""
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from pydantic import Field
-from sqlalchemy import delete, or_, select
+from sqlalchemy import Date, cast, delete, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 
 from planner import planning, schemas
@@ -331,8 +331,104 @@ def remove_record(db, auth, kind, entity_id, version):
     db.flush()
 
 
+def activity_counts(db, user, start, end):
+    zone = ZoneInfo(user.timezone)
+    lower = datetime.combine(start, time.min, zone)
+    upper = datetime.combine(end + timedelta(days=1), time.min, zone)
+    day = cast(func.timezone(user.timezone, Activity.created_at), Date)
+    kind = func.split_part(Activity.kind, ".", 1)
+    rows = db.execute(select(day, kind, func.count()).where(
+        Activity.user_id == user.id,
+        Activity.created_at >= lower,
+        Activity.created_at < upper,
+        kind.in_(["task", "habit", "checklist"]),
+        Activity.kind.not_like("%reopened%"),
+        Activity.kind.not_like("%undone%"),
+        Activity.kind.not_like("%cleared%"),
+    ).group_by(day, kind).order_by(day, kind)).all()
+    return [{"date": day, "kind": kind, "count": count} for day, kind, count in rows]
+
+
+@router.get("/activity/summary")
+def activity_summary(auth: Auth, db: DB, start: date, end: date):
+    if end == date.max or end < start or (end - start).days > 365:
+        raise HTTPException(422, "Activity summary must cover at most 366 days")
+    return {"items": activity_counts(db, auth.user, start, end)}
+
+
+@router.get("/activity")
+def activity_page(
+    auth: Auth, db: DB, before: str | None = None, start: datetime | None = None,
+    end: datetime | None = None, day: date | None = None,
+    size: int = Query(default=50, ge=1, le=200),
+):
+    if day:
+        if start or end or day == date.max:
+            raise HTTPException(422, "Use either a local day or instant bounds")
+        zone = ZoneInfo(auth.user.timezone)
+        start = datetime.combine(day, time.min, zone)
+        end = datetime.combine(day + timedelta(days=1), time.min, zone)
+    for value in (start, end):
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise HTTPException(422, "Activity bounds must include a timezone")
+    if start and end and start >= end:
+        raise HTTPException(422, "Activity start must precede end")
+    statement = select(Activity).where(Activity.user_id == auth.user.id)
+    if start:
+        statement = statement.where(Activity.created_at >= start)
+    if end:
+        statement = statement.where(Activity.created_at < end)
+    if before:
+        cursor = db.scalar(select(Activity).where(
+            Activity.id == before, Activity.user_id == auth.user.id
+        ))
+        if cursor is None:
+            raise HTTPException(404, "Not found")
+        statement = statement.where(or_(
+            Activity.created_at < cursor.created_at,
+            (Activity.created_at == cursor.created_at) & (Activity.id < cursor.id),
+        ))
+    rows = db.scalars(statement.order_by(Activity.created_at.desc(), Activity.id.desc()).limit(size + 1)).all()
+    return {
+        "items": [
+            {"id": row.id, "kind": row.kind, "entity_id": row.entity_id, "created_at": row.created_at}
+            for row in rows[:size]
+        ],
+        "next_cursor": rows[size - 1].id if len(rows) > size else None,
+    }
+
+
+@router.get("/archive/{kind}")
+def archive_page(auth: Auth, db: DB, kind: str, before: str | None = None,
+                 size: int = Query(default=50, ge=1, le=200)):
+    model = planning.model_for(kind)
+    statement = select(model).where(model.user_id == auth.user.id, model.archived_at.is_not(None))
+    if before:
+        cursor = db.scalar(select(model).where(
+            model.id == before, model.user_id == auth.user.id, model.archived_at.is_not(None)
+        ))
+        if cursor is None:
+            raise HTTPException(404, "Not found")
+        statement = statement.where(or_(
+            model.archived_at < cursor.archived_at,
+            (model.archived_at == cursor.archived_at) & (model.id < cursor.id),
+        ))
+    rows = db.scalars(statement.order_by(model.archived_at.desc(), model.id.desc()).limit(size + 1)).all()
+    unlocked = set()
+    if kind == "notes":
+        note_ids = [row.id for row in rows[:size] if row.lock_hash]
+        unlocks = db.scalars(select(NoteUnlock).where(
+            NoteUnlock.token_hash == auth.session.token_hash, NoteUnlock.note_id.in_(note_ids)
+        ))
+        unlocked = {(row.note_id, row.lock_hash) for row in unlocks}
+    items = [planning.serialize(row, mask_note=(
+        kind == "notes" and bool(row.lock_hash) and (row.id, row.lock_hash) not in unlocked
+    )) for row in rows[:size]]
+    return {"items": items, "next_cursor": rows[size - 1].id if len(rows) > size else None}
+
+
 @router.get("/snapshot")
-def snapshot(auth: Auth, db: DB):
+def snapshot(auth: Auth, db: DB, activity: Literal["all", "summary"] = "all"):
     user_id = auth.user.id
     result = {}
     for kind, model in planning.MODELS.items():
@@ -465,7 +561,10 @@ def snapshot(auth: Auth, db: DB):
             .where(Activity.user_id == user_id)
             .order_by(Activity.created_at, Activity.id)
         )
-    ]
+    ] if activity == "all" else []
+    if activity == "summary":
+        today = now().astimezone(ZoneInfo(auth.user.timezone)).date()
+        result["activity_counts"] = activity_counts(db, auth.user, today - timedelta(days=364), today)
     focus = db.get(Focus, user_id)
     result["focus"] = focus.goal_id if focus else None
     return result

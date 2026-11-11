@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import EmailStr, Field
 from sqlalchemy import delete, func, select
+from starlette.background import BackgroundTask
 
 from planner import accounts, planning, schemas, storage
 from planner.auth import (
@@ -155,9 +157,9 @@ def account_file(file_id: str, auth: Auth, db: DB):
             raise HTTPException(404, "Not found")
     key, mime = row.storage_key, row.mime
     db.rollback()
-    return Response(
-        storage.read(key),
-        media_type=mime,
+    chunks, close = storage.open_download(key)
+    return StreamingResponse(
+        chunks, media_type=mime, background=BackgroundTask(close),
         headers={"Content-Disposition": "inline", "X-Content-Type-Options": "nosniff"},
     )
 

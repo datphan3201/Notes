@@ -4,12 +4,19 @@
 
 `python -m planner.jobs` runs the polling worker, scheduling periodic jobs and processing persisted PostgreSQL jobs. The Render supervisor starts it alongside the API when `PLANNER_RUN_WORKER=true`. Development uses a watched process; the alternative Cloud Tasks topology uses authenticated `planner.worker_api:app` ingress and dispatcher.
 
+In the working tree, idle polling backs off to five seconds; scheduling runs independently from one short-work lane and one AI/index lane. `PLANNER_SCHEDULER_MODE=legacy` remains the default. `compare` logs bounded aggregate candidate mismatches while retaining legacy scheduling; `due` uses indexed, bounded reminder/series selection and a persistent bounded hourly retention scan. Recurrence checkpoints are invalidated by edits and archival restoration. These changes and migrations `0010`–`0012` have not yet been released to the recorded production backend.
+
+The generic `/health/worker` endpoint checks independent scheduler, fast-lane and slow-lane heartbeats. Repeated worker exits are retried with bounded backoff; the API remains available after retries are exhausted and the stale heartbeat makes worker health fail. The operator-only `python -m planner.job_status --expect-project PROJECT_REF` prints aggregate queue and worker state without job payloads.
+
+`python -m planner.job_cleanup --expect-project PROJECT_REF` is a dry run. Executing it requires an explicit recent verified backup, continuous due-mode scheduler observations, no pending legacy periodic jobs, fresh worker heartbeats and at least 48 hours since the legacy queue drained. It deletes only completed legacy periodic keys in bounded batches and preserves email and business-effect receipts. No production cleanup has yet been performed.
+
 | Job | Work |
 | --- | --- |
 | `assistant` | Provider/tool rounds, source-versioned Note AI, durable run output/proposal |
 | `index` | Eligible source chunks and optional embeddings; locked Notes excluded |
 | `recurrence` | Materialize active TaskSeries occurrences with stable business keys |
 | `reminders` | In-app/email reminders respecting preferences, History and deduplication |
+| `reminder-dispatch` | One Task/reminder instant, rechecked before dispatch in due mode |
 | `retention` | Archive expired/excess History Tasks, preserving facts/snapshots |
 | `email` | Configured HTTPS Resend or SMTP delivery outside write transactions |
 | `delete-file` | Remove private bytes after committed metadata deletion |

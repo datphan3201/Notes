@@ -34,9 +34,9 @@ Trace ID: `dashboard`. Test references identify coverage to inspect; they are no
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L35) — `export function DashboardView({` |
 | Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1179) — `export function usePreviewData(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L821) — `def dashboard(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L301) — `def select_focus(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L530) — `def activity(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L825) — `def dashboard(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L324) — `def select_focus(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L555) — `def activity(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |

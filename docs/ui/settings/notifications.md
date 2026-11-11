@@ -15,9 +15,9 @@ Trace ID: `settings.notifications`. Test references identify coverage to inspect
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L51) — `export default function SettingsPreview({` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L194) — `def preferences(` |
-| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L226) — `def process_one(` |
-| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L140) — `def reminders(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L217) — `def preferences(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L254) — `def process_one(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L199) — `def reminders(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 

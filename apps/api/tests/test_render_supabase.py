@@ -83,6 +83,16 @@ def test_private_storage_roundtrip_is_create_only_and_delete_is_idempotent(supab
     assert missing.value.status_code == 404
 
 
+def test_private_download_stream_is_bounded_and_closes(supabase):
+    data = b"x" * (65536 * 3 + 17)
+    storage.upload(UploadFile(io.BytesIO(data)), "account/stream")
+    chunks, close = storage.open_download("account/stream")
+    received = list(chunks)
+    close()
+    assert b"".join(received) == data
+    assert max(map(len, received)) <= 65536
+
+
 def test_remote_files_still_require_owned_api_access(client, stranger, supabase):
     note = make(client, "notes")
     response = client.post(
@@ -307,7 +317,7 @@ def test_private_schema_migrates_without_using_public_accounts(client, db):
                 "c=engine().connect(); "
                 "assert c.scalar(text('SELECT current_database()')) == 'planner_test'; "
                 "assert c.scalar(text('SELECT current_schema()')) == 'planner_test_cloud'; "
-                "assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0009'; "
+                "assert c.scalar(text('SELECT version_num FROM alembic_version')) == '0012'; "
                 "assert c.scalar(text('SELECT count(*) FROM users')) == 0; "
                 "c.close()",
             ],
@@ -327,7 +337,7 @@ def test_private_schema_migrates_without_using_public_accounts(client, db):
 
 
 @pytest.mark.parametrize("crash", [False, True])
-def test_container_supervisor_stops_siblings_on_signal_or_worker_exit(tmp_path, crash):
+def test_container_supervisor_stops_on_signal_and_keeps_api_after_worker_exit(tmp_path, crash):
     marker = tmp_path / "children"
     child = (
         "import os,time; from pathlib import Path; "
@@ -348,7 +358,7 @@ def test_container_supervisor_stops_siblings_on_signal_or_worker_exit(tmp_path, 
             "-c",
             "from planner.serve import supervise; raise SystemExit(supervise("
             + repr(commands)
-            + "))",
+            + ", worker_retry_delay=0.05))",
         ]
     )
     try:
@@ -356,9 +366,11 @@ def test_container_supervisor_stops_siblings_on_signal_or_worker_exit(tmp_path, 
         while not marker.exists() and time.monotonic() < deadline:
             time.sleep(0.05)
         assert marker.exists()
-        if not crash:
-            process.send_signal(signal.SIGTERM)
-        assert process.wait(timeout=20) == (1 if crash else 0)
+        if crash:
+            time.sleep(3.5)
+            assert process.poll() is None
+        process.send_signal(signal.SIGTERM)
+        assert process.wait(timeout=20) == 0
         for pid in marker.read_text().splitlines():
             with pytest.raises(ProcessLookupError):
                 os.kill(int(pid), 0)

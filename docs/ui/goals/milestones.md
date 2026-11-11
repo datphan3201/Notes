@@ -17,9 +17,9 @@ Trace ID: `goals.milestones`. Test references identify coverage to inspect; they
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/planning.tsx](../../../apps/web/src/components/preview/planning.tsx#L68) — `export default function PlanningPreview({ text }: { text: Text }) {` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L735) — `def prerequisites(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L739) — `def prerequisites(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
-| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L589) — `def archive(` |
+| API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L591) — `def archive(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

@@ -17,7 +17,7 @@ Trace ID: `settings.password`. Test references identify coverage to inspect; the
 | Live UI view (via WorkspaceView) | [apps/web/src/components/live-security.tsx](../../../apps/web/src/components/live-security.tsx#L10) — `export default function LiveSecurity({ text }: { text: Text }) {` |
 | API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L350) — `def change_password(` |
 | API / domain | [apps/api/planner/accounts.py](../../../apps/api/planner/accounts.py#L408) — `def setup_mfa(` |
-| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L279) — `def setup_email_mfa(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L281) — `def setup_email_mfa(` |
 | Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |

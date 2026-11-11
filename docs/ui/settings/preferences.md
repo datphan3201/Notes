@@ -19,8 +19,8 @@ Trace ID: `settings.preferences`. Test references identify coverage to inspect; 
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/settings.tsx](../../../apps/web/src/components/preview/settings.tsx#L51) — `export default function SettingsPreview({` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L194) — `def preferences(` |
-| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L88) — `def account_files(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L217) — `def preferences(` |
+| API / domain | [apps/api/planner/personal.py](../../../apps/api/planner/personal.py#L90) — `def account_files(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

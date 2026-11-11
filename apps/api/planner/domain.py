@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 
 
 def assert_acyclic(edges: dict[str, list[str]]):
@@ -23,10 +23,12 @@ def assert_acyclic(edges: dict[str, list[str]]):
             stack.extend((child, False) for child in edges.get(node, []))
 
 
-def recurrence_dates(rule, cursor: date, horizon: date, limit: int = 200):
+def recurrence_dates(rule, cursor: date | None, horizon: date, limit: int = 200):
     result = []
     start = rule.start_date
-    candidate = max(start, cursor + timedelta(days=1))
+    if cursor == date.max:
+        return result
+    candidate = max(start, cursor + timedelta(days=1)) if cursor is not None else start
     end = min(horizon, rule.end_date or horizon)
     while candidate <= end and len(result) < limit:
         months = (candidate.year - start.year) * 12 + candidate.month - start.month
@@ -52,8 +54,27 @@ def recurrence_dates(rule, cursor: date, horizon: date, limit: int = 200):
                 raise ValueError("Unsupported recurrence frequency")
         if eligible:
             result.append(candidate)
+        if candidate == date.max:
+            break
         candidate += timedelta(days=1)
     return result
+
+
+def next_materialization(rule):
+    """Next instant at which an occurrence enters the seven-day local horizon."""
+    from planner.timezones import zone
+
+    cursor = rule.cursor
+    anchor = cursor or rule.start_date
+    horizon = date.fromordinal(min(date.max.toordinal(), anchor.toordinal() + 366 * 53))
+    occurrences = recurrence_dates(rule, cursor, horizon, limit=1)
+    if not occurrences:
+        return datetime.max.replace(tzinfo=UTC)
+    due = occurrences[0] - timedelta(days=min(7, occurrences[0].toordinal() - 1))
+    try:
+        return datetime.combine(due, time.min, zone(rule.timezone)).astimezone(UTC)
+    except OverflowError:
+        return datetime.min.replace(tzinfo=UTC) if due == date.min else datetime.max.replace(tzinfo=UTC)
 
 
 def daily_streak(done: set[date], rest: set[date], since: date, today: date):

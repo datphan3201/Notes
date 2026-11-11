@@ -105,7 +105,7 @@ def serialize(item, mask_note=False):
     result = {
         column.name: getattr(item, column.name)
         for column in item.__table__.columns
-        if column.name not in ("user_id", "lock_hash")
+        if column.name not in ("user_id", "lock_hash", "next_materialize_at")
     }
     result.update(result.pop("details", {}) or {})
     if isinstance(item, Task):
@@ -529,6 +529,8 @@ def update(
         else:
             extra[field] = value
     item.details = extra
+    if isinstance(item, TaskSeries):
+        item.next_materialize_at = now()
     item.version += 1
     item.updated_at = now()
     db.flush()
@@ -682,6 +684,8 @@ def archive(
         ):
             continue
         row.archived_at = stamp if archived else None
+        if isinstance(row, TaskSeries) and not archived:
+            row.next_materialize_at = stamp
         row.updated_at, row.version = stamp, row.version + 1
         invalidate(db, row_kind, row)
     if archived:

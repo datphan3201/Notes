@@ -1,23 +1,35 @@
 import logging
+import queue
 import signal
+import threading
 import time
-from datetime import timedelta
+from datetime import UTC, timedelta
 
-from sqlalchemy import and_, or_, select, update
+from sqlalchemy import Date, and_, cast, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from planner.ai import index_source, run_assistant
 from planner.auth import lock_owner
 from planner.config import settings
 from planner.db import session_factory
-from planner.domain import recurrence_dates
-from planner.models import AIRun, Job, Notification, Task, TaskSeries, User, new_id, now
+from planner.domain import next_materialization, recurrence_dates
+from planner.models import (
+    AIRun,
+    Job,
+    Notification,
+    SystemSetting,
+    Task,
+    TaskSeries,
+    User,
+    new_id,
+    now,
+)
 from planner.provider import CompatibleProvider
 
 logger = logging.getLogger("planner.jobs")
 
 
-def claim(factory, job_id=None):
+def claim(factory, job_id=None, *, slow=None):
     with factory() as db:
         statement = (
             select(Job)
@@ -33,6 +45,9 @@ def claim(factory, job_id=None):
         )
         if job_id:
             statement = statement.where(Job.id == job_id)
+        if slow is not None:
+            slow_kinds = ("assistant", "index")
+            statement = statement.where(Job.kind.in_(slow_kinds) if slow else Job.kind.not_in(slow_kinds))
         job = db.scalar(statement)
         if job is None:
             return None
@@ -72,27 +87,33 @@ def finish(factory, job, error=None):
 
 
 def materialize(db, job):
+    from datetime import datetime
+
     from planner.timezones import zone as ZoneInfo
 
     lock_owner(db, job.user_id)
     if db.get(User, job.user_id).locked_at:
         db.commit()
         return
-    series_rows = db.scalars(
-        select(TaskSeries).where(
+    query = select(TaskSeries).where(
             TaskSeries.user_id == job.user_id,
             TaskSeries.state == "active",
             TaskSeries.archived_at.is_(None),
         )
-    ).all()
+    payload = getattr(job, "payload", {})
+    series_id = payload.get("series_id")
+    if series_id:
+        query = query.where(
+            TaskSeries.id == series_id,
+            TaskSeries.next_materialize_at == datetime.fromisoformat(payload["checkpoint"]),
+        )
+    series_rows = db.scalars(query).all()
     for series in series_rows:
         today = now().astimezone(ZoneInfo(series.timezone)).date()
         horizon = today + timedelta(days=7)
-        cursor = series.cursor or series.start_date - timedelta(days=1)
+        cursor = series.cursor
         dates = recurrence_dates(series, cursor, horizon, limit=35)
         for day in dates:
-            from datetime import datetime
-
             from planner import planning
 
             template = dict((series.details or {}).get("template") or {})
@@ -134,24 +155,15 @@ def materialize(db, job):
             )
         if dates:
             series.cursor = dates[-1]
+        series.next_materialize_at = next_materialization(series)
     db.commit()
 
 
-def reminders(db, job):
-    from planner.models import User
-    from planner.planning import enqueue
-
-    lock_owner(db, job.user_id)
-    user = db.get(User, job.user_id)
-    if user.locked_at or not user.preferences.get("show_reminders", True):
-        db.commit()
-        return
-    from datetime import UTC
-
-    from sqlalchemy import func
-
+def pending_reminders(db, user, limit=200, *, task_id=None, reminder_at=None):
     from planner.timezones import zone as ZoneInfo
 
+    if user.locked_at or not user.preferences.get("show_reminders", True):
+        return []
     cutoff = now().astimezone(ZoneInfo(user.timezone)).date() - timedelta(
         days=user.preferences.get("history_overdue_days", 3)
     )
@@ -166,7 +178,7 @@ def reminders(db, job):
         .where(Notification.user_id == user.id, Notification.key == key_expression)
         .exists()
     )
-    tasks = db.scalars(
+    statement = (
         select(Task)
         .where(
             Task.user_id == user.id,
@@ -177,8 +189,24 @@ def reminders(db, job):
             ~already_sent,
         )
         .order_by(Task.reminder_at, Task.id)
-        .limit(200)
-    ).all()
+        .limit(limit)
+    )
+    if task_id is not None:
+        statement = statement.where(Task.id == task_id, Task.reminder_at == reminder_at)
+    return db.scalars(statement).all()
+
+
+def reminders(db, job):
+    from datetime import datetime
+
+    from planner.planning import enqueue
+
+    lock_owner(db, job.user_id)
+    user = db.get(User, job.user_id)
+    payload = getattr(job, "payload", {})
+    task_id = payload.get("task_id")
+    reminder_at = datetime.fromisoformat(payload["reminder_at"]) if task_id else None
+    tasks = pending_reminders(db, user, task_id=task_id, reminder_at=reminder_at)
     for task in tasks:
         instant = task.reminder_at.astimezone(UTC)
         stamp = f"{instant.year:04d}{instant.month:02d}{instant.day:02d}{instant.hour:02d}{instant.minute:02d}{instant.second:02d}{instant.microsecond:06d}"
@@ -223,9 +251,9 @@ def reminders(db, job):
     db.commit()
 
 
-def process_one(factory=None, provider=None, job_id=None):
+def process_one(factory=None, provider=None, job_id=None, *, slow=None):
     factory = factory or session_factory()
-    job = claim(factory, job_id)
+    job = claim(factory, job_id, slow=slow)
     if job is None:
         return False
     try:
@@ -269,7 +297,7 @@ def process_one(factory=None, provider=None, job_id=None):
                     )
                 elif job.kind == "recurrence":
                     materialize(db, job)
-                elif job.kind == "reminders":
+                elif job.kind in ("reminders", "reminder-dispatch"):
                     reminders(db, job)
                 elif job.kind == "retention":
                     retain_history(db, job)
@@ -294,17 +322,236 @@ def process_one(factory=None, provider=None, job_id=None):
     return True
 
 
+def schedule_due_reminders(db, *, limit=200, compare=False):
+    """Enqueue bounded actual reminder work; legacy reminder handlers remain valid."""
+    from planner.planning import enqueue
+
+    stamp = func.to_char(func.timezone("UTC", Task.reminder_at), "YYYYMMDDHH24MISSUS")
+    receipt_key = "reminder:v2:" + Task.id + ":" + stamp
+    job_key = "reminder-dispatch:" + Task.id + ":" + stamp
+    sent = select(Notification.id).where(
+        Notification.user_id == Task.user_id, Notification.key == receipt_key
+    ).exists()
+    queued = select(Job.id).where(Job.key == job_key).exists()
+    overdue_days = func.coalesce(User.preferences["history_overdue_days"].as_integer(), 3)
+    local_today = cast(func.timezone(User.timezone, now()), Date)
+    rows = db.execute(
+        select(Task.id, Task.user_id, Task.reminder_at)
+        .join(User, User.id == Task.user_id)
+        .where(
+            User.locked_at.is_(None),
+            func.coalesce(User.preferences["show_reminders"].as_boolean(), True),
+            Task.archived_at.is_(None),
+            Task.status != "done",
+            Task.reminder_at <= now(),
+            or_(Task.due_date.is_(None), Task.due_date > local_today - overdue_days),
+            ~sent,
+            ~queued,
+        )
+        .order_by(Task.reminder_at, Task.id)
+        .limit(limit)
+    ).all()
+    if compare:
+        return rows
+    for task_id, owner_id, instant in rows:
+        utc = instant.astimezone(UTC)
+        key = f"reminder-dispatch:{task_id}:{utc:%Y%m%d%H%M%S%f}"
+        enqueue(db, owner_id, "reminder-dispatch", key, {
+            "task_id": task_id, "reminder_at": instant.isoformat(),
+        })
+    return len(rows)
+
+
+def schedule_due_series(db, *, limit=200, compare=False):
+    from planner.planning import enqueue
+
+    stamp = func.to_char(func.timezone("UTC", TaskSeries.next_materialize_at), "YYYYMMDDHH24MISSUS")
+    key = "recurrence:v2:" + TaskSeries.id + ":" + stamp
+    existing = select(Job.id).where(Job.key == key).exists()
+    rows = db.execute(
+        select(TaskSeries.id, TaskSeries.user_id, TaskSeries.next_materialize_at)
+        .join(User, User.id == TaskSeries.user_id)
+        .where(
+            User.locked_at.is_(None),
+            TaskSeries.archived_at.is_(None),
+            TaskSeries.state == "active",
+            TaskSeries.next_materialize_at <= now(),
+            ~existing,
+        )
+        .order_by(TaskSeries.next_materialize_at, TaskSeries.id)
+        .limit(limit)
+    ).all()
+    if compare:
+        return rows
+    for series_id, owner_id, checkpoint in rows:
+        stamp = checkpoint.astimezone(UTC).strftime("%Y%m%d%H%M%S%f")
+        enqueue(db, owner_id, "recurrence", f"recurrence:v2:{series_id}:{stamp}", {
+            "series_id": series_id, "checkpoint": checkpoint.isoformat(),
+        })
+    return len(rows)
+
+
+def schedule_due_retention(db, *, limit=200):
+    """Advance a bounded hourly account scan, enqueueing only real archival work."""
+    from datetime import datetime
+
+    from planner.planning import enqueue
+    from planner.timezones import zone
+
+    key = "scheduler:retention"
+    db.execute(insert(SystemSetting).values(key=key, value={}).on_conflict_do_nothing())
+    checkpoint = db.scalar(select(SystemSetting).where(SystemSetting.key == key).with_for_update(
+        skip_locked=True
+    ))
+    if checkpoint is None:
+        return 0
+    stamp = now()
+    state = checkpoint.value or {}
+    if state.get("next_at") and datetime.fromisoformat(state["next_at"]) > stamp:
+        return 0
+    cursor = state.get("cursor", "")
+    slot = state.get("slot") or stamp.strftime("%Y-%m-%dT%H")
+    owners = db.scalars(
+        select(User).where(User.id > cursor, User.locked_at.is_(None)).order_by(User.id).limit(limit)
+    ).all()
+    policy = db.get(SystemSetting, "history_limit")
+    cap = policy.value.get("limit", 1000) if policy else 1000
+    enqueued = 0
+    for owner in owners:
+        completed = stamp - timedelta(hours=owner.preferences.get("history_completed_hours", 24))
+        overdue = stamp.astimezone(zone(owner.timezone)).date() - timedelta(
+            days=owner.preferences.get("history_overdue_days", 3)
+        )
+        eligible = (
+            Task.user_id == owner.id,
+            Task.archived_at.is_(None),
+            or_(
+                and_(Task.status == "done", Task.completed_at <= completed),
+                and_(Task.status != "done", Task.due_date <= overdue),
+            ),
+        )
+        past_cap = db.scalar(select(Task.id).where(*eligible).offset(cap).limit(1)) is not None
+        days = owner.preferences.get("history_retention_days")
+        expired = days is not None and db.scalar(
+            select(Task.id).where(
+                *eligible,
+                or_(
+                    and_(Task.status == "done", Task.completed_at <= completed - timedelta(days=days)),
+                    and_(Task.status != "done", Task.due_date <= overdue - timedelta(days=days)),
+                ),
+            ).limit(1)
+        ) is not None
+        if past_cap or expired:
+            enqueue(db, owner.id, "retention", f"retention:v2:{owner.id}:{slot}", {})
+            enqueued += 1
+    if len(owners) == limit:
+        checkpoint.value = {"cursor": owners[-1].id, "slot": slot}
+    else:
+        checkpoint.value = {"next_at": (stamp + timedelta(hours=1)).isoformat()}
+    return enqueued
+
+
+def compare_scheduler(db):
+    """Compare bounded candidate identifiers without publishing account data."""
+    from planner.timezones import zone
+
+    due_reminders = schedule_due_reminders(db, limit=201, compare=True)
+    due_series = schedule_due_series(db, limit=201, compare=True)
+    old_reminders = set()
+    old_series = set()
+    cursor = ""
+    while True:
+        owners = db.scalars(select(User).where(
+            User.id > cursor, User.locked_at.is_(None)
+        ).order_by(User.id).limit(200)).all()
+        if not owners:
+            break
+        for owner in owners:
+            if len(old_reminders) < 201:
+                for task in pending_reminders(db, owner, limit=201 - len(old_reminders)):
+                    old_reminders.add(task.id)
+        for series in db.scalars(select(TaskSeries).where(
+            TaskSeries.user_id.in_([owner.id for owner in owners]),
+            TaskSeries.state == "active",
+            TaskSeries.archived_at.is_(None),
+        )):
+            if len(old_series) < 201 and recurrence_dates(
+                series, series.cursor,
+                now().astimezone(zone(series.timezone)).date() + timedelta(days=7), limit=1,
+            ):
+                old_series.add(series.id)
+        cursor = owners[-1].id
+    new_reminders = {row[0] for row in due_reminders}
+    new_series = {row[0] for row in due_series}
+    limited = max(len(old_reminders), len(old_series), len(due_reminders), len(due_series)) > 200
+    logger.info("scheduler_comparison", extra={
+        "reminder_mismatches": len(old_reminders ^ new_reminders),
+        "series_mismatches": len(old_series ^ new_series),
+        "batch_limited": limited,
+    })
+    return not limited and old_reminders == new_reminders and old_series == new_series
+
+
+def record_scheduler_mode(db, mode):
+    from datetime import datetime
+
+    key = "scheduler:mode"
+    db.execute(insert(SystemSetting).values(key=key, value={}).on_conflict_do_nothing())
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == key).with_for_update())
+    state = dict(row.value or {})
+    stamp = now()
+    try:
+        last_tick = datetime.fromisoformat(state["last_tick"]) if state.get("last_tick") else None
+    except (TypeError, ValueError):
+        last_tick = None
+    interrupted = mode == "due" and (
+        last_tick is None or not timedelta(0) <= stamp - last_tick <= timedelta(seconds=180)
+    )
+    if state.get("mode") != mode or interrupted:
+        state = {"mode": mode, "since": stamp.isoformat()}
+    if mode == "due":
+        state["last_tick"] = stamp.isoformat()
+        legacy_waiting = db.scalar(select(Job.id).where(
+            Job.status.in_(["queued", "running"]),
+            or_(
+                Job.kind == "reminders",
+                and_(Job.kind == "recurrence", Job.key.not_like("recurrence:v2:%")),
+                and_(Job.kind == "retention", Job.key.not_like("retention:v2:%")),
+            ),
+        ).limit(1))
+        if legacy_waiting:
+            state.pop("legacy_drained_at", None)
+        elif "legacy_drained_at" not in state:
+            state["legacy_drained_at"] = stamp.isoformat()
+    if state != row.value:
+        row.value = state
+
+
 def schedule(factory=None):
     from planner.models import User
     from planner.planning import enqueue
+    from planner.timezones import zone as ZoneInfo
 
     factory = factory or session_factory()
+    with factory() as db:
+        record_scheduler_mode(db, settings().scheduler_mode)
+        db.commit()
+    if settings().scheduler_mode == "compare":
+        with factory() as db:
+            compare_scheduler(db)
+    if settings().scheduler_mode == "due":
+        with factory() as db:
+            schedule_due_reminders(db)
+            schedule_due_series(db)
+            schedule_due_retention(db)
+            db.commit()
+        return
     # Bounded owner pages avoid loading every account at once.
     cursor = ""
     while True:
         with factory() as db:
             owners = db.scalars(
-                select(User.id)
+                select(User)
                 .where(User.id > cursor, User.locked_at.is_(None))
                 .order_by(User.id)
                 .limit(200)
@@ -312,14 +559,69 @@ def schedule(factory=None):
             if not owners:
                 break
             slot = now().strftime("%Y-%m-%dT%H:%M")
+            owner_ids = [owner.id for owner in owners]
+            due_series = set()
+            for series in db.scalars(select(TaskSeries).where(
+                TaskSeries.user_id.in_(owner_ids),
+                TaskSeries.state == "active",
+                TaskSeries.archived_at.is_(None),
+            )):
+                if recurrence_dates(
+                    series,
+                    series.cursor,
+                    now().astimezone(ZoneInfo(series.timezone)).date() + timedelta(days=7),
+                    limit=1,
+                ):
+                    due_series.add(series.user_id)
+            reminder_owners = set(db.scalars(select(Task.user_id).where(
+                Task.user_id.in_(owner_ids),
+                Task.archived_at.is_(None),
+                Task.status != "done",
+                Task.reminder_at <= now(),
+            ).distinct()))
             for owner in owners:
-                for kind in ("recurrence", "reminders"):
-                    enqueue(db, owner, kind, f"{kind}:{owner}:{slot}", {})
+                if owner.id in due_series:
+                    enqueue(db, owner.id, "recurrence", f"recurrence:{owner.id}:{slot}", {})
+                if owner.id in reminder_owners and pending_reminders(db, owner, limit=1):
+                    enqueue(db, owner.id, "reminders", f"reminders:{owner.id}:{slot}", {})
                 enqueue(
-                    db, owner, "retention", f"retention:{owner}:{now().strftime('%Y-%m-%dT%H')}", {}
+                    db, owner.id, "retention", f"retention:{owner.id}:{now().strftime('%Y-%m-%dT%H')}", {}
                 )
             db.commit()
-            cursor = owners[-1]
+            cursor = owners[-1].id
+
+
+def heartbeat(lane, factory=None):
+    factory = factory or session_factory()
+    with factory() as db:
+        statement = insert(SystemSetting).values(
+            key="worker:heartbeat:" + lane, value={"at": now().isoformat()}
+        )
+        db.execute(statement.on_conflict_do_update(
+            index_elements=[SystemSetting.key], set_={"value": statement.excluded.value}
+        ))
+        db.commit()
+
+
+def _scheduler_loop(stop):
+    while not stop.is_set():
+        schedule()
+        heartbeat("scheduler")
+        stop.wait(60)
+
+
+def _poll_lane(stop, *, slow):
+    idle_delay = 1.0
+    last_heartbeat = float("-inf")
+    while not stop.is_set():
+        if time.monotonic() - last_heartbeat >= 60:
+            heartbeat("slow" if slow else "fast")
+            last_heartbeat = time.monotonic()
+        if process_one(slow=slow):
+            idle_delay = 1.0
+        else:
+            stop.wait(idle_delay)
+            idle_delay = min(5.0, idle_delay * 2)
 
 
 def worker():
@@ -329,13 +631,30 @@ def worker():
     # Background shells can inherit ignored SIGINT; watchers must be able to stop us.
     signal.signal(signal.SIGINT, signal.default_int_handler)
     signal.signal(signal.SIGTERM, signal.default_int_handler)
-    last_schedule = 0.0
-    while True:
-        if time.monotonic() - last_schedule >= 60:
-            schedule()
-            last_schedule = time.monotonic()
-        if not process_one():
-            time.sleep(1)
+    stop = threading.Event()
+    errors = queue.SimpleQueue()
+
+    def supervise(target):
+        try:
+            target()
+        except BaseException as error:
+            errors.put(error)
+            stop.set()
+
+    threads = [
+        threading.Thread(target=supervise, args=(lambda: _scheduler_loop(stop),), daemon=True),
+        threading.Thread(target=supervise, args=(lambda: _poll_lane(stop, slow=True),), daemon=True),
+    ]
+    for thread in threads:
+        thread.start()
+    try:
+        _poll_lane(stop, slow=False)
+        if not errors.empty():
+            raise errors.get()
+    finally:
+        stop.set()
+        for thread in threads:
+            thread.join(timeout=1)
 
 
 def retain_history(db, job):

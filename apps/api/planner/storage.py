@@ -100,6 +100,72 @@ def read(key: str) -> bytes:
     return path.read_bytes()
 
 
+def open_download(key: str):
+    """Open an authorized object's byte stream and its idempotent close callback."""
+    config = settings()
+    if config.supabase_storage_bucket:
+        if not key or "\\" in key or PurePosixPath(key).is_absolute() or ".." in PurePosixPath(key).parts:
+            raise HTTPException(404, "File not found")
+        bucket = quote(config.supabase_storage_bucket, safe="")
+        token = config.supabase_service_role_key.get_secret_value()
+        client = httpx.Client(
+            base_url=config.supabase_url + "/storage/v1/",
+            headers={"apikey": token, "Authorization": "Bearer " + token}, timeout=60,
+        )
+        try:
+            request = client.build_request("GET", f"object/authenticated/{bucket}/{quote(key, safe='/')}")
+            response = client.send(request, stream=True)
+        except httpx.RequestError:
+            client.close()
+            raise HTTPException(502, "Private storage is temporarily unavailable") from None
+        if not response.is_success:
+            try:
+                response.read()
+                try:
+                    error = response.json()
+                except ValueError:
+                    error = {}
+            except httpx.RequestError:
+                raise HTTPException(502, "Private storage is temporarily unavailable") from None
+            finally:
+                response.close()
+                client.close()
+            if (error.get("code") == "NoSuchKey" or error.get("message") == "Object not found"
+                    or response.status_code == 404 and error.get("code") != "NoSuchBucket"):
+                raise HTTPException(404, "File not found")
+            raise HTTPException(502, "Private storage request failed")
+
+        def close():
+            response.close()
+            client.close()
+
+        def chunks():
+            try:
+                yield from response.iter_bytes(chunk_size=65536)
+            finally:
+                close()
+
+        return chunks(), close
+    if config.storage_bucket:
+        from google.cloud import storage
+
+        handle = storage.Client().bucket(config.storage_bucket).blob(key).open("rb")
+    else:
+        path = storage_path(key)
+        if not path.is_file():
+            raise HTTPException(404, "File not found")
+        handle = path.open("rb")
+
+    def chunks():
+        try:
+            while chunk := handle.read(65536):
+                yield chunk
+        finally:
+            handle.close()
+
+    return chunks(), handle.close
+
+
 def remove(key: str):
     if settings().supabase_storage_bucket:
         supabase_request("DELETE", key, json={"prefixes": [key]})

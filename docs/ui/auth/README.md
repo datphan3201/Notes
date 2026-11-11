@@ -15,8 +15,8 @@ Trace ID: `auth`. Test references identify coverage to inspect; they are not exe
 | Role | Current source |
 | --- | --- |
 | UI | [apps/web/src/components/auth-form.tsx](../../../apps/web/src/components/auth-form.tsx#L23) — `export default function AuthForm({` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L157) — `def login(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L120) — `def register(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L180) — `def login(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L143) — `def register(` |
 | API / domain | [apps/api/planner/auth.py](../../../apps/api/planner/auth.py#L79) — `def identity(` |
 | Related tests | [apps/api/tests/test_accounts.py](../../../apps/api/tests/test_accounts.py) |
 | Related tests | [apps/api/tests/test_auth_refinement.py](../../../apps/api/tests/test_auth_refinement.py) |

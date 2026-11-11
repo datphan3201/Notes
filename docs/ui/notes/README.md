@@ -24,7 +24,7 @@ Trace ID: `notes`. Test references identify coverage to inspect; they are not ex
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L40) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L80) — `def access_note(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L335) — `def snapshot(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L431) — `def snapshot(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

@@ -19,7 +19,7 @@ Trace ID: `shared.ai`. Test references identify coverage to inspect; they are no
 | UI | [apps/web/src/components/live-assistant.tsx](../../../apps/web/src/components/live-assistant.tsx#L115) — `export default function LiveAssistant(` |
 | API / domain | [apps/api/planner/ai.py](../../../apps/api/planner/ai.py#L243) — `def run_assistant(` |
 | API / domain | [apps/api/planner/ai.py](../../../apps/api/planner/ai.py#L148) — `def apply_proposal(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L631) — `def assistant_history(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L656) — `def assistant_history(` |
 | Related tests | [apps/api/tests/test_ai_jobs.py](../../../apps/api/tests/test_ai_jobs.py) |
 | Related tests | [apps/api/tests/test_assistant_tools.py](../../../apps/api/tests/test_assistant_tools.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |

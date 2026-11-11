@@ -158,6 +158,81 @@ def test_job_lease_retry_and_deduplication(client, db):
     assert claim(factory, job.id) is None
 
 
+def test_idle_worker_lane_backs_off_and_resets(monkeypatch):
+    from planner import jobs
+
+    sleeps = []
+    steps = iter([False, False, False, False, True, False])
+
+    class Stop:
+        def is_set(self):
+            return False
+
+        def wait(self, seconds):
+            sleeps.append(seconds)
+
+    monkeypatch.setattr(jobs, "process_one", lambda **_: next(steps))
+    monkeypatch.setattr(jobs, "heartbeat", lambda *_: None)
+    with pytest.raises(StopIteration):
+        jobs._poll_lane(Stop(), slow=False)
+    assert sleeps == [1, 2, 4, 5, 1]
+
+
+def test_worker_lanes_claim_distinct_job_kinds(client, db):
+    from planner.models import User
+
+    owner = db.scalar(select(User.id))
+    enqueue(db, owner, "assistant", "lane-assistant", {})
+    enqueue(db, owner, "email", "lane-email", {})
+    db.commit()
+    fast = claim(session_factory(), slow=False)
+    slow = claim(session_factory(), slow=True)
+    assert fast and fast.kind == "email"
+    assert slow and slow.kind in ("assistant", "index")
+
+
+def test_scheduler_and_fast_lane_run_while_slow_lane_is_busy(monkeypatch):
+    import threading
+
+    from planner import jobs
+
+    stop = threading.Event()
+    slow_started = threading.Event()
+    release_slow = threading.Event()
+    fast_ran = threading.Event()
+    scheduled = threading.Event()
+
+    def process_one(*, slow):
+        if slow:
+            slow_started.set()
+            release_slow.wait(2)
+        else:
+            fast_ran.set()
+        return False
+
+    monkeypatch.setattr(jobs, "process_one", process_one)
+    monkeypatch.setattr(jobs, "schedule", scheduled.set)
+    monkeypatch.setattr(jobs, "heartbeat", lambda *_: None)
+    threads = [
+        threading.Thread(target=jobs._poll_lane, args=(stop,), kwargs={"slow": True}),
+        threading.Thread(target=jobs._poll_lane, args=(stop,), kwargs={"slow": False}),
+        threading.Thread(target=jobs._scheduler_loop, args=(stop,)),
+    ]
+    try:
+        threads[0].start()
+        assert slow_started.wait(1)
+        for thread in threads[1:]:
+            thread.start()
+        assert fast_ran.wait(1)
+        assert scheduled.wait(1)
+    finally:
+        stop.set()
+        release_slow.set()
+        for thread in threads:
+            if thread.ident is not None:
+                thread.join(timeout=2)
+
+
 def test_worker_interruption_releases_the_owned_job_for_retry(client, db, monkeypatch):
     make(client, "notes")
     job = db.scalar(select(Job).where(Job.kind == "index"))
@@ -175,6 +250,20 @@ def test_worker_interruption_releases_the_owned_job_for_retry(client, db, monkey
     assert current.error_code == "KeyboardInterrupt"
 
 
+def test_worker_health_detects_missing_and_stale_lanes(client, db):
+    from planner.jobs import heartbeat
+    from planner.models import SystemSetting
+
+    assert client.get("/health/worker").status_code == 503
+    for lane in ("scheduler", "fast", "slow"):
+        heartbeat(lane, session_factory())
+    assert client.get("/health/worker").status_code == 200
+    row = db.get(SystemSetting, "worker:heartbeat:fast")
+    row.value = {"at": (now() - timedelta(minutes=5)).isoformat()}
+    db.commit()
+    assert client.get("/health/worker").status_code == 503
+
+
 def test_recurrence_is_not_materialized_on_get_and_is_idempotent(client, db):
     from datetime import date
 
@@ -187,6 +276,222 @@ def test_recurrence_is_not_materialized_on_get_and_is_idempotent(client, db):
     assert first >= 7
     materialize(db, job)
     assert len(db.scalars(select(Task)).all()) == first
+
+
+def test_scheduler_only_enqueues_due_reminders_and_recurrences(client, db, monkeypatch):
+    from planner import jobs
+
+    jobs.schedule(session_factory())
+    def periodic():
+        return list(db.scalars(select(Job).where(Job.kind.in_(["recurrence", "reminders"]))))
+    assert periodic() == []
+
+    make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
+    make(client, "task-series", frequency="daily", start_date=str(now().date()))
+    db.expire_all()
+    jobs.schedule(session_factory())
+    db.expire_all()
+    first = periodic()
+    assert {job.kind for job in first} == {"recurrence", "reminders"}
+    for job in first:
+        assert jobs.process_one(session_factory(), job_id=job.id)
+
+    original_now = jobs.now
+    monkeypatch.setattr(jobs, "now", lambda: original_now() + timedelta(minutes=1))
+    db.expire_all()
+    jobs.schedule(session_factory())
+    db.expire_all()
+    later = periodic()
+    assert len([job for job in later if job.kind == "reminders"]) == 1
+    from planner.timezones import zone
+
+    crossed_local_day = original_now().astimezone(zone("Asia/Ho_Chi_Minh")).date() != (
+        original_now() + timedelta(minutes=1)
+    ).astimezone(zone("Asia/Ho_Chi_Minh")).date()
+    assert len([job for job in later if job.kind == "recurrence"]) == 1 + crossed_local_day
+
+
+def test_scheduler_does_not_enqueue_expired_reminders_for_other_accounts(client, stranger, db):
+    from planner import jobs
+
+    reminder = (now() - timedelta(minutes=1)).isoformat()
+    make(client, "tasks", reminder_at=reminder, due_date=str(now().date() - timedelta(days=30)))
+    task = make(stranger, "tasks", reminder_at=reminder)
+    expected_owner = db.get(Task, task["id"]).user_id
+    jobs.schedule(session_factory())
+    db.expire_all()
+    jobs_due = list(db.scalars(select(Job).where(Job.kind == "reminders")))
+    assert [job.user_id for job in jobs_due] == [expected_owner]
+
+
+def test_queued_reminder_rechecks_rescheduled_task(client, db):
+    from planner import jobs
+    from planner.models import Notification
+
+    task = make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
+    jobs.schedule(session_factory())
+    db.expire_all()
+    job = db.scalar(select(Job).where(Job.kind == "reminders"))
+    assert job is not None
+    changed = client.patch(
+        "/api/v1/tasks/" + task["id"],
+        json={"version": task["version"], "fields": {"reminder_at": (now() + timedelta(days=1)).isoformat()}},
+    )
+    assert changed.status_code == 200
+    assert jobs.process_one(session_factory(), job_id=job.id)
+    db.expire_all()
+    assert db.scalars(select(Notification)).all() == []
+
+
+def test_due_reminder_batches_skip_ineligible_and_recheck_changes(client, stranger, db):
+    from planner import jobs
+    from planner.models import Notification
+
+    due = (now() - timedelta(minutes=2)).isoformat()
+    make(client, "tasks", reminder_at=due, due_date=str(now().date() - timedelta(days=30)))
+    first = make(client, "tasks", reminder_at=due)
+    second = make(stranger, "tasks", reminder_at=due)
+    with session_factory()() as session:
+        assert jobs.schedule_due_reminders(session, limit=1) == 1
+        session.commit()
+    with session_factory()() as session:
+        assert jobs.schedule_due_reminders(session, limit=1) == 1
+        session.commit()
+    with session_factory()() as session:
+        assert jobs.schedule_due_reminders(session, limit=1) == 0
+    db.expire_all()
+    dispatches = list(db.scalars(select(Job).where(Job.kind == "reminder-dispatch")))
+    assert {job.payload["task_id"] for job in dispatches} == {first["id"], second["id"]}
+    changed = client.patch(
+        "/api/v1/tasks/" + first["id"],
+        json={"version": first["version"], "fields": {
+            "reminder_at": (now() + timedelta(days=1)).isoformat(),
+        }},
+    )
+    assert changed.status_code == 200
+    for job in dispatches:
+        assert jobs.process_one(session_factory(), job_id=job.id)
+    db.expire_all()
+    notifications = list(db.scalars(select(Notification)))
+    assert len(notifications) == 1
+    assert notifications[0].user_id == db.get(Task, second["id"]).user_id
+
+
+def test_shadow_scheduler_compares_without_creating_jobs(client, db):
+    from planner import jobs
+
+    make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
+    make(client, "task-series", frequency="daily", start_date=str(now().date()))
+    before = len(list(db.scalars(select(Job))))
+    with session_factory()() as session:
+        assert jobs.compare_scheduler(session)
+        session.rollback()
+    db.expire_all()
+    assert len(list(db.scalars(select(Job)))) == before
+
+
+def test_series_checkpoint_backfill_is_dry_run_by_default(client, db):
+    from planner.scheduler_admin import backfill
+
+    series = make(client, "task-series", frequency="monthly", start_date=str(now().date() + timedelta(days=90)))
+    db.expire_all()
+    initial = db.get(TaskSeries, series["id"]).next_materialize_at
+    assert backfill(session_factory(), batch_size=1) == (1, 1)
+    db.expire_all()
+    assert db.get(TaskSeries, series["id"]).next_materialize_at == initial
+    assert backfill(session_factory(), execute=True, batch_size=1) == (1, 1)
+    db.expire_all()
+    assert db.get(TaskSeries, series["id"]).next_materialize_at > now() + timedelta(days=80)
+    assert backfill(session_factory()) == (1, 0)
+
+
+def test_due_scheduler_mode_does_not_create_legacy_reminder_jobs(client, db, monkeypatch):
+    from planner import jobs
+
+    monkeypatch.setattr(settings(), "scheduler_mode", "due")
+    make(client, "tasks", reminder_at=(now() - timedelta(minutes=1)).isoformat())
+    jobs.schedule(session_factory())
+    jobs.schedule(session_factory())
+    db.expire_all()
+    assert len(list(db.scalars(select(Job).where(Job.kind == "reminder-dispatch")))) == 1
+    assert list(db.scalars(select(Job).where(Job.kind == "reminders"))) == []
+
+
+def test_due_scheduler_creates_no_periodic_jobs_for_an_idle_account(client, db, monkeypatch):
+    from planner import jobs
+
+    monkeypatch.setattr(settings(), "scheduler_mode", "due")
+    start = now()
+    for minute in range(65):
+        monkeypatch.setattr(jobs, "now", lambda minute=minute: start + timedelta(minutes=minute))
+        jobs.schedule(session_factory())
+    db.expire_all()
+    assert list(db.scalars(select(Job).where(
+        Job.kind.in_(["recurrence", "reminders", "reminder-dispatch", "retention"])
+    ))) == []
+
+
+def test_due_series_checkpoint_advances_and_invalidates_stale_jobs(client, db, monkeypatch):
+    from datetime import date
+
+    from planner import jobs
+
+    monkeypatch.setattr(settings(), "scheduler_mode", "due")
+    series = make(client, "task-series", frequency="daily", start_date=str(date.today()))
+    jobs.schedule(session_factory())
+    db.expire_all()
+    first = db.scalar(select(Job).where(Job.kind == "recurrence"))
+    assert first and first.payload["series_id"] == series["id"]
+    jobs.schedule(session_factory())
+    db.expire_all()
+    assert len(list(db.scalars(select(Job).where(Job.kind == "recurrence")))) == 1
+    assert jobs.process_one(session_factory(), job_id=first.id)
+    db.expire_all()
+    row = db.get(TaskSeries, series["id"])
+    assert row.next_materialize_at > now()
+    assert len(list(db.scalars(select(Task).where(Task.series_id == row.id)))) >= 7
+    jobs.schedule(session_factory())
+    db.expire_all()
+    assert len(list(db.scalars(select(Job).where(Job.kind == "recurrence")))) == 1
+
+    row.next_materialize_at = now() - timedelta(minutes=1)
+    db.commit()
+    jobs.schedule(session_factory())
+    db.expire_all()
+    stale = db.scalar(select(Job).where(Job.kind == "recurrence", Job.status == "queued"))
+    assert stale
+    row.next_materialize_at = now() + timedelta(days=5)
+    db.commit()
+    count = len(list(db.scalars(select(Task).where(Task.series_id == row.id))))
+    assert jobs.process_one(session_factory(), job_id=stale.id)
+    db.expire_all()
+    assert len(list(db.scalars(select(Task).where(Task.series_id == row.id)))) == count
+
+
+def test_due_retention_checkpoint_only_enqueues_eligible_owner(client, stranger, db):
+    from planner import jobs
+    from planner.models import SystemSetting, User
+
+    first = make(client, "tasks", status="done")
+    second = make(stranger, "tasks", status="done")
+    owner = db.get(Task, first["id"]).user_id
+    db.get(Task, first["id"]).completed_at = now() - timedelta(days=10)
+    db.get(Task, second["id"]).completed_at = now() - timedelta(days=10)
+    db.get(User, owner).preferences = {"history_retention_days": 1}
+    db.commit()
+    with session_factory()() as session:
+        assert jobs.schedule_due_retention(session, limit=10) == 1
+        session.commit()
+    with session_factory()() as session:
+        assert jobs.schedule_due_retention(session, limit=10) == 0
+    db.expire_all()
+    scheduled = list(db.scalars(select(Job).where(Job.kind == "retention")))
+    assert [job.user_id for job in scheduled] == [owner]
+    assert db.get(SystemSetting, "scheduler:retention").value.get("next_at")
+    assert jobs.process_one(session_factory(), job_id=scheduled[0].id)
+    db.expire_all()
+    assert db.get(Task, first["id"]).archived_at is not None
+    assert db.get(Task, second["id"]).archived_at is None
 
 
 def test_ai_budget_reserved_before_enqueue(client, db, monkeypatch):
@@ -231,6 +536,64 @@ def test_assistant_uses_durable_worker_and_fake_provider(client, db, monkeypatch
     result = client.get("/api/v1/assistant/runs/" + run_id).json()
     assert result["status"] == "completed" and result["answer"] == "A small next step."
     assert result["input_tokens"] == 100
+
+
+def test_assistant_batches_stream_writes_and_flushes_provider_errors(client, db, monkeypatch):
+    from pydantic import SecretStr
+    from sqlalchemy import event
+
+    from planner.db import engine
+
+    monkeypatch.setattr(settings(), "ai_api_key", SecretStr("fake-test-key"))
+    monkeypatch.setattr(settings(), "ai_model", "fake")
+    response = client.post("/api/v1/assistant/runs", json={"prompt": "What next?"})
+    run_id = response.json()["id"]
+    job = db.scalar(select(Job).where(Job.key == f"assistant:{run_id}"))
+    writes = []
+
+    def record(_conn, _cursor, statement, _parameters, _context, _many):
+        if statement.lstrip().upper().startswith("UPDATE AI_RUNS SET ANSWER"):
+            writes.append(statement)
+
+    class FragmentProvider(FakeProvider):
+        def stream(self, messages, publish):
+            for _ in range(100):
+                publish("x")
+            raise RuntimeError("provider failed")
+
+    event.listen(engine(), "before_cursor_execute", record)
+    try:
+        assert process_one(session_factory(), FragmentProvider(), job.id)
+    finally:
+        event.remove(engine(), "before_cursor_execute", record)
+    db.expire_all()
+    assert db.get(AIRun, run_id).answer == "x" * 100
+    assert len(writes) == 2
+
+
+def test_buffered_stream_rechecks_note_lock_before_flushing(client, db, monkeypatch):
+    from pydantic import SecretStr
+
+    monkeypatch.setattr(settings(), "ai_api_key", SecretStr("fake-test-key"))
+    monkeypatch.setattr(settings(), "ai_model", "fake")
+    note = make(client, "notes", content="Private source")
+    response = client.post(f"/api/v1/notes/{note['id']}/summary")
+    run_id = response.json()["id"]
+    job = db.scalar(select(Job).where(Job.key == f"assistant:{run_id}"))
+
+    class LockingProvider(FakeProvider):
+        def stream(self, messages, publish):
+            publish("visible before lock")
+            publish(" must not be saved")
+            with session_factory()() as session:
+                session.get(Note, note["id"]).lock_hash = "locked"
+                session.commit()
+            return {"role": "assistant", "content": ""}, {}
+
+    assert process_one(session_factory(), LockingProvider(), job.id)
+    db.expire_all()
+    assert db.get(AIRun, run_id).answer == "visible before lock"
+    assert db.get(Job, job.id).status == "queued"
 
 
 def test_note_summary_and_questions_use_owned_source_and_trusted_account_context(
@@ -393,3 +756,47 @@ def test_completed_run_events_return_the_saved_answer(client, db):
     assert response.status_code == 200
     assert '"answer": "Saved answer"' in response.text
     assert '"status": "completed"' in response.text
+
+
+def test_stream_database_wait_does_not_block_event_loop(monkeypatch):
+    import asyncio
+    import time
+    from types import SimpleNamespace
+
+    from planner import main
+
+    row = SimpleNamespace(status="completed")
+    session = SimpleNamespace(expires_at=now() + timedelta(minutes=1))
+
+    class FakeDB:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            pass
+
+        def get(self, *_):
+            return session
+
+        def scalar(self, *_):
+            return row
+
+        def rollback(self):
+            pass
+
+    def slow_result(*_):
+        time.sleep(0.2)
+        return {"status": "completed"}
+
+    monkeypatch.setattr(main, "session_factory", lambda: FakeDB)
+    monkeypatch.setattr(main, "run_result", slow_result)
+    auth = SimpleNamespace(user=SimpleNamespace(id="owner"), session=SimpleNamespace(token_hash="s"))
+    response = main.events("run", auth, FakeDB())
+
+    async def check():
+        timer = asyncio.Event()
+        asyncio.get_running_loop().call_later(0.05, timer.set)
+        await response.body_iterator.__anext__()
+        assert timer.is_set(), "database wait blocked the event loop"
+
+    asyncio.run(check())

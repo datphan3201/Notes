@@ -54,8 +54,8 @@ def verify_target(db, expected_database, expected_schema):
     actual = db.execute(text("SELECT current_database(), current_schema() ")).one()
     if tuple(actual) != (expected_database, expected_schema):
         raise ValueError("Connected database/schema does not match the explicitly selected target")
-    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0009":
-        raise ValueError("Demo requires the current 0009 schema; no migrations were performed")
+    if db.scalar(text("SELECT version_num FROM alembic_version")) != "0012":
+        raise ValueError("Demo requires the current 0012 schema; no migrations were performed")
 
 
 def seed_account(db, email, password, as_of):

@@ -175,6 +175,10 @@ class Task(Owned, Base):
         ),
         UniqueConstraint("series_id", "occurrence_date"),
         Index("tasks_owner_due", "user_id", "due_date"),
+        Index(
+            "tasks_due_reminder", "reminder_at", "user_id",
+            postgresql_where=sql_text("archived_at IS NULL AND status <> 'done' AND reminder_at IS NOT NULL"),
+        ),
     )
 
 
@@ -259,11 +263,22 @@ class TaskSeries(Owned, Base):
     start_date: Mapped[date] = mapped_column(Date)
     end_date: Mapped[date | None] = mapped_column(Date)
     cursor: Mapped[date | None] = mapped_column(Date)
+    next_materialize_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=now, server_default=sql_text("now()")
+    )
     state: Mapped[str] = mapped_column(String(10), default="active")
     timezone: Mapped[str] = mapped_column(String(80), default=DEFAULT_TIMEZONE)
     __table_args__ = (
         *owned_constraints("task_series"),
         CheckConstraint("state IN ('active','paused','ended')"),
+        Index(
+            "task_series_active_owner", "user_id",
+            postgresql_where=sql_text("archived_at IS NULL AND state = 'active'"),
+        ),
+        Index(
+            "task_series_materialize_due", "next_materialize_at", "id",
+            postgresql_where=sql_text("archived_at IS NULL AND state = 'active'"),
+        ),
     )
 
 
@@ -274,6 +289,7 @@ class Activity(Base):
     kind: Mapped[str] = mapped_column(String(30))
     entity_id: Mapped[str] = mapped_column(String(36))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    __table_args__ = (Index("activities_owner_cursor", "user_id", "created_at", "id"),)
 
 
 class Attachment(Base):

@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     worker_audience: str = ""
     worker_service_account: str = ""
     worker_mode: Literal["cloud_tasks", "poll"] = "cloud_tasks"
+    scheduler_mode: Literal["legacy", "compare", "due"] = "legacy"
     run_worker: bool = False
     migrate_on_start: bool = False
     encryption_key: SecretStr = SecretStr("")
