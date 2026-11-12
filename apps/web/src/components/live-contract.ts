@@ -1,6 +1,9 @@
 import type { Identity, WorkspacePreferences } from "@/lib/api";
 import type { PreviewNotice } from "./preview/notifications";
+import type { ActivityFact } from "./preview/workspace-data";
 export type LiveRuntime = {
+    loadNote?: (id: string) => Promise<void>;
+    searchNotes?: (query: string) => Promise<string[]>;
     historyLimit: number;
     keepNoteDraft: (
         id: string,
@@ -25,6 +28,9 @@ export type LiveRuntime = {
     busy: boolean;
     offline: boolean;
     notices: PreviewNotice[];
+    activityDay?: (day: string, before?: string) => Promise<{
+        items: ActivityFact[]; nextCursor: string | null;
+    }>;
     request: <T = unknown>(path: string, options?: RequestInit) => Promise<T>;
     refresh: () => Promise<void>;
     flush: () => Promise<boolean>;

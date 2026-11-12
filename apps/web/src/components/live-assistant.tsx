@@ -11,6 +11,7 @@ import {
     X,
 } from "lucide-react";
 import { api, ApiError, type Kind, type Run } from "@/lib/api";
+import { appendAnswer } from "@/lib/assistant-stream";
 import { usePreviewData } from "./preview/workspace-data";
 import { Confirm } from "./preview/ui";
 import type { Text } from "./preview/shared";
@@ -33,7 +34,8 @@ export function waitForRun(
     signal?: AbortSignal,
 ): Promise<Run> {
     return new Promise((resolve, reject) => {
-        const source = new EventSource(`/api/v1/assistant/runs/${id}/events`);
+        const source = new EventSource(`/api/v1/assistant/runs/${id}/events?deltas=true`);
+        let streamedAnswer = "";
         let finished = false,
             polling = false;
         let pollTimer: ReturnType<typeof setTimeout>;
@@ -89,13 +91,22 @@ export function waitForRun(
         }
         source.onmessage = (event) => {
             try {
-                consume(JSON.parse(event.data) as Run);
+                const update = JSON.parse(event.data);
+                if (typeof update.answer_delta === "string") {
+                    streamedAnswer = appendAnswer(streamedAnswer, update);
+                    consume({ ...update, answer: streamedAnswer } as Run);
+                } else {
+                    streamedAnswer = update.answer || "";
+                    consume(update as Run);
+                }
             } catch {
+                source.close();
                 void poll();
             }
         };
         // Proxies may buffer or interrupt SSE. A durable GET also recovers completed output.
         source.onerror = () => {
+            source.close();
             void poll();
         };
         pollTimer = setTimeout(poll, 2000);

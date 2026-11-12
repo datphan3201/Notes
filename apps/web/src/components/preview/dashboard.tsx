@@ -58,6 +58,7 @@ export function DashboardView({
         | "milestones"
         | "habits"
         | "events"
+        | "activityCounts"
         | "appearance"
         | "dashboard"
         | "setTasks"
@@ -85,12 +86,13 @@ export function DashboardView({
             ...t,
             importance: String(t.importance),
             note: text(...t.description),
-            scheduled: t.scheduledStart.slice(11, 16),
+            scheduled: t.scheduledDay,
             daily: connected ? t.daily : isToday(t),
             automaticToday:
                 t.due === day ||
                 t.start === day ||
-                t.scheduledStart.slice(0, 10) === day,
+                t.scheduledDay === day,
+            automaticWeek: !!t.scheduledDay && t.scheduledDay >= monday(day) && t.scheduledDay <= addDays(monday(day), 6),
             weekly: connected
                 ? t.weekly
                 : t.weekly ||
@@ -130,16 +132,22 @@ export function DashboardView({
     const recentCounts = Array.from(
         { length: 30 },
         (_, i) =>
-            db.events.filter(
-                (e) => e.date === addDays(day, i - 29) && !e.reversed,
-            ).length,
+            db.activityCounts
+                ? db.activityCounts.filter((e) => e.date === addDays(day, i - 29))
+                    .reduce((sum, e) => sum + e.count, 0)
+                : db.events.filter(
+                    (e) => e.date === addDays(day, i - 29) && !e.reversed,
+                ).length,
     );
     const weekCounts = Array.from(
         { length: 7 },
         (_, i) =>
-            db.events.filter(
-                (e) => e.date === addDays(monday(day), i) && !e.reversed,
-            ).length,
+            db.activityCounts
+                ? db.activityCounts.filter((e) => e.date === addDays(monday(day), i))
+                    .reduce((sum, e) => sum + e.count, 0)
+                : db.events.filter(
+                    (e) => e.date === addDays(monday(day), i) && !e.reversed,
+                ).length,
     );
     const setEditor = (value: PreviewTask | null | undefined) => {
         if (value === undefined) return;
@@ -177,7 +185,7 @@ export function DashboardView({
     }, [week]);
     const selected = empty
         ? []
-        : tasks.filter((task) => (week ? task.weekly : task.daily));
+        : tasks.filter((task) => (week ? task.weekly || task.automaticWeek : task.daily));
     const done = selected.filter((task) => task.status === "Done").length;
     const percentage = selected.length
         ? Math.round((done / selected.length) * 100)
@@ -200,6 +208,7 @@ export function DashboardView({
             month: "short",
             timeZone: "UTC",
         }).format(sampleDay(offset));
+    const activityOffset = (sampleDay(-29).getUTCDay() + 6) % 7;
     const miniActivityCalendar = (
         <div
             className="recent-activity-mini-calendar"
@@ -221,7 +230,7 @@ export function DashboardView({
             </div>
             <div className="recent-activity-mini-grid">
                 {Array.from(
-                    { length: 4 },
+                    { length: activityOffset },
                     (_, index) => (
                         <span
                             key={`blank-${index}`}
@@ -314,6 +323,14 @@ export function DashboardView({
                     </div>
                     <div className="dashboard-header-activity-box">
                         {miniActivityCalendar}
+                    </div>
+                    <div className="dashboard-header-activity-compact" role="group" aria-label={text("Activity this week, Monday to Sunday", "Hoạt động tuần này, từ thứ Hai đến Chủ nhật")}>
+                        {weekCounts.map((count, index) => (
+                            <span className="dashboard-header-activity-day" key={index}>
+                                <span aria-hidden="true">{text(...weekdays[index])}</span>
+                                <span className="activity-day" data-level={empty ? 0 : Math.min(count, 4)} aria-label={`${text(...weekdays[index])}, ${dayLabel(index - ((sampleDay(0).getUTCDay() + 6) % 7))}: ${empty ? 0 : count}`} title={`${text(...weekdays[index])}, ${dayLabel(index - ((sampleDay(0).getUTCDay() + 6) % 7))}: ${empty ? 0 : count}`} />
+                            </span>
+                        ))}
                     </div>
                 </div>
             </PageHeaderFrame>
@@ -565,9 +582,9 @@ export function DashboardView({
                                                 ? "Công việc trong tuần"
                                                 : "Công việc hàng ngày",
                                         )}
-                                        <span className="count-badge">
+                                        {week && <span className="count-badge">
                                             {done}/{selected.length}
-                                        </span>
+                                        </span>}
                                     </h2>
                                     <button
                                         className={
@@ -668,8 +685,8 @@ export function DashboardView({
                                             </option>
                                             <option value="scheduled">
                                                 {text(
-                                                    "Scheduled time",
-                                                    "Thời gian lên lịch",
+                                                    "Scheduled day",
+                                                    "Ngày xếp lịch",
                                                 )}
                                             </option>
                                         </select>
@@ -684,34 +701,6 @@ export function DashboardView({
                                                 onDragStart={event => event.dataTransfer.setData(TASK_RETURN_MIME, String(task.id))}
                                                 className={`dashboard-item dashboard-checklist-row ${task.status === "Done" ? "is-done" : ""}`}
                                             >
-                                                <button
-                                                    className={`task-completion-button ${task.status === "Done" ? "is-complete" : ""}`}
-                                                    aria-label={
-                                                        text(
-                                                            task.status ===
-                                                                "Done"
-                                                                ? "Reopen: "
-                                                                : "Complete: ",
-                                                            task.status ===
-                                                                "Done"
-                                                                ? "Mở lại: "
-                                                                : "Hoàn thành: ",
-                                                        ) + text(...task.title)
-                                                    }
-                                                    aria-pressed={
-                                                        task.status === "Done"
-                                                    }
-                                                    onClick={() =>
-                                                        db.setTaskAction({
-                                                            kind: "complete",
-                                                            id: task.id,
-                                                        })
-                                                    }
-                                                >
-                                                    {task.status === "Done" && (
-                                                        <Check size={17} />
-                                                    )}
-                                                </button>
                                                 <button
                                                     className="dashboard-item-copy preview-dashboard-task-copy"
                                                     onClick={() =>
@@ -733,7 +722,7 @@ export function DashboardView({
                                                                     "Scheduled",
                                                                     "Lên lịch",
                                                                 )}{" "}
-                                                                {task.scheduled}
+                                                                {dateLabel(task.scheduled, locale)}
                                                             </span>
                                                         )}
                                                         {task.due && (
@@ -834,6 +823,34 @@ export function DashboardView({
                                                         <X size={14} />
                                                     </button>
                                                 )}
+                                                <button
+                                                    className={`task-completion-button ${task.status === "Done" ? "is-complete" : ""}`}
+                                                    aria-label={
+                                                        text(
+                                                            task.status ===
+                                                                "Done"
+                                                                ? "Reopen: "
+                                                                : "Complete: ",
+                                                            task.status ===
+                                                                "Done"
+                                                                ? "Mở lại: "
+                                                                : "Hoàn thành: ",
+                                                        ) + text(...task.title)
+                                                    }
+                                                    aria-pressed={
+                                                        task.status === "Done"
+                                                    }
+                                                    onClick={() =>
+                                                        db.setTaskAction({
+                                                            kind: "complete",
+                                                            id: task.id,
+                                                        })
+                                                    }
+                                                >
+                                                    {task.status === "Done" && (
+                                                        <Check size={17} />
+                                                    )}
+                                                </button>
                                             </article>
                                         ),
                                     )}
@@ -1151,11 +1168,6 @@ export function DashboardView({
                                         header={<div className="section-heading">
                                             <h2>
                                                 {text("Habits", "Thói quen")}
-                                                <span className="count-badge">
-                                                    {empty
-                                                        ? "0/0"
-                                                        : `${habitChecks.length}/${sampleHabits.length}`}
-                                                </span>
                                             </h2>
                                             <button
                                                 className="text-button"
@@ -1288,7 +1300,7 @@ export function DashboardView({
                                                 </div>
                                                 <div className="recent-activity-mini-grid">
                                                     {Array.from(
-                                                        { length: 4 },
+                                                        { length: activityOffset },
                                                         (_, index) => (
                                                             <span
                                                                 key={`blank-${index}`}
@@ -1380,7 +1392,7 @@ export function DashboardView({
                                                         )}
                                                     >
                                                         {Array.from(
-                                                            { length: 4 },
+                                                            { length: activityOffset },
                                                             (_, index) => (
                                                                 <span
                                                                     key={`blank-${index}`}

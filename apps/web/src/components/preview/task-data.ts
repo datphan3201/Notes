@@ -19,9 +19,9 @@ export type TaskDraft = {
     importance: number;
     start: string;
     due: string;
+    scheduledDay: string;
     scheduledStart: string;
     scheduledEnd: string;
-    estimate: string;
     reminder: string;
     reminderAt: string;
     tags: string[];
@@ -133,9 +133,9 @@ export const blankDraft = (): TaskDraft => ({
     importance: 3,
     start: "",
     due: "",
+    scheduledDay: "",
     scheduledStart: "",
     scheduledEnd: "",
-    estimate: "",
     reminder: "none",
     reminderAt: "",
     tags: [],
@@ -210,7 +210,6 @@ export const taskFixtures: TaskRecord[] = [
         due: demoToday,
         daily: true,
         weekly: true,
-        estimate: "30",
         tags: ["english"],
         description: [
             "Listen once without a transcript, then review the difficult parts.",
@@ -259,6 +258,7 @@ export const taskFixtures: TaskRecord[] = [
         start: "2026-11-09",
         due: "2026-11-09",
         scheduledStart: "2026-11-09T19:00",
+        scheduledDay: "2026-11-09",
         scheduledEnd: "2026-11-09T19:30",
         weekly: true,
         seriesId: 1,
@@ -306,9 +306,9 @@ export const seriesFixtures: SeriesRecord[] = [
             ["Read for fifteen minutes", "Đọc sách mười lăm phút"],
             {
                 parent: "reading",
-                estimate: "15",
                 reminder: "start",
                 scheduledStart: "2026-11-07T19:00",
+                scheduledDay: "2026-11-07",
                 scheduledEnd: "2026-11-07T19:15",
                 checklist: [
                     {
@@ -450,10 +450,7 @@ export function isToday(task: TaskRecord, today=demoToday): boolean {
         task.daily ||
         task.due === today ||
         task.start === today ||
-        (!!task.scheduledStart &&
-            task.scheduledStart.slice(0, 10) <= today &&
-            (task.scheduledEnd || task.scheduledStart).slice(0, 10) >=
-                today) ||
+        task.scheduledDay === today ||
         (!!task.due && task.due < today && task.status !== "Done")
     );
 }
@@ -461,14 +458,14 @@ export function matchesTaskView(task: TaskRecord, view: string, today=demoToday,
     const dates = [
         task.start,
         task.due,
-        task.scheduledStart.slice(0, 10),
-        task.scheduledEnd.slice(0, 10),
+        task.scheduledDay,
     ].filter(Boolean);
     if (view === "today") return isToday(task,today);
     if (view === "next") return dates.some((date) => date > today);
     if (view === "week")
         return (
             task.weekly ||
+            (!!task.scheduledDay && task.scheduledDay >= mondayDate(today) && task.scheduledDay <= addDaysLocal(mondayDate(today), 6)) ||
             !explicitWeek && dates.some((date) => date >= mondayDate(today) && date <= addDaysLocal(mondayDate(today),6))
         );
     if (view === "other") return !isToday(task, today) && !matchesTaskView(task, "week", today, explicitWeek);

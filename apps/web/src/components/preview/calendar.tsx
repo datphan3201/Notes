@@ -69,14 +69,14 @@ export default function CalendarPreview({ text }: { text: Text }) {
                 id: String(t.id),
                 kind: "tasks" as const,
                 title: text(...t.title),
-                start: t.start || t.scheduledStart.slice(0, 10) || t.due,
-                end: t.due || t.scheduledEnd.slice(0, 10) || t.start,
+                start: t.scheduledDay,
+                end: t.scheduledDay,
                 done: t.status === "Done",
                 series: !!t.seriesId,
                 color: "#067287",
                 parent:
                     db.parents.find((p) => p.id === t.parent)?.goal || "inbox",
-                slot: t.scheduledStart.slice(11, 16),
+                slot: "",
             })),
         ...db.goals
             .filter((g) => !g.archived)
@@ -130,7 +130,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
     const create = (date: string) =>
         db.setTaskAction({
             kind: "create",
-            draft: { ...blankDraft(), due: date },
+            draft: { ...blankDraft(), scheduledDay: date },
         });
     const open = (item: Item) =>
         item.kind === "tasks"
@@ -150,42 +150,9 @@ export default function CalendarPreview({ text }: { text: Text }) {
             (Date.parse(target) - Date.parse(origin)) / 86400000,
         );
         if (item.kind === "tasks")
-            db.setTasks((rows) =>
-                rows.map((row) => {
-                    if (String(row.id) !== item.id) return row;
-                    let start = row.start,
-                        due = row.due,
-                        scheduledStart = row.scheduledStart,
-                        scheduledEnd = row.scheduledEnd;
-                    const move = (s: string) =>
-                        s ? addDays(s.slice(0, 10), delta) + s.slice(10) : s;
-                    if (edge === "start") start = target;
-                    else if (edge === "end") due = target;
-                    else if (!item.start) due = target;
-                    else {
-                        start =
-                            start && (view === "gantt" || start === origin)
-                                ? move(start)
-                                : start;
-                        due =
-                            due && (view === "gantt" || due === origin)
-                                ? move(due)
-                                : due;
-                        if (
-                            scheduledStart &&
-                            (view === "gantt" ||
-                                scheduledStart.slice(0, 10) === origin)
-                        ) {
-                            scheduledStart = move(scheduledStart);
-                            scheduledEnd = move(scheduledEnd);
-                        }
-                    }
-                    if (start && due && start > due) {
-                        return row;
-                    }
-                    return { ...row, start, due, scheduledStart, scheduledEnd };
-                }),
-            );
+            db.setTasks((rows) => rows.map((row) =>
+                String(row.id) === item.id ? { ...row, scheduledDay: target } : row,
+            ));
         else {
             const update = (row: {
                 id: string;
@@ -794,13 +761,9 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                             <div
                                                 role="button"
                                                 tabIndex={0}
-                                                aria-label={
-                                                    item.title +
-                                                    text(
-                                                        ". Alt+arrows to move; Shift to resize.",
-                                                        ". Alt+mũi tên để di chuyển; thêm Shift để đổi hạn.",
-                                                    )
-                                                }
+                                                aria-label={item.title + (item.kind === "tasks"
+                                                    ? text(". Alt+arrows to move.", ". Alt+mũi tên để di chuyển.")
+                                                    : text(". Alt+arrows to move; Shift to resize.", ". Alt+mũi tên để di chuyển; thêm Shift để đổi hạn."))}
                                                 className={`review-gantt-bar ${item.done ? "is-done" : ""}`}
                                                 style={{
                                                     left: left * cell,
@@ -836,7 +799,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                     )
                                                         return;
                                                     e.preventDefault();
-                                                    const origin = e.shiftKey
+                                                    const origin = e.shiftKey && item.kind !== "tasks"
                                                         ? item.end
                                                         : item.start;
                                                     shift(
@@ -849,13 +812,13 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                                 : 1,
                                                         ),
                                                         origin,
-                                                        e.shiftKey
+                                                        e.shiftKey && item.kind !== "tasks"
                                                             ? "end"
                                                             : undefined,
                                                     );
                                                 }}
                                             >
-                                                <span
+                                                {item.kind !== "tasks" && <span
                                                     className="review-gantt-handle"
                                                     draggable={
                                                         !item.done &&
@@ -873,7 +836,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                             edge: "start",
                                                         });
                                                     }}
-                                                />
+                                                />}
                                                 <span>{item.title}</span>
                                                 {progress(item) !== null && (
                                                     <i
@@ -883,7 +846,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                         }}
                                                     />
                                                 )}
-                                                <span
+                                                {item.kind !== "tasks" && <span
                                                     className="review-gantt-handle"
                                                     draggable={
                                                         !item.done &&
@@ -901,7 +864,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                             edge: "end",
                                                         });
                                                     }}
-                                                />
+                                                />}
                                             </div>
                                         ) : (
                                             !item.start && (
@@ -909,10 +872,7 @@ export default function CalendarPreview({ text }: { text: Text }) {
                                                     className="text-button review-gantt-unscheduled"
                                                     onClick={() => open(item)}
                                                 >
-                                                    {text(
-                                                        "Set dates",
-                                                        "Đặt ngày",
-                                                    )}
+                                                    {item.kind === "tasks" ? text("Schedule", "Xếp lịch") : text("Set dates", "Đặt ngày")}
                                                 </button>
                                             )
                                         )}

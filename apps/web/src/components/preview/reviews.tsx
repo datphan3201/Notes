@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import {
     usePreviewData,
@@ -8,6 +8,7 @@ import {
     dateLabel,
     type Review,
     type ActivityFact,
+    type ActivityCount,
 } from "./workspace-data";
 import { monday } from "./calendar";
 import { PageActionBar } from "../ui/layout";
@@ -19,24 +20,74 @@ export function ActivityView({
     data: db,
     today = fixtureToday,
     onOpen,
+    fetchActivity,
 }: {
     text: Text;
     compact?: boolean;
     data: {
         events: ActivityFact[];
+        activityCounts?: ActivityCount[];
         locale: "vi" | "en";
         profile: { timezone: string };
     };
     today?: string;
     onOpen: (fact: ActivityFact) => void;
+    fetchActivity?: (day: string, before?: string) => Promise<{
+        items: ActivityFact[]; nextCursor: string | null;
+    }>;
 }) {
     const day = today;
     const [selected, setSelected] = useState(day),
         [month, setMonth] = useState(day.slice(0, 7)),
         [kind, setKind] = useState("all");
-    const facts = db.events.filter((e) => kind === "all" || e.kind === kind),
+    const [remote, setRemote] = useState<ActivityFact[]>([]),
+        [cursor, setCursor] = useState<string | null>(null),
+        [loading, setLoading] = useState(false),
+        [error, setError] = useState(false),
+        [retry, setRetry] = useState(0);
+    const fetchRef = useRef(fetchActivity), requestId = useRef(0);
+    fetchRef.current = fetchActivity;
+    const refreshKey = JSON.stringify(db.activityCounts?.filter((row) => row.date === selected));
+    useEffect(() => {
+        if (!fetchRef.current) return;
+        const request = ++requestId.current;
+        setRemote([]);
+        setCursor(null);
+        setError(false);
+        setLoading(true);
+        fetchRef.current(selected).then((page) => {
+            if (request !== requestId.current) return;
+            setRemote(page.items);
+            setCursor(page.nextCursor);
+        }).catch(() => {
+            if (request === requestId.current) setError(true);
+        }).finally(() => {
+            if (request === requestId.current) setLoading(false);
+        });
+        return () => { requestId.current++; };
+    }, [selected, refreshKey, retry, !!fetchActivity]);
+    async function loadMore() {
+        if (!fetchRef.current || !cursor || loading) return;
+        const request = requestId.current;
+        setLoading(true);
+        setError(false);
+        try {
+            const page = await fetchRef.current(selected, cursor);
+            if (request !== requestId.current) return;
+            setRemote((items) => [...items, ...page.items]);
+            setCursor(page.nextCursor);
+        } catch {
+            if (request === requestId.current) setError(true);
+        } finally {
+            if (request === requestId.current) setLoading(false);
+        }
+    }
+    const facts = (fetchActivity ? remote : db.events).filter((e) => kind === "all" || e.kind === kind),
         count = (date: string) =>
-            facts.filter((e) => e.date === date && !e.reversed).length;
+            db.activityCounts
+                ? db.activityCounts.filter((row) => row.date === date && (kind === "all" || row.kind === kind))
+                    .reduce((total, row) => total + row.count, 0)
+                : facts.filter((e) => e.date === date && !e.reversed).length;
     const days = Array.from({ length: compact ? 30 : 365 }, (_, i) =>
             addDays(day, i - (compact ? 29 : 364)),
         ),
@@ -139,13 +190,32 @@ export function ActivityView({
                         </time>
                     </div>
                 ))
-            ) : (
+            ) : !loading && !error && !cursor ? (
                 <p className="review-inline-empty">
                     {text(
                         "No recorded activity on this date.",
                         "Chưa có hoạt động được ghi nhận trong ngày này.",
                     )}
                 </p>
+            ) : !loading && !error && cursor ? (
+                <p className="review-inline-empty">
+                    {text("No matches in the loaded activities. Load more to continue.",
+                          "Chưa có kết quả phù hợp trong các hoạt động đã tải. Hãy tải thêm.")}
+                </p>
+            ) : null}
+            {fetchActivity && (
+                <div className="review-toolbar" aria-live="polite">
+                    {loading && <span>{text("Loading activity…", "Đang tải hoạt động…")}</span>}
+                    {error && <>
+                        <span>{text("Could not load activity.", "Không thể tải hoạt động.")}</span>
+                        <button type="button" onClick={() => cursor ? void loadMore() : setRetry((n) => n + 1)}>
+                            {text("Retry", "Thử lại")}
+                        </button>
+                    </>}
+                    {!loading && !error && cursor && <button type="button" onClick={() => void loadMore()}>
+                        {text("Load more", "Tải thêm")}
+                    </button>}
+                </div>
             )}
         </section>
     );
@@ -163,6 +233,7 @@ export function ActivityPreview({
             text={text}
             compact={compact}
             data={data}
+            fetchActivity={data.live?.activityDay}
             today={data.today}
             onOpen={(fact) =>
                 fact.kind === "task"
@@ -346,20 +417,9 @@ export default function ReviewsPreview({ text }: { text: Text }) {
                                         .flush()
                                         .then(async (ok) => {
                                             if (!ok) return;
-                                            const rows =
-                                                await db.live!.request<{
-                                                    reviews: {
-                                                        id: string;
-                                                        version: number;
-                                                    }[];
-                                                }>("/workspace/snapshot");
-                                            const row = rows.reviews.find(
-                                                (r) =>
-                                                    r.id ===
-                                                    db.live!.serverId(
-                                                        review.id,
-                                                    ),
-                                            );
+                                            const row = await db.live!.request<{
+                                                id: string; version: number;
+                                            }>(`/reviews/${encodeURIComponent(db.live!.serverId(review.id))}`);
                                             if (row) {
                                                 await db.live!.request(
                                                     "/workspace/changes",

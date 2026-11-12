@@ -5,7 +5,7 @@ import type { TaskRecord } from "../src/components/preview/task-data";
 
 const task = (fields: Partial<TaskRecord> = {}) => ({
     id: 1, daily: false, weekly: false, parent: "", start: "", due: "",
-    scheduledStart: "", scheduledEnd: "", ...fields,
+    scheduledDay: "", scheduledStart: "", scheduledEnd: "", ...fields,
 }) as TaskRecord;
 
 test("manual daily/weekly selections preserve dates, status and an existing daily selection", () => {
@@ -14,22 +14,18 @@ test("manual daily/weekly selections preserve dates, status and an existing dail
     assert.equal(taskIsPicked(task({ daily: true }), { kind: "plan", period: "today" }), true);
 });
 
-test("an undated task gains only its target due date", () => {
-    assert.deepEqual(pickedTaskPatch(task(), { kind: "calendar", date: "2026-11-09" }), { due: "2026-11-09" });
+test("placing an undated Task on Calendar sets only its all-day schedule", () => {
+    assert.deepEqual(pickedTaskPatch(task(), { kind: "calendar", date: "2026-11-09" }), { scheduledDay: "2026-11-09" });
 });
 
-test("calendar moves shift complete intervals across month boundaries and keep local clock times", () => {
-    const row = task({ start: "2026-10-31", due: "2026-11-02", scheduledStart: "2026-10-31T23:30", scheduledEnd: "2026-11-01T00:30" });
+test("moving a Task on Calendar preserves its start, due, and reminder dates", () => {
+    const row = task({ start: "2026-10-31", due: "2026-11-02", scheduledDay: "2026-10-31", reminder: "custom", reminderAt: "2026-10-30T09:00" });
     assert.deepEqual(pickedTaskPatch(row, { kind: "calendar", date: "2026-11-09" }), {
-        start: "2026-11-09", due: "2026-11-11", scheduledStart: "2026-11-09T23:30", scheduledEnd: "2026-11-10T00:30",
+        scheduledDay: "2026-11-09",
     });
     assert.equal(row.start, "2026-10-31");
-});
-
-test("date-only intervals can move backwards without reversing their order", () => {
-    assert.deepEqual(pickedTaskPatch(task({ start: "2026-11-09", due: "2026-11-11" }), { kind: "calendar", date: "2026-11-01" }), {
-        start: "2026-11-01", due: "2026-11-03", scheduledStart: "", scheduledEnd: "",
-    });
+    assert.equal(row.due, "2026-11-02");
+    assert.equal(row.reminderAt, "2026-10-30T09:00");
 });
 
 test("primary-parent assignment changes only the parent and duplicate detection uses that exact parent", () => {
@@ -50,10 +46,10 @@ test("returning from Today keeps the weekly selection while removing the week al
     assert.deepEqual(returnedTaskPatch({ kind: "plan", period: "week" }), { daily: false, weekly: false });
 });
 
-test("returning from Calendar clears all date fields and preserves other metadata", () => {
-    const row = task({ start: "2026-11-09", due: "2026-11-10", scheduledStart: "2026-11-09T09:00", scheduledEnd: "2026-11-09T10:00", parent: "goal", daily: true, reminder: "custom", reminderAt: "2026-11-12T08:00" });
+test("returning from Calendar clears only the all-day schedule", () => {
+    const row = task({ start: "2026-11-09", due: "2026-11-10", scheduledDay: "2026-11-09", parent: "goal", daily: true, reminder: "custom", reminderAt: "2026-11-12T08:00" });
     assert.deepEqual({ ...row, ...returnedTaskPatch({ kind: "calendar", date: "2026-11-15" }) }, {
-        ...row, start: "", due: "", scheduledStart: "", scheduledEnd: "",
+        ...row, scheduledDay: "",
     });
     assert.equal(taskCanReturn(row, { kind: "calendar", date: "2026-11-15" }), true);
     assert.equal(taskCanReturn(task(), { kind: "calendar", date: "2026-11-15" }), false);
@@ -66,7 +62,7 @@ test("a parent return detaches only Tasks directly attached to that exact parent
 });
 
 test("due, overdue and scheduled dates do not imply a manual Today selection", () => {
-    for (const fields of [{ due: "2026-11-09" }, { due: "2026-11-01" }, { scheduledStart: "2026-11-09T09:00", scheduledEnd: "2026-11-09T10:00" }]) {
+    for (const fields of [{ due: "2026-11-09" }, { due: "2026-11-01" }, { scheduledDay: "2026-11-09" }]) {
         assert.equal(taskIsPicked(task(fields), { kind: "plan", period: "today" }), false);
     }
 });

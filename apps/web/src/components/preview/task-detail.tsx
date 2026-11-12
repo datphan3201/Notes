@@ -223,22 +223,6 @@ export default function TaskPreviewDetail({
                                 </dd>
                             </div>
                             <div>
-                                <dt>
-                                    {text(
-                                        "Estimated time",
-                                        "Thời gian dự kiến",
-                                    )}
-                                </dt>
-                                <dd>
-                                    {task.estimate
-                                        ? `${task.estimate} ${text("minutes", "phút")}`
-                                        : text(
-                                              "Not estimated",
-                                              "Chưa ước tính",
-                                          )}
-                                </dd>
-                            </div>
-                            <div>
                                 <dt>{text("Tags", "Nhãn")}</dt>
                                 <dd>
                                     {task.tags.length
@@ -255,17 +239,14 @@ export default function TaskPreviewDetail({
                                         : "—"}
                                 </dd>
                             </div>
-                            {task.scheduledStart && (
+                            {task.scheduledDay && (
                                 <div>
                                     <dt>{text("Scheduled", "Theo lịch")}</dt>
                                     <dd>
                                         {formatTaskDate(
-                                            task.scheduledStart.slice(0, 10),
+                                            task.scheduledDay,
                                             locale,
                                         )}{" "}
-                                        {task.scheduledStart.slice(11)}
-                                        {task.scheduledEnd &&
-                                            ` – ${task.scheduledEnd.slice(11)}`}{" "}
 
                                     </dd>
                                 </div>

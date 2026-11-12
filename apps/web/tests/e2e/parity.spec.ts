@@ -280,6 +280,34 @@ test("Notes pin, tag filtering and list view remain functional after reload", as
     expect((await note(page, tagged.id)).pinned).toBe(true);
 });
 
+test("Notes tag creation and renaming use separate actions", async ({ page }) => {
+    await signInFixture(page);
+    const tagged = await create(page, "notes", {
+        title: "Tagged thought",
+        content: "Tagged body",
+        tags: ["Research"],
+    });
+    await page.reload();
+    const filters = page.locator(".notes-filter-panel");
+    await expect(page.getByRole("heading", { name: "Tagged thought", exact: true })).toBeVisible();
+    if (!(await filters.isVisible()))
+        await page.getByRole("button", { name: "Hiện bộ lọc ghi chú", exact: true }).first().click();
+    await filters.getByRole("button", { name: "Thêm nhãn" }).click();
+    const createDialog = page.getByRole("dialog", { name: "Thêm nhãn" });
+    await createDialog.getByLabel("Tên nhãn").fill("Ideas");
+    await createDialog.getByRole("button", { name: "Thêm nhãn" }).click();
+    await expect(createDialog).not.toBeVisible();
+    await expect(filters.getByText("Ideas", { exact: true })).toBeVisible();
+    await filters.getByRole("button", { name: "Quản lý nhãn" }).click();
+    const manageDialog = page.getByRole("dialog", { name: "Quản lý nhãn" });
+    await expect(manageDialog.getByLabel("Nhãn mới")).toHaveCount(0);
+    await manageDialog.getByLabel("Research").fill("Research notes");
+    await manageDialog.getByRole("button", { name: "Lưu thay đổi" }).click();
+    await expect(manageDialog).not.toBeVisible();
+    await expect(filters.getByText("Research notes", { exact: true })).toBeVisible();
+    expect((await note(page, tagged.id)).tags).toContain("Research notes");
+});
+
 test("calendar date capture saves selected date and week navigation changes period", async ({
     page,
 }) => {
@@ -298,22 +326,18 @@ test("calendar date capture saves selected date and week navigation changes peri
     await editor
         .getByLabel("Tên công việc", { exact: true })
         .fill("Calendar next step");
-    await editor
-        .getByRole("button", { name: "Ngày và lịch", exact: true })
-        .click();
-    const chosen = await editor
-        .getByLabel("Hạn hoàn thành", { exact: true })
-        .inputValue();
-    expect(chosen).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const chosen = await page.locator(".review-calendar-day.is-selected .review-date-number").getAttribute("aria-label");
+    await expect(editor.getByText("Thời gian dự kiến")).toHaveCount(0);
     await saved(page, () =>
         editor
             .getByRole("button", { name: "Tạo công việc", exact: true })
             .click(),
     );
-    expect(
-        (await (await page.request.get("/api/v1/tasks")).json()).items[0]
-            .due_date,
-    ).toBe(chosen);
+    const created = (await (await page.request.get("/api/v1/tasks")).json()).items[0];
+    expect(created.due_date).toBeNull();
+    expect(new Intl.DateTimeFormat("vi", {
+        day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Ho_Chi_Minh",
+    }).format(new Date(created.scheduled_at))).toBe(chosen);
     await page.getByRole("button", { name: "Tuần", exact: true }).click();
     const before = await page
         .locator(".review-date-number")

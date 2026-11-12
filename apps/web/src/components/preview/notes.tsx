@@ -44,6 +44,19 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
     const contextTask = taskId ?? db.nav.task;
     const [selectedId, setSelectedId] = useState("");
     const [query, setQuery] = useState("");
+    const [searchIds, setSearchIds] = useState<string[] | null>(null);
+    const [searching, setSearching] = useState(false);
+    useEffect(() => {
+        if (!db.live?.searchNotes || !query) { setSearchIds(null); setSearching(false); return; }
+        let active = true;
+        setSearching(true); setSearchIds([]);
+        const timer = setTimeout(() => {
+            db.live!.searchNotes!(query).then(ids => { if (active) setSearchIds(ids); })
+                .catch(err => { if (active) setError((err as Error).message); })
+                .finally(() => { if (active) setSearching(false); });
+        }, 200);
+        return () => { active = false; clearTimeout(timer); };
+    }, [query]);
     const [layout, setLayout] = useState(
         db.live?.identity.user.preferences.notes_view || "grid",
     );
@@ -53,10 +66,11 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
     const [noteSize, setNoteSize] = useState("16px");
     const [tagsOpen, setTagsOpen] = useState(false);
     const [tags, setTags] = useState(db.live?.tags || tagOptions);
+    const tagLabel = (id: string) => text(...(tags.find(tag => tag.id === id)?.label || [id, id]));
     useEffect(() => {
         if (db.live) setTags(db.live.tags);
     }, [db.live?.tags.map((t) => t.id).join("|")]);
-    const [manageTags, setManageTags] = useState(false);
+    const [tagDialog, setTagDialog] = useState<"create" | "manage" | null>(null);
     const [drafts, setDrafts] = useState<
         Record<string, { title: string; content: string; document?: RichNoteDocument | null }>
     >({});
@@ -84,7 +98,17 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
         ? drafts[note.id] || { title: note.title, content: note.content, document: note.document }
         : null;
     const locked = !!note?.locked && !note.unlocked;
-    const editable = !!note && note.permission !== "read" && !locked;
+    const editable = !!note && note.permission !== "read" && !locked && note.bodyLoaded !== false;
+    const [loadingBody, setLoadingBody] = useState(false);
+    useEffect(() => {
+        if (!note || note.bodyLoaded !== false || locked || !db.live?.loadNote) return;
+        let active = true;
+        setLoadingBody(true);
+        db.live.loadNote(note.id).catch(err => {
+            if (active) setError((err as Error).message);
+        }).finally(() => { if (active) setLoadingBody(false); });
+        return () => { active = false; };
+    }, [note?.id, note?.bodyLoaded, locked]);
     useEffect(
         () => () => urls.current.forEach((url) => URL.revokeObjectURL(url)),
         [],
@@ -281,10 +305,10 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
             return (
                 !note.archived &&
                 (!contextTask || note.task === contextTask || db.tasks.find(task => task.id === contextTask)?.noteIds?.includes(note.id) || (!inline && db.tasks.find(task => task.id === contextTask)?.resourceNoteIds?.includes(note.id))) &&
-                (!query ||
+                (!query || (searchIds !== null ? searchIds.includes(note.id) :
                     privateText
                         .toLocaleLowerCase(db.locale)
-                        .includes(query.toLocaleLowerCase(db.locale))) &&
+                        .includes(query.toLocaleLowerCase(db.locale)))) &&
                 activeTags.every((tag) => note.tags.includes(tag)) &&
                 (filter === "all" ||
                     (filter === "pinned" && note.pinned) ||
@@ -579,13 +603,14 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                 </label>
                             ))}
                         </div>
-                        <button
-                            className="button button-quiet note-tags-manage"
-                            onClick={() => setManageTags(true)}
-                        >
-                            {tags.length ? <BaselineIcon name="settings" /> : <Plus size={16} aria-hidden="true" />}
-                            {tags.length ? text("Manage tags", "Quản lý nhãn") : text("Add tag", "Thêm nhãn")}
+                        <button className="button button-quiet note-tags-manage" onClick={() => setTagDialog("create")}>
+                            <Plus size={16} aria-hidden="true" />
+                            {text("Add tag", "Thêm nhãn")}
                         </button>
+                        {!!tags.length && <button className="button button-quiet note-tags-manage" onClick={() => setTagDialog("manage")}>
+                            <BaselineIcon name="settings" />
+                            {text("Manage tags", "Quản lý nhãn")}
+                        </button>}
                     </section>
                 </aside>
                 <section className="review-notes-results">
@@ -671,13 +696,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                         <div className="active-filter-row">
                             <span>
                                 {activeTags
-                                    .map((id) =>
-                                        text(
-                                            ...tags.find(
-                                                (tag) => tag.id === id,
-                                            )!.label,
-                                        ),
-                                    )
+                                    .map((id) => tagLabel(id))
                                     .join(", ")}
                             </span>
                             <button
@@ -783,25 +802,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                                                           "Read-only",
                                                                           "Chỉ đọc",
                                                                       )
-                                                                    : note.tags
-                                                                          .map(
-                                                                              (
-                                                                                  id,
-                                                                              ) =>
-                                                                                  text(
-                                                                                      ...tags.find(
-                                                                                          (
-                                                                                              tag,
-                                                                                          ) =>
-                                                                                              tag.id ===
-                                                                                              id,
-                                                                                      )!
-                                                                                          .label,
-                                                                                  ),
-                                                                          )
-                                                                          .join(
-                                                                              ", ",
-                                                                          )}
+                                                                    : note.tags.map(tagLabel).join(", ")}
                                                             </small>
                                                         </button>
                                                         <details className="review-row-menu">
@@ -944,7 +945,8 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                 </section>
                             ),
                     )}
-                    {!filtered.length && (
+                    {searching && <p role="status">{text("Searching…", "Đang tìm…")}</p>}
+                    {!filtered.length && !searching && (
                         <div className="review-state">
                             <FileText size={28} />
                             <h2>
@@ -979,7 +981,12 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                 {!filtered.length && <p className="subtle-copy">{text("This task has no attached note yet.", "Công việc này chưa có ghi chú đi kèm.")}</p>}
                 {error && <p className="field-error" role="alert">{error}</p>}
             </>}
-            {note && (
+            {note && note.bodyLoaded === false && !locked && <div role="status">
+                {loadingBody ? text("Loading note…", "Đang tải ghi chú…") : <button className="button button-quiet"
+                    onClick={() => { setLoadingBody(true); db.live?.loadNote?.(note.id).catch(err => setError((err as Error).message)).finally(() => setLoadingBody(false)); }}>
+                    {text("Retry", "Thử lại")}</button>}
+            </div>}
+            {note && (note.bodyLoaded !== false || locked) && (
                 <NoteEditorFrame inline={inline}
                     title={
                         locked
@@ -1999,11 +2006,33 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                     )}</p>
                 </Confirm>
             )}
-            {manageTags && (
+            {tagDialog === "create" && (
+                <FormDialog
+                    title={text("Add tag", "Thêm nhãn")}
+                    text={text}
+                    submitLabel={text("Add tag", "Thêm nhãn")}
+                    onClose={() => setTagDialog(null)}
+                    onSubmit={async (form) => {
+                        const added = String(new FormData(form).get("newTag") || "").trim();
+                        if (!added) throw new Error(text("Enter a tag name.", "Nhập tên nhãn."));
+                        if (tags.some((tag) => text(...tag.label).toLowerCase() === added.toLowerCase()))
+                            throw new Error(text("This tag already exists.", "Nhãn này đã tồn tại."));
+                        const next = [...tags, { id: `note-tag-${Date.now()}`, label: [added, added] as [string, string] }];
+                        if (db.live) await db.live.saveTags(next.map((tag) => tag.label[0]));
+                        else setTags(next);
+                        setTagDialog(null);
+                    }}
+                >
+                    <Field label={text("Tag name", "Tên nhãn")}>
+                        <input name="newTag" maxLength={80} required />
+                    </Field>
+                </FormDialog>
+            )}
+            {tagDialog === "manage" && (
                 <FormDialog
                     title={text("Manage tags", "Quản lý nhãn")}
                     text={text}
-                    onClose={() => setManageTags(false)}
+                    onClose={() => setTagDialog(null)}
                     onSubmit={async (form) => {
                         const fields = new FormData(form);
                         const next = tags
@@ -2015,19 +2044,6 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                 ] as [string, string],
                             }))
                             .filter((tag) => tag.label[0]);
-                        const added = String(fields.get("newTag") || "").trim();
-                        if (
-                            added &&
-                            !next.some(
-                                (tag) =>
-                                    tag.label[0].toLowerCase() ===
-                                    added.toLowerCase(),
-                            )
-                        )
-                            next.push({
-                                id: `note-tag-${Date.now()}`,
-                                label: [added, added],
-                            });
                         if (db.live) {
                             const renamed = new Map(
                                 tags.map((t) => [
@@ -2053,7 +2069,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                             );
                             if (!(await db.live.flush())) return false;
                             await db.live.saveTags(names);
-                            setManageTags(false);
+                            setTagDialog(null);
                             return;
                         }
                         setTags(next);
@@ -2070,7 +2086,7 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                                 ),
                             })),
                         );
-                        setManageTags(false);
+                        setTagDialog(null);
                     }}
                 >
                     <p className="subtle-copy">
@@ -2088,9 +2104,6 @@ export default function NotesPreview({ text, taskId, resourceNoteId, onResourceC
                             />
                         </Field>
                     ))}
-                    <Field label={text("New tag", "Nhãn mới")}>
-                        <input name="newTag" maxLength={80} />
-                    </Field>
                 </FormDialog>
             )}
             {dialog?.kind === "unlock" && modalNote && (

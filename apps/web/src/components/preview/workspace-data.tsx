@@ -71,6 +71,7 @@ export type NoteFile = {
     content?: string;
 };
 export type Note = {
+    bodyLoaded?: boolean;
     archived?: boolean;
     archivedWith?: string;
     document?: import("@/lib/note-document").RichNoteDocument | null;
@@ -145,6 +146,7 @@ export type ActivityFact = {
     at: string;
     reversed?: boolean;
 };
+export type ActivityCount = { date: string; kind: "task" | "habit" | "checklist"; count: number };
 export type Appearance = {
     theme: "light" | "dark";
     scene: string;
@@ -234,6 +236,7 @@ export type Data = {
     habits: Habit[];
     reviews: Review[];
     events: ActivityFact[];
+    activityCounts?: ActivityCount[];
     focus: string;
     dashboard: DashboardPreferences;
     appearance: Appearance;

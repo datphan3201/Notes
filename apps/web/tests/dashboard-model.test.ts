@@ -30,6 +30,7 @@ test("Dashboard uses account dates for scheduled Tasks and retains real text", (
     assert.equal(vi.daily, true);
     assert.deepEqual(vi.title, ["Stored title", "Stored title"]);
     assert.equal(vi.scheduledStart, "2026-11-07T03:00");
+    assert.equal(vi.scheduledDay, "2026-11-07");
     assert.equal(
         dashboardTask(
             row,
@@ -83,6 +84,12 @@ test("weekly selections and history follow the connected system contract", () =>
         ).daily,
         false,
     );
+});
+test("legacy timed intervals project to one local Calendar day", () => {
+    const row = { ...entity, scheduled_at: "2026-11-06T20:00:00Z", scheduled_end: "2026-11-08T20:00:00Z" };
+    const task = dashboardTask(row, 0, "2026-11-08", "Asia/Ho_Chi_Minh", { daily: [], weekly: [] }, {});
+    assert.equal(task.scheduledDay, "2026-11-07");
+    assert.equal(task.daily, false);
 });
 test("Habit check-ins use the Habit timezone and keep rest distinct", () => {
     const habit = dashboardHabit(

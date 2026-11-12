@@ -7,7 +7,7 @@ for (const locale of ["en", "vi"] as const) {
         await page.evaluate(value => sessionStorage.setItem("planner-workspace-locale", value), locale);
         let release!: () => void;
         const held = new Promise<void>(resolve => { release = resolve; });
-        await page.route("**/api/v1/workspace/snapshot", async route => {
+        await page.route(/\/api\/v1\/workspace\/(?:snapshot|bootstrap)(?:\?.*)?$/, async route => {
             await held;
             await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ detail: "Failed to fetch" }) });
         });

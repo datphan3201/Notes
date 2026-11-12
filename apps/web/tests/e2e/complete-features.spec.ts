@@ -573,6 +573,7 @@ test("offline Note deletions survive refresh and sync only an unchanged owned ve
         content: "A saved Note",
     });
     await page.reload();
+    await expect(page.getByRole("heading", { name: "Delete offline safely", exact: true })).toBeVisible();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await context.setOffline(true);
     await page.getByLabel("Thao tác ghi chú", { exact: true }).click();

@@ -40,8 +40,8 @@ export function dashboardTask(
         start: row.start_date || "",
         due: row.due_date || "",
         scheduledStart: zonedInput(row.scheduled_at, timezone),
+        scheduledDay: row.scheduled_at ? zonedInput(row.scheduled_at, timezone).slice(0, 10) : "",
         scheduledEnd: zonedInput(row.scheduled_end, timezone),
-        estimate: row.estimated_minutes?.toString() || "",
         reminder: "none",
         reminderAt: row.reminder_at || "",
         tags: row.tags || [],
@@ -50,7 +50,7 @@ export function dashboardTask(
         related: [],
         linkedNotes: [],
         daily: matchesView(
-            row,
+            { ...row, scheduled_end: null },
             "today",
             today,
             timezone,

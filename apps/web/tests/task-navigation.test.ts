@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { matchesTaskView, views, type TaskRecord } from "../src/components/preview/task-data.ts";
-const task = (values: Partial<TaskRecord>) => ({ start: "", due: "", scheduledStart: "", scheduledEnd: "", daily: false, weekly: false, ...values }) as TaskRecord;
+const task = (values: Partial<TaskRecord>) => ({ start: "", due: "", scheduledDay: "", daily: false, weekly: false, ...values }) as TaskRecord;
 const today = "2026-11-09";
 
 test("Task navigation exposes exactly the four requested tabs", () => {

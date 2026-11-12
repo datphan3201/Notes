@@ -392,7 +392,7 @@ test("unverified accounts stay actionable on sign-in and can switch accounts", a
     await signIn(page, account);
     await page.getByRole("button", { name: "I have verified my email" }).click();
     await expect(page.getByText("Your email is not verified yet. Open the verification link in your email.", { exact: true })).toBeVisible();
-    await page.route("**/api/v1/workspace/snapshot", route => route.fulfill({
+    await page.route(/\/api\/v1\/workspace\/(?:snapshot|bootstrap)(?:\?.*)?$/, route => route.fulfill({
         status: 403,
         contentType: "application/json",
         body: JSON.stringify({ detail: "Verify your email before using the workspace" }),
@@ -404,7 +404,7 @@ test("unverified accounts stay actionable on sign-in and can switch accounts", a
     await page.getByRole("button", { name: "Use another account" }).click();
     await expect(panel).toHaveCount(0);
     expect((await page.request.get("/api/v1/auth/me")).status()).toBe(401);
-    await page.unroute("**/api/v1/workspace/snapshot");
+    await page.unroute(/\/api\/v1\/workspace\/(?:snapshot|bootstrap)(?:\?.*)?$/);
     const other = seedFixture();
     await signIn(page, other);
     await expect(page).toHaveURL("/dashboard");

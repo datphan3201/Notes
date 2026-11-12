@@ -106,7 +106,7 @@ export function TaskPickerProvider({ children }: { children: ReactNode }) {
             onAdd={id => add(id, target)} onClose={() => setTarget(null)}
             onCreate={() => {
                 const draft = { ...blankDraft(), ...(target.kind === "parent" ? { parent: target.id }
-                    : target.kind === "calendar" ? { due: target.date }
+                    : target.kind === "calendar" ? { scheduledDay: target.date }
                     : { plan: target.period === "today" ? "today" as const : "week" as const }) };
                 setTarget(null);
                 db.setTaskAction({ kind: "create", draft });

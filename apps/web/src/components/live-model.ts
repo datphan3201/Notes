@@ -11,6 +11,7 @@ import type { Data, Nav, Note, ActivityFact } from "./preview/workspace-data";
 import type { TaskRecord } from "./preview/task-data";
 
 export type Row = Entity & {
+    body_loaded?: boolean;
     client_key?: string;
     weekly_for?: string;
     pinned?: boolean;
@@ -54,6 +55,7 @@ export type Snapshot = Record<Kind, Row[]> & {
         entity_id: string;
         created_at: string;
     }[];
+    activity_counts?: import("./preview/workspace-data").ActivityCount[];
 };
 export type Change = {
     action: string;
@@ -192,7 +194,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         related: row.related || [],
         tags: row.tags || [],
         reminder:
-            row.reminder_mode && row.reminder_mode !== "none"
+            row.reminder_mode && !["none", "start", "before15", "before60"].includes(row.reminder_mode)
                 ? row.reminder_mode
                 : row.reminder_at
                   ? "custom"
@@ -200,6 +202,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
         reminderAt: zonedInput(row.reminder_at, user.timezone),
     });
     const notes: Note[] = s.notes.map((row) => ({
+        bodyLoaded: row.body_loaded !== false,
         archived: !!row.archived_at,
         id: row.id,
         title: row.title,
@@ -371,6 +374,7 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
             createdAt: row.created_at,
         })),
         events,
+        activityCounts: s.activity_counts,
         focus: s.focus || "",
         dashboard: { ...DEFAULT_DASHBOARD, ...prefs.dashboard },
         appearance: {
@@ -422,7 +426,12 @@ export function fromSnapshot(s: Snapshot, ids: WorkspaceIds, nav: Nav): Data {
 
 function taskFields(row: TaskRecord, data: Data, ids: WorkspaceIds) {
     const milestone = data.milestones.some((m) => m.id === row.parent);
-    const start = zonedInstant(row.scheduledStart, data.profile.timezone);
+    const originalDay = row.scheduledStart.slice(0, 10);
+    const scheduledAt = row.scheduledDay
+        ? row.scheduledDay === originalDay && row.scheduledStart
+            ? zonedInstant(row.scheduledStart, data.profile.timezone)
+            : zonedInstant(`${row.scheduledDay}T12:00`, data.profile.timezone)
+        : null;
     const due = row.due
         ? zonedInstant(
               `${row.reminder === "dayBefore" ? addDays(row.due, -1) : row.due}T09:00`,
@@ -436,17 +445,7 @@ function taskFields(row: TaskRecord, data: Data, ids: WorkspaceIds) {
               ? zonedInstant(row.reminderAt, data.profile.timezone)
               : ["due", "dayBefore"].includes(row.reminder)
                 ? due
-                : start
-                  ? new Date(
-                        Date.parse(start) -
-                            (row.reminder === "before15"
-                                ? 15
-                                : row.reminder === "before60"
-                                  ? 60
-                                  : 0) *
-                                60000,
-                    ).toISOString()
-                  : null;
+                : null;
     return {
         title: row.title[0],
         content: row.description[0],
@@ -458,12 +457,13 @@ function taskFields(row: TaskRecord, data: Data, ids: WorkspaceIds) {
         milestone_id: milestone ? row.parent : null,
         start_date: row.start || null,
         due_date: row.due || null,
-        scheduled_at: zonedInstant(row.scheduledStart, data.profile.timezone),
-        scheduled_end: zonedInstant(row.scheduledEnd, data.profile.timezone),
+        scheduled_at: scheduledAt,
+        scheduled_end: row.scheduledDay === originalDay && row.scheduledEnd
+            ? zonedInstant(row.scheduledEnd, data.profile.timezone)
+            : null,
         reminder_at: reminder,
         reminder_mode: row.reminder,
         pinned: row.pinned,
-        estimated_minutes: row.estimate ? Number(row.estimate) : null,
         tags: row.tags,
         checklist: row.checklist.map(({ text, checked }) => ({
             text,

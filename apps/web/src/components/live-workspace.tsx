@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type SetStateAction } from "react";
 import { api, ApiError, type Kind } from "@/lib/api";
+import { mergeWorkspace, versionInventory, workspaceKinds } from "@/lib/workspace-refresh";
 import { localDate } from "@/lib/dates";
 import { rebaseEdit } from "@/lib/workspace-rebase";
 import { translate } from "@/lib/i18n";
@@ -32,7 +33,12 @@ import {
 } from "./live-model";
 import type { LiveRuntime } from "./live-contract";
 import type { PreviewNotice } from "./preview/notifications";
+import type { ActivityFact } from "./preview/workspace-data";
 import "@/styles/tasks-preview.css";
+
+const boundedActivity = process.env.NEXT_PUBLIC_BOUNDED_ACTIVITY === "true";
+const incrementalRefresh = process.env.NEXT_PUBLIC_INCREMENTAL_REFRESH === "true";
+const boundedWorkspace = process.env.NEXT_PUBLIC_BOUNDED_WORKSPACE === "true";
 import "@/styles/full-preview.css";
 
 const settings: Record<string, string> = {
@@ -121,6 +127,7 @@ export default function LiveWorkspace() {
     const [offline, setOffline] = useState(false),
         [notices, setNotices] = useState<PreviewNotice[]>([]);
     const [startupLocale, setStartupLocale] = useState<"en" | "vi">("en");
+    const [syncEpoch, setSyncEpoch] = useState(0);
     useEffect(() => {
         try {
             const saved = sessionStorage.getItem("planner-workspace-locale") ||
@@ -153,13 +160,62 @@ export default function LiveWorkspace() {
         current.current = next;
         setData(next);
     };
+    async function readSnapshot() {
+        if (!boundedWorkspace) return api<Snapshot>(`/workspace/snapshot${boundedActivity ? "?activity=summary" : ""}`);
+        const snapshot = await api<Snapshot>("/workspace/bootstrap");
+        // Keep the complete active graph before rendering percentages or editors.
+        // Every request is bounded; archived bodies and Note documents are excluded.
+        for (let offset = 0; offset < workspaceKinds.length; offset += 3) {
+            await Promise.all(workspaceKinds.slice(offset, offset + 3).map(async kind => {
+                let after: string | null = null;
+                do {
+                    const query = new URLSearchParams({ size: "200" });
+                    if (after) query.set("after", after);
+                    const page: { items: Snapshot[Kind]; next_cursor: string | null } =
+                        await api(`/workspace/page/${kind}?${query}`);
+                    snapshot[kind].push(...page.items);
+                    after = page.next_cursor;
+                } while (after);
+            }));
+        }
+        for (const kind of ["habit_days", "selections"] as const) {
+            let page = 0, more = true;
+            while (more) {
+                const result: { items: Snapshot[typeof kind]; has_more: boolean } =
+                    await api(`/workspace/calendar-state/${kind}?page=${page}&size=200`);
+                (snapshot[kind] as unknown[]).push(...result.items);
+                more = result.has_more; page++;
+            }
+        }
+        return snapshot;
+    }
     async function refresh() {
-        let snapshot = await api<Snapshot>("/workspace/snapshot");
+        const prior = raw.current;
+        let snapshot: Snapshot;
+        if (incrementalRefresh && prior?.identity.csrf) {
+            const update = await api<Snapshot & {
+                manifest: Record<Kind, string[]>; task_notes: Record<string, string[]>;
+            }>("/workspace/refresh", { method: "POST", body: JSON.stringify({ known: versionInventory(prior),
+                compact: boundedWorkspace, note_details: prior.notes.filter(row => row.body_loaded !== false).slice(0, 200).map(row => row.id),
+            }) }, prior.identity.csrf);
+            snapshot = mergeWorkspace(prior, update);
+        } else {
+            snapshot = await readSnapshot();
+        }
         setStartupLocale(snapshot.identity.user.locale);
         let preservedDeletion = false;
         const cached = await cachedNotes(snapshot.identity.user.id).catch(
             () => undefined,
         );
+        if (cached?.changes.length && boundedWorkspace) {
+            for (const change of cached.changes) {
+                const index = snapshot.notes.findIndex(note => note.id === change.id ||
+                    (change.client_id && note.client_key === change.client_id));
+                const note = snapshot.notes[index];
+                if (note?.body_loaded === false && !note.locked && !note.shared)
+                    snapshot.notes[index] = await api(`/workspace/note/${note.id}`);
+            }
+        }
         if (cached?.changes.length) {
             const replay: Change[] = [];
             for (const change of cached.changes) {
@@ -225,7 +281,7 @@ export default function LiveWorkspace() {
                     snapshot.identity.csrf,
                 );
                 ids.aliases(result.aliases);
-                snapshot = await api<Snapshot>("/workspace/snapshot");
+                snapshot = await readSnapshot();
             }
             await clearNoteChanges(snapshot.identity.user.id);
         }
@@ -272,6 +328,7 @@ export default function LiveWorkspace() {
         base.current = next;
         patch(replay(next));
         setOffline(false);
+        if (boundedWorkspace) setSyncEpoch(value => value + 1);
         const alerts = await api<
             {
                 id: string;
@@ -524,6 +581,28 @@ export default function LiveWorkspace() {
         pending.current = work;
         return work;
     }
+    useEffect(() => {
+        if (!boundedWorkspace || !syncEpoch || offline) return;
+        let active = true;
+        const controller = new AbortController();
+        async function synchronize() {
+            let after: string | null = null;
+            do {
+                const query = new URLSearchParams({ size: "10" });
+                if (after) query.set("after", after);
+                const page: { items: Snapshot["notes"]; next_cursor: string | null } =
+                    await api(`/workspace/note-sync?${query}`, { signal: controller.signal });
+                if (!active || !raw.current) return;
+                const snapshot = raw.current;
+                await cacheNotes({ ...snapshot, notes: snapshot.notes.map(note =>
+                    page.items.find(row => row.id === note.id && row.version === note.version &&
+                        !note.locked && !note.shared && !note.shares?.length) || note) });
+                after = page.next_cursor;
+            } while (active && after);
+        }
+        void synchronize().catch(() => { /* Keep the last verified offline Notes; retry on refresh. */ });
+        return () => { active = false; controller.abort(); };
+    }, [syncEpoch, offline]);
     function scheduleSave() {
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => void flush(), saveDelay);
@@ -642,11 +721,64 @@ export default function LiveWorkspace() {
         ]),
     ];
     const runtime: LiveRuntime = {
+        searchNotes: boundedWorkspace ? async query => {
+            const matches: string[] = [];
+            let after: string | null = null;
+            do {
+                const params = new URLSearchParams({ q: query, size: "200" });
+                if (after) params.set("after", after);
+                const page: { ids: string[]; next_cursor: string | null } = await api(`/workspace/note-search?${params}`);
+                matches.push(...page.ids.map(id => ids.view(id))); after = page.next_cursor;
+            } while (after);
+            return matches;
+        } : undefined,
+        loadNote: boundedWorkspace ? async (id) => {
+            const serverId = ids.server(id);
+            const row = await api<Snapshot["notes"][number]>(`/workspace/note/${serverId}`);
+            if (!raw.current || !base.current || !current.current) return;
+            raw.current = { ...raw.current, notes: raw.current.notes.map(item => item.id === serverId ? row : item) };
+            const loaded = fromSnapshot(raw.current, ids, current.current.nav).notes.find(item => item.id === id);
+            if (!loaded) return;
+            base.current = { ...base.current, notes: base.current.notes.map(item => item.id === id ? loaded : item) };
+            patch({ ...current.current, notes: current.current.notes.map(item => item.id === id ? loaded : item) });
+            await cacheNotes(raw.current);
+        } : undefined,
         identity,
         historyLimit,
         busy,
         offline,
         notices,
+        activityDay: boundedActivity ? async (day, before) => {
+            const query = new URLSearchParams({ day, size: "100" });
+            if (before) query.set("before", before);
+            const response = await api<{
+                items: { id: string; kind: string; entity_id: string; created_at: string }[];
+                next_cursor: string | null;
+            }>(`/workspace/activity?${query}`);
+            const snapshot = raw.current!;
+            const titles = new Map(
+                [...snapshot.tasks, ...snapshot.habits, ...snapshot.goals,
+                 ...snapshot.milestones, ...snapshot.notes].map((row) => [row.id, row.title]),
+            );
+            const items: ActivityFact[] = response.items
+                .filter((row) => /^(task|habit|checklist)\./.test(row.kind))
+                .map((row) => {
+                    const title = titles.get(row.entity_id) || "—";
+                    const undo = /reopened|undone|cleared/.test(row.kind);
+                    return {
+                        id: row.id,
+                        title: [`${undo ? "Reversed" : "Completed"}: ${title}`,
+                                `${undo ? "Hoàn tác" : "Hoàn thành"}: ${title}`],
+                        kind: row.kind.split(".")[0] as ActivityFact["kind"],
+                        target: /^(task|checklist)\./.test(row.kind)
+                            ? String(ids.number(row.entity_id)) : row.entity_id,
+                        date: localDate(identity.user.timezone, new Date(row.created_at)),
+                        at: row.created_at,
+                        reversed: undo,
+                    };
+                });
+            return { items, nextCursor: response.next_cursor };
+        } : undefined,
         flush,
         refresh: async () => {
             if (await flush()) await refresh();

@@ -10,6 +10,7 @@ export type DashboardTask = Omit<PreviewTask, "title" | "done"> & {
     weekly: boolean;
     scheduled: string;
     automaticToday?: boolean;
+    automaticWeek?: boolean;
 };
 export const planningStatuses: [PlanningStatus, string, string][] = [
     ["NotStarted", "Not started", "Chưa bắt đầu"],

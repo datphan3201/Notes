@@ -79,7 +79,7 @@ export async function cacheNotes(snapshot: Snapshot) {
         account_files: [],
         invitations: [],
         notes: snapshot.notes
-            .filter((note) => !note.shared && !note.locked && !note.archived_at)
+            .filter((note) => !note.shared && !note.shares?.length && !note.locked && !note.archived_at)
             .map((note) => ({
                 ...note,
                 files: [],
@@ -90,7 +90,11 @@ export async function cacheNotes(snapshot: Snapshot) {
     };
     localStorage.setItem(lastAccount, identity.user.id);
     await stored(identity.user.id, (prior) => ({
-        snapshot: copy,
+        snapshot: { ...copy, notes: copy.notes.flatMap(note => {
+            if (note.body_loaded !== false) return [note];
+            const cached = prior?.snapshot.notes.find(row => row.id === note.id && row.version === note.version);
+            return cached ? [cached] : [];
+        }) },
         changes: prior?.changes || [],
         drafts: Object.fromEntries(
             Object.entries(prior?.drafts || {}).filter(
@@ -98,7 +102,7 @@ export async function cacheNotes(snapshot: Snapshot) {
                     !snapshot.notes.some(
                         (note) =>
                             (note.id === id || note.client_key === id) &&
-                            (note.locked || note.shared),
+                            (note.locked || note.shared || !!note.shares?.length),
                     ),
             ),
         ),

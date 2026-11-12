@@ -27,6 +27,7 @@ import { Confirm, Field, FormDialog, Tabs } from "./ui";
 import Dialog from "../dialog";
 import DashboardDisplaySettings from "../dashboard-display-settings";
 import LiveSecurity from "../live-security";
+import LiveArchive from "../live-archive";
 import { forgetOfflineNotes } from "@/lib/offline-notes";
 import type { Text } from "./shared";
 const scenes = [
@@ -1268,6 +1269,7 @@ export default function SettingsPreview({
             )}
             {section === "archive" && (
                 <Surface className="review-settings-card">
+                    {db.live && process.env.NEXT_PUBLIC_BOUNDED_WORKSPACE === "true" ? <LiveArchive runtime={db.live} text={text} /> : <>
                     <div className="review-toolbar">
                         <div>
                             <h2>
@@ -1457,6 +1459,7 @@ export default function SettingsPreview({
                             </button>
                         </div>
                     )}
+                    </>}
                 </Surface>
             )}
             {verify && (

@@ -19,7 +19,7 @@ test("capture a dated Task, find it on Dashboard, and complete it", async ({
         .getByLabel("Tên công việc", { exact: true })
         .fill("A small next step");
     await dialog
-        .getByRole("button", { name: "Ngày và lịch", exact: true })
+        .getByRole("button", { name: "Ngày", exact: true })
         .click();
     const today = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Ho_Chi_Minh",

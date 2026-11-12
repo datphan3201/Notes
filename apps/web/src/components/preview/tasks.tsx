@@ -153,10 +153,10 @@ export default function TasksPreview({
                 (sort === "importance"
                     ? b.importance - a.importance
                     : (
-                          a.scheduledStart ||
+                          a.scheduledDay ||
                           (a.start ? `${a.start}T00:00` : "9999")
                       ).localeCompare(
-                          b.scheduledStart ||
+                          b.scheduledDay ||
                               (b.start ? `${b.start}T00:00` : "9999"),
                       )),
         );
@@ -388,7 +388,7 @@ export default function TasksPreview({
                 <p>
                     {task.status === "Done" ? statusLabel(task.status)
                         : task.due ? `${text(task.due < demoToday ? "Overdue" : "Due", task.due < demoToday ? "Quá hạn" : "Hạn")} ${formatTaskDate(task.due, locale)}`
-                        : task.scheduledStart ? `${text("Scheduled", "Theo lịch")} ${formatTaskDate(task.scheduledStart.slice(0, 10), locale)}`
+                        : task.scheduledDay ? `${text("Scheduled", "Theo lịch")} ${formatTaskDate(task.scheduledDay, locale)}`
                         : statusLabel(task.status)}
                 </p>
                 {task.parent && (

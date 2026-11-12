@@ -14,8 +14,8 @@ export function readPickedTask(value: string): number | null {
     return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
-export function taskDate(task: Pick<TaskRecord, "scheduledStart" | "start" | "due">) {
-    return task.scheduledStart.slice(0, 10) || task.start || task.due;
+export function taskDate(task: Pick<TaskRecord, "scheduledDay">) {
+    return task.scheduledDay;
 }
 
 export function taskIsPicked(task: TaskRecord, target: TaskPickerTarget) {
@@ -24,25 +24,12 @@ export function taskIsPicked(task: TaskRecord, target: TaskPickerTarget) {
     return taskDate(task) === target.date;
 }
 
-// These are account-local date strings, not UTC instants. Preserve the local
-// clock time and the complete date interval; the ordinary API adapter converts instants.
+// Calendar placement is an account-local day, independent of Task start and due dates.
 export function pickedTaskPatch(task: TaskRecord, target: TaskPickerTarget): Partial<TaskRecord> {
     if (target.kind === "plan")
         return { weekly: true, daily: task.daily || target.period === "today" };
     if (target.kind === "parent") return { parent: target.id };
-    const origin = taskDate(task);
-    if (!origin) return { due: target.date };
-    const delta = Math.round((Date.parse(target.date) - Date.parse(origin)) / 86_400_000);
-    const shift = (value: string) => {
-        if (!value) return value;
-        const date = new Date(value.slice(0, 10) + "T00:00:00Z");
-        date.setUTCDate(date.getUTCDate() + delta);
-        return date.toISOString().slice(0, 10) + value.slice(10);
-    };
-    return {
-        start: shift(task.start), due: shift(task.due),
-        scheduledStart: shift(task.scheduledStart), scheduledEnd: shift(task.scheduledEnd),
-    };
+    return { scheduledDay: target.date };
 }
 
 export function taskCanReturn(task: TaskRecord, target: TaskPickerTarget) {
@@ -53,5 +40,5 @@ export function returnedTaskPatch(target: TaskPickerTarget): Partial<TaskRecord>
     if (target.kind === "plan") return target.period === "today"
         ? { daily: false } : { daily: false, weekly: false };
     if (target.kind === "parent") return { parent: "" };
-    return { start: "", due: "", scheduledStart: "", scheduledEnd: "" };
+    return { scheduledDay: "" };
 }

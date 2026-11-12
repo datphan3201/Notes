@@ -15,19 +15,19 @@ test("Archive keeps delete confirmation open until the server acknowledges delet
     await confirmation.getByRole("checkbox").check();
     let release!: () => void;
     const gate = new Promise<void>(resolve => { release = resolve; });
-    await page.route("**/api/v1/workspace/changes", async route => {
+    await page.route(/\/api\/v1\/workspace\/(?:changes|archived\/delete)$/, async route => {
         await gate;
         await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ detail: "Audit: server rejected deletion" }) });
     });
     try {
-        const request = page.waitForRequest(r => r.url().endsWith("/workspace/changes") && r.method() === "POST");
+        const request = page.waitForRequest(r => /\/workspace\/(?:changes|archived\/delete)$/.test(r.url()) && r.method() === "POST");
         await confirmation.getByRole("button", { name: "Xác nhận", exact: true }).click();
         await request;
         await expect(confirmation).toBeVisible({ timeout: 1500 });
     } finally { release(); }
     await expect(confirmation).toBeVisible();
     await expect(confirmation).toContainText("Chưa lưu thao tác xóa");
-    await page.unroute("**/api/v1/workspace/changes");
+    await page.unroute(/\/api\/v1\/workspace\/(?:changes|archived\/delete)$/);
     await confirmation.getByRole("button", { name: "Xác nhận", exact: true }).click();
     await expect(confirmation).toHaveCount(0);
     await expect(page.locator(".review-archive-row").filter({ hasText: row.title })).toHaveCount(0);

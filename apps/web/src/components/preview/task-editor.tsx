@@ -161,19 +161,6 @@ export default function TaskPreviewEditor({
                             return;
                         }
                         if (
-                            draft.scheduledStart &&
-                            draft.scheduledEnd &&
-                            draft.scheduledEnd <= draft.scheduledStart
-                        ) {
-                            setError(
-                                text(
-                                    "The scheduled end must be after the start.",
-                                    "Kết thúc theo lịch phải sau lúc bắt đầu.",
-                                ),
-                            );
-                            return;
-                        }
-                        if (
                             repeating &&
                             (!dates.length ||
                                 (draft.rule.end &&
@@ -405,8 +392,8 @@ export default function TaskPreviewEditor({
                                     [
                                         "dates",
                                         CalendarDays,
-                                        "Dates and schedule",
-                                        "Ngày và lịch",
+                                        "Dates",
+                                        "Ngày",
                                     ],
                                     [
                                         "reminder",
@@ -466,7 +453,7 @@ export default function TaskPreviewEditor({
                                             ? "Repeat settings"
                                             : panel === "reminder"
                                               ? "Reminder settings"
-                                              : "Dates and schedule",
+                                              : "Dates",
                                         panel === "repeat"
                                             ? "Thiết lập lặp lại"
                                             : panel === "reminder"
@@ -573,41 +560,6 @@ export default function TaskPreviewEditor({
                                                     />
                                                 </label>
                                             </div>
-                                            <label className="field">
-                                                {text(
-                                                    "Scheduled start",
-                                                    "Bắt đầu theo lịch",
-                                                )}
-                                                <input
-                                                    type="datetime-local"
-                                                    value={draft.scheduledStart}
-                                                    onChange={(event) =>
-                                                        change(
-                                                            "scheduledStart",
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                />
-                                            </label>
-                                            <label className="field">
-                                                {text(
-                                                    "Scheduled end",
-                                                    "Kết thúc theo lịch",
-                                                )}
-                                                <input
-                                                    type="datetime-local"
-                                                    value={draft.scheduledEnd}
-                                                    onChange={(event) =>
-                                                        change(
-                                                            "scheduledEnd",
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                />
-                                            </label>
-                                            <small className="subtle-copy">
-                                                {db.profile.timezone}
-                                            </small>
                                         </>
                                     ) : panel === "reminder" ? (
                                         <>
@@ -626,39 +578,6 @@ export default function TaskPreviewEditor({
                                                         {text(
                                                             "No reminder",
                                                             "Không nhắc",
-                                                        )}
-                                                    </option>
-                                                    <option
-                                                        value="start"
-                                                        disabled={
-                                                            !draft.scheduledStart
-                                                        }
-                                                    >
-                                                        {text(
-                                                            "When the task starts",
-                                                            "Khi bắt đầu theo lịch",
-                                                        )}
-                                                    </option>
-                                                    <option
-                                                        value="before15"
-                                                        disabled={
-                                                            !draft.scheduledStart
-                                                        }
-                                                    >
-                                                        {text(
-                                                            "15 minutes before the start",
-                                                            "15 phút trước khi bắt đầu",
-                                                        )}
-                                                    </option>
-                                                    <option
-                                                        value="before60"
-                                                        disabled={
-                                                            !draft.scheduledStart
-                                                        }
-                                                    >
-                                                        {text(
-                                                            "1 hour before the start",
-                                                            "1 giờ trước khi bắt đầu",
                                                         )}
                                                     </option>
                                                     <option
@@ -709,8 +628,8 @@ export default function TaskPreviewEditor({
                                             )}
                                             <p className="subtle-copy">
                                                 {text(
-                                                    "Add a scheduled start or due date to enable reminders tied to the task.",
-                                                    "Đặt lúc bắt đầu theo lịch hoặc hạn hoàn thành để chọn nhắc nhở gắn với công việc.",
+                                                    "Add a due date to enable due-date reminders.",
+                                                    "Đặt hạn hoàn thành để dùng nhắc nhở theo hạn.",
                                                 )}
                                             </p>
                                         </>
@@ -1022,24 +941,6 @@ export default function TaskPreviewEditor({
                                     <Stars value={draft.importance} text={text}
                                         onChange={value => change("importance", value)} />
                                 </fieldset>
-                                <label className="field">
-                                    {text(
-                                        "Estimated minutes",
-                                        "Thời gian dự kiến (phút)",
-                                    )}
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={1440}
-                                        value={draft.estimate}
-                                        onChange={(event) =>
-                                            change(
-                                                "estimate",
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-                                </label>
                                 <fieldset className="preview-task-tags">
                                     <legend>{text("Tags", "Nhãn")}</legend>
                                     {tagOptions.map((tag) => (

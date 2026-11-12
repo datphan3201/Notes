@@ -126,7 +126,7 @@ export async function workspaceSaved(
 ) {
     const result = page.waitForResponse(
         (r) =>
-            r.url().endsWith("/workspace/changes") &&
+            /\/workspace\/(?:changes|archived\/delete)$/.test(r.url()) &&
             r.request().method() === "POST",
     );
     await action();
