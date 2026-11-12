@@ -15,7 +15,7 @@ Trace ID: `tasks.repeating`. Test references identify coverage to inspect; they 
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/task-editor.tsx](../../../apps/web/src/components/preview/task-editor.tsx#L20) — `export default function TaskPreviewEditor({` |
-| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L89) — `def materialize(` |
+| API / domain | [apps/api/planner/jobs.py](../../../apps/api/planner/jobs.py#L96) — `def materialize(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_ai_jobs.py](../../../apps/api/tests/test_ai_jobs.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

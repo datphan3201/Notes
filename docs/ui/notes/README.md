@@ -6,7 +6,7 @@ Notes provide a rich document, grid/list, search, tags, pin/color and optional o
 
 Card previews show only the highest-priority nonempty content category: headings, otherwise checkboxes, otherwise ordinary text. Selection scans the complete document before limiting the preview to three headings/checks or 200 text characters; the Note title remains separate. Card backgrounds are solid and adapt to light/dark mode, including API color tokens, older picker values and custom hex colors. Long heading/checklist rows clamp individually to two lines; ordinary text clamps to three. More than three selected headings/checks or more than 200 text characters displays an ellipsis; the preview container has no fixed-height crop.
 
-The Notes filter sidebar uses a solid theme surface. Tags have full-width selection rows and a Manage tags button; an empty tag list shows No tags yet and Add tag. Mobile reveals the same controls through the filter toggle.
+The Notes filter sidebar uses a solid theme surface. Tags have full-width selection rows and separate Add tag and Manage tags actions; the former creates one tag, while the latter renames or removes existing tags. An empty tag list shows No tags yet and Add tag. Mobile reveals the same controls through the filter toggle.
 
 Rich JSON is stored as `document` in existing Note details. Server validation permits only supported nodes, marks and safe link schemes, and derives the searchable/AI-compatible `content` text. Metadata edits retain formatting; an explicit plain-content-only API update clears the rich document. Drafts, offline recovery and shared edits retain both representations. Locked responses omit the rich document as well as masking plain content.
 
@@ -24,7 +24,7 @@ Trace ID: `notes`. Test references identify coverage to inspect; they are not ex
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L40) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L80) — `def access_note(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L431) — `def snapshot(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L506) — `def snapshot(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

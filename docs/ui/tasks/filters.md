@@ -17,10 +17,10 @@ Trace ID: `tasks.filters`. Test references identify coverage to inspect; they ar
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/tasks.tsx](../../../apps/web/src/components/preview/tasks.tsx#L58) — `export default function TasksPreview({` |
-| Live Task projection | [apps/web/src/components/live-model.ts](../../../apps/web/src/components/live-model.ts#L116) — `export function fromSnapshot(` |
+| Live Task projection | [apps/web/src/components/live-model.ts](../../../apps/web/src/components/live-model.ts#L118) — `export function fromSnapshot(` |
 | Alternate typed Task-view helper; unit-tested, not mounted by WorkspaceView | [apps/web/src/lib/task-views.ts](../../../apps/web/src/lib/task-views.ts#L30) — `export function matchesView(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L271) — `def task_plan(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L289) — `def select_task(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L272) — `def task_plan(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L290) — `def select_task(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L825) — `def dashboard(` |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |

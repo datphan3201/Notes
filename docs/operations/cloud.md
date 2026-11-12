@@ -2,6 +2,32 @@
 
 [Operations](README.md) · [Release procedure](deployment.md) · [Topology setup](../migration/render-vercel-supabase.md)
 
+### 2026-11-12 bounded reads, recovery and monitoring
+
+Backend `b198b6f` reached live as Render `dep-dbqkd82fngtc73fsbt3g` at 04:56 UTC, followed by the version-aware offline-sync fix `02947f1` as `dep-dbqkhkoae00c738m9of0` at 05:06 UTC. The latter backend's API/migration and operator-tool CI steps passed before backend rollout; frontend rollout followed the complete green workflow. Both are compatible code-only releases on schema `0012`, with Render still Free/Singapore and automatic deploys disabled.
+
+Frontend commit `02947f1` reached READY as Vercel `dpl_HDU3rGbxprQo6EWfCKStrGD7g9gK`, with `planner-t1.vercel.app` assigned. Source was exported from that exact Git commit, with local/private files excluded and `npm ci` explicitly selected. Production project settings persist `NEXT_PUBLIC_BOUNDED_ACTIVITY=true`, `NEXT_PUBLIC_BOUNDED_WORKSPACE=true` and `NEXT_PUBLIC_INCREMENTAL_REFRESH=true`; build/runtime `API_ORIGIN` points to the existing Singapore API. The full [GitHub workflow 43158526618](https://github.com/datphan3201/Planner-T1/actions/runs/43158526618) passed: 221 API tests plus one baseline-history skip, 49 web unit tests, both builds, five recovery tests and all 104 desktop/mobile browser cases. All 222 API tests passed locally; the cache-sync follow-up's six focused offline/sharing/password browser cases also passed.
+
+Hosted browser checks confirmed the Dashboard requests bootstrap/entity pages with no full-snapshot request; an owned Note fetched full detail before enabling its editor and retained disabled Save while clean. Archive server search returned the expected two synthetic matches, a browser-only simulated 503 recovered through Retry, and document width matched the viewport at 390 and 1280 px. Screenshots were inspected locally. These are viewport emulation/read-only user-flow checks, not physical-device or full visual acceptance. Synthetic sign-in/read/logout sessions were used; the simulated 503 did not reach the backend.
+
+The synthetic account's hosted bootstrap, active entity cursor pages, server Note/Archive search and incremental refresh passed authenticated read checks through the production frontend proxy. The bootstrap was 7,032 bytes; unchanged Task bodies were omitted on refresh. These are smoke observations, not a new baseline comparison or latency benchmark. No planning, Note, provider-mail or AI-generation mutation was performed.
+
+Local operator automation is active while this machine, WSL, Docker and network are available:
+
+- Backup daily at 03:10, restore drill on the first day of each month at 04:00, and guarded cleanup every four hours at 00:30/04:30/08:30/12:30/16:30/20:30, all `Asia/Ho_Chi_Minh`.
+- Aggregate health/capacity monitoring every fifteen minutes. Latest private report: `~/.local/state/planner-monitor/latest.json`; service results are in the user journal. No external alert delivery was configured.
+- Install/reinstall units with `python3 tools/backup/install_timers.py`; `loginctl enable-linger thanhdat` was enabled so user timers survive terminal logout while WSL remains running. The stale `planner-existing-runtime.timer` and its deployment service were stopped; that timer is disabled.
+- Backups: `~/.local/share/planner-backups/automated`; decryption key: `~/.config/planner-backup/archive.key`, private permissions. Seven daily/four weekly retention is local only. Losing this machine/key can still lose recovery capability; no off-site or managed PITR promise follows.
+- New archives also contain encrypted `recovery-config.json.enc`, including the application's stable encryption key and private provider/storage configuration. The encrypted manifest verifies its ciphertext hash; the drill checks decryption/JSON without applying provider credentials to the isolated environment.
+
+Backup `backup-20261112T044554Z-3ca769` was restored into a disposable `planner_test`: all 31 table counts/digests matched, zero hosted private objects existed, and the drill took 13.6 seconds. A separate automated fixture restored a database plus one nonempty binary private object and encrypted recovery configuration. This is local recovery evidence, not hosted Storage/PITR acceptance.
+
+The monitor uses conservative decimal 500 MB database/1 GB Storage allowances for the owner-confirmed Free plan, with warning/urgent/critical at 70/85/95%. At 85% database use it holds optional index jobs without consuming retries; business jobs remain eligible. Sources: [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase), [Storage usage](https://supabase.com/docs/guides/platform/manage-your-usage/storage-size). Account-level bandwidth, Render monthly-hour allowance and Vercel build entitlement cannot be verified with the current scopes and are reported unavailable, not as zero usage. Vercel team billing lookup returned 403; no subscription/billing change was made.
+
+The latest sampled database was approximately 50.4 MB, Storage zero bytes and Render's preceding fifteen-minute memory peak approximately 188.9 MB of its 536.9 MB reported limit. API/worker health was good, no due job was waiting, and one historical exhausted email job remained. Its aggregate error is `RuntimeError`; no message payload was read and no blind retry was issued. Notification-delay p95 is unavailable until new timestamped reminder samples exist. These values are not sustained capacity evidence.
+
+The cleanup timer still requires 48 continuous healthy due-mode hours, drained legacy jobs and a fresh encrypted backup. A successful skipped timer invocation is not a successful purge. ISSUE-082 remains open until actual deletion/retention verification; ordinary PostgreSQL vacuum can reuse space without immediately shrinking physical bytes.
+
 ### 2026-11-11 compact Dashboard header
 
 Frontend deployment `dpl_Fmw83krTpuHQ8VSuZiAwA2YrhoHz` reached READY and was assigned `planner-t1.vercel.app`. It was built from tracked frontend files in the local working tree based on `fda5e93`, including uncommitted Dashboard header changes; it is not a Git commit deployment. No backend or database changes were made. The login page and proxied health returned HTTP 200. The hosted synthetic preview was checked at 320, 390 and 1280 px: the compact strip appeared at narrow widths, the calendar appeared at 1280 px and document width did not overflow. These checks do not establish authenticated or physical-device behavior.
@@ -20,7 +46,7 @@ Frontend deployment `dpl_B2W3pqGK6jxJNHNLoXuqHZxZJUJX` reached READY and was ass
 
 ## Recorded resources and evidence
 
-The API deployment on **2026-11-12** uses commit `838fed3`, Render deploy `dep-dbqh6r2jnfac738mdlug`, and Vercel `planner-t1`. The database was moved to Singapore as recorded below. Verify current hosted settings, health and account plans before an operational change.
+The latest API deployment on **2026-11-12** uses commit `02947f1`, Render deploy `dep-dbqkhkoae00c738m9of0`, and the existing Vercel `planner-t1` frontend. Earlier release records below retain their historical state. The database was moved to Singapore as recorded below. Verify current hosted settings, health and account plans before an operational change.
 
 | Component | Recorded resource | Recorded location / endpoint |
 | --- | --- | --- |
@@ -48,11 +74,11 @@ flowchart LR
 
 Commit `838fed3` was deployed as Render `dep-dbqh6r2jnfac738mdlug` after both GitHub workflows passed: 212 API tests passed with one baseline-history test skipped, 47 web tests passed, and 102 browser tests passed. Local API verification passed all 213 tests. A fresh encrypted backup and isolated restore succeeded before release. Production inspection confirmed schema `0012`, 31 application tables, four new indexes and fresh scheduler/fast/slow heartbeats. Five inspected post-release readiness probes returned 200 with 14 ms server durations; no error event appeared in that inspected log window. This does not establish sustained capacity or complete hosted user-flow acceptance.
 
-The stored scheduler mode remains `legacy`. No checkpoint backfill, compare/due switch, frontend flag activation or production job cleanup was performed. The cleanup timer remains disabled; backup and isolated restore timers remain active. Rolling back to an image unaware of revision `0012` requires disabling its startup migrations; do not run destructive downgrades. Prefer this compatible image in legacy scheduler mode while investigating.
+At that initial release, the stored scheduler mode was still `legacy`. No checkpoint backfill, compare/due switch, frontend flag activation or production job cleanup had been performed. The cleanup timer was disabled; backup and isolated restore timers were active. Subsequent activation and timer state are recorded separately. Rolling back to an image unaware of revision `0012` requires disabling its startup migrations; do not run destructive downgrades. Prefer this compatible image in legacy scheduler mode while investigating.
 
 ### Direct due-mode activation (2026-11-12)
 
-The owner explicitly waived shadow comparison and its 24-hour trial. The operator verified the Singapore `postgres/planner` identity and revision `0012`, backfilled one active series checkpoint under owner locks, and switched the shared scheduler mode from `legacy` to `due` without comparison. A subsequent live tick recorded due mode, fresh scheduler/fast/slow heartbeats and no pending legacy periodic work. No job cleanup or frontend deployment was performed; the cleanup timer remains disabled. The usual comparison gate described in the runbook was deliberately bypassed for this owner-authorized transition, not reported as passed.
+The owner explicitly waived shadow comparison and its 24-hour trial. The operator verified the Singapore `postgres/planner` identity and revision `0012`, backfilled one active series checkpoint under owner locks, and switched the shared scheduler mode from `legacy` to `due` without comparison. A subsequent live tick recorded due mode, fresh scheduler/fast/slow heartbeats and no pending legacy periodic work. At that activation step, no job cleanup or frontend deployment was performed and the cleanup timer was still disabled; the later release/automation record above supersedes that state. The usual comparison gate described in the runbook was deliberately bypassed for this owner-authorized transition, not reported as passed.
 
 ## Configuration
 

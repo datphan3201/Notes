@@ -10,6 +10,8 @@ Snapshot Tasks expose owner-only `note_ids` so locked Notes can be listed withou
 
 Today and This week header actions are matching labeled toggles. Their pressed state uses explicit daily/weekly plan selections, never inferred due/overdue/scheduled dates. Selecting Today also selects the week; removing Today preserves the week; removing the week clears both. These actions reuse the shared picker transformations, preserve Task dates/status and are disabled for completed Tasks.
 
+Task detail shows the all-day Calendar placement when present. The mounted Task editor no longer exposes timed Scheduled start/end or estimated minutes; legacy values stay in storage until the database change.
+
 A Task has at most one primary Goal or Milestone. Moving work preserves its identity, checklist and history. Related Goal links are additional context, not progress-bearing parentage or prerequisites. Updates require the displayed version; stale writes return 409. Server rules govern completion, ancestor reopening and archive operations.
 
 Local verification on 2026-11-09: final E2E build/TypeScript and 38 Node checks passed. Browser checks on the synthetic workspace verified an overdue unselected Task stays selectable, Today selects the week, week removal clears both, Today removal retains the week, date/status text stays unchanged and both labeled controls remain visible at mobile width. No database mutation or cloud deployment was required for these checks.

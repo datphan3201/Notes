@@ -4,6 +4,8 @@
 
 IndexedDB stores account-scoped personal Note drafts/outbox. Offline creates/edits/deletes replay after reconnect. A stale edit recovers a copy while preserving remote text; deletion proceeds only against the unchanged owned version. Shared/password-protected Notes and private media are excluded.
 
+With bounded workspace reads enabled, Note metadata is loaded first and personal bodies synchronize only for missing/new cached versions, at most ten bodies per response; unchanged metadata pages still advance the cursor. Background writes from an older refresh are rejected. Opening an uncached body shows a loading/retry state before enabling the editor. A partial metadata response keeps a previously cached body only when its version still matches; complete accessible-ID manifests establish deletion/revocation. Shared, password-protected and archived Notes are removed from the private offline cache. Reconnecting from an offline shell obtains fresh identity/CSRF before any incremental POST or outbox replay.
+
 The service worker caches only generic `/` and `/notes` navigation shells plus selected static assets. It never caches `/api/*` or private file responses. Other sections are not an offline editing feature. Cached data and sessions are origin-specific; moving between local/Funnel/Vercel origins does not transfer them. Logout clears account drafts/cache through the browser cleanup path.
 
 <!-- BEGIN GENERATED TRACE -->
@@ -16,7 +18,7 @@ Trace ID: `notes.offline`. Test references identify coverage to inspect; they ar
 | --- | --- |
 | UI | [apps/web/src/lib/offline-notes.ts](../../../apps/web/src/lib/offline-notes.ts#L53) — `export async function cachedNotes(` |
 | Notes shell/static cache boundary | [apps/web/public/planner-sw.js](../../../apps/web/public/planner-sw.js#L2) — `const CACHE="planner-shell-v1";` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L580) — `def apply_changes(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L896) — `def apply_changes(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L284) — `def update(` |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |
 | Related tests | [apps/web/tests/e2e/complete-features.spec.ts](../../../apps/web/tests/e2e/complete-features.spec.ts) |

@@ -7,8 +7,21 @@ Entries describe their own historical stage. In particular, earlier 2026-11-08 p
 ## 2026-11-12
 
 ### Changed
-- Prepared a feature-gated due-work scheduler, bounded worker lanes, AI output buffering, private-file streaming, Activity/Archive pagination and local encrypted backup/restore tools. The scheduler defaults to the legacy mode during rollout.
-- Recorded the Supabase Singapore cutover, isolated restore verification and local backup timer.
+- Released indexed due-work scheduling, recurrence checkpoints, bounded worker lanes, heartbeats, buffered AI output, file streaming and migrations 0010–0012 in backend `838fed3`. The owner authorized due-mode activation without a comparison run.
+- Added paged workspace/bootstrap reads, lazy Note bodies with bounded heading/checkbox previews, server-side Note/Archive search, atomic archived-root deletion and Unicode-safe AI deltas. Added version-aware frontend refresh with explicit manifests and auxiliary Note state, bounded background offline synchronization and safe reconnect recovery.
+- Added a fifteen-minute local capacity/queue/worker/memory/backup report and optional-index throttling. Backup, monthly restore and guarded cleanup timers are reproducibly installable; backups now encrypt recovery configuration too. A cloud-schema restore matched all 31 tables, and a separate isolated fixture restored a nonempty private object. Legacy cleanup remains gated on 48 healthy hours; no purge is claimed.
+- Reconciled the previously published frontend refinements below into source control while adopting the bounded-read APIs.
+- Deployed backend and web `02947f1` with bounded-read production flags enabled. ISSUE-066 is resolved for the active browser path; complete active-graph/client-memory capacity remains under ISSUE-048. The legacy full snapshot remains compatible with older clients and rollback. Version-aware offline sync skips unchanged bodies and rejects stale background cache writes.
+
+## 2026-11-11
+
+### Changed
+- Moved the production Supabase database and private bucket configuration from Mumbai to Singapore. The paused source and destination matched across all 31 application tables before cutover; Render's internal readiness check passed after the connection change. See the cloud runbook for recovery limits and verification scope.
+- Started the free-tier backend work locally: idle polling backs off to five seconds and assistant SSE reads no longer block the async event loop. Due-work scheduling and the remaining backend plan are not yet implemented or deployed.
+- Moved the Dashboard Task checklist completion control to the right edge of each row, after any plan action, and enlarged its touch target to 44 px.
+- Separated Notes tag creation from editing existing tags: Add tag opens its own one-field dialog, while Manage tags contains only existing tags.
+- Simplified the mounted Task editor and Calendar projection to an all-day local date: dragging sets or clears only Calendar placement, while Start, Due and reminder remain independent. Removed timed schedule and estimated-time controls from that editor and Task detail. The frontend adapter continues to preserve legacy stored values until the database migration. ISSUE-081 is resolved by giving single-start legacy schedules a one-day Calendar projection.
+- Made the Dashboard header compact at narrow widths with a current-week activity strip and aligned content; corrected 30-day activity grid weekday offsets.
 
 ## 2026-11-09
 

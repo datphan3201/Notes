@@ -10,7 +10,7 @@ Dashboard, Calendar and Goal/Milestone task selection use one nonmodal floating 
 | --- | --- |
 | Dashboard Today | Selects the existing Task for today and the current week. Dates, status and primary parent remain unchanged. |
 | Dashboard This week | Selects for the current week; preserves an existing Today selection. |
-| Calendar date | An undated Task gains that due date. Dated work shifts its full start/due/scheduled interval together, anchored on the scheduled start, otherwise start/due; local clock times and duration remain intact. The ordinary API adapter converts scheduled instants. |
+| Calendar date | Sets the Task's all-day Calendar placement. Its start, due and reminder dates stay unchanged. The current API adapter stores the selected local day as a scheduled instant pending the database change. |
 | Goal / Milestone | Changes the Task's primary parent. Inbox Tasks attach directly; a Task already owned by another parent requires a compact confirmation. It creates no duplicate Task and does not change content, dates or status. |
 
 Calendar uses a single floating Task button to toggle this picker directly, with no selected-day/task-selection sidebar cards. Its default panel position leaves the trigger available for a second click, including on mobile.
@@ -27,7 +27,7 @@ The picker has an explicit return drop zone and per-row localized return action.
 | --- | --- |
 | Dashboard Today | Clears the Today selection and preserves the weekly selection. |
 | Dashboard This week | Clears both weekly and Today selections, preserving the daily-implies-weekly invariant. |
-| Calendar | Clears start/due/scheduled start/end for the dragged Task, even if its date differs from the picker's selected day. Other metadata and separately configured custom reminders remain intact; relative reminders recalculate through the existing adapter. |
+| Calendar | Clears only the Task's Calendar placement, even if its date differs from the picker's selected day. Start, due and reminder stay unchanged. |
 | Goal / Milestone | Clears only the exact matching primary parent and places the Task in Inbox. Tasks owned by a different parent are not detached. |
 
 Desktop destination cards are draggable while the picker is open. They identify returns with a separate MIME type so ordinary Calendar moves/resizes retain their original handlers. Selected picker rows can also be dragged to the return zone using the existing pointer grips. Return buttons provide a keyboard/mobile alternative. Completed/archived Tasks and recurrence date/parent restrictions remain enforced.
@@ -68,7 +68,7 @@ Trace ID: `shared.task-picker`. Test references identify coverage to inspect; th
 | Reusable nonmodal Task selection template | [apps/web/src/components/ui/floating-task-picker.tsx](../../../apps/web/src/components/ui/floating-task-picker.tsx#L19) — `export function FloatingTaskPicker({` |
 | Workspace context, assignment and transfer confirmation | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L25) — `export function TaskPickerProvider({` |
 | Shared native/pointer drop destinations | [apps/web/src/components/task-picker.tsx](../../../apps/web/src/components/task-picker.tsx#L130) — `export function TaskDropZone({` |
-| Date/selection/parent transformations and drag IDs | [apps/web/src/lib/task-picker.ts](../../../apps/web/src/lib/task-picker.ts#L29) — `export function pickedTaskPatch(` |
+| Date/selection/parent transformations and drag IDs | [apps/web/src/lib/task-picker.ts](../../../apps/web/src/lib/task-picker.ts#L28) — `export function pickedTaskPatch(` |
 | Related tests | [apps/web/tests/task-picker.test.ts](../../../apps/web/tests/task-picker.test.ts) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |
 

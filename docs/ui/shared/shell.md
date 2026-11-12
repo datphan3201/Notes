@@ -28,10 +28,10 @@ Trace ID: `shared.shell`. Test references identify coverage to inspect; they are
 
 | Role | Current source |
 | --- | --- |
-| UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L112) — `export default function LiveWorkspace()` |
+| UI | [apps/web/src/components/live-workspace.tsx](../../../apps/web/src/components/live-workspace.tsx#L118) — `export default function LiveWorkspace()` |
 | Mounted feature routing | [apps/web/src/components/preview/workspace.tsx](../../../apps/web/src/components/preview/workspace.tsx#L95) — `export function WorkspaceView(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L431) — `def snapshot(` |
-| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L580) — `def apply_changes(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L506) — `def snapshot(` |
+| API / domain | [apps/api/planner/workspace.py](../../../apps/api/planner/workspace.py#L896) — `def apply_changes(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/web/tests/e2e/parity.spec.ts](../../../apps/web/tests/e2e/parity.spec.ts) |

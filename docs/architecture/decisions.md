@@ -8,6 +8,8 @@ Active source is **Next.js/React/TypeScript + FastAPI/Python + PostgreSQL/pgvect
 
 Repository records report deployment on 2026-11-08 to Vercel web, Render Singapore API/worker and Supabase database/private Storage. [Cloud operations](../operations/cloud.md) owns the recorded resources/runbooks; no fresh hosted checks are implied. `render.yaml` selects `main`, Free colocated polling worker and manual deploy trigger. Sleep pauses background work. Funnel remains a local development fallback; the former paused preparation handoff is historical, not an active stop instruction.
 
+The user requires zero cloud-infrastructure spending (2026-11-11) and accepts free-tier availability/resource limits. The user reports an existing UptimeRobot monitor used to keep the backend active; its settings have not been inspected. Optimize the existing deployment within verified free allowances. The [free-tier backend plan](../operations/free-tier-backend-plan.md) records the delivered due scheduler, worker lanes, bounded reads and local recovery/monitoring; the cloud runbook owns actual releases and pending cleanup observation.
+
 ## Product model
 
 The system default user-facing timezone is UTC+7 (`Asia/Ho_Chi_Minh`), including new accounts, Habits, recurrence and missing-configuration fallbacks. Explicit account/Habit/series timezones remain authoritative. Stored instants, worker timing and logs remain UTC; DATE values remain separate calendar dates. Changing the default does not rewrite existing accounts or dated/check-in history.

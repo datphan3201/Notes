@@ -6,7 +6,7 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 
 ## Reporting rules
 
-- Next unused ID: **ISSUE-079**. Never reuse an earlier ID.
+- Next unused ID: **ISSUE-083**. Never reuse an earlier ID.
 - Include status, severity, affected source/UI, observed versus expected behavior, evidence type/limits and a concrete next step.
 - Severity: High (data loss/security/core failure), Medium (wrong behavior or material unverified operational/scaling gap), Low (cosmetic/documentation/tooling friction).
 - Status: Open, Needs decision or In progress. Listing an issue alone does not authorize runtime changes.
@@ -21,13 +21,14 @@ Only unresolved current problems/acceptance decisions belong here. Fixed entries
 | [ISSUE-063](#issue-063--assistant-context-selection-is-too-broad-and-source-lists-are-noisy) | Assistant context selection is too broad and source lists are noisy | Medium | Open |
 | [ISSUE-064](#issue-064--orphaned-legacy-deployment-test-references-a-removed-script) | Orphaned legacy deployment test references a removed script | Low | Open |
 | [ISSUE-065](#issue-065--cloud-copy-helper-lacks-complete-migration-and-recovery-guards) | Cloud COPY helper lacks complete migration and recovery guards | Medium | Open |
-| [ISSUE-066](#issue-066--workspace-snapshot-loads-unbounded-account-data) | Workspace snapshot loads unbounded account data | Medium | Open |
 | [ISSUE-067](#issue-067--dashboard-layout-requirement-disagrees-with-the-mounted-desktop-view) | Dashboard layout requirement disagrees with the mounted desktop view | Low | Needs decision |
 | [ISSUE-068](#issue-068--dashboard-habit-strip-assumes-today-is-saturday) | Dashboard Habit strip assumes today is Saturday | Medium | Open |
 | [ISSUE-069](#issue-069--hosted-ai-is-unconfigured-on-render) | Hosted AI is unconfigured on Render | Medium | Open |
 | [ISSUE-070](#issue-070--hosted-mail-still-uses-the-resend-testing-sender) | Hosted mail still uses the Resend testing sender | Medium | Open |
 | [ISSUE-076](#issue-076--dashboard-roadmap-marks-completed-milestones-by-count) | Dashboard roadmap marks completed milestones by count | Medium | Open |
 | [ISSUE-077](#issue-077--task-reopen-prompts-do-not-cover-all-completed-ancestors) | Task reopen prompts do not cover all completed ancestors | Medium | Open |
+| [ISSUE-080](#issue-080--assistant-area-chips-do-not-navigate-to-the-area) | Assistant Area chips do not navigate to the Area | Low | Open |
+| [ISSUE-082](#issue-082--completed-worker-jobs-grow-without-a-retention-policy) | Completed worker jobs grow without a retention policy | Medium | Open |
 
 ## UI refinement queue
 
@@ -75,7 +76,7 @@ The former ISSUE-049–062 implementation gaps were closed by the connected UI w
 - **Severity:** Medium.
 - **Affected:** [authentication lifecycle](../apps/api/planner/auth.py), [pool](../apps/api/planner/db.py), [load tool](../tools/performance/planner_load.py).
 - **Observed:** a historical local 1000-request/100-concurrency Task-list run reported 1000 HTTP 200 responses, 197.16 requests/s, p95 645.59 ms and p99 761.52 ms with one process, 5+2 pool and one synthetic Task. A separate 20-concurrency run reported p95 129.64 ms. The earlier pool-starvation defect was fixed; higher-concurrency workload acceptance was not.
-- **Expected / next step:** agree a realistic fixture/workload budget, profile CPU/pool/queue waits, measure large datasets and concurrent worker/AI load, and compare controlled staging scaling/pool settings. Include snapshot behavior in ISSUE-066.
+- **Expected / next step:** agree a realistic fixture/workload budget, profile CPU/pool/queue waits, measure large datasets and concurrent worker/AI load, and compare controlled staging scaling/pool settings. The deployed bounded reads resolve the former full-snapshot browser path; include complete active-graph/client-memory growth, paged Habit/selection history and incremental manifests/auxiliary state in future capacity assessment.
 - **Evidence and limits:** historical local benchmark report, not rerun here and not production capacity evidence. The committed Render blueprint now configures 4+2 per process, not that benchmark's settings.
 
 ## ISSUE-063 — Assistant context selection is too broad and source lists are noisy
@@ -113,15 +114,6 @@ The former ISSUE-049–062 implementation gaps were closed by the connected UI w
 - **Expected:** an explicitly reviewed transfer with checked target/source/schema, dependency-safe ordering, empty-target or validated merge semantics, full inventory/content/file reconciliation, backups and isolated restore rehearsal. A successful count-only transaction is insufficient acceptance.
 - **Next step:** define supported transfer semantics and add isolated fixtures for nonempty/mismatched targets, parent/series relations, reruns, missing tables and private-file restoration before further real transfer. Keep the current helper out of ordinary synchronization guidance until addressed.
 - **Evidence and limits:** source-inspected only; the helper was not executed and no development/hosted data was read or changed. Documentation now describes actual limitations. Broader acceptance stays in ISSUE-046.
-
-## ISSUE-066 — Workspace snapshot loads unbounded account data
-
-- **Status:** Open.
-- **Severity:** Medium.
-- **Affected:** [workspace snapshot](../apps/api/planner/workspace.py), [live refresh](../apps/web/src/components/live-workspace.tsx).
-- **Observed:** `/api/v1/workspace/snapshot` loads every owned model row, including archived rows, plus all account selections, Habit days, dependencies and Activity. Ordinary live refresh calls this snapshot. Per-resource list pagination does not bound this endpoint or browser transformation/rendering work.
-- **Expected / next step:** define measured large-account payload/latency/memory budgets; use representative history/Notes/Habits fixtures, then select pagination/lazy loading or incremental projections while preserving offline/version/graph/permission semantics. Reuse capacity acceptance in ISSUE-048.
-- **Evidence and limits:** source-inspected; no large-account benchmark or production failure was reproduced. Ownership checks remain present; this reports growth/scalability exposure, not a demonstrated cross-account leak.
 
 ## ISSUE-067 — Dashboard layout requirement disagrees with the mounted desktop view
 
@@ -175,6 +167,22 @@ The former ISSUE-049–062 implementation gaps were closed by the connected UI w
 - **Observed:** frontend reopen acknowledgement detection checks the directly associated Goal against completed Goals. The server checks a completed Milestone and the full ancestor Goal chain, requiring `reopen_parents` and rejecting a completed dependent Milestone. A done Task under a completed Milestone or higher ancestor can therefore reach a server rejection without the UI offering the required acknowledgement. The frontend's synthetic parent updates also reset a detected Goal to NotStarted whereas the server reopens completed ancestors as doing.
 - **Expected / next step:** share a complete ancestor/dependency projection for Task reopen prompts, describe all affected parents and match acknowledged server states. Cover a completed Milestone with an active Goal, a completed higher Goal, and a completed dependent Milestone.
 - **Evidence and limits:** source inspection on 2026-11-09; these transition cases were not executed against development or production, and no Task records were changed.
+
+## ISSUE-080 — Assistant Area chips do not navigate to the Area
+
+- **Status / severity:** Open / Low.
+- **Affected:** [assistant entity chip](../apps/web/src/components/assistant-compiled-message.tsx), [live navigation](../apps/web/src/components/live-workspace.tsx).
+- **Observed:** clicking an Area tag passes an `area` target to navigation, but live navigation does not serialize or otherwise consume that target. It opens the general Goals page instead of selecting the referenced Area.
+- **Expected / next step:** support an Area navigation target end to end and verify an Area tag opens the intended Area in the live workspace.
+- **Evidence and limits:** source inspection of the new chip and navigation path; no browser check was performed.
+
+## ISSUE-082 — Completed worker jobs grow without a retention policy
+
+- **Status / severity:** In progress / Medium.
+- **Affected:** [worker schedule](../apps/api/planner/jobs.py), [guarded cleanup](../apps/api/planner/job_cleanup.py), [local cleanup timer](../tools/backup/cleanup_when_stable.py).
+- **Observed:** the due scheduler is active and no longer manufactures minute-by-minute empty jobs. The legacy completed backlog remains; the enabled four-hour cleanup timer intentionally skips until 48 continuous healthy due-mode hours, legacy drain and a fresh verified backup are established. Queued/running/dead jobs and durable business-effect receipts are preserved.
+- **Expected / next step:** let the guarded timer perform the first eligible bounded cleanup, then verify candidate/deletion counts and retained categories before closing this issue. Do not reset the stability clock or bypass backup checks merely to remove the backlog sooner.
+- **Evidence and limits:** production aggregates and timer execution show the backlog and a skipped stability gate; no production purge or immediate physical disk shrink is claimed.
 
 ## New issue template
 

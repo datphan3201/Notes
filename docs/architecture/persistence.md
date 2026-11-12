@@ -4,7 +4,7 @@
 
 ## Schema authority
 
-[SQLAlchemy models](../../apps/api/planner/models.py) describe mappings; [Alembic revisions](../../apps/api/migrations/versions/) and the initial SQL define deployed DDL. The current chain ends at `0009` (binary Task completion, following normalized Area names and single attached Task Notes/resource links). Add forward migrations for changes; do not silently edit applied schema. [Alembic environment](../../apps/api/migrations/env.py) selects the configured application schema and version table.
+[SQLAlchemy models](../../apps/api/planner/models.py) describe mappings; [Alembic revisions](../../apps/api/migrations/versions/) and the initial SQL define DDL. The local chain includes `0010`, which adds scheduler indexes; the recorded hosted revision remains `0009` until a verified deployment. Add forward migrations for changes; do not silently edit applied schema. [Alembic environment](../../apps/api/migrations/env.py) selects the configured application schema and version table.
 
 | Concern | Current model groups |
 | --- | --- |

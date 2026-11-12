@@ -15,8 +15,8 @@ Trace ID: `notes.files`. Test references identify coverage to inspect; they are 
 | Role | Current source |
 | --- | --- |
 | Live Notes controls | [apps/web/src/components/preview/notes.tsx](../../../apps/web/src/components/preview/notes.tsx#L40) — `export default function NotesPreview({ text, taskId, resourceNoteId, onResourceClose }: { text: Text; taskId?: number; resourceNoteId?: string; onResourceClose?: () => void }) {` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L443) — `def upload_attachment(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L492) — `def download(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L444) — `def upload_attachment(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L493) — `def download(` |
 | API / domain | [apps/api/planner/note_features.py](../../../apps/api/planner/note_features.py#L139) — `def remove_attachment(` |
 | Related tests | [apps/api/tests/test_render_supabase.py](../../../apps/api/tests/test_render_supabase.py) |
 | Related tests | [apps/api/tests/test_complete_workspace.py](../../../apps/api/tests/test_complete_workspace.py) |

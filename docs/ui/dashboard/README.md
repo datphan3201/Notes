@@ -4,6 +4,8 @@
 
 Today and This week are separate tabs. Current desktop source uses a Task checklist column with supporting cards beside it, collapsing on narrow screens. A retained decision instead asks for cards above a full-width checklist; this unresolved layout contract is ISSUE-067, not silently treated as accepted. They use real account-local selections, Task state, Habit check-ins and Activity. Manual selection does not change Task dates/status and does not roll forward automatically.
 
+The illustrated header shows 30 days of activity on wide screens and a compact Monday-to-Sunday strip for the current account-local week at widths up to 800 px. The full Activity panel retains the 30-day calendar. Weekday alignment follows the first displayed account-local date.
+
 The roadmap preview is a single fluid row: its displayed milestones share the available width equally at every viewport, with no fixed-width mobile cells or horizontal scrolling. Long labels clamp to three lines; their full title remains available and each milestone still opens its detail.
 
 Local responsive checks on 2026-11-09 used the synthetic six-milestone roadmap at 320, 390, 768, 1280 and 1920 px: all steps stayed on one row, shared equal widths and required no horizontal scroll. Full titles and mobile milestone navigation remained available. The production E2E build/TypeScript passed; no database changes or cloud deployment were performed.
@@ -17,6 +19,8 @@ Autosave is silent: it shows no global progress banner or automatic success toas
 Dashboard cards (Roadmap, Today/Week Tasks, Habits, Completed tasks, and Activity) are wrapped in reusable `DashboardPanel` containers with labeled collapse/restore (`ChevronUp`/`ChevronDown`) and full-viewport expansion (`Maximize2`/`Minimize2`, dismissible with Escape). Collapse/expand states remain session-only.
 
 Tasks, Habits, and Completed tasks lists default to displaying 3 items each, with explicit "Show more" / "Show less" controls so long lists cannot push supporting cards indefinitely below the fold. Per-list visible item limits (1–20) can be configured and saved under account Appearance settings (`DashboardDisplaySettings`), persisted in `User.preferences["dashboard"]` and validated on the server via `DashboardPreferences`. Completed tasks render in their own dedicated panel with total count badges, keeping active task checklists focused.
+
+In the Dashboard Task checklist, the Task title and status stay on the left; any plan action precedes the completion circle at the far right. The completion control keeps its Complete/Reopen behavior and a 44 px touch target on narrow screens.
 
 Habit check-in rows use the shared `HabitCheckinDays` component displaying a 7-day strip based on the habit-local Monday, allowing direct check-in/undo for past days and current day without duplicate checkboxes.
 
@@ -33,10 +37,10 @@ Trace ID: `dashboard`. Test references identify coverage to inspect; they are no
 | Role | Current source |
 | --- | --- |
 | Live UI view (via WorkspaceView) | [apps/web/src/components/preview/dashboard.tsx](../../../apps/web/src/components/preview/dashboard.tsx#L35) — `export function DashboardView({` |
-| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1179) — `export function usePreviewData(` |
+| Shared live projections | [apps/web/src/components/preview/workspace-data.tsx](../../../apps/web/src/components/preview/workspace-data.tsx#L1182) — `export function usePreviewData(` |
 | API / domain | [apps/api/planner/planning.py](../../../apps/api/planner/planning.py#L825) — `def dashboard(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L324) — `def select_focus(` |
-| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L555) — `def activity(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L325) — `def select_focus(` |
+| API / domain | [apps/api/planner/main.py](../../../apps/api/planner/main.py#L556) — `def activity(` |
 | Retain evaluated local edits across acknowledgement refresh | [apps/web/src/lib/workspace-rebase.ts](../../../apps/web/src/lib/workspace-rebase.ts#L4) — `export function rebaseEdit<T>(` |
 | Related tests | [apps/api/tests/test_workspace_ui.py](../../../apps/api/tests/test_workspace_ui.py) |
 | Related tests | [apps/api/tests/test_boundaries.py](../../../apps/api/tests/test_boundaries.py) |
