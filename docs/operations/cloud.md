@@ -20,7 +20,7 @@ Frontend deployment `dpl_B2W3pqGK6jxJNHNLoXuqHZxZJUJX` reached READY and was ass
 
 ## Recorded resources and evidence
 
-The API deployment on **2026-11-11** uses commit `6094212`, Render deploy `dep-dbq9iljbc2fs739ch6k0`, and Vercel `planner-t1`. The database was moved to Singapore as recorded below. Verify current hosted settings, health and account plans before an operational change.
+The API deployment on **2026-11-12** uses commit `838fed3`, Render deploy `dep-dbqh6r2jnfac738mdlug`, and Vercel `planner-t1`. The database was moved to Singapore as recorded below. Verify current hosted settings, health and account plans before an operational change.
 
 | Component | Recorded resource | Recorded location / endpoint |
 | --- | --- | --- |
@@ -43,6 +43,12 @@ flowchart LR
 ```
 
 [render.yaml](../../render.yaml) requests service name `planner-api`, branch **`main`**, Singapore, Free plan, `/ready` health check and **`autoDeployTrigger: "off"`**. The recorded existing service name differs from the template name; review/update the intended existing service rather than accidentally provisioning a duplicate. A push to `main` alone does not imply a Render deployment. Actual dashboard settings require separate inspection.
+
+### Backend release verification (2026-11-12)
+
+Commit `838fed3` was deployed as Render `dep-dbqh6r2jnfac738mdlug` after both GitHub workflows passed: 212 API tests passed with one baseline-history test skipped, 47 web tests passed, and 102 browser tests passed. Local API verification passed all 213 tests. A fresh encrypted backup and isolated restore succeeded before release. Production inspection confirmed schema `0012`, 31 application tables, four new indexes and fresh scheduler/fast/slow heartbeats. Five inspected post-release readiness probes returned 200 with 14 ms server durations; no error event appeared in that inspected log window. This does not establish sustained capacity or complete hosted user-flow acceptance.
+
+The stored scheduler mode remains `legacy`. No checkpoint backfill, compare/due switch, frontend flag activation or production job cleanup was performed. The cleanup timer remains disabled; backup and isolated restore timers remain active. Rolling back to an image unaware of revision `0012` requires disabling its startup migrations; do not run destructive downgrades. Prefer this compatible image in legacy scheduler mode while investigating.
 
 ## Configuration
 
