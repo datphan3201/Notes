@@ -108,3 +108,26 @@ def test_note_previews_keep_headings_and_auxiliary_changes_without_body_transfer
     refreshed = client.post("/api/v1/workspace/refresh", json={"known": {"notes": {row.id: row.version}}}).json()
     assert refreshed["notes"] == []
     assert refreshed["note_state"][row.id]["files"][0]["name"] == "new.txt"
+
+
+def test_background_sync_skips_cached_bodies_and_advances_empty_pages(client, stranger):
+    notes = [make(client, "notes", content="Body " + str(i)) for i in range(12)]
+    foreign = make(stranger, "notes", content="Must not synchronize")
+    known = {row["id"]: row["version"] for row in notes + [foreign]}
+    result = client.post("/api/v1/workspace/note-sync", json={"known": known}).json()
+    assert result == {"items": [], "next_cursor": None}
+    target = max(notes, key=lambda note: note["id"])
+    assert client.patch(f"/api/v1/notes/{target['id']}", json={
+        "version": target["version"], "fields": {"content": "Changed body"},
+    }).status_code == 200
+    cursor, received, empty_pages = None, [], 0
+    while True:
+        params = {"size": 2, **({"after": cursor} if cursor else {})}
+        page = client.post("/api/v1/workspace/note-sync", params=params, json={"known": known}).json()
+        received.extend(page["items"])
+        empty_pages += not page["items"]
+        cursor = page["next_cursor"]
+        if cursor is None:
+            break
+    assert empty_pages > 0
+    assert [(row["id"], row["content"]) for row in received] == [(target["id"], "Changed body")]

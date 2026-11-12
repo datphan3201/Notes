@@ -55,7 +55,7 @@ export async function cachedNotes(
 ) {
     return userId ? stored<Cached | undefined>(userId) : undefined;
 }
-export async function cacheNotes(snapshot: Snapshot) {
+export async function cacheNotes(snapshot: Snapshot, valid = () => true) {
     const identity = {
         ...snapshot.identity,
         csrf: "",
@@ -89,11 +89,14 @@ export async function cacheNotes(snapshot: Snapshot) {
             })),
     };
     localStorage.setItem(lastAccount, identity.user.id);
-    await stored(identity.user.id, (prior) => ({
+    await stored(identity.user.id, (prior) => {
+        if (!valid()) return prior;
+        const cached = new Map((prior?.snapshot.notes || []).map(note => [note.id, note]));
+        return ({
         snapshot: { ...copy, notes: copy.notes.flatMap(note => {
             if (note.body_loaded !== false) return [note];
-            const cached = prior?.snapshot.notes.find(row => row.id === note.id && row.version === note.version);
-            return cached ? [cached] : [];
+            const previous = cached.get(note.id);
+            return previous?.version === note.version ? [previous] : [];
         }) },
         changes: prior?.changes || [],
         drafts: Object.fromEntries(
@@ -106,7 +109,8 @@ export async function cacheNotes(snapshot: Snapshot) {
                     ),
             ),
         ),
-    }));
+        });
+    });
 }
 export async function queueNoteChanges(userId: string, changes: Change[]) {
     if (

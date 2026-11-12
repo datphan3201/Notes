@@ -128,6 +128,7 @@ export default function LiveWorkspace() {
         [notices, setNotices] = useState<PreviewNotice[]>([]);
     const [startupLocale, setStartupLocale] = useState<"en" | "vi">("en");
     const [syncEpoch, setSyncEpoch] = useState(0);
+    const noteSyncGeneration = useRef(0);
     useEffect(() => {
         try {
             const saved = sessionStorage.getItem("planner-workspace-locale") ||
@@ -190,6 +191,7 @@ export default function LiveWorkspace() {
         return snapshot;
     }
     async function refresh() {
+        ++noteSyncGeneration.current;
         const prior = raw.current;
         let snapshot: Snapshot;
         if (incrementalRefresh && prior?.identity.csrf) {
@@ -585,18 +587,28 @@ export default function LiveWorkspace() {
         if (!boundedWorkspace || !syncEpoch || offline) return;
         let active = true;
         const controller = new AbortController();
+        const generation = noteSyncGeneration.current;
         async function synchronize() {
+            const cached = await cachedNotes(raw.current!.identity.user.id);
+            const known = Object.fromEntries((cached?.snapshot.notes || []).map(note => [note.id, note.version]));
             let after: string | null = null;
             do {
-                const query = new URLSearchParams({ size: "10" });
+                const query = new URLSearchParams({ size: "200" });
                 if (after) query.set("after", after);
                 const page: { items: Snapshot["notes"]; next_cursor: string | null } =
-                    await api(`/workspace/note-sync?${query}`, { signal: controller.signal });
-                if (!active || !raw.current) return;
+                    await api(`/workspace/note-sync?${query}`, { method: "POST", signal: controller.signal,
+                        body: JSON.stringify({ known }),
+                    }, raw.current!.identity.csrf);
+                if (!active || generation !== noteSyncGeneration.current || !raw.current) return;
                 const snapshot = raw.current;
-                await cacheNotes({ ...snapshot, notes: snapshot.notes.map(note =>
-                    page.items.find(row => row.id === note.id && row.version === note.version &&
-                        !note.locked && !note.shared && !note.shares?.length) || note) });
+                if (page.items.length) {
+                    const received = new Map(page.items.map(note => [note.id, note]));
+                    await cacheNotes({ ...snapshot, notes: snapshot.notes.map(note => {
+                        const row = received.get(note.id);
+                        return row?.version === note.version && !note.locked && !note.shared && !note.shares?.length ? row : note;
+                    }) }, () => active && generation === noteSyncGeneration.current && raw.current === snapshot);
+                    for (const row of page.items) known[row.id] = row.version;
+                }
                 after = page.next_cursor;
             } while (active && after);
         }

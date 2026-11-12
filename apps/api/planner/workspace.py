@@ -560,6 +560,8 @@ def workspace_page(auth: Auth, db: DB, kind: str, after: str | None = None,
     if after:
         statement = statement.where(model.id > after)
     ids = list(db.scalars(statement.order_by(model.id).limit(size + 1)))
+    if not ids:
+        return {"items": [], "next_cursor": None}
     result = workspace_snapshot(auth, db, "summary", only={kind}, selected=set(ids[:size]), compact=True)
     return {"items": result[kind], "next_cursor": ids[size - 1] if len(ids) > size else None}
 
@@ -593,15 +595,39 @@ def search_notes(auth: Auth, db: DB, q: str = Query(min_length=1, max_length=200
 @router.get("/note-sync")
 def sync_notes(auth: Auth, db: DB, after: str | None = None,
                size: int = Query(default=10, ge=1, le=20)):
-    statement = select(Note.id).where(
+    return sync_note_page(auth, db, after, size, {})
+
+
+class NoteInventory(schemas.Strict):
+    known: dict[str, int] = Field(default_factory=dict, max_length=20000)
+
+
+@router.post("/note-sync")
+def sync_changed_notes(body: NoteInventory, auth: Auth, db: DB, after: str | None = None,
+                       size: int = Query(default=200, ge=1, le=200)):
+    return sync_note_page(auth, db, after, size, body.known)
+
+
+def sync_note_page(auth, db, after, size, known):
+    statement = select(Note.id, Note.version).where(
         Note.user_id == auth.user.id, Note.archived_at.is_(None), Note.lock_hash.is_(None),
         ~select(NoteShare.note_id).where(NoteShare.note_id == Note.id).exists(),
     )
     if after:
         statement = statement.where(Note.id > after)
-    ids = list(db.scalars(statement.order_by(Note.id).limit(size + 1)))
-    result = workspace_snapshot(auth, db, only={"notes"}, selected=set(ids[:size]))
-    return {"items": result["notes"], "next_cursor": ids[size - 1] if len(ids) > size else None}
+    rows = db.execute(statement.order_by(Note.id).limit(size + 1)).all()
+    ids, scanned = [], 0
+    for row in rows[:size]:
+        scanned += 1
+        if known.get(row.id) != row.version:
+            ids.append(row.id)
+        if len(ids) == 10:
+            break
+    cursor = rows[scanned - 1].id if len(rows) > scanned else None
+    if not ids:
+        return {"items": [], "next_cursor": cursor}
+    result = workspace_snapshot(auth, db, only={"notes"}, selected=set(ids))
+    return {"items": result["notes"], "next_cursor": cursor}
 
 
 def preview_nodes(kind):
