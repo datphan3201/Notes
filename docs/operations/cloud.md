@@ -50,6 +50,10 @@ Commit `838fed3` was deployed as Render `dep-dbqh6r2jnfac738mdlug` after both Gi
 
 The stored scheduler mode remains `legacy`. No checkpoint backfill, compare/due switch, frontend flag activation or production job cleanup was performed. The cleanup timer remains disabled; backup and isolated restore timers remain active. Rolling back to an image unaware of revision `0012` requires disabling its startup migrations; do not run destructive downgrades. Prefer this compatible image in legacy scheduler mode while investigating.
 
+### Direct due-mode activation (2026-11-12)
+
+The owner explicitly waived shadow comparison and its 24-hour trial. The operator verified the Singapore `postgres/planner` identity and revision `0012`, backfilled one active series checkpoint under owner locks, and switched the shared scheduler mode from `legacy` to `due` without comparison. A subsequent live tick recorded due mode, fresh scheduler/fast/slow heartbeats and no pending legacy periodic work. No job cleanup or frontend deployment was performed; the cleanup timer remains disabled. The usual comparison gate described in the runbook was deliberately bypassed for this owner-authorized transition, not reported as passed.
+
 ## Configuration
 
 [Settings](../../apps/api/planner/config.py) and [environment example](../../apps/api/.env.example) are authoritative for accepted fields/defaults. Supply secrets through the provider's private environment/secret controls, never committed files, browser variables, command arguments or logs.
