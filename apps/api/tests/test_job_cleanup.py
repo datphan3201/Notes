@@ -7,6 +7,25 @@ from planner.job_cleanup import legacy_candidates, require_stable_scheduler
 from planner.models import Job, SystemSetting, User, now
 
 
+def test_capacity_pressure_keeps_index_queued_without_blocking_business(client, db):
+    from planner.db import session_factory
+    from planner.jobs import claim
+
+    owner = db.query(User).filter_by(email="owner@example.com").one().id
+    index = Job(kind="index", user_id=owner, key="index:capacity", payload={}, status="queued", available_at=now())
+    email = Job(kind="email", user_id=owner, key="email:capacity", payload={}, status="queued", available_at=now())
+    pressure = SystemSetting(key="capacity:pressure", value={"pause_index": True})
+    db.add_all([index, email, pressure])
+    db.commit()
+    assert claim(session_factory(), job_id=index.id, slow=True) is None
+    assert claim(session_factory(), job_id=email.id, slow=False).id == email.id
+    db.refresh(index)
+    assert index.status == "queued" and index.attempts == 0
+    pressure.value = {"pause_index": False}
+    db.commit()
+    assert claim(session_factory(), job_id=index.id, slow=True).id == index.id
+
+
 def test_cleanup_selects_only_old_completed_legacy_periodic_jobs(client, db):
     owner = db.query(User).filter_by(email="owner@example.com").one().id
     old = now() - timedelta(days=5)

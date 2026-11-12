@@ -870,6 +870,14 @@ def test_completed_run_events_return_the_saved_answer(client, db):
     assert response.status_code == 200
     assert '"answer": "Saved answer"' in response.text
     assert '"status": "completed"' in response.text
+    delta = client.get(f"/api/v1/assistant/runs/{run.id}/events?deltas=true")
+    assert delta.status_code == 200
+    import json
+
+    payload = json.loads(delta.text.removeprefix("data: ").strip())
+    assert payload["answer_delta"] == "Saved answer"
+    assert payload["answer_offset"] == 0 and payload["answer_reset"] is True
+    assert "answer" not in payload
 
 
 def test_stream_database_wait_does_not_block_event_loop(monkeypatch):
@@ -914,3 +922,46 @@ def test_stream_database_wait_does_not_block_event_loop(monkeypatch):
         assert timer.is_set(), "database wait blocked the event loop"
 
     asyncio.run(check())
+
+
+def test_delta_stream_resets_on_retry_and_reconnect(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+
+    from planner import main
+
+    row = SimpleNamespace(status="running")
+    session = SimpleNamespace(expires_at=now() + timedelta(minutes=5))
+
+    class FakeDB:
+        def __enter__(self): return self
+        def __exit__(self, *_): pass
+        def get(self, *_): return session
+        def scalar(self, *_): return row
+        def rollback(self): pass
+
+    states = iter([("running", "Xin 👋"), ("running", "Xin 👋 chào"),
+                   ("running", "Retry"), ("completed", "Retry done")])
+
+    def result(*_):
+        status, answer = next(states)
+        row.status = status
+        return {"status": status, "answer": answer}
+
+    async def no_wait(*_): pass
+
+    monkeypatch.setattr(main, "session_factory", lambda: FakeDB)
+    monkeypatch.setattr(main, "run_result", result)
+    monkeypatch.setattr(main.asyncio, "sleep", no_wait)
+    auth = SimpleNamespace(user=SimpleNamespace(id="owner"), session=SimpleNamespace(token_hash="s"))
+
+    async def collect():
+        response = main.events("run", auth, FakeDB(), deltas=True)
+        return [json.loads(event.removeprefix("data: ").strip()) async for event in response.body_iterator]
+
+    events = asyncio.run(collect())
+    assert [event["answer_offset"] for event in events] == [0, 5, 0, 5]
+    assert [event["answer_reset"] for event in events] == [True, False, True, False]
+    assert [event["answer_delta"] for event in events] == ["Xin 👋", " chào", "Retry", " done"]
+    assert all("answer" not in event for event in events)

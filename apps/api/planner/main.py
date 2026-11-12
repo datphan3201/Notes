@@ -91,6 +91,7 @@ async def request_context(request: Request, call_next):
             "route": getattr(route, "path", "unmatched"),
             "status": response.status_code,
             "latency_ms": int((time.monotonic() - started) * 1000),
+            "response_bytes": response.headers.get("content-length"),
             "user_agent": request.headers.get("user-agent", ""),
         },
     )
@@ -707,7 +708,7 @@ def get_run(run_id: str, auth: Auth, db: DB):
 
 
 @app.get("/api/v1/assistant/runs/{run_id}/events")
-def events(run_id: str, auth: Auth, db: DB):
+def events(run_id: str, auth: Auth, db: DB, deltas: bool = False):
     run = db.scalar(select(AIRun).where(AIRun.id == run_id, AIRun.user_id == auth.user.id))
     if run is None:
         raise HTTPException(404, "Not found")
@@ -737,11 +738,21 @@ def events(run_id: str, auth: Auth, db: DB):
 
     async def stream():
         # Each read gets a short transaction outside the event loop.
+        previous = ""
+        first = True
         for _ in range(240):
             event = await asyncio.to_thread(read_event)
             if event is None:
                 break
             payload, status = event
+            if deltas:
+                answer = payload.get("answer", "")
+                reset = first or not answer.startswith(previous)
+                offset = 0 if reset else len(previous)
+                payload = {**payload, "answer_delta": answer[offset:],
+                           "answer_offset": offset, "answer_reset": reset}
+                payload.pop("answer", None)
+                previous, first = answer, False
             yield "data: " + json.dumps(payload) + "\n\n"
             if status in ("completed", "failed", "rejected"):
                 break

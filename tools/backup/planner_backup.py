@@ -213,6 +213,11 @@ def backup(args):
                                 "table_digests": digests,
                                 "bucket": config["PLANNER_SUPABASE_STORAGE_BUCKET"],
                                 "encrypted_database_sha256": dump_digest, "objects": []}
+                    # Include the application encryption key and provider/storage
+                    # configuration privately; a database dump cannot recover them.
+                    recovery = temp / "recovery-config.json.enc"
+                    encrypt_bytes(json.dumps(config).encode(), recovery, args.key)
+                    manifest["encrypted_recovery_config_sha256"] = hashlib.sha256(recovery.read_bytes()).hexdigest()
                     manifest["objects"] = capture_objects(config, objects, attachments, temp, args.key)
                     encrypt_bytes(json.dumps(manifest).encode(), temp / "manifest.json.enc", args.key)
         temp.rename(final)

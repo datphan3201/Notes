@@ -11,7 +11,7 @@ class JsonFormatter(logging.Formatter):
             "level": record.levelname,
             "event": record.getMessage(),
         }
-        for field in ("trace_id", "route", "status", "latency_ms", "job_id", "error_code", "user_agent",
+        for field in ("trace_id", "route", "status", "latency_ms", "response_bytes", "job_id", "error_code", "user_agent",
                       "reminder_mismatches", "series_mismatches", "batch_limited"):
             if hasattr(record, field):
                 result[field] = getattr(record, field)

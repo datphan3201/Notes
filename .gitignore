@@ -63,3 +63,5 @@ apps/web/.next-vercel-check/
 
 # Private operator backups and local credentials.
 /.private/
+
+.cloud

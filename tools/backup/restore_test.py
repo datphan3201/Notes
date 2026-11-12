@@ -34,6 +34,12 @@ def restore(directory, key):
         digest = hashlib.file_digest(file, "sha256").hexdigest()
     if digest != manifest["encrypted_database_sha256"]:
         raise ValueError("Backup checksum does not match manifest")
+    if manifest.get("encrypted_recovery_config_sha256"):
+        recovery = directory / "recovery-config.json.enc"
+        if hashlib.sha256(recovery.read_bytes()).hexdigest() != manifest["encrypted_recovery_config_sha256"]:
+            raise ValueError("Recovery configuration checksum differs")
+        if not isinstance(json.loads(decrypt(recovery, key)), dict):
+            raise ValueError("Invalid recovery configuration")
     name = "planner-restore-test-" + uuid.uuid4().hex[:8]
     create = run([
         "docker", "run", "--rm", "-d", "--name", name,
@@ -67,6 +73,7 @@ def restore(directory, key):
         finally:
             source.stdout.close()
         source.stderr.read()
+        source.stderr.close()
         if source.wait(timeout=60) or result.returncode:
             raise RuntimeError("Database restore failed")
         for table, expected in manifest["table_counts"].items():

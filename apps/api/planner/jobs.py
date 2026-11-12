@@ -48,6 +48,13 @@ def claim(factory, job_id=None, *, slow=None):
         if slow is not None:
             slow_kinds = ("assistant", "index")
             statement = statement.where(Job.kind.in_(slow_kinds) if slow else Job.kind.not_in(slow_kinds))
+        if slow is not False:
+            # Keep optional indexing queued without another polling round trip.
+            pressure = select(SystemSetting.key).where(
+                SystemSetting.key == "capacity:pressure",
+                SystemSetting.value["pause_index"].as_boolean().is_(True),
+            ).exists()
+            statement = statement.where(or_(Job.kind != "index", ~pressure))
         job = db.scalar(statement)
         if job is None:
             return None
@@ -211,7 +218,7 @@ def reminders(db, job):
         instant = task.reminder_at.astimezone(UTC)
         stamp = f"{instant.year:04d}{instant.month:02d}{instant.day:02d}{instant.hour:02d}{instant.minute:02d}{instant.second:02d}{instant.microsecond:06d}"
         key = f"reminder:v2:{task.id}:{stamp}"
-        details = {"destination": "tasks", "task_id": task.id}
+        details = {"destination": "tasks", "task_id": task.id, "reminder_at": instant.isoformat()}
         legacy = db.scalar(
             select(Notification).where(
                 Notification.user_id == user.id,
