@@ -46,6 +46,13 @@ The Next.js/FastAPI system is deployed on `main` under `apps/`. Read [the migrat
 - Transform imperative tasks into verifiable goals with concrete checks.
 - For multi-step tasks, state a brief plan (`[Step] → verify: [check]`) and verify each step.
 
+## Design communication
+
+- For every UI/UX design question or proposed change, describe the current layout and interaction concretely, and separate what was observed from assumptions. Inspect the relevant screen and behavior before judging them; a screenshot alone does not establish how a control works.
+- Explain the proposed design in enough detail that the user can picture it: which elements move, appear or disappear; their placement, hierarchy, labels and visual treatment; how pointer, keyboard and touch interactions work; and what happens on narrow screens.
+- Name the exact scope of the intended change, the reason for each decision and any meaningful tradeoff or uncertainty. When multiple plausible designs depend on the user's preference, present the options clearly instead of choosing silently.
+- If the user asks only for an assessment, give the assessment and a concrete proposal without changing code. Before implementing a requested design change, communicate the intended result and verify it against the described behavior afterward.
+
 ## Domain & Security Invariants
 
 Regardless of the tech stack or framework used:
